@@ -21,3 +21,15 @@ class ArticleVersion(models.Model):
     class Meta:
         indexes = [models.Index(fields=['article', 'created_at'])]
 
+
+class ArticleLogEntry(models.Model):
+    class LogEntryType(models.TextChoices):
+        Source = 'source'
+        Title = 'title'
+        New = 'new'
+
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    type = models.TextField(choices=LogEntryType.choices)
+    meta = models.JSONField(default=lambda: {})
+    created_at = models.DateTimeField(auto_now_add=True)
+    comment = models.TextField(default='')

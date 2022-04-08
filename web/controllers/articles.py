@@ -49,24 +49,47 @@ def create_article(full_name):
 # Creates new article version for specified article
 def create_article_version(full_name_or_article, source):
     article = get_article(full_name_or_article)
+    is_new = get_latest_version(article) is None
     version = ArticleVersion(
         article=article,
-        created_at=datetime.datetime.now(),
         source=source,
         rendered=None
     )
     version.save()
+    # either NEW or SOURCE
+    if is_new:
+        log = ArticleLogEntry(
+            article=article,
+            type=ArticleLogEntry.LogEntryType.New,
+            meta={'version_id': version.id, 'title': article.title}
+        )
+    else:
+        log = ArticleLogEntry(
+            article=article,
+            type=ArticleLogEntry.LogEntryType.Source,
+            meta={'version_id': version.id}
+        )
+    log.save()
     return version
 
 
-# Get latest source of article
-def get_latest_source(full_name_or_article):
+# Get latest version of article
+def get_latest_version(full_name_or_article):
     article = get_article(full_name_or_article)
     if article is None:
         return None
     latest_version = ArticleVersion.objects.filter(article=article).order_by('-created_at')[:1]
     if latest_version:
-        return latest_version[0].source
+        return latest_version[0]
+    else:
+        return None
+
+
+# Get latest source of article
+def get_latest_source(full_name_or_article):
+    ver = get_latest_version(full_name_or_article)
+    if ver is not None:
+        return ver.source
     else:
         return None
 
