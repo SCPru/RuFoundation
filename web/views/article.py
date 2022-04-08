@@ -15,7 +15,13 @@ def index(request, article_name='main'):
     nav_top_article = articles.get_article('nav:top')
     nav_side_article = articles.get_article('nav:side')
 
-    content = single_pass_render(articles.get_latest_source(article), RenderContext(article, article))
+    if article is not None:
+        content = single_pass_render(articles.get_latest_source(article), RenderContext(article, article))
+    else:
+        template_404 = loader.get_template('page_404.html')
+        context = {'page_id': article_name, 'allow_create': articles.check_can_create(article_name)}
+        content = template_404.render(context, request)
+
     nav_top = single_pass_render(articles.get_latest_source(nav_top_article), RenderContext(article, nav_top_article))
     nav_side = single_pass_render(articles.get_latest_source(nav_side_article), RenderContext(article, nav_side_article))
 

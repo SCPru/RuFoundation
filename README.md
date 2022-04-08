@@ -22,6 +22,8 @@ Note: this is what I tested with, your mileage may differ.
 
 By default, there are no pages in the website.
 
+This also includes `nav:top` and `nav:side` which are critical for proper appearance.
+
 You can create some by running the following sequence:
 
 - `python manage.py shell`

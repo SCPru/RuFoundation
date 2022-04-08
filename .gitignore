@@ -4,3 +4,4 @@ db.sqlite3
 files/*
 !files/.gitkeep
 node_modules
+*.log
