@@ -3,3 +3,4 @@ db.sqlite3
 *.pyc
 files/*
 !files/.gitkeep
+node_modules

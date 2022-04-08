@@ -28,6 +28,7 @@ def serve_static(request, path, document_root=None, show_indexes=False):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    re_path(r'^static/(?P<path>.*$)', serve_static, {'document_root': './web/static'}),
     re_path(r'^local--files/(?P<path>.*)$', serve_static, {'document_root': './files'}),
     path('<str:article_name>/', web.views.article.index),
     path('', web.views.article.index)

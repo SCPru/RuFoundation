@@ -1,0 +1,18 @@
+{
+  "name": "scpdev-js",
+  "version": "1.0.0",
+  "description": "JS scripts",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^17.0.23",
+    "esbuild": "^0.14.34",
+    "esbuild-sass-plugin": "^2.2.6",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "scripts": {
+    "build": "npx ts-node build.ts",
+    "watch": "npx ts-node build.ts --watch"
+  }
+}

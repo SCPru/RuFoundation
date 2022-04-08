@@ -13,7 +13,11 @@ class Node(object):
     def __init__(self):
         self.children = []
         self.parent = None
+        # Block node is a node that will always close current paragraph
         self.block_node = False
+        # Complex node is a node that prevents treating the line as plain text paragraph
+        # (based on Wikidot's weird treating of lines that start with [[, [, or something similar)
+        self.complex_node = False
 
     def append_child(self, child):
         if type(child) == TextNode and self.children and type(self.children[-1]) == TextNode:
@@ -46,8 +50,7 @@ class Node(object):
             elif type(child) != NewlineNode and was_newline:
                 was_newline = 0
                 was_forced = False
-                special_nodes = [ImageNode, HTMLNode, IncludeNode, ModuleNode]
-                is_raw_line = type(child) not in special_nodes and not child.block_node
+                is_raw_line = not child.complex_node
             elif type(child) == NewlineNode:
                 was_newline = 1
                 was_forced = False
@@ -127,6 +130,7 @@ class HTMLNode(Node):
         self.name = name
         self.attributes = attributes
         self.block_node = self.name in ['div']
+        self.complex_node = True
         for child in children:
             self.append_child(child)
 
@@ -156,6 +160,7 @@ class ImageNode(Node):
         self.img_type = img_type
         self.source = source
         self.attributes = attributes
+        self.complex_node = True
 
     def _get_image_url(self, context=None):
         if context is None or context.source_article is None:
@@ -197,6 +202,7 @@ class IncludeNode(Node):
         super().__init__()
         self.name = name
         self.attributes = attributes
+        self.complex_node = True
 
     def render(self, context=None):
         return '<div>Include is not supported yet</div>'
@@ -209,6 +215,7 @@ class ModuleNode(Node):
         self.attributes = attributes
         self.content = content
         self.block_node = True
+        self.complex_node = True
 
     def render(self, context=None):
         # render only module CSS for now
