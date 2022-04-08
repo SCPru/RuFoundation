@@ -1,6 +1,6 @@
-import * as React from 'react'
-import { Component } from 'react'
-import ArticleEditor from '../article-editor'
+import * as React from 'react';
+import { Component } from 'react';
+import ArticleEditor from '../article-editor';
 
 
 interface Props {

@@ -1,5 +1,5 @@
-import * as esbuild from 'esbuild'
-import {sassPlugin} from 'esbuild-sass-plugin'
+import * as esbuild from 'esbuild';
+import {sassPlugin} from 'esbuild-sass-plugin';
 
 const args = process.argv.slice(2);
 const watch = args.includes('--watch');

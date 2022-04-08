@@ -1,6 +1,6 @@
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
-import Page404 from './entrypoints/page-404'
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import Page404 from './entrypoints/page-404';
 
 
 function renderTo(where: HTMLElement, what: any) {
