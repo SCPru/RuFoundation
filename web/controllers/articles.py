@@ -73,8 +73,12 @@ def get_latest_source(full_name_or_article):
 
 # Check if name is allowed for creation
 # Pretty much this blocks two 100% special paths, everything else is OK
-def check_can_create(article_name):
+def is_full_name_allowed(article_name):
     if article_name == '_' or article_name == 'api':
         return False
-    #category, name = articles.get_name(article_name)
+    if len(article_name) > 128:
+        return False
+    category, name = get_name(article_name)
+    if not category.strip() or not name.strip():
+        return False
     return True

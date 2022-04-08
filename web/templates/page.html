@@ -35,6 +35,11 @@
                         </div>
                         <div id="main-content">
                             <div id="action-area-top"></div>
+                            {% if title %}
+                                <div id="page-title">
+                                    {{ title }}
+                                </div>
+                            {% endif %}
                             <div id="page-content">
                                 {{ content|safe }}
                             </div>

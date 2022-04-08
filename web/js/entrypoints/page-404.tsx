@@ -32,14 +32,16 @@ class Page404 extends Component<Props, State> {
         const { page_id } = this.props;
         if (!isCreate) {
             return (
-                <p id="404-message">
-                    Запрашиваемая вами страница <em>{page_id}</em> не существует.
+                <>
+                    <p id="404-message">
+                        Запрашиваемая вами страница <em>{page_id}</em> не существует.
+                    </p>
                     <ul id="create-it-now-link">
                         <li>
                             <a href="#" onClick={this.onCreate}>Создать страницу</a>
                         </li>
                     </ul>
-                </p>
+                </>
             )
         } else {
             return (
