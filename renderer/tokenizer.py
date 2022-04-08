@@ -38,6 +38,8 @@ class TokenType(Enum):
 
     DoubleAsterisk = '**'
 
+    HrBeginning = '----'
+
 
 def get_sorted_special_types():
     types = []

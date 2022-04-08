@@ -23,6 +23,16 @@ def get_article(full_name_or_article):
         return full_name_or_article
 
 
+def get_full_name(full_name_or_article):
+    if type(full_name_or_article) == str:
+        return full_name_or_article
+    else:
+        if full_name_or_article.category == '_default':
+            return full_name_or_article.name
+        else:
+            return '%s:%s' % (full_name_or_article.category, full_name_or_article.name)
+
+
 # Creates article with specified id. Does not add versions
 def create_article(full_name):
     category, name = get_name(full_name)

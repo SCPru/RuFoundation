@@ -1,5 +1,12 @@
 from .tokenizer import TokenType
 from django.utils import html
+from web.controllers import articles
+
+
+class RenderContext(object):
+    def __init__(self, article, source_article):
+        self.article = article
+        self.source_article = source_article
 
 
 class Node(object):
@@ -15,13 +22,14 @@ class Node(object):
         child.parent = self
         self.children.append(child)
 
-    def render(self, context_article=None):
+    def render(self, context=None):
         content = ''
         was_block = True
         was_newline = 1
         was_forced = False
+        is_raw_line = False
         for child in self.children:
-            child_content = child.render(context_article)
+            child_content = child.render(context)
             # empty children are not visible
             if not child_content:
                 continue
@@ -38,20 +46,30 @@ class Node(object):
             elif type(child) != NewlineNode and was_newline:
                 was_newline = 0
                 was_forced = False
+                special_nodes = [ImageNode, HTMLNode, IncludeNode, ModuleNode]
+                is_raw_line = type(child) not in special_nodes and not child.block_node
             elif type(child) == NewlineNode:
                 was_newline = 1
                 was_forced = False
             # close/open paragraph. ignore newline nodes here
-            if type(child) != NewlineNode and self.block_node and child_content:
-                if child.block_node and not was_block:
+            if type(child) != NewlineNode and self.block_node and child_content.strip():
+                if child.block_node and not was_block and is_raw_line:
                     content += '</p>'
-                elif not child.block_node and was_block:
+                elif not child.block_node and was_block and is_raw_line:
                     content += '<p>'
                 was_block = child.block_node
             content += child_content
-        if not was_block:
+        if not was_block and is_raw_line:
             content += '</p>'
         return content
+
+    def to_json(self):
+        base = {'type': str(type(self)), 'children': [x.to_json() for x in self.children]}
+        for k in self.__dict__:
+            if k in ['parent', 'children']:
+                continue
+            base[k] = self.__dict__[k]
+        return base
 
 
 class TextNode(Node):
@@ -59,9 +77,7 @@ class TextNode(Node):
         super().__init__()
         self.text = text
 
-    def render(self, context_article=None):
-        if not self.text.strip():
-            return ''
+    def render(self, context=None):
         return html.escape(self.text)
 
 
@@ -71,7 +87,7 @@ class HTMLLiteralNode(Node):
         self.text = text
         self.force_render = True
 
-    def render(self, context_article=None):
+    def render(self, context=None):
         return self.text.strip()
 
 
@@ -80,7 +96,7 @@ class NewlineNode(Node):
         super().__init__()
         self.forced = forced
 
-    def render(self, context_article=None):
+    def render(self, context=None):
         if self.parent is not None and (self == self.parent.children[0] or self == self.parent.children[-1]):
             return ''
         return '<br>'
@@ -92,8 +108,17 @@ class ColorNode(Node):
         self.color = color
         self.content = content
 
-    def render(self, context_article=None):
+    def render(self, context=None):
         return '<span style="color: #%s">%s</span>' % (html.escape(self.color), html.escape(self.content))
+
+
+class HorizontalRulerNode(Node):
+    def __init__(self):
+        super().__init__()
+        self.block_node = True
+
+    def render(self, context=None):
+        return '<hr>'
 
 
 class HTMLNode(Node):
@@ -105,8 +130,8 @@ class HTMLNode(Node):
         for child in children:
             self.append_child(child)
 
-    def render(self, context_article=None):
-        content = super().render(context_article=context_article)
+    def render(self, context=None):
+        content = super().render(context=context)
         attr_string = ''
         attr_whitelist = ['class', 'id', 'style']
         if self.name == 'a':
@@ -125,6 +150,25 @@ class HTMLNode(Node):
         return '<%s%s>%s</%s>' % (html.escape(self.name), attr_string, content, html.escape(self.name))
 
 
+class ImageNode(Node):
+    def __init__(self, img_type, source, attributes):
+        super().__init__()
+        self.img_type = img_type
+        self.source = source
+        self.attributes = attributes
+
+    def _get_image_url(self, context=None):
+        if context is None or context.source_article is None:
+            return None
+        return '/local--files/%s/%s' % (articles.get_full_name(context.source_article), self.source)
+
+    def render(self, context=None):
+        url = self._get_image_url(context)
+        if self.img_type == 'image':
+            return '<img src="%s" alt="%s">' % (html.escape(url), html.escape(self.source))
+        return ''
+
+
 class LinkNode(Node):
     def __init__(self, url, text, blank=False):
         super().__init__()
@@ -132,7 +176,7 @@ class LinkNode(Node):
         self.text = text
         self.blank = blank
 
-    def render(self, context_article=None):
+    def render(self, context=None):
         blank = ' target="_blank"' if self.blank else ''
         return '<a href="%s"%s>%s</a>' % (html.escape(self.url), blank, html.escape(self.text))
 
@@ -142,7 +186,7 @@ class CommentNode(Node):
         super().__init__()
         self.text = text
 
-    def render(self, context_article=None):
+    def render(self, context=None):
         #return '<!-- %s -->' % html.escape(self.text)
         # This is actually not rendered
         return ''
@@ -154,7 +198,7 @@ class IncludeNode(Node):
         self.name = name
         self.attributes = attributes
 
-    def render(self, context_article=None):
+    def render(self, context=None):
         return '<div>Include is not supported yet</div>'
 
 
@@ -166,7 +210,7 @@ class ModuleNode(Node):
         self.content = content
         self.block_node = True
 
-    def render(self, context_article=None):
+    def render(self, context=None):
         # render only module CSS for now
         if self.name == 'css':
             return '<style>%s</style>' % html.escape(self.content)
@@ -182,10 +226,11 @@ class Parser(object):
         root_node = Node()
         root_node.block_node = True
         while True:
-            new_node = self.parse_node()
-            if new_node is None:
+            new_children = self.parse_nodes()
+            if not new_children:
                 break
-            root_node.append_child(new_node)
+            for child in new_children:
+                root_node.append_child(child)
         return root_node
 
     def parse_node(self):
@@ -242,7 +287,19 @@ class Parser(object):
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
+        elif token.type == TokenType.HrBeginning:
+            pos = self.tokenizer.position
+            new_node = self.parse_hr()
+            if new_node is not None:
+                return new_node
+            self.tokenizer.position = pos
         return TextNode(token.raw)
+
+    def parse_nodes(self):
+        node = self.parse_node()
+        if node is None:
+            return []
+        return [node]
 
     def parse_html_node(self):
         # [[ has already been parsed
@@ -251,7 +308,8 @@ class Parser(object):
         if name_tk.type != TokenType.String:
             return None
         name = name_tk.value.lower()
-        allowed_tags = ['a', 'span', 'div', 'module', 'include', 'iframe']
+        image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
+        allowed_tags = ['a', 'span', 'div', 'module', 'include', 'iframe'] + image_tags
         if name not in allowed_tags:
             return None
         attributes = []
@@ -259,20 +317,25 @@ class Parser(object):
         module_content = ''
         while True:
             self.tokenizer.skip_whitespace()
+            attr_name = self.read_as_value_until([TokenType.CloseDoubleBracket, TokenType.Whitespace, TokenType.Equals])
+            if attr_name is None:
+                return None
+            attr_name = attr_name.strip()
+            self.tokenizer.skip_whitespace()
+            pos = self.tokenizer.position
             tk = self.tokenizer.read_token()
             if tk.type == TokenType.Null:
-                break
+                return None
             elif tk.type == TokenType.CloseDoubleBracket:
-                break
-            elif tk.type == TokenType.String:
-                pos = self.tokenizer.position
-                # read attribute
-                attr_name = tk.value
-                self.tokenizer.skip_whitespace()
-                tk = self.tokenizer.read_token()
-                if tk.type != TokenType.Equals:
+                if attr_name:
                     attributes.append((attr_name, None))
+                break
+            else:
+                # read attribute
+                if tk.type != TokenType.Equals:
                     self.tokenizer.position = pos
+                    if attr_name:
+                        attributes.append((attr_name, None))
                     continue
                 # from here, different handling for include. this is a hack in original Wikidot syntax
                 if name == 'include':
@@ -296,10 +359,16 @@ class Parser(object):
                         continue
                     attributes.append((attr_name, tk.value))
         # include is a special case, it does not have/require ending tag
-        if name == 'include':
-            name = attributes[0][0]
-            attributes = attributes[1:]
-            return IncludeNode(attributes, name)
+        if name == 'include' or name in image_tags:
+            if name == 'include':
+                name = attributes[0][0]
+                attributes = attributes[1:]
+                return IncludeNode(name, attributes)
+            else:
+                source = attributes[0][0]
+                attributes = attributes[1:]
+                print('image %s attributes %s' % (repr(source), repr(attributes)))
+                return ImageNode(name, source, attributes)
         # tag beginning found. now iterate and check for tag ending
         while True:
             pos = self.tokenizer.position
@@ -321,13 +390,15 @@ class Parser(object):
                                 attributes = attributes[1:]
                                 return ModuleNode(name, attributes, module_content)
                             return HTMLNode(name, attributes, children)
+
             if name != 'module':
                 self.tokenizer.position = pos
-                child = self.parse_node()
-                if child is None:  # this means we reached EOF before locating end tag
+                new_children = self.parse_nodes()
+                if not new_children:  # this means we reached EOF before locating end tag
                     return None
-                children.append(child)
+                children += new_children
             else:
+                self.tokenizer.position = pos + len(tk.raw or '')
                 module_content += tk.raw
 
     def parse_comment_node(self):
@@ -455,7 +526,20 @@ class Parser(object):
             elif tk.type == TokenType.DoubleAsterisk:
                 return HTMLNode('strong', [], children)
             self.tokenizer.position = pos
-            node = self.parse_node()
-            if node is None:
+            new_children = self.parse_nodes()
+            if not new_children:
                 return None
-            children.append(node)
+            children += new_children
+
+    def parse_hr(self):
+        # ---- has already been parsed.
+        # we require that there is either strictly no text or a newline.
+        # after this token we should have either more hyphens or a newline
+        # if anything else, fail
+        prev_pos = self.tokenizer.position-5
+        if prev_pos <= 0 or self.tokenizer.source[prev_pos] != '\n':
+            return None
+        content = self.read_as_value_until([TokenType.Newline])
+        if content is None or content.rstrip().replace('-', '') != '':
+            return None
+        return HorizontalRulerNode()

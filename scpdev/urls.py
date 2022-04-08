@@ -14,12 +14,21 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
 
+import django.views.static
 import web.views.article
+import urllib.parse
+
+
+def serve_static(request, path, document_root=None, show_indexes=False):
+    path = '/'.join([urllib.parse.quote(x) for x in path.split('/')])
+    return django.views.static.serve(request, path, document_root=document_root, show_indexes=show_indexes)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    re_path(r'^local--files/(?P<path>.*)$', serve_static, {'document_root': './files'}),
     path('<str:article_name>/', web.views.article.index),
     path('', web.views.article.index)
 ]

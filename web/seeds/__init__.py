@@ -208,7 +208,7 @@ SCP-объекты
 [[/div]]
 
 [[div class="menu-item small" style="grid-template-columns: 100% !important; max-height: max-content !important; height: auto !important; display: flex;"]]
-[[image series.png]][[[scp-series-1-tales-edition|I]]] - [[[scp-series-2-tales-edition|II]]] - [[[scp-series-3-tales-edition|III]]] - [[[scp-series-4-tales-edition|IV]]] - [[[scp-series-5-tales-edition|V]]] - [[[scp-series-6-tales-edition|VI]]]
+[[image series.png]][[[scp-series-1-tales-edition|I]]] - [[[scp-series-2-tales-edition|II]]] - [[[scp-series-3-tales-edition|III]]] - [[[scp-series-4-tales-edition|IV]]] - [[[scp-series-5-tales-edition|V]]] - [[[scp-series-6-tales-edition|VI]]]
 [[/div]]
 
 [[div class="heading"]]
