@@ -108,11 +108,20 @@ class HTMLNode(Node):
     def render(self, context_article=None):
         content = super().render(context_article=context_article)
         attr_string = ''
+        attr_whitelist = ['class', 'id', 'style']
+        if self.name == 'a':
+            attr_whitelist.append('href')
+            attr_whitelist.append('target')
         for attr in self.attributes:
+            if attr[0] not in attr_whitelist:
+                continue
             attr_string += ' '
             attr_string += attr[0]
             if attr[1] is not None:
-                attr_string += '="%s"' % html.escape(attr[1])
+                value = attr[1]
+                if attr[0] == 'id' and not value.startswith('u-'):
+                    value = 'u-' + value
+                attr_string += '="%s"' % html.escape(value)
         return '<%s%s>%s</%s>' % (html.escape(self.name), attr_string, content, html.escape(self.name))
 
 
