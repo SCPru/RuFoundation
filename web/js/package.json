@@ -9,12 +9,14 @@
     "@types/react": "17",
     "@types/react-dom": "17",
     "@types/react-is": "^17.0.3",
+    "@types/sprintf-js": "^1.1.2",
     "@types/styled-components": "^5.1.25",
     "esbuild": "^0.14.34",
     "esbuild-sass-plugin": "^2.2.6",
     "react": "17.x",
     "react-dom": "17",
     "react-is": "^18.0.0",
+    "sprintf-js": "^1.1.2",
     "styled-components": "^5.3.5"
   },
   "scripts": {

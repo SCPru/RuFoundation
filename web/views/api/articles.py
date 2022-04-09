@@ -1,6 +1,6 @@
 import json
 
-from . import render_error, render_json
+from . import render_error, render_json, restrict_method
 
 from web.controllers import articles
 
@@ -15,9 +15,8 @@ def _validate_article_data(data):
     return None
 
 
+@restrict_method('POST')
 def create(request):
-    if request.method != 'POST':
-        return render_error(405, 'Некорректный метод запроса')
     data = json.loads(request.body.decode('utf-8'))
     err = _validate_article_data(data)
     if err is not None:
@@ -33,13 +32,12 @@ def create(request):
     return render_json(201, {'status': 'ok'})
 
 
+@restrict_method('GET', 'PUT')
 def fetch_or_update(request, full_name):
     if request.method == 'GET':
         return fetch(request, full_name)
     elif request.method == 'PUT':
         return update(request, full_name)
-    else:
-        return render_error(405, 'Некорректный метод запроса')
 
 
 def fetch(request, full_name):
@@ -79,3 +77,23 @@ def update(request, full_name):
     if data['source'] != source:
         articles.create_article_version(article, data['source'])
     return render_json(200, {'status': 'ok'})
+
+
+@restrict_method('GET')
+def fetch_log(request, full_name):
+    try:
+        c_from = int(request.GET.get('from', '0'))
+        c_to = int(request.GET.get('to', '25'))
+    except ValueError:
+        return render_error(400, 'Некорректное указание ограничений списка')
+    log_entries, total_count = articles.get_log_entries_paged(full_name, c_from, c_to)
+    output = []
+    for entry in log_entries:
+        output.append({
+            'revNumber': entry.rev_number,
+            'comment': entry.comment,
+            'createdAt': entry.created_at.isoformat(),
+            'type': entry.type,
+            'meta': entry.meta
+        })
+    return render_json(200, {'count': total_count, 'entries': output})

@@ -57,13 +57,25 @@ def add_log_entry(full_name_or_article, log_entry):
     log_entry.save()
 
 
+# Gets all log entries of article, sorted
+def get_log_entries(full_name_or_article):
+    article = get_article(full_name_or_article)
+    return ArticleLogEntry.objects.filter(article=article).order_by('-rev_number')
+
+
 # Gets latest log entry of article
 def get_latest_log_entry(full_name_or_article):
-    article = get_article(full_name_or_article)
-    log_entry = ArticleLogEntry.objects.filter(article=article).order_by('-rev_number')[:1]
+    log_entry = get_log_entries(full_name_or_article)[:1]
     if log_entry:
         return log_entry[0]
     return None
+
+
+# Gets list of log entries from article, sorted, with specified bounds
+def get_log_entries_paged(full_name_or_article, c_from, c_to):
+    log_entries = get_log_entries(full_name_or_article)
+    total_count = len(log_entries)
+    return log_entries[c_from:c_to], total_count
 
 
 # Creates new article version for specified article
@@ -96,6 +108,7 @@ def create_article_version(full_name_or_article, source):
 # Updates name of article
 def update_full_name(full_name_or_article, new_full_name):
     article = get_article(full_name_or_article)
+    prev_full_name = get_full_name(full_name_or_article)
     category, name = get_name(new_full_name)
     article.category = category
     article.name = name
@@ -103,7 +116,7 @@ def update_full_name(full_name_or_article, new_full_name):
     log = ArticleLogEntry(
         article=article,
         type=ArticleLogEntry.LogEntryType.Name,
-        meta={'name': new_full_name}
+        meta={'name': new_full_name, 'prev_name': prev_full_name}
     )
     add_log_entry(article, log)
 
@@ -111,12 +124,13 @@ def update_full_name(full_name_or_article, new_full_name):
 # Updates title of article
 def update_title(full_name_or_article, new_title):
     article = get_article(full_name_or_article)
+    prev_title = article.title
     article.title = new_title
     article.save()
     log = ArticleLogEntry(
         article=article,
         type=ArticleLogEntry.LogEntryType.Title,
-        meta={'title': new_title}
+        meta={'title': new_title, 'prev_title': prev_title}
     )
     add_log_entry(article, log)
 
