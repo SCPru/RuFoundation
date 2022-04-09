@@ -31,6 +31,10 @@ class ArticleLogEntry(models.Model):
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     type = models.TextField(choices=LogEntryType.choices)
-    meta = models.JSONField(default=lambda: {})
+    meta = models.JSONField(default=dict())
     created_at = models.DateTimeField(auto_now_add=True)
     comment = models.TextField(default='')
+    rev_number = models.PositiveIntegerField()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['article', 'rev_number'], name='%(app_label)s_%(class)s_unique')]

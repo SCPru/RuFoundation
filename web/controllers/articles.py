@@ -46,6 +46,26 @@ def create_article(full_name):
     return article
 
 
+# Adds log entry to article
+def add_log_entry(full_name_or_article, log_entry):
+    article = get_article(full_name_or_article)
+    existing_entry = get_latest_log_entry(article)
+    if existing_entry is None:
+        log_entry.rev_number = 0
+    else:
+        log_entry.rev_number = existing_entry.rev_number + 1
+    log_entry.save()
+
+
+# Gets latest log entry of article
+def get_latest_log_entry(full_name_or_article):
+    article = get_article(full_name_or_article)
+    log_entry = ArticleLogEntry.objects.filter(article=article).order_by('-rev_number')[:1]
+    if log_entry:
+        return log_entry[0]
+    return None
+
+
 # Creates new article version for specified article
 def create_article_version(full_name_or_article, source):
     article = get_article(full_name_or_article)
@@ -69,7 +89,7 @@ def create_article_version(full_name_or_article, source):
             type=ArticleLogEntry.LogEntryType.Source,
             meta={'version_id': version.id}
         )
-    log.save()
+    add_log_entry(article, log)
     return version
 
 
@@ -85,7 +105,7 @@ def update_full_name(full_name_or_article, new_full_name):
         type=ArticleLogEntry.LogEntryType.Name,
         meta={'name': new_full_name}
     )
-    log.save()
+    add_log_entry(article, log)
 
 
 # Updates title of article
@@ -98,7 +118,7 @@ def update_title(full_name_or_article, new_title):
         type=ArticleLogEntry.LogEntryType.Title,
         meta={'title': new_title}
     )
-    log.save()
+    add_log_entry(article, log)
 
 
 # Get latest version of article

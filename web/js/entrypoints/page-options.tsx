@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Component } from 'react';
 import ArticleEditor from "../articles/article-editor";
+import ArticleHistory from "../articles/article-history";
 
 
 interface Props {
@@ -11,7 +12,7 @@ interface Props {
 
 
 interface State {
-    subView: 'edit' | null
+    subView: 'edit' | 'history' | null
 }
 
 
@@ -29,8 +30,17 @@ class PageOptions extends Component<Props, State> {
         }, 1);
     };
 
-    onCancelEdit = () => {
+    onCancelSubView = () => {
         this.setState({ subView: null });
+    };
+
+    onHistory = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ subView: 'history' });
+        setTimeout(() => {
+            window.scrollTo(window.scrollX, document.body.scrollHeight);
+        });
     };
 
     render() {
@@ -45,6 +55,7 @@ class PageOptions extends Component<Props, State> {
             <>
                 <div id="page-options-bottom" className="page-options-bottom">
                     { editable && <a id="edit-button" className="btn btn-default" href="#" onClick={this.onEdit}>Редактировать</a> }
+                    <a id="history-button" className="btn btn-default" href="#" onClick={this.onHistory}>История</a>
                 </div>
                 { subView && (
                     <div id="action-area">
@@ -61,7 +72,10 @@ class PageOptions extends Component<Props, State> {
 
         switch (subView) {
             case 'edit':
-                return <ArticleEditor pageId={pageId} onCancel={this.onCancelEdit} />;
+                return <ArticleEditor pageId={pageId} onCancel={this.onCancelSubView} />;
+
+            case 'history':
+                return <ArticleHistory pageId={pageId} onClose={this.onCancelSubView} />;
 
             default:
                 return null

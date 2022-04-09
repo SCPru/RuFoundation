@@ -1,4 +1,5 @@
 from web.controllers import articles
+from django.db import transaction
 
 
 def _create_article(full_name, content):
@@ -7,6 +8,7 @@ def _create_article(full_name, content):
     return ver
 
 
+@transaction.atomic
 def run():
     _create_article('nav:top', """
 [[module ListPages range="." limit="1"]]
