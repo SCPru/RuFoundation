@@ -2,8 +2,8 @@ import {wFetch} from "../util/fetch-util";
 
 export interface ArticleData {
     pageId: string
-    title: string
-    source: string
+    title?: string
+    source?: string
 }
 
 export async function createArticle(data: ArticleData) {

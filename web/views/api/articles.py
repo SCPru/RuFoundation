@@ -5,12 +5,12 @@ from . import render_error, render_json, restrict_method
 from web.controllers import articles
 
 
-def _validate_article_data(data):
+def _validate_article_data(data, allow_partial=False):
     if 'pageId' not in data or not data['pageId'] or not articles.is_full_name_allowed(data['pageId']):
         return render_error(400, 'Некорректный ID страницы')
-    if 'source' not in data or not (data['source'] or '').strip():
+    if ('source' not in data or not (data['source'] or '').strip()) and not (allow_partial and 'source' not in data):
         return render_error(400, 'Отсутствует исходный код страницы')
-    if 'title' not in data or not (data['title'] or '').strip():
+    if ('title' not in data or not (data['title'] or '').strip()) and not (allow_partial and 'title' not in data):
         return render_error(400, 'Отсутствует название страницы')
     return None
 
@@ -56,7 +56,7 @@ def fetch(request, full_name):
 
 def update(request, full_name):
     data = json.loads(request.body.decode('utf-8'))
-    err = _validate_article_data(data)
+    err = _validate_article_data(data, allow_partial=True)
     if err is not None:
         return err
     # find page
@@ -70,11 +70,10 @@ def update(request, full_name):
             return render_error(409, 'Страница с таким ID уже существует')
         articles.update_full_name(article, data['pageId'])
     # check if changing title
-    if data['title'] != article.title:
+    if 'title' in data and data['title'] != article.title:
         articles.update_title(article, data['title'])
     # check if changing source
-    source = articles.get_latest_source(article)
-    if data['source'] != source:
+    if 'source' in data and data['source'] != articles.get_latest_source(article):
         articles.create_article_version(article, data['source'])
     return render_json(200, {'status': 'ok'})
 
