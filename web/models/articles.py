@@ -26,6 +26,7 @@ class ArticleLogEntry(models.Model):
     class LogEntryType(models.TextChoices):
         Source = 'source'
         Title = 'title'
+        Name = 'name'
         New = 'new'
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE)

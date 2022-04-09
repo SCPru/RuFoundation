@@ -27,6 +27,7 @@ const Styles = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #0000007f;
 }
 .owindow {
   max-width: 50em;
@@ -42,6 +43,9 @@ const Styles = styled.div`
   align-items: center;
   justify-content: center;
 }
+.owindow.owait .content {
+  background-image: url(/static/images/progressbar.gif);
+}
 `;
 
 
@@ -56,7 +60,7 @@ class WikidotModal extends Component<Props> {
         const { children, isLoading, buttons } = this.props;
         return (
             <Styles>
-                <div className="odialog-shader odialog-container">
+                <div className="odialog-container">
                     <div className={`owindow ${isLoading?'owait':''}`}>
                         <div className="content modal-body">
                             { children }

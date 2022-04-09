@@ -73,6 +73,34 @@ def create_article_version(full_name_or_article, source):
     return version
 
 
+# Updates name of article
+def update_full_name(full_name_or_article, new_full_name):
+    article = get_article(full_name_or_article)
+    category, name = get_name(new_full_name)
+    article.category = category
+    article.name = name
+    article.save()
+    log = ArticleLogEntry(
+        article=article,
+        type=ArticleLogEntry.LogEntryType.Name,
+        meta={'name': new_full_name}
+    )
+    log.save()
+
+
+# Updates title of article
+def update_title(full_name_or_article, new_title):
+    article = get_article(full_name_or_article)
+    article.title = new_title
+    article.save()
+    log = ArticleLogEntry(
+        article=article,
+        type=ArticleLogEntry.LogEntryType.Title,
+        meta={'title': new_title}
+    )
+    log.save()
+
+
 # Get latest version of article
 def get_latest_version(full_name_or_article):
     article = get_article(full_name_or_article)

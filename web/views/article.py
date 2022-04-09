@@ -6,6 +6,8 @@ from web.controllers import articles
 from renderer import single_pass_render
 from renderer.parser import RenderContext
 
+import json
+
 
 def index(request, article_name='main'):
     template = loader.get_template('page.html')
@@ -30,11 +32,18 @@ def index(request, article_name='main'):
     nav_top = single_pass_render(articles.get_latest_source(nav_top_article), RenderContext(article, nav_top_article))
     nav_side = single_pass_render(articles.get_latest_source(nav_side_article), RenderContext(article, nav_side_article))
 
+    options_config = {
+        'optionsEnabled': True,
+        'editable': True,
+        'pageId': article_name
+    }
+
     context = {
         'content': content,
         'nav_top': nav_top,
         'nav_side': nav_side,
-        'title': title
+        'title': title,
+        'options_config': json.dumps(options_config)
     }
 
     return HttpResponse(template.render(context, request), status=status)
