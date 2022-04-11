@@ -81,7 +81,7 @@ class TextNode(Node):
         self.text = text
 
     def render(self, context=None):
-        return html.escape(self.text)
+        return html.escape(self.text).replace('--', '&mdash;').replace('&lt;&lt;', '&laquo;').replace('&gt;&gt;', '&raquo;')
 
 
 class HTMLLiteralNode(Node):
