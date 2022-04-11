@@ -217,6 +217,13 @@ class ModuleNode(Node):
         self.block_node = True
         self.complex_node = True
 
+    @staticmethod
+    def module_has_content(name):
+        name = name.lower()
+        print('module', repr(name))
+        content_modules = ['css', 'listpages', 'listusers']
+        return name in content_modules
+
     def render(self, context=None):
         # render only module CSS for now
         if self.name == 'css':
@@ -365,8 +372,8 @@ class Parser(object):
                         self.tokenizer.position = pos
                         continue
                     attributes.append((attr_name, tk.value))
-        # include is a special case, it does not have/require ending tag
-        if name == 'include' or name in image_tags:
+        # include is a special case, it does not have/require ending tag. same for img tags. same for module tags, but not all of them
+        if name == 'include' or name in image_tags or (name == 'module' and (not attributes or not ModuleNode.module_has_content(attributes[0][0]))):
             if name == 'include':
                 name = attributes[0][0]
                 attributes = attributes[1:]
@@ -374,7 +381,6 @@ class Parser(object):
             else:
                 source = attributes[0][0]
                 attributes = attributes[1:]
-                print('image %s attributes %s' % (repr(source), repr(attributes)))
                 return ImageNode(name, source, attributes)
         # tag beginning found. now iterate and check for tag ending
         while True:
