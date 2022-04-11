@@ -129,10 +129,26 @@ class HTMLNode(Node):
         super().__init__()
         self.name = name
         self.attributes = attributes
-        self.block_node = self.name in ['div']
+        self.block_node = self.name in ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
         self.complex_node = True
         for child in children:
             self.append_child(child)
+
+    allowed_tags = ['a', 'span', 'div']
+
+    @staticmethod
+    def node_allowed(name):
+        name = name.lower()
+        return name in HTMLNode.allowed_tags
+
+    @staticmethod
+    def get_attribute(attributes, name, default=None):
+        name = name.lower()
+        attr = [x for x in attributes if x[0].lower() == name]
+        if attr:
+            return attr[0][1]
+        else:
+            return default
 
     def render(self, context=None):
         content = super().render(context=context)
@@ -208,6 +224,18 @@ class IncludeNode(Node):
         return '<div>Include is not supported yet</div>'
 
 
+class IframeNode(Node):
+    def __init__(self, url, attributes):
+        super().__init__()
+        self.url = url
+        self.attributes = attributes
+        self.complex_node = True
+        self.block_node = True
+
+    def render(self, context=None):
+        return '<div>Iframe is not supported yet</div>'
+
+
 class ModuleNode(Node):
     def __init__(self, name, attributes, content):
         super().__init__()
@@ -228,7 +256,37 @@ class ModuleNode(Node):
         # render only module CSS for now
         if self.name == 'css':
             return '<style>%s</style>' % html.escape(self.content)
-        return '<div>Module is not supported yet</div>'
+        return '<div>Module \'%s\' is not supported yet</div>' % html.escape(self.name)
+
+
+class CollapsibleNode(Node):
+    def __init__(self, attributes, children):
+        super().__init__()
+        self.attributes = attributes
+        self.block_node = True
+        self.complex_node = True
+        for child in children:
+            self.append_child(child)
+
+    def render(self, context=None):
+        code = '<div class="collapsible-block">'
+        code += '  <div class="collapsible-block-folded" style="display: block">'
+        code += '    <a class="collapsible-block-link" href="javascript:;">'
+        code += HTMLNode.get_attribute(self.attributes, 'show', '+ открыть блок')
+        code += '    </a>'
+        code += '  </div>'
+        code += '  <div class="collapsible-block-unfolded" style="display: none">'
+        code += '    <div class="collapsible-block-unfolded-link">'
+        code += '      <a class="collapsible-block-link" href="javascript:;">'
+        code += HTMLNode.get_attribute(self.attributes, 'hide', '- закрыть блок')
+        code += '      </a>'
+        code += '    </div>'
+        code += '    <div class="collapsible-block-content">'
+        code += super().render(context=context)
+        code += '    </div>'
+        code += '  </div>'
+        code += '</div>'
+        return code
 
 
 class Parser(object):
@@ -307,6 +365,12 @@ class Parser(object):
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
+        elif token.type == TokenType.Plus:
+            pos = self.tokenizer.position
+            new_node = self.parse_heading()
+            if new_node is not None:
+                return new_node
+            self.tokenizer.position = pos
         return TextNode(token.raw)
 
     def parse_nodes(self):
@@ -322,9 +386,9 @@ class Parser(object):
         if name_tk.type != TokenType.String:
             return None
         name = name_tk.value.lower()
+        hack_tags = ['module', 'include', 'iframe', 'collapsible']
         image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
-        allowed_tags = ['a', 'span', 'div', 'module', 'include', 'iframe'] + image_tags
-        if name not in allowed_tags:
+        if not HTMLNode.node_allowed(name) and name not in image_tags and name not in hack_tags:
             return None
         attributes = []
         children = []
@@ -373,11 +437,19 @@ class Parser(object):
                         continue
                     attributes.append((attr_name, tk.value))
         # include is a special case, it does not have/require ending tag. same for img tags. same for module tags, but not all of them
-        if name == 'include' or name in image_tags or (name == 'module' and (not attributes or not ModuleNode.module_has_content(attributes[0][0]))):
+        if name == 'include' or name == 'iframe' or name in image_tags or (name == 'module' and (not attributes or not ModuleNode.module_has_content(attributes[0][0]))):
             if name == 'include':
                 name = attributes[0][0]
                 attributes = attributes[1:]
                 return IncludeNode(name, attributes)
+            elif name == 'iframe':
+                url = attributes[0][0]
+                attributes = attributes[1:]
+                return IframeNode(url, attributes)
+            elif name == 'module':
+                name = attributes[0][0]
+                attributes = attributes[1:]
+                return ModuleNode(name, attributes, None)
             else:
                 source = attributes[0][0]
                 attributes = attributes[1:]
@@ -402,7 +474,10 @@ class Parser(object):
                                 name = attributes[0][0]
                                 attributes = attributes[1:]
                                 return ModuleNode(name, attributes, module_content)
-                            return HTMLNode(name, attributes, children)
+                            elif name == 'collapsible':
+                                return CollapsibleNode(attributes, children)
+                            else:
+                                return HTMLNode(name, attributes, children)
 
             if name != 'module':
                 self.tokenizer.position = pos
@@ -544,15 +619,53 @@ class Parser(object):
                 return None
             children += new_children
 
+    def check_newline(self, size=1):
+        prev_pos = self.tokenizer.position - size - 1
+        if prev_pos <= 0 or self.tokenizer.source[prev_pos] != '\n':
+            return False
+        return True
+
     def parse_hr(self):
         # ---- has already been parsed.
         # we require that there is either strictly no text or a newline.
         # after this token we should have either more hyphens or a newline
         # if anything else, fail
-        prev_pos = self.tokenizer.position-5
-        if prev_pos <= 0 or self.tokenizer.source[prev_pos] != '\n':
+        if not self.check_newline(4):
             return None
         content = self.read_as_value_until([TokenType.Newline])
         if content is None or content.rstrip().replace('-', '') != '':
             return None
         return HorizontalRulerNode()
+
+    def parse_heading(self):
+        # + has already been parsed (one)
+        # we require one to 6 + then space then heading text
+        # if more than 6, invalid input, fail
+        if not self.check_newline(1):
+            return None
+        h_count = 1
+        while True:
+            tk = self.tokenizer.read_token()
+            print(repr(tk))
+            if tk.type == TokenType.Plus:
+                h_count += 1
+            elif tk.type == TokenType.Whitespace:
+                break
+            else:
+                return None
+        if h_count > 6:
+            return None
+        # parse nodes until newline found
+        children = []
+        while True:
+            pos = self.tokenizer.position
+            tk = self.tokenizer.read_token()
+            if tk.type == TokenType.Null:
+                return None
+            elif tk.type == TokenType.Newline:
+                return HTMLNode('h%d' % h_count, [], children)
+            self.tokenizer.position = pos
+            new_children = self.parse_nodes()
+            if not new_children:
+                return None
+            children += new_children
