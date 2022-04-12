@@ -100,7 +100,6 @@ class TextNode(Node):
         super().__init__()
         self.text = text
         self.literal = literal
-        self.complex_node = text.startswith('[')
 
     def render(self, context=None):
         return html.escape(self.text).replace('--', '&mdash;').replace('&lt;&lt;', '&laquo;').replace('&gt;&gt;', '&raquo;')
