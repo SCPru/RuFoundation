@@ -34,6 +34,7 @@ class Node(object):
         was_empty_line = True
         is_raw_text = False
         was_raw_text = False
+        set_raw_text = False
         last_newline = False
         in_p = False
         newline_escape = None
@@ -41,40 +42,46 @@ class Node(object):
             child_content = child.render(context)
             is_hack = False
             if newline_escape is None:
-                if not child_content.strip() and type(child) == TextNode and child.literal and last_newline and not was_empty_line:
+                if not child_content.strip() and type(child) == TextNode and child.literal and last_newline and not was_raw_text:
                     child_content = '<br>' + child_content
                     is_hack = True
-                if child_content.strip() or type(child) == NewlineNode:
-                    last_newline = type(child) == NewlineNode
                 if type(child) != NewlineNode:
                     is_empty_line = False
-                    if child.complex_node:
+                    if child.complex_node and not set_raw_text:
                         is_raw_text = False
+                        set_raw_text = True
                 elif type(child) == NewlineNode:
                     was_empty_line = is_empty_line
                     is_empty_line = True
                     was_raw_text = is_raw_text
                     is_raw_text = True
+                    set_raw_text = False
+                if child_content.strip() or type(child) == NewlineNode:
+                    last_newline = type(child) == NewlineNode
                 # we ignore all whitespaces if it's not a double empty line
-                if type(child) == NewlineNode and not was_empty_line:
+                if type(child) == NewlineNode and not was_empty_line and not in_p:
                     continue
                 # even if it was a double empty line, it probably should be a <p>, but only if raw line
                 if type(child) == NewlineNode and was_empty_line and in_p:
+                    if content.endswith('<br>'):
+                        content = content[:-4]
                     content += '</p>'
                     in_p = False
                     continue
-                if type(child) == NewlineNode:
+                if type(child) == NewlineNode and not in_p:
                     continue
                 if type(child) == NewlineEscape:
                     newline_escape = child
                     continue
             if child_content:
-                if not is_hack and child_content.strip(' '):
+                if not is_hack and child_content.strip(' ') and type(child) != NewlineNode:
                     if is_raw_text and not in_p and was_empty_line:
                         content += '<p>'
                         in_p = True
                     elif not is_raw_text and in_p:
                         content += '</p>'
+                        if content.endswith('<br>'):
+                            content = content[:-4]
                         in_p = False
                 content += child_content
         return content
@@ -541,7 +548,7 @@ class Parser(object):
                             elif name in align_tags:
                                 return TextAlignNode(name, children)
                             else:
-                                return HTMLNode(name, attributes, children)
+                                return HTMLNode(name, attributes, children, complex_node=name not in ['span'])
 
             if name != 'module':
                 self.tokenizer.position = pos
