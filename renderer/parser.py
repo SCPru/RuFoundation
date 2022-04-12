@@ -30,42 +30,53 @@ class Node(object):
 
     def render(self, context=None):
         content = ''
-        was_block = True
-        was_newline = 1
-        was_forced = False
-        is_raw_line = False
+        is_empty_line = True
+        was_empty_line = True
+        is_raw_text = False
+        was_raw_text = False
+        last_newline = False
+        in_p = False
+        newline_escape = None
         for child in self.children:
             child_content = child.render(context)
-            # empty children are not visible
-            if not child_content:
-                continue
-            # ignore/not ignore newline
-            if type(child) == NewlineNode and self.block_node and was_newline and not was_block:
-                content += '</p><p>'
-            # 1. true and (false or (true and not false)) -> true and (false or (true)) -> true and (true) -> true
-            # 2.
-            if type(child) == NewlineNode and not was_forced and (was_newline or was_block):
-                if child.forced and was_newline <= 1:
-                    was_forced = True
-                was_newline += 1
-                continue
-            elif type(child) != NewlineNode and was_newline:
-                was_newline = 0
-                was_forced = False
-                is_raw_line = not child.complex_node
-            elif type(child) == NewlineNode:
-                was_newline = 1
-                was_forced = False
-            # close/open paragraph. ignore newline nodes here
-            if type(child) != NewlineNode and self.block_node and child_content.strip():
-                if child.block_node and not was_block and is_raw_line:
+            is_hack = False
+            if newline_escape is None:
+                if not child_content.strip() and type(child) == TextNode and child.literal and last_newline and not was_empty_line:
+                    child_content = '<br>' + child_content
+                    is_hack = True
+                if child_content.strip() or type(child) == NewlineNode:
+                    last_newline = type(child) == NewlineNode
+                if type(child) != NewlineNode:
+                    is_empty_line = False
+                    if child.complex_node:
+                        is_raw_text = False
+                elif type(child) == NewlineNode:
+                    was_empty_line = is_empty_line
+                    is_empty_line = True
+                    was_raw_text = is_raw_text
+                    is_raw_text = True
+                # we ignore all whitespaces if it's not a double empty line
+                if type(child) == NewlineNode and not was_empty_line:
+                    continue
+                # even if it was a double empty line, it probably should be a <p>, but only if raw line
+                if type(child) == NewlineNode and was_empty_line and in_p:
                     content += '</p>'
-                elif not child.block_node and was_block and is_raw_line:
-                    content += '<p>'
-                was_block = child.block_node
-            content += child_content
-        if not was_block and is_raw_line:
-            content += '</p>'
+                    in_p = False
+                    continue
+                if type(child) == NewlineNode:
+                    continue
+                if type(child) == NewlineEscape:
+                    newline_escape = child
+                    continue
+            if child_content:
+                if not is_hack and child_content.strip(' '):
+                    if is_raw_text and not in_p and was_empty_line:
+                        content += '<p>'
+                        in_p = True
+                    elif not is_raw_text and in_p:
+                        content += '</p>'
+                        in_p = False
+                content += child_content
         return content
 
     def to_json(self):
@@ -78,12 +89,14 @@ class Node(object):
 
 
 class TextNode(Node):
-    def __init__(self, text):
+    def __init__(self, text, literal=False):
         super().__init__()
         self.text = text
+        self.literal = literal
+        self.complex_node = text.startswith('[')
 
     def render(self, context=None):
-        return html.escape(self.text).replace('--', '&mdash;').replace('&lt;&lt;', '&laquo;').replace('&gt;&gt;', '&raquo;').replace('\n', '<br>')
+        return html.escape(self.text).replace('--', '&mdash;').replace('&lt;&lt;', '&laquo;').replace('&gt;&gt;', '&raquo;')
 
 
 class HTMLLiteralNode(Node):
@@ -107,6 +120,14 @@ class NewlineNode(Node):
         return '<br>'
 
 
+class NewlineEscape(Node):
+    def __init__(self):
+        super().__init__()
+
+    def render(self, context=None):
+        return ''
+
+
 class ColorNode(Node):
     def __init__(self, color, content):
         super().__init__()
@@ -120,6 +141,7 @@ class ColorNode(Node):
 class HorizontalRulerNode(Node):
     def __init__(self):
         super().__init__()
+        self.complex_node = True
         self.block_node = True
 
     def render(self, context=None):
@@ -127,12 +149,12 @@ class HorizontalRulerNode(Node):
 
 
 class HTMLNode(Node):
-    def __init__(self, name, attributes, children):
+    def __init__(self, name, attributes, children, complex_node=True):
         super().__init__()
         self.name = name
         self.attributes = attributes
         self.block_node = self.name in ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
-        self.complex_node = True
+        self.complex_node = complex_node
         for child in children:
             self.append_child(child)
 
@@ -339,8 +361,9 @@ class Parser(object):
             return None
         elif token.type == TokenType.Backslash:
             pos = self.tokenizer.position
-            if self.check_skip_newline():
-                return TextNode('')
+            new_node = self.parse_newline_escape()
+            if new_node is not None:
+                return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.OpenDoubleBracket:
             pos = self.tokenizer.position
@@ -563,16 +586,13 @@ class Parser(object):
 
     def parse_literal(self):
         # @@ has already been parsed
-        content = ''
-        while True:
-            tk = self.tokenizer.read_token()
-            if tk.type == TokenType.DoubleAt:
-                if content == '':
-                    return NewlineNode(True)
-                return TextNode(content)
-            elif tk.type == TokenType.Null:
-                return None
-            content += tk.raw
+        content = self.read_as_value_until([TokenType.DoubleAt])
+        if content is None:
+            return None
+        tk = self.tokenizer.read_token()
+        if tk.type != TokenType.DoubleAt:
+            return None
+        return TextNode(content, literal=True)
 
     def parse_html_literal(self):
         # @< has already been parsed
@@ -663,7 +683,7 @@ class Parser(object):
             if tk.type == TokenType.Null:
                 return None
             elif tk.type == TokenType.DoubleAsterisk:
-                return HTMLNode('strong', [], children)
+                return HTMLNode('strong', [], children, complex_node=False)
             self.tokenizer.position = pos
             new_children = self.parse_nodes()
             if not new_children:
@@ -679,7 +699,7 @@ class Parser(object):
             if tk.type == TokenType.Null:
                 return None
             elif tk.type == TokenType.DoubleSlash:
-                return HTMLNode('em', [], children)
+                return HTMLNode('em', [], children, complex_node=False)
             self.tokenizer.position = pos
             new_children = self.parse_nodes()
             if not new_children:
@@ -737,9 +757,9 @@ class Parser(object):
                 return None
             children += new_children
 
-    def check_skip_newline(self):
+    def parse_newline_escape(self):
         # \ was already parsed
-        if self.tokenizer.peek_token().type == TokenType.Newline:
-            self.tokenizer.position += 1
-            return True
-        return False
+        tk = self.tokenizer.read_token()
+        if tk.type != TokenType.Newline:
+            return None
+        return NewlineEscape()
