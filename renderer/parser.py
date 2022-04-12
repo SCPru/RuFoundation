@@ -102,7 +102,11 @@ class TextNode(Node):
         self.literal = literal
 
     def render(self, context=None):
-        return html.escape(self.text).replace('--', '&mdash;').replace('&lt;&lt;', '&laquo;').replace('&gt;&gt;', '&raquo;')
+        # very special logic
+        text = html.escape(self.text).replace('--', '&mdash;').replace('&lt;&lt;', '&laquo;').replace('&gt;&gt;', '&raquo;')
+        if self.literal and self.text and self.text.strip(' ') != '\n':
+            return '<span style="white-space: pre">' + text + '</span>'
+        return text
 
 
 class HTMLLiteralNode(Node):
