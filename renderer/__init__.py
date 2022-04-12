@@ -9,6 +9,6 @@ def single_pass_render(source, context=None):
     p = Parser(Tokenizer(source))
     result = p.parse().render(context)
     print('rendering took %.3fs' % (time.time()-t))
-    #print('rendering tree')
-    #print(json.dumps(p.parse().to_json()))
+    print('rendering tree')
+    print(json.dumps(p.parse().to_json()))
     return result

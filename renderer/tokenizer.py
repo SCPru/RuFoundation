@@ -26,6 +26,7 @@ class TokenType(Enum):
     Plus = '+'
     Newline = '\n'
     Slash = '/'
+    Backslash = '\\'
 
     DoubleAt = '@@'
     DoubleHash = '##'
@@ -34,6 +35,7 @@ class TokenType(Enum):
     CloseHTMLLiteral = '>@'
 
     DoubleAsterisk = '**'
+    DoubleSlash = '//'
 
     HrBeginning = '----'
 
@@ -125,6 +127,7 @@ class Tokenizer(object):
                 self.position += 1
                 break
             content += self.source[self.position]
+            raw += self.source[self.position]
             self.position += 1
         if len(raw) > 1 and raw[-1] == '"':
             return Token(raw, TokenType.QuotedString, content)

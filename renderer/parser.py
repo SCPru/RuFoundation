@@ -18,6 +18,8 @@ class Node(object):
         # Complex node is a node that prevents treating the line as plain text paragraph
         # (based on Wikidot's weird treating of lines that start with [[, [, or something similar)
         self.complex_node = False
+        # This enforces newlines for literals
+        self.force_render = False
 
     def append_child(self, child):
         if type(child) == TextNode and self.children and type(self.children[-1]) == TextNode:
@@ -81,7 +83,7 @@ class TextNode(Node):
         self.text = text
 
     def render(self, context=None):
-        return html.escape(self.text).replace('--', '&mdash;').replace('&lt;&lt;', '&laquo;').replace('&gt;&gt;', '&raquo;')
+        return html.escape(self.text).replace('--', '&mdash;').replace('&lt;&lt;', '&laquo;').replace('&gt;&gt;', '&raquo;').replace('\n', '<br>')
 
 
 class HTMLLiteralNode(Node):
@@ -295,6 +297,26 @@ class CollapsibleNode(Node):
         return code
 
 
+class TextAlignNode(Node):
+    def __init__(self, t, children):
+        super().__init__()
+        self.type = t
+        self.block_node = True
+        self.complex_node = True
+        for child in children:
+            self.append_child(child)
+
+    def render(self, context=None):
+        dir = 'left'
+        if self.type == '>':
+            dir = 'right'
+        elif self.type == '=':
+            dir = 'center'
+        elif self.type == '==':
+            dir = 'justify'
+        return ('<div style="text-align: %s">' % dir) + super().render(context=context) + '</div>'
+
+
 class Parser(object):
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
@@ -315,6 +337,11 @@ class Parser(object):
         token = self.tokenizer.read_token()
         if token.type == TokenType.Null:
             return None
+        elif token.type == TokenType.Backslash:
+            pos = self.tokenizer.position
+            if self.check_skip_newline():
+                return TextNode('')
+            self.tokenizer.position = pos
         elif token.type == TokenType.OpenDoubleBracket:
             pos = self.tokenizer.position
             new_node = self.parse_html_node()
@@ -365,6 +392,12 @@ class Parser(object):
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
+        elif token.type == TokenType.DoubleSlash:
+            pos = self.tokenizer.position
+            new_node = self.parse_em()
+            if new_node is not None:
+                return new_node
+            self.tokenizer.position = pos
         elif token.type == TokenType.HrBeginning:
             pos = self.tokenizer.position
             new_node = self.parse_hr()
@@ -388,13 +421,13 @@ class Parser(object):
     def parse_html_node(self):
         # [[ has already been parsed
         self.tokenizer.skip_whitespace()
-        name_tk = self.tokenizer.read_token()
-        if name_tk.type != TokenType.String:
+        name = self.read_as_value_until([TokenType.Whitespace, TokenType.CloseDoubleBracket])
+        if name is None:
             return None
-        name = name_tk.value.lower()
+        align_tags = ['<', '>', '=', '==']
         hack_tags = ['module', 'include', 'iframe', 'collapsible']
         image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
-        if not HTMLNode.node_allowed(name) and name not in image_tags and name not in hack_tags:
+        if not HTMLNode.node_allowed(name) and name not in image_tags and name not in hack_tags and name not in align_tags:
             return None
         attributes = []
         children = []
@@ -482,6 +515,8 @@ class Parser(object):
                                 return ModuleNode(name, attributes, module_content)
                             elif name == 'collapsible':
                                 return CollapsibleNode(attributes, children)
+                            elif name in align_tags:
+                                return TextAlignNode(name, children)
                             else:
                                 return HTMLNode(name, attributes, children)
 
@@ -611,6 +646,9 @@ class Parser(object):
             if not is_text:
                 if tk.type == TokenType.Whitespace:
                     is_text = True
+                    # wikidot does not do links if they do not have a slash
+                    if '/' not in url:
+                        return None
                 else:
                     url += tk.raw
             else:
@@ -626,6 +664,22 @@ class Parser(object):
                 return None
             elif tk.type == TokenType.DoubleAsterisk:
                 return HTMLNode('strong', [], children)
+            self.tokenizer.position = pos
+            new_children = self.parse_nodes()
+            if not new_children:
+                return None
+            children += new_children
+
+    def parse_em(self):
+        # // has already been parsed
+        children = []
+        while True:
+            pos = self.tokenizer.position
+            tk = self.tokenizer.read_token()
+            if tk.type == TokenType.Null:
+                return None
+            elif tk.type == TokenType.DoubleSlash:
+                return HTMLNode('em', [], children)
             self.tokenizer.position = pos
             new_children = self.parse_nodes()
             if not new_children:
@@ -682,3 +736,10 @@ class Parser(object):
             if not new_children:
                 return None
             children += new_children
+
+    def check_skip_newline(self):
+        # \ was already parsed
+        if self.tokenizer.peek_token().type == TokenType.Newline:
+            self.tokenizer.position += 1
+            return True
+        return False
