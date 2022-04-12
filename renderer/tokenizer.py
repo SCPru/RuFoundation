@@ -64,7 +64,7 @@ class Token(object):
 
 class Tokenizer(object):
     def __init__(self, source):
-        self.source = source.replace('\r\n', '\n').replace('\r', '\n')
+        self.source = (source or '').replace('\r\n', '\n').replace('\r', '\n')
         self.position = 0
         self.special_tokens = get_sorted_special_types()
 

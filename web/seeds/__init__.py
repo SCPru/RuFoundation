@@ -341,6 +341,9 @@ SCP-библиотека
 [[/div]]
     """)
 
+    if articles.get_article('main') is not None:
+        return
+
     _create_article('main', """
 [[div class="welcome-warning"]]
 ##600|Далее представлены материалы различной степени секретности.##\

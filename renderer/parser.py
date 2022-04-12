@@ -191,15 +191,21 @@ class ImageNode(Node):
 
 
 class LinkNode(Node):
-    def __init__(self, url, text, blank=False):
+    def __init__(self, url, text, blank=False, exists=True):
         super().__init__()
         self.url = url
         self.text = text
         self.blank = blank
+        self.exists = exists
+
+    @staticmethod
+    def article_exists(article):
+        return articles.get_article(article) is not None
 
     def render(self, context=None):
         blank = ' target="_blank"' if self.blank else ''
-        return '<a href="%s"%s>%s</a>' % (html.escape(self.url), blank, html.escape(self.text))
+        cls = ' class="newpage"' if not self.exists else ''
+        return '<a href="%s"%s%s>%s</a>' % (html.escape(self.url), blank, cls, html.escape(self.text))
 
 
 class CommentNode(Node):
@@ -564,17 +570,24 @@ class Parser(object):
         article = self.read_as_value_until([TokenType.CloseTripleBracket, TokenType.Pipe])
         if article is None:
             return None
+        external = False
+        article_url = '/' + article.lower()
+        article_id = article.lower()
+        if '/' in article:
+            external = True
+            article_url = article
+            article_id = ''
         tk = self.tokenizer.read_token()
         if tk.type == TokenType.CloseTripleBracket:
             # title = article name
-            return LinkNode('/'+article, article)
+            return LinkNode(article_url, article, exists=LinkNode.article_exists(article_id) or external)
         elif tk.type != TokenType.Pipe:
             return None
         text = ''
         while True:
             tk = self.tokenizer.read_token()
             if tk.type == TokenType.CloseTripleBracket:
-                return LinkNode('/'+article, text.strip())
+                return LinkNode(article_url, text.strip(), exists=LinkNode.article_exists(article_id) or external)
             elif tk.type == TokenType.Null:
                 return None
             text += tk.raw

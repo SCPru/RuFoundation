@@ -29,8 +29,8 @@ def index(request, article_name='main'):
         content = template_404.render(context, request)
         status = 404
 
-    nav_top = single_pass_render(articles.get_latest_source(nav_top_article), RenderContext(article, nav_top_article))
-    nav_side = single_pass_render(articles.get_latest_source(nav_side_article), RenderContext(article, nav_side_article))
+    nav_top = single_pass_render(articles.get_latest_source(nav_top_article), RenderContext(article, nav_top_article)) if nav_top_article else ''
+    nav_side = single_pass_render(articles.get_latest_source(nav_side_article), RenderContext(article, nav_side_article)) if nav_side_article else ''
 
     options_config = {
         'optionsEnabled': True,
