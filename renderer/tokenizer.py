@@ -1,4 +1,5 @@
 from enum import Enum, unique
+import re
 
 
 @unique
@@ -66,7 +67,13 @@ class Token(object):
 
 class Tokenizer(object):
     def __init__(self, source):
-        self.source = (source or '').replace('\r\n', '\n').replace('\r', '\n')
+        source = (source or '')\
+            .replace('\r\n', '\n')\
+            .replace('\r', '\n')\
+            .replace('\t', ' ')\
+            .replace('\u00a0', ' ')
+        source = re.sub(r'\n{2,}', '\n\n', source)
+        self.source = source
         self.position = 0
         self.special_tokens = get_sorted_special_types()
 

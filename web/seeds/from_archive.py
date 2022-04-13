@@ -28,13 +28,19 @@ def run(base_path):
         with codecs.open('%s/meta/pages/%s' % (base_path, f), 'r', encoding='utf-8') as fp:
             meta = json.load(fp)
             pagename = meta['name']
+            title = meta['title'] if 'title' in meta else None
             top_rev = meta['last_revision']
             fn_7z = '.'.join(f.split('.')[:-1]) + '.7z'
             fn_7z = '%s/pages/%s' % (base_path, fn_7z)
+            if not os.path.exists(fn_7z):
+                continue
             with py7zr.SevenZipFile(fn_7z) as z:
                 [(_, bio)] = z.read(['%d.txt' % top_rev]).items()
                 content = bio.read().decode('utf-8')
                 article = articles.create_article(pagename)
+                if title is not None:
+                    article.title = title
+                    article.save()
                 articles.create_article_version(article, content)
         if time.time() - t > 1:
             print('Added: %d/%d' % (cnt, len(allfiles)))
