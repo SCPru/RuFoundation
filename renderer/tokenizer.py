@@ -76,6 +76,7 @@ class Tokenizer(object):
             .replace('\r', '\n')\
             .replace('\t', ' ')
         source = re.sub(r'\n{2,}', '\n\n', source)
+        source = re.sub(r'\n\s+\n', '\n\n', source)
         source = '\n'.join([x.lstrip() for x in source.split('\n')])
         self.source = source
         self.position = 0

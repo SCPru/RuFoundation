@@ -1,4 +1,4 @@
-from .tokenizer import TokenType
+from .tokenizer import TokenType, WHITESPACE_CHARS
 from django.utils import html
 from web.controllers import articles
 
@@ -29,6 +29,8 @@ class Node(object):
         self.complex_node = False
         # This enforces newlines for literals
         self.force_render = False
+        # This handles [[div_]] hack
+        self.trim_paragraphs = False
 
     def append_child(self, child):
         if type(child) == TextNode and self.children and type(self.children[-1]) == TextNode:
@@ -52,6 +54,31 @@ class Node(object):
             p = p.parent
         return list(reversed(nodes))
 
+    def _get_paragraph_bounds(self, nodes):
+        if not self.trim_paragraphs:
+            return 0, len(nodes)-1
+        # return position of first double newline
+        first_p = 0
+        non_p = False
+        for i in range(len(nodes)):
+            if type(nodes[i]) != NewlineNode and (type(nodes[i]) != TextNode or nodes[i].text.strip(WHITESPACE_CHARS)):
+                non_p = True
+            if non_p and type(nodes[i]) == NewlineNode and i+1 < len(nodes) and type(nodes[i+1]) == NewlineNode:
+                first_p = i
+                break
+        last_p = len(nodes)-1
+        non_p = False
+        for i in reversed(range(len(nodes))):
+            if type(nodes[i]) != NewlineNode and (type(nodes[i]) != TextNode or nodes[i].text.strip(WHITESPACE_CHARS)):
+                non_p = True
+            if non_p and type(nodes[i]) == NewlineNode and i-1 >= 0 and type(nodes[i-1]) == NewlineNode:
+                last_p = i
+                break
+        if (first_p == 0 and last_p == len(nodes)-1) or last_p <= first_p:
+            # special case which means this is a single paragraph and we do not render it
+            return -1, -1
+        return first_p, last_p
+
     def render(self, context=None):
         content = ''
         is_empty_line = True
@@ -72,6 +99,8 @@ class Node(object):
                 continue
             child_content = child.render(context)
             is_hack = False
+            # basically this makes sure that we do not create paragraphs at the beginning and ending of a div
+            paragraph_bounds = self._get_paragraph_bounds(rendered_children)
             if newline_escape is None:
                 if not child_content.strip() and type(child) == TextNode and child.literal and last_newline and not was_raw_text:
                     child_content = '<br>' + child_content
@@ -106,7 +135,7 @@ class Node(object):
                     continue
             if child_content:
                 if not is_hack and child_content.strip(' \u00a0') and type(child) != NewlineNode:
-                    if is_raw_text and not in_p and was_empty_line:
+                    if is_raw_text and not in_p and was_empty_line and i >= paragraph_bounds[0] and i <= paragraph_bounds[1]:
                         content += '<p>'
                         in_p = True
                     elif not is_raw_text and in_p:
@@ -217,12 +246,13 @@ class HTMLNode(Node):
         super().__init__()
         self.name = name
         self.attributes = attributes
-        self.block_node = self.name in ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+        self.block_node = self.name in ['div', 'div_', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+        self.trim_paragraphs = (self.name == 'div_')
         self.complex_node = complex_node
         for child in children:
             self.append_child(child)
 
-    allowed_tags = ['a', 'span', 'div']
+    allowed_tags = ['a', 'span', 'div', 'div_']
 
     @staticmethod
     def node_allowed(name):
@@ -255,7 +285,10 @@ class HTMLNode(Node):
                 if attr[0] == 'id' and not value.startswith('u-'):
                     value = 'u-' + value
                 attr_string += '="%s"' % html.escape(value)
-        return '<%s%s>%s</%s>' % (html.escape(self.name), attr_string, content, html.escape(self.name))
+        tag = self.name
+        if tag == 'div_':
+            tag = 'div'
+        return '<%s%s>%s</%s>' % (html.escape(tag), attr_string, content, html.escape(tag))
 
 
 class ImageNode(Node):
@@ -588,8 +621,6 @@ class Parser(object):
         if name is None:
             return None
         name = name.lower()
-        if name == 'div_':
-            name = 'div'
         align_tags = ['<', '>', '=', '==']
         hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview', 'size']
         if self._context._in_tabview:
@@ -686,7 +717,7 @@ class Parser(object):
                     if close_name is None:
                         return None
                     close_name = close_name.lower()
-                    if close_name == name:
+                    if (name != 'div_' and close_name == name) or (name == 'div_' and close_name == 'div'):
                         self.tokenizer.skip_whitespace()
                         tk = self.tokenizer.read_token()
                         if tk.type == TokenType.CloseDoubleBracket:
@@ -903,7 +934,6 @@ class Parser(object):
         h_count = 1
         while True:
             tk = self.tokenizer.read_token()
-            print(repr(tk))
             if tk.type == TokenType.Plus:
                 h_count += 1
             elif tk.type == TokenType.Whitespace:
