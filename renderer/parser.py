@@ -37,6 +37,21 @@ class Node(object):
         child.parent = self
         self.children.append(child)
 
+    def _get_control_nodes(self, child):
+        # the idea is that control nodes of the same type override each other
+        # control nodes is what happens when you apply e.g. "bold" style to several nested block elements
+        # note that real bold is not currently implemented through control nodes.
+        # note2 that this will not generate exactly same code as Wikidot.
+        # but at least it kind of supports transparent paragraphs of font size like Wikidot does.
+        unique_classes = []
+        nodes = []
+        p = child
+        while p is not None:
+            if isinstance(p, ControlNode) and type(p) not in unique_classes:
+                nodes.append(p)
+            p = p.parent
+        return list(reversed(nodes))
+
     def render(self, context=None):
         content = ''
         is_empty_line = True
@@ -47,7 +62,14 @@ class Node(object):
         last_newline = False
         in_p = False
         newline_escape = None
-        for child in self.children:
+        rendered_children = self.children[:]
+        i = -1
+        while i < len(rendered_children)-1:
+            i += 1
+            child = rendered_children[i]
+            if isinstance(child, ControlNode):
+                rendered_children[i+1:i+1] = child.children[:]
+                continue
             child_content = child.render(context)
             is_hack = False
             if newline_escape is None:
@@ -83,7 +105,7 @@ class Node(object):
                     newline_escape = child
                     continue
             if child_content:
-                if not is_hack and child_content.strip(' ') and type(child) != NewlineNode:
+                if not is_hack and child_content.strip(' \u00a0') and type(child) != NewlineNode:
                     if is_raw_text and not in_p and was_empty_line:
                         content += '<p>'
                         in_p = True
@@ -92,7 +114,15 @@ class Node(object):
                         if content.endswith('<br>'):
                             content = content[:-4]
                         in_p = False
-                content += child_content
+                if not child.block_node and child_content.strip(' '):
+                    control_nodes = self._get_control_nodes(child)
+                    for node in control_nodes:
+                        content += node.render_before_text(context=context)
+                    content += child_content
+                    for node in reversed(control_nodes):
+                        content += node.render_after_text(context=context)
+                else:
+                    content += child_content
         return content
 
     def to_json(self):
@@ -102,6 +132,21 @@ class Node(object):
                 continue
             base[k] = self.__dict__[k]
         return base
+
+
+class ControlNode(Node):
+    def __init__(self):
+        super().__init__()
+
+    def render_before_text(self, context=None):
+        return ''
+
+    def render_after_text(self, context=None):
+        return ''
+
+    def render(self, context=None):
+        # this is so that the renderer crashes if we accidentally render control node
+        return None
 
 
 class TextNode(Node):
@@ -408,6 +453,20 @@ class TextAlignNode(Node):
         return ('<div style="text-align: %s">' % dir) + super().render(context=context) + '</div>'
 
 
+class FontSizeNode(ControlNode):
+    def __init__(self, sz, children):
+        super().__init__()
+        self.size = sz
+        for child in children:
+            self.append_child(child)
+
+    def render_before_text(self, context=None):
+        return '<span style="font-size: %s">' % html.escape(self.size)
+
+    def render_after_text(self, context=None):
+        return '</span>'
+
+
 class Parser(object):
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
@@ -517,6 +576,11 @@ class Parser(object):
             return []
         return [node]
 
+    def _extract_name_from_attributes(self, attributes):
+        if attributes and attributes[0]:
+            return attributes[0][0]
+        return ''
+
     def parse_html_node(self):
         # [[ has already been parsed
         self.tokenizer.skip_whitespace()
@@ -524,7 +588,7 @@ class Parser(object):
         if name is None:
             return None
         align_tags = ['<', '>', '=', '==']
-        hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview']
+        hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview', 'size']
         if self._context._in_tabview:
             hack_tags += ['tab']
         image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
@@ -587,21 +651,22 @@ class Parser(object):
                         continue
                     attributes.append((attr_name, tk.value))
         # include is a special case, it does not have/require ending tag. same for img tags. same for module tags, but not all of them
-        if name == 'include' or name == 'iframe' or name in image_tags or (name == 'module' and (not attributes or not ModuleNode.module_has_content(attributes[0][0]))):
+        first_attr_name = self._extract_name_from_attributes(attributes)
+        if name == 'include' or name == 'iframe' or name in image_tags or (name == 'module' and (not attributes or not ModuleNode.module_has_content(first_attr_name))):
             if name == 'include':
-                name = attributes[0][0]
+                name = first_attr_name
                 attributes = attributes[1:]
                 return IncludeNode(name, attributes)
             elif name == 'iframe':
-                url = attributes[0][0]
+                url = first_attr_name
                 attributes = attributes[1:]
                 return IframeNode(url, attributes)
             elif name == 'module':
-                name = attributes[0][0]
+                name = first_attr_name
                 attributes = attributes[1:]
                 return ModuleNode(name, attributes, None)
             else:
-                source = attributes[0][0]
+                source = first_attr_name
                 attributes = attributes[1:]
                 return ImageNode(name, source, attributes)
         # tag beginning found. now iterate and check for tag ending
@@ -621,7 +686,7 @@ class Parser(object):
                         if tk.type == TokenType.CloseDoubleBracket:
                             # all done!
                             if name == 'module':
-                                name = attributes[0][0]
+                                name = first_attr_name
                                 attributes = attributes[1:]
                                 return ModuleNode(name, attributes, module_content)
                             elif name == 'collapsible':
@@ -629,8 +694,11 @@ class Parser(object):
                             elif name == 'tabview':
                                 return TabViewNode(attributes, children)
                             elif name == 'tab':
-                                name = attributes[0][0]
+                                name = first_attr_name
                                 return TabViewTabNode(name, children)
+                            elif name == 'size':
+                                name = first_attr_name
+                                return FontSizeNode(name, children)
                             elif name in align_tags:
                                 return TextAlignNode(name, children)
                             else:

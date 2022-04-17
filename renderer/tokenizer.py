@@ -2,6 +2,10 @@ from enum import Enum, unique
 import re
 
 
+WHITESPACE_CHARS = ' \u00a0'
+ALL_WHITESPACE_CHARS = WHITESPACE_CHARS + '\r\n\t'
+
+
 @unique
 class TokenType(Enum):
     Null = -1
@@ -70,9 +74,9 @@ class Tokenizer(object):
         source = (source or '')\
             .replace('\r\n', '\n')\
             .replace('\r', '\n')\
-            .replace('\t', ' ')\
-            .replace('\u00a0', ' ')
+            .replace('\t', ' ')
         source = re.sub(r'\n{2,}', '\n\n', source)
+        source = '\n'.join([x.lstrip() for x in source.split('\n')])
         self.source = source
         self.position = 0
         self.special_tokens = get_sorted_special_types()
@@ -112,7 +116,7 @@ class Tokenizer(object):
     def try_read_whitespace(self):
         content = ''
         while self.position < len(self.source):
-            if self.source[self.position] == ' ':
+            if self.source[self.position] in WHITESPACE_CHARS:
                 content += self.source[self.position]
             else:
                 break
@@ -152,7 +156,7 @@ class Tokenizer(object):
             chars = self.peek_chars(max_special_chars)
             if chars[0:1] == '"' and (not ignore_quote_start or content):
                 break
-            if chars[0:1] == ' ':
+            if chars[0:1] in WHITESPACE_CHARS:
                 break
             found_subtoken = False
             for value, token_type in self.special_tokens:
@@ -182,6 +186,6 @@ class Tokenizer(object):
 
     def skip_whitespace(self):
         while self.position < len(self.source):
-            if self.source[self.position] != ' ':
+            if self.source[self.position] not in WHITESPACE_CHARS:
                 break
             self.position += 1

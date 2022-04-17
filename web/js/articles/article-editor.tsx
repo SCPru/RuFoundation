@@ -118,7 +118,7 @@ class ArticleEditor extends Component<Props, State> {
             try {
                 await createArticle(input);
                 this.setState({ saving: false, savingSuccess: true });
-                await sleep(2000);
+                await sleep(1000);
                 this.setState({ savingSuccess: false });
                 window.location.href = `/${pageId}`;
             } catch (e) {
@@ -128,7 +128,7 @@ class ArticleEditor extends Component<Props, State> {
             try {
                 await updateArticle(pageId, input);
                 this.setState({ saving: false, savingSuccess: true });
-                await sleep(2000);
+                await sleep(1000);
                 this.setState({ savingSuccess: false });
                 window.scrollTo(window.scrollX, 0);
                 window.location.reload();
