@@ -349,7 +349,7 @@ class ModuleNode(Node):
     def render(self, context=None):
         # render only module CSS for now
         if self.name == 'css':
-            return '<style>%s</style>' % html.escape(self.content)
+            return '<style>%s</style>' % self.content.replace('</style>', '\\u003c/style\\u003e')
         return '<div>Module \'%s\' is not supported yet</div>' % html.escape(self.name)
 
 
@@ -587,6 +587,9 @@ class Parser(object):
         name = self.read_as_value_until([TokenType.Whitespace, TokenType.CloseDoubleBracket])
         if name is None:
             return None
+        name = name.lower()
+        if name == 'div_':
+            name = 'div'
         align_tags = ['<', '>', '=', '==']
         hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview', 'size']
         if self._context._in_tabview:
@@ -679,8 +682,11 @@ class Parser(object):
                 tk = self.tokenizer.read_token()
                 if tk.type == TokenType.Slash:
                     self.tokenizer.skip_whitespace()
-                    tk = self.tokenizer.read_token()
-                    if tk.type == TokenType.String and tk.value == name:
+                    close_name = self.read_as_value_until([TokenType.CloseDoubleBracket, TokenType.Whitespace])
+                    if close_name is None:
+                        return None
+                    close_name = close_name.lower()
+                    if close_name == name:
                         self.tokenizer.skip_whitespace()
                         tk = self.tokenizer.read_token()
                         if tk.type == TokenType.CloseDoubleBracket:

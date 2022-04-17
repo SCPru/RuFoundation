@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Component } from 'react';
+import * as ReactDOM from 'react-dom';
+import { Component, ReactNode } from 'react';
 import ArticleEditor from "../articles/article-editor";
 import ArticleHistory from "../articles/article-history";
 
@@ -57,16 +58,16 @@ class PageOptions extends Component<Props, State> {
                     { editable && <a id="edit-button" className="btn btn-default" href="#" onClick={this.onEdit}>Редактировать</a> }
                     <a id="history-button" className="btn btn-default" href="#" onClick={this.onHistory}>История</a>
                 </div>
-                { subView && (
-                    <div id="action-area">
-                        { this.renderSubView() }
-                    </div>
-                ) }
+                { this.renderSubView() }
             </>
         )
     }
 
     renderSubView() {
+        return ReactDOM.createPortal(this.pickSubView(), document.getElementById('action-area'));
+    }
+
+    pickSubView() {
         const { subView } = this.state;
         const { pageId } = this.props;
 

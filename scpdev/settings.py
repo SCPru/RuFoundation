@@ -120,6 +120,11 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+# Fixes custom includes
+SECURE_CONTENT_TYPE_NOSNIFF = False
+
+
 # Fixes static images
 mimetypes.add_type("text/css", ".css", True)
 mimetypes.add_type("text/javascript", ".js", True)

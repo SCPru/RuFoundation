@@ -180,6 +180,8 @@ class ArticleEditor extends Component<Props, State> {
                         </tr>
                         </tbody>
                     </table>
+                    {/* This is not supported right now but we have to add empty div for BHL */}
+                    <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
                     <div className={`editor-area ${loading?'loading':''}`}>
                         <textarea id="edit-page-textarea" value={source} onChange={this.onChange} name="source" rows={20} cols={60} style={{ width: '95%' }} disabled={loading||saving} />
                         { loading && <Loader className="loader" /> }
