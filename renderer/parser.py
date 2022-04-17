@@ -9,6 +9,15 @@ class RenderContext(object):
         self.source_article = source_article
 
 
+class ParseContext(object):
+    def __init__(self, parser, root_node):
+        self.parser = parser
+        self.footnotes = []
+        self.code_blocks = []
+        self.root = root_node
+        self._in_tabview = False
+
+
 class Node(object):
     def __init__(self):
         self.children = []
@@ -309,7 +318,7 @@ class CollapsibleNode(Node):
             self.append_child(child)
 
     def render(self, context=None):
-        code = '<div class="collapsible-block">'
+        code = '<div class="w-collapsible collapsible-block">'
         code += '  <div class="collapsible-block-folded" style="display: block">'
         code += '    <a class="collapsible-block-link" href="javascript:;">'
         code += HTMLNode.get_attribute(self.attributes, 'show', '+ открыть блок')
@@ -325,6 +334,56 @@ class CollapsibleNode(Node):
         code += super().render(context=context)
         code += '    </div>'
         code += '  </div>'
+        code += '</div>'
+        return code
+
+
+class TabViewNode(Node):
+    def __init__(self, attributes, children):
+        super().__init__()
+        self.attributes = attributes
+        self.block_node = True
+        self.complex_node = True
+        for child in children:
+            self.append_child(child)
+
+    def render(self, context=None):
+        code = '<div class="yui-navset yui-navset-top w-tabview">'
+        code += '  <ul class="yui-nav">'
+        tab = 0
+        for child in self.children:
+            if type(child) != TabViewTabNode:
+                continue
+            name = child.name
+            child.visible = (tab == 0)
+            # sadly complete absence of spaces is needed for wikidot compatibility
+            code += '<li class="selected" title="active">' if child.visible else '<li>'
+            code += '<a href="javascript:;">'
+            code += '<em>' + html.escape(name) + '</em>'
+            code += '</a>'
+            code += '</li>'
+            tab += 1
+        code += '  </ul>'
+        code += '  <div class="yui-content">'
+        code += super().render(context=context)
+        code += '  </div>'
+        code += '</div>'
+        return code
+
+
+class TabViewTabNode(Node):
+    def __init__(self, name, children):
+        super().__init__()
+        self.name = name
+        self.block_node = True
+        self.complex_node = True
+        self.visible = False
+        for child in children:
+            self.append_child(child)
+
+    def render(self, context=None):
+        code = '<div class="w-tabview-tab" style="display: block">' if self.visible else '<div class="w-tabview-tab" style="display: none">'
+        code += super().render(context=context)
         code += '</div>'
         return code
 
@@ -352,18 +411,25 @@ class TextAlignNode(Node):
 class Parser(object):
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
+        self._context = None
 
     def parse(self):
         self.tokenizer.position = 0
+
         root_node = Node()
         root_node.block_node = True
+        context = ParseContext(self, root_node)
+        self._context = context
+
         while True:
             new_children = self.parse_nodes()
             if not new_children:
                 break
             for child in new_children:
                 root_node.append_child(child)
-        return root_node
+
+        self._context = None
+        return context
 
     def parse_node(self):
         token = self.tokenizer.read_token()
@@ -458,15 +524,27 @@ class Parser(object):
         if name is None:
             return None
         align_tags = ['<', '>', '=', '==']
-        hack_tags = ['module', 'include', 'iframe', 'collapsible']
+        hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview']
+        if self._context._in_tabview:
+            hack_tags += ['tab']
         image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
         if not HTMLNode.node_allowed(name) and name not in image_tags and name not in hack_tags and name not in align_tags:
             return None
+        in_tabview = (name == 'tabview')
         attributes = []
         children = []
         module_content = ''
         while True:
             self.tokenizer.skip_whitespace()
+            if name == 'tab':
+                tab_name = self.read_as_value_until([TokenType.CloseDoubleBracket])
+                if tab_name is None:
+                    return None
+                attributes.append((tab_name.strip(), None))
+                tk = self.tokenizer.read_token()
+                if tk.type != TokenType.CloseDoubleBracket:
+                    return None
+                break
             attr_name = self.read_as_value_until([TokenType.CloseDoubleBracket, TokenType.Whitespace, TokenType.Equals])
             if attr_name is None:
                 return None
@@ -548,6 +626,11 @@ class Parser(object):
                                 return ModuleNode(name, attributes, module_content)
                             elif name == 'collapsible':
                                 return CollapsibleNode(attributes, children)
+                            elif name == 'tabview':
+                                return TabViewNode(attributes, children)
+                            elif name == 'tab':
+                                name = attributes[0][0]
+                                return TabViewTabNode(name, children)
                             elif name in align_tags:
                                 return TextAlignNode(name, children)
                             else:
@@ -555,7 +638,10 @@ class Parser(object):
 
             if name != 'module':
                 self.tokenizer.position = pos
+                was_in_tabview = self._context._in_tabview
+                self._context._in_tabview = in_tabview
                 new_children = self.parse_nodes()
+                self._context._in_tabview = was_in_tabview
                 if not new_children:  # this means we reached EOF before locating end tag
                     return None
                 children += new_children

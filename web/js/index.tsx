@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom';
 import Page404 from './entrypoints/page-404';
 import PageOptions from "./entrypoints/page-options";
 import {makeCollapsible} from "./articles/collapsible";
+import {makeTabView} from "./articles/tabview";
 
 
 function renderTo(where: HTMLElement, what: any) {
@@ -17,21 +18,28 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('#w-page-options').forEach((node: HTMLElement) => renderTo(node, <PageOptions {...JSON.parse(node.dataset.config)} />));
 
     // enable collapsibles that loaded with HTML
-    document.querySelectorAll('.collapsible-block').forEach((node: HTMLElement) => makeCollapsible(node));
+    document.querySelectorAll('.w-collapsible').forEach((node: HTMLElement) => makeCollapsible(node));
+    document.querySelectorAll('.w-tabview').forEach((node: HTMLElement) => makeTabView(node));
 
     // establish watcher. will be used later for things like TabView too
     const observer = new MutationObserver((mutationList) => {
         mutationList.forEach(record => {
             if (record.type === 'childList') {
                 record.addedNodes.forEach((node: HTMLElement) => {
-                    if (node.classList && node.classList.contains('collapsible-block')) {
+                    if (!node.classList) return;
+                    if (node.classList.contains('w-collapsible')) {
                         makeCollapsible(node);
+                    } else if (node.classList.contains('w-tabview')) {
+                        makeTabView(node);
                     }
                 })
             }
         });
     });
 
-    observer.observe(document.body);
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
 
 });
