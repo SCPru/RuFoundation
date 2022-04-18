@@ -1,6 +1,7 @@
 from .tokenizer import TokenType, WHITESPACE_CHARS
 from django.utils import html
 from web.controllers import articles
+import copy
 
 
 class RenderContext(object):
@@ -32,6 +33,11 @@ class Node(object):
         # This handles [[div_]] hack
         self.trim_paragraphs = False
 
+    def clone(self):
+        new_node = copy.copy(self)
+        new_node.children = []
+        return new_node
+
     def append_child(self, child):
         if type(child) == TextNode and self.children and type(self.children[-1]) == TextNode:
             self.children[-1].text += child.text
@@ -39,119 +45,48 @@ class Node(object):
         child.parent = self
         self.children.append(child)
 
-    def _get_control_nodes(self, child):
-        # the idea is that control nodes of the same type override each other
-        # control nodes is what happens when you apply e.g. "bold" style to several nested block elements
-        # note that real bold is not currently implemented through control nodes.
-        # note2 that this will not generate exactly same code as Wikidot.
-        # but at least it kind of supports transparent paragraphs of font size like Wikidot does.
-        unique_classes = []
-        nodes = []
-        p = child
-        while p is not None:
-            if isinstance(p, ControlNode) and type(p) not in unique_classes:
-                nodes.append(p)
-            p = p.parent
-        return list(reversed(nodes))
+    @staticmethod
+    def whitespace_node(child):
+        if child.force_render:
+            return False
+        return type(child) == NewlineNode or (type(child) == TextNode and not child.text.strip(WHITESPACE_CHARS)) or type(child) == CommentNode
 
-    def _get_paragraph_bounds(self, nodes):
-        if not self.trim_paragraphs:
-            return 0, len(nodes)-1
-        # return position of first double newline
-        first_p = 0
-        non_p = False
-        for i in range(len(nodes)):
-            if type(nodes[i]) != NewlineNode and (type(nodes[i]) != TextNode or nodes[i].text.strip(WHITESPACE_CHARS)):
-                non_p = True
-            if non_p and type(nodes[i]) == NewlineNode and i+1 < len(nodes) and type(nodes[i+1]) == NewlineNode:
-                first_p = i
+    @staticmethod
+    def is_only_whitespace(children):
+        for child in children:
+            if not Node.whitespace_node(child):
+                return False
+        return True
+
+    @staticmethod
+    def strip(children):
+        if not children:
+            return []
+        # this deletes leading and trailing newline (not whitespace though)
+        first_non_whitespace = 0
+        last_non_whitespace = len(children)
+        any_non_whitespace = False
+        for i in range(len(children)):
+            child = children[i]
+            if not Node.whitespace_node(child):
+                first_non_whitespace = i
+                any_non_whitespace = True
                 break
-        last_p = len(nodes)-1
-        non_p = False
-        for i in reversed(range(len(nodes))):
-            if type(nodes[i]) != NewlineNode and (type(nodes[i]) != TextNode or nodes[i].text.strip(WHITESPACE_CHARS)):
-                non_p = True
-            if non_p and type(nodes[i]) == NewlineNode and i-1 >= 0 and type(nodes[i-1]) == NewlineNode:
-                last_p = i
+        for i in reversed(range(len(children))):
+            child = children[i]
+            if not Node.whitespace_node(child):
+                last_non_whitespace = i
+                any_non_whitespace = True
                 break
-        if (first_p == 0 and last_p == len(nodes)-1) or last_p <= first_p:
-            # special case which means this is a single paragraph and we do not render it
-            return -1, -1
-        return first_p, last_p
+        if not any_non_whitespace:
+            return []
+        else:
+            return children[first_non_whitespace:last_non_whitespace+1]
 
     def render(self, context=None):
         content = ''
-        is_empty_line = True
-        was_empty_line = True
-        is_raw_text = False
-        was_raw_text = False
-        set_raw_text = False
-        last_newline = False
-        in_p = False
-        newline_escape = None
-        rendered_children = self.children[:]
-        i = -1
-        while i < len(rendered_children)-1:
-            i += 1
-            child = rendered_children[i]
-            if isinstance(child, ControlNode):
-                rendered_children[i+1:i+1] = child.children[:]
-                continue
-            child_content = child.render(context)
-            is_hack = False
-            # basically this makes sure that we do not create paragraphs at the beginning and ending of a div
-            paragraph_bounds = self._get_paragraph_bounds(rendered_children)
-            if newline_escape is None:
-                if not child_content.strip() and type(child) == TextNode and child.literal and last_newline and not was_raw_text:
-                    child_content = '<br>' + child_content
-                    is_hack = True
-                if type(child) != NewlineNode:
-                    is_empty_line = False
-                    if child.complex_node and not set_raw_text:
-                        is_raw_text = False
-                        set_raw_text = True
-                elif type(child) == NewlineNode:
-                    was_empty_line = is_empty_line
-                    is_empty_line = True
-                    was_raw_text = is_raw_text
-                    is_raw_text = True
-                    set_raw_text = False
-                if child_content.strip() or type(child) == NewlineNode:
-                    last_newline = type(child) == NewlineNode
-                # we ignore all whitespaces if it's not a double empty line
-                if type(child) == NewlineNode and not was_empty_line and not in_p:
-                    continue
-                # even if it was a double empty line, it probably should be a <p>, but only if raw line
-                if type(child) == NewlineNode and was_empty_line and in_p:
-                    if content.endswith('<br>'):
-                        content = content[:-4]
-                    content += '</p>'
-                    in_p = False
-                    continue
-                if type(child) == NewlineNode and not in_p:
-                    continue
-                if type(child) == NewlineEscape:
-                    newline_escape = child
-                    continue
-            if child_content:
-                if not is_hack and child_content.strip(' \u00a0') and type(child) != NewlineNode:
-                    if is_raw_text and not in_p and was_empty_line and i >= paragraph_bounds[0] and i <= paragraph_bounds[1]:
-                        content += '<p>'
-                        in_p = True
-                    elif not is_raw_text and in_p:
-                        content += '</p>'
-                        if content.endswith('<br>'):
-                            content = content[:-4]
-                        in_p = False
-                if not child.block_node and child_content.strip(' '):
-                    control_nodes = self._get_control_nodes(child)
-                    for node in control_nodes:
-                        content += node.render_before_text(context=context)
-                    content += child_content
-                    for node in reversed(control_nodes):
-                        content += node.render_after_text(context=context)
-                else:
-                    content += child_content
+        for child in self.children:
+            content += child.render(context)
         return content
 
     def to_json(self):
@@ -163,26 +98,15 @@ class Node(object):
         return base
 
 
-class ControlNode(Node):
-    def __init__(self):
-        super().__init__()
-
-    def render_before_text(self, context=None):
-        return ''
-
-    def render_after_text(self, context=None):
-        return ''
-
-    def render(self, context=None):
-        # this is so that the renderer crashes if we accidentally render control node
-        return None
-
-
 class TextNode(Node):
     def __init__(self, text, literal=False):
         super().__init__()
         self.text = text
         self.literal = literal
+
+    @staticmethod
+    def is_literal(node):
+        return type(node) == TextNode and node.literal
 
     def render(self, context=None):
         # very special logic
@@ -203,14 +127,28 @@ class HTMLLiteralNode(Node):
 
 
 class NewlineNode(Node):
-    def __init__(self, forced):
+    def __init__(self, force_render=False):
         super().__init__()
-        self.forced = forced
+        self.block_node = True
+        self.force_render = force_render
 
     def render(self, context=None):
-        if self.parent is not None and (self == self.parent.children[0] or self == self.parent.children[-1]):
-            return ''
         return '<br>'
+
+
+class ParagraphNode(Node):
+    def __init__(self, children):
+        super().__init__()
+        self.block_node = True
+        for child in children:
+            self.append_child(child)
+
+    def render(self, context=None):
+        content = super().render(context=context)
+        has_non_newlines = False
+        if self.children and self.children[0].complex_node:
+            return content
+        return '<p>' + content + '</p>'
 
 
 class NewlineEscape(Node):
@@ -486,18 +424,15 @@ class TextAlignNode(Node):
         return ('<div style="text-align: %s">' % dir) + super().render(context=context) + '</div>'
 
 
-class FontSizeNode(ControlNode):
+class FontSizeNode(Node):
     def __init__(self, sz, children):
         super().__init__()
         self.size = sz
         for child in children:
             self.append_child(child)
 
-    def render_before_text(self, context=None):
-        return '<span style="font-size: %s">' % html.escape(self.size)
-
-    def render_after_text(self, context=None):
-        return '</span>'
+    def render(self, context=None):
+        return ('<span style="font-size: %s">' % html.escape(self.size)) + super().render(context=context) + '</span>'
 
 
 class Parser(object):
@@ -520,8 +455,88 @@ class Parser(object):
             for child in new_children:
                 root_node.append_child(child)
 
+        self.create_paragraphs(root_node.children)
+
         self._context = None
         return context
+
+    def flatten_inline_node(self, node):
+        self.flatten_inline_nodes(node.children)
+        if node.block_node:
+            node.children[:] = Node.strip(node.children)
+            return [node]
+        new_nodes = []
+        children_so_far = []
+        for child in node.children:
+            if not child.block_node:
+                children_so_far.append(child)
+            else:
+                if children_so_far:
+                    new_node = node.clone()
+                    for new_child in children_so_far:
+                        new_node.append_child(new_child)
+                    new_nodes.append(new_node)
+                    children_so_far = []
+                new_nodes.append(child)
+        if children_so_far:
+            new_node = node.clone()
+            for new_child in children_so_far:
+                new_node.append_child(new_child)
+            new_nodes.append(new_node)
+        if not new_nodes:
+            new_nodes.append(node)
+        return new_nodes
+
+    def flatten_inline_nodes(self, nodes):
+        new_nodes = []
+        for node in nodes:
+            new_nodes += self.flatten_inline_node(node)
+        nodes[:] = new_nodes[:]
+
+    def create_paragraphs(self, nodes):
+        # flatten inline first
+        self.flatten_inline_nodes(nodes)
+        #
+        new_nodes = []
+        last_paragraph = []
+        i = -1
+        while i < len(nodes)-1:
+            i += 1
+            node = nodes[i]
+            prev_prev_node = nodes[i-2] if i >= 1 else None
+            prev_node = nodes[i-1] if i >= 0 else None
+            next_node = nodes[i+1] if i+1 < len(nodes) else None
+            # generate forced line breaks from <non-\n>\n@@@@.
+            # because @@@@ is "inline", it is guaranteed to be on the bottom level
+            if TextNode.is_literal(node) and type(prev_node) == NewlineNode and type(prev_prev_node) != NewlineNode:
+                if TextNode.is_literal(prev_prev_node) or last_paragraph:
+                    last_paragraph.append(NewlineNode(True))
+                else:
+                    new_nodes.append(NewlineNode(True))
+            # the other way around, if we have newline + @@@@, do not render newline. this is needed elsewhere
+            if type(node) == NewlineNode and TextNode.is_literal(next_node):
+                continue
+            # so:
+            # if we have newline+newline it's a paragraph
+            if (type(node) == NewlineNode and type(next_node) == NewlineNode) or (node.block_node and type(node) != NewlineNode):
+                last_paragraph = Node.strip(last_paragraph)
+                if last_paragraph:
+                    p_node = ParagraphNode(last_paragraph)
+                    last_paragraph = []
+                    new_nodes.append(p_node)
+                if type(node) != NewlineNode:
+                    self.create_paragraphs(node.children)
+                    new_nodes.append(node)
+                else:
+                    # double newline, i.e. <p>, skip it for next node
+                    i += 1
+            else:
+                last_paragraph.append(node)
+        last_paragraph = Node.strip(last_paragraph)
+        if last_paragraph:
+            p_node = ParagraphNode(last_paragraph)
+            new_nodes.append(p_node)
+        nodes[:] = new_nodes[:]
 
     def parse_node(self):
         token = self.tokenizer.read_token()
@@ -546,7 +561,7 @@ class Parser(object):
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.Newline:
-            return NewlineNode(False)
+            return NewlineNode()
         elif token.type == TokenType.DoubleHash:
             pos = self.tokenizer.position
             new_node = self.parse_color_node()

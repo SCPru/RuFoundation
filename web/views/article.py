@@ -18,6 +18,9 @@ def index(request, article_name='main'):
     nav_top_article = articles.get_article('nav:top')
     nav_side_article = articles.get_article('nav:side')
 
+    nav_top = single_pass_render(articles.get_latest_source(nav_top_article), RenderContext(article, nav_top_article)) if nav_top_article else ''
+    nav_side = single_pass_render(articles.get_latest_source(nav_side_article), RenderContext(article, nav_side_article)) if nav_side_article else ''
+
     if article is not None:
         content = single_pass_render(articles.get_latest_source(article), RenderContext(article, article))
         if article_name != 'main':
@@ -28,9 +31,6 @@ def index(request, article_name='main'):
         context = {'page_id': article_name, 'allow_create': articles.is_full_name_allowed(article_name)}
         content = template_404.render(context, request)
         status = 404
-
-    nav_top = single_pass_render(articles.get_latest_source(nav_top_article), RenderContext(article, nav_top_article)) if nav_top_article else ''
-    nav_side = single_pass_render(articles.get_latest_source(nav_side_article), RenderContext(article, nav_side_article)) if nav_side_article else ''
 
     options_config = {
         'optionsEnabled': True,
