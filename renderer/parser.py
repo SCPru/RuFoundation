@@ -103,6 +103,7 @@ class TextNode(Node):
         super().__init__()
         self.text = text
         self.literal = literal
+        self.force_render = literal
 
     @staticmethod
     def is_literal(node):
