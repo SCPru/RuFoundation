@@ -140,13 +140,13 @@ class ParagraphNode(Node):
     def __init__(self, children):
         super().__init__()
         self.block_node = True
+        self.collapsed = False
         for child in children:
             self.append_child(child)
 
     def render(self, context=None):
         content = super().render(context=context)
-        has_non_newlines = False
-        if self.children and self.children[0].complex_node:
+        if (self.children and self.children[0].complex_node) or self.collapsed:
             return content
         return '<p>' + content + '</p>'
 
@@ -464,7 +464,7 @@ class Parser(object):
         # node should be a block node. wrap_with should be a span node
         new_nodes = []
         for child in node.children:
-            if type(child) == TextNode:
+            if type(child) == TextNode or type(child) == HTMLLiteralNode:
                 spanned = wrap_with.clone()
                 spanned.parent = node
                 spanned.append_child(child)
@@ -477,12 +477,16 @@ class Parser(object):
     def flatten_inline_node(self, node):
         self.flatten_inline_nodes(node.children)
         if node.block_node:
-            node.children[:] = Node.strip(node.children)
             return [node]
         new_nodes = []
         children_so_far = []
-        for child in node.children:
+        i = -1
+        while i < len(node.children)-1:
+            i += 1
+            child = node.children[i]
             if not child.block_node:
+                children_so_far.append(child)
+            elif type(child) == NewlineNode and (i+1 < len(node.children) and type(node.children[i+1]) != NewlineNode) and (i-1 < 0 or type(node.children[i-1]) != NewlineNode):
                 children_so_far.append(child)
             else:
                 if children_so_far:
@@ -542,6 +546,13 @@ class Parser(object):
                     new_nodes.append(p_node)
                 if type(node) != NewlineNode:
                     self.create_paragraphs(node.children)
+                    # special handling
+                    # if current node is div_, collapse first and last paragraph
+                    if type(node) == HTMLNode and node.name == 'div_' and node.children:
+                        if type(node.children[0]) == ParagraphNode:
+                            node.children[0].collapsed = True
+                        if type(node.children[-1]) == ParagraphNode:
+                            node.children[-1].collapsed = True
                     new_nodes.append(node)
                 else:
                     # double newline, i.e. <p>, skip it for next node
