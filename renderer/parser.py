@@ -460,6 +460,20 @@ class Parser(object):
         self._context = None
         return context
 
+    def wrap_text_nodes_in_span(self, node, wrap_with):
+        # node should be a block node. wrap_with should be a span node
+        new_nodes = []
+        for child in node.children:
+            if type(child) == TextNode:
+                spanned = wrap_with.clone()
+                spanned.parent = node
+                spanned.append_child(child)
+                new_nodes.append(spanned)
+            else:
+                self.wrap_text_nodes_in_span(child, wrap_with)
+                new_nodes.append(child)
+        node.children[:] = new_nodes
+
     def flatten_inline_node(self, node):
         self.flatten_inline_nodes(node.children)
         if node.block_node:
@@ -478,6 +492,8 @@ class Parser(object):
                     new_nodes.append(new_node)
                     children_so_far = []
                 new_nodes.append(child)
+                if type(node) == HTMLNode and node.name == 'span':
+                    self.wrap_text_nodes_in_span(child, node)
         if children_so_far:
             new_node = node.clone()
             for new_child in children_so_far:
