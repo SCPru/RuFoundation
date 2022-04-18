@@ -30,7 +30,7 @@ class Node(object):
         self.complex_node = False
         # This enforces newlines for literals
         self.force_render = False
-        # This handles [[div_]] hack
+        # This handles [[div_]] hack (and [[span_]], and god knows what else)
         self.trim_paragraphs = False
 
     def clone(self):
@@ -180,12 +180,12 @@ class HorizontalRulerNode(Node):
 
 
 class HTMLNode(Node):
-    def __init__(self, name, attributes, children, complex_node=True):
+    def __init__(self, name, attributes, children, complex_node=True, trim_paragraphs=False):
         super().__init__()
         self.name = name
         self.attributes = attributes
-        self.block_node = self.name in ['div', 'div_', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
-        self.trim_paragraphs = (self.name == 'div_')
+        self.trim_paragraphs = trim_paragraphs
+        self.block_node = self.name in ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
         self.complex_node = complex_node
         for child in children:
             self.append_child(child)
@@ -223,10 +223,7 @@ class HTMLNode(Node):
                 if attr[0] == 'id' and not value.startswith('u-'):
                     value = 'u-' + value
                 attr_string += '="%s"' % html.escape(value)
-        tag = self.name
-        if tag == 'div_':
-            tag = 'div'
-        return '<%s%s>%s</%s>' % (html.escape(tag), attr_string, content, html.escape(tag))
+        return '<%s%s>%s</%s>' % (html.escape(self.name), attr_string, content, html.escape(self.name))
 
 
 class ImageNode(Node):
@@ -475,6 +472,8 @@ class Parser(object):
         node.children[:] = new_nodes
 
     def flatten_inline_node(self, node):
+        if node.trim_paragraphs:
+            node.children[:] = Node.strip(node.children)
         self.flatten_inline_nodes(node.children)
         if node.block_node:
             return [node]
@@ -486,7 +485,9 @@ class Parser(object):
             child = node.children[i]
             if not child.block_node:
                 children_so_far.append(child)
-            elif type(child) == NewlineNode and (i+1 < len(node.children) and type(node.children[i+1]) != NewlineNode) and (i-1 < 0 or type(node.children[i-1]) != NewlineNode):
+            elif not node.trim_paragraphs and type(child) == NewlineNode and\
+                    (i+1 < len(node.children) and type(node.children[i+1]) != NewlineNode) and\
+                    (i-1 < 0 or type(node.children[i-1]) != NewlineNode):
                 children_so_far.append(child)
             else:
                 if children_so_far:
@@ -548,7 +549,7 @@ class Parser(object):
                     self.create_paragraphs(node.children)
                     # special handling
                     # if current node is div_, collapse first and last paragraph
-                    if type(node) == HTMLNode and node.name == 'div_' and node.children:
+                    if node.trim_paragraphs and node.children:
                         if type(node.children[0]) == ParagraphNode:
                             node.children[0].collapsed = True
                         if type(node.children[-1]) == ParagraphNode:
@@ -663,6 +664,10 @@ class Parser(object):
         if name is None:
             return None
         name = name.lower()
+        trim_paragraphs = False
+        if name.endswith('_'):
+            trim_paragraphs = True
+            name = name[:-1]
         align_tags = ['<', '>', '=', '==']
         hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview', 'size']
         if self._context._in_tabview:
@@ -781,7 +786,17 @@ class Parser(object):
                             elif name in align_tags:
                                 return TextAlignNode(name, children)
                             else:
-                                return HTMLNode(name, attributes, children, complex_node=name not in ['span'])
+                                if trim_paragraphs:
+                                    # special handling, we just eat any whitespace or newlines.
+                                    # this reproduces what wikidot does with [[span_]]
+                                    while True:
+                                        pos = self.tokenizer.position
+                                        tk = self.tokenizer.read_token()
+                                        if tk.type == TokenType.Whitespace or tk.type == TokenType.Newline:
+                                            continue
+                                        self.tokenizer.position = pos
+                                        break
+                                return HTMLNode(name, attributes, children, complex_node=name not in ['span'], trim_paragraphs=trim_paragraphs)
 
             if name != 'module':
                 self.tokenizer.position = pos
