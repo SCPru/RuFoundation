@@ -288,9 +288,8 @@ class IncludeNode(Node):
             code = articles.get_latest_source(article) or ''
             map_values = dict()
             for name, value in self.attributes:
-                if name not in map_values:
+                if name not in map_values or (map_values[name].startswith('{$') and map_values[name].endswith('}')):
                     map_values[name] = value
-            print(repr(self.attributes))
             for name in map_values:
                 code = code.replace('{$%s}' % name, map_values[name])
             self.code = code
@@ -548,6 +547,8 @@ class Parser(object):
         while i < len(nodes)-1:
             i += 1
             node = nodes[i]
+            if type(node) == NewlineNode:
+                new_nodes.append(TextNode('\n'))
             prev_prev_node = nodes[i-2] if i >= 1 else None
             prev_node = nodes[i-1] if i >= 0 else None
             next_node = nodes[i+1] if i+1 < len(nodes) else None
