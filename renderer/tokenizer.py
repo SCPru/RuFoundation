@@ -70,15 +70,19 @@ class Token(object):
 
 
 class Tokenizer(object):
-    def __init__(self, source):
+    @staticmethod
+    def prepare_source(source):
         source = (source or '')\
             .replace('\r\n', '\n')\
             .replace('\r', '\n')\
             .replace('\t', ' ')
         source = re.sub(r'\n{2,}', '\n\n', source)
         source = re.sub(r'\n\s+\n', '\n\n', source)
-        source = '\n'.join([x.lstrip() for x in source.split('\n')])
-        self.source = source
+        source = '\n'.join([x.lstrip(ALL_WHITESPACE_CHARS) for x in source.split('\n')])
+        return source
+
+    def __init__(self, source):
+        self.source = self.prepare_source(source)
         self.position = 0
         self.special_tokens = get_sorted_special_types()
 
@@ -187,6 +191,10 @@ class Tokenizer(object):
 
     def skip_whitespace(self):
         while self.position < len(self.source):
-            if self.source[self.position] not in WHITESPACE_CHARS:
+            if self.source[self.position] not in ALL_WHITESPACE_CHARS:
                 break
             self.position += 1
+
+    def inject_code(self, code):
+        code = self.prepare_source(code)
+        self.source = self.source[:self.position] + code + self.source[self.position:]

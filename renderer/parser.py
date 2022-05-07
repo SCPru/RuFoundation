@@ -1,4 +1,4 @@
-from .tokenizer import TokenType, WHITESPACE_CHARS
+from .tokenizer import TokenType, WHITESPACE_CHARS, Tokenizer
 from django.utils import html
 from web.controllers import articles
 import copy
@@ -215,7 +215,7 @@ class HTMLNode(Node):
             attr_whitelist.append('href')
             attr_whitelist.append('target')
         for attr in self.attributes:
-            if attr[0] not in attr_whitelist:
+            if attr[0] not in attr_whitelist and not attr[0].startswith('data-'):
                 continue
             attr_string += ' '
             attr_string += attr[0]
@@ -282,9 +282,29 @@ class IncludeNode(Node):
         self.name = name
         self.attributes = attributes
         self.complex_node = True
+        self.code = None
+        article = articles.get_article(self.name)
+        if article is not None:
+            code = articles.get_latest_source(article) or ''
+            map_values = dict()
+            for name, value in self.attributes:
+                if name not in map_values:
+                    map_values[name] = value
+            print(repr(self.attributes))
+            for name in map_values:
+                code = code.replace('{$%s}' % name, map_values[name])
+            self.code = code
 
     def render(self, context=None):
-        return '<div>Include is not supported yet</div>'
+        # Include is never rendered directly unless it's broken
+        if self.code is None:
+            c = '<div class="error-block"><p>'
+            c += 'Вставленная страница &quot;%s&quot; не существует (' % html.escape(self.name)
+            c += '<a href="/%s/edit/true" target="_blank">создать её сейчас</a>' % html.escape(self.name)
+            c += ')'
+            c += '</p></div>'
+            return c
+        return ''
 
 
 class IframeNode(Node):
@@ -318,7 +338,10 @@ class ModuleNode(Node):
     def render(self, context=None):
         # render only module CSS for now
         if self.name == 'css':
-            return '<style>%s</style>' % self.content.replace('</style>', '\\u003c/style\\u003e')
+            code = self.content\
+                .replace('\u00a0', ' ')\
+                .replace('</style>', '\\u003c/style\\u003e')
+            return '<style>%s</style>' % code
         return '<div>Module \'%s\' is not supported yet</div>' % html.escape(self.name)
 
 
@@ -581,6 +604,9 @@ class Parser(object):
             pos = self.tokenizer.position
             new_node = self.parse_html_node()
             if new_node is not None:
+                # if it's an include node, add all tokens into current tokenizer position!
+                if isinstance(new_node, IncludeNode) and new_node.code is not None:
+                    self.tokenizer.inject_code(new_node.code)
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.OpenComment:
@@ -691,7 +717,7 @@ class Parser(object):
                 if tk.type != TokenType.CloseDoubleBracket:
                     return None
                 break
-            attr_name = self.read_as_value_until([TokenType.CloseDoubleBracket, TokenType.Whitespace, TokenType.Equals])
+            attr_name = self.read_as_value_until([TokenType.CloseDoubleBracket, TokenType.Whitespace, TokenType.Equals, TokenType.Newline])
             if attr_name is None:
                 return None
             attr_name = attr_name.strip()
@@ -713,18 +739,14 @@ class Parser(object):
                     continue
                 # from here, different handling for include. this is a hack in original Wikidot syntax
                 if name == 'include':
-                    value = ''
-                    self.tokenizer.skip_whitespace()
-                    while True:
-                        tk = self.tokenizer.read_token()
-                        if tk.type == TokenType.Null:
-                            return None
-                        elif tk.type == TokenType.Pipe or tk.type == TokenType.CloseDoubleBracket:
-                            if tk.type == TokenType.CloseDoubleBracket:
-                                self.tokenizer.position -= 2
-                            break
-                        value += tk.raw
-                    attributes.append((attr_name, value))
+                    value = self.read_as_value_until([TokenType.Pipe, TokenType.CloseDoubleBracket])
+                    if value is None:
+                        return None
+                    attributes.append((attr_name, value.strip()))
+                    pos = self.tokenizer.position
+                    tk = self.tokenizer.read_token()
+                    if tk.type != TokenType.Pipe:
+                        self.tokenizer.position = pos
                 else:
                     self.tokenizer.skip_whitespace()
                     tk = self.tokenizer.read_token()
