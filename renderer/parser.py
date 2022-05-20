@@ -930,8 +930,8 @@ class Parser(object):
         if article is None:
             return None
         external = False
-        article_url = '/' + article.lower().strip()
-        article_id = article.lower().strip()
+        article_id = articles.normalize_article_name(article.lower().strip())
+        article_url = '/' + article_id
         if '/' in article:
             external = True
             article_url = article

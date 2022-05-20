@@ -1,5 +1,6 @@
 from web.models.articles import *
 import datetime
+import re
 
 
 # Returns (category, name) from a full name
@@ -9,6 +10,10 @@ def get_name(full_name):
         return split[0], split[1]
     else:
         return '_default', split[0]
+
+
+def normalize_article_name(name):
+    return re.sub(r'[^A-Za-z0-9\-_:]+', '-', name).lower().strip('-')
 
 
 def get_article(full_name_or_article):
@@ -162,6 +167,8 @@ def is_full_name_allowed(article_name):
     if article_name == '_' or article_name == 'api':
         return False
     if len(article_name) > 128:
+        return False
+    if not re.match(r'[^A-Za-z0-9\-_:]+', article_name):
         return False
     category, name = get_name(article_name)
     if not category.strip() or not name.strip():
