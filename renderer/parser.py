@@ -139,6 +139,15 @@ class NewlineNode(Node):
         return '<br>'
 
 
+class AlignMarkerNode(Node):
+    def __init__(self, align):
+        super().__init__()
+        self.align = align
+
+    def render(self, context=None):
+        return ''
+
+
 class ParagraphNode(Node):
     def __init__(self, children):
         super().__init__()
@@ -153,7 +162,10 @@ class ParagraphNode(Node):
             return content
         if len(self.children) == 1 and self.children[0].force_render:
             return content
-        return '<p>' + content + '</p>'
+        alignattr = ''
+        if self.children and type(self.children[0]) == AlignMarkerNode:
+            alignattr = ' style="text-align: %s"' % (html.escape(self.children[0].align))
+        return ('<p%s>' % alignattr) + content + '</p>'
 
 
 class NewlineEscape(Node):
@@ -661,16 +673,15 @@ class Parser(object):
 
     def parse_node(self):
         token = self.tokenizer.read_token()
+        pos = self.tokenizer.position
         if token.type == TokenType.Null:
             return None
         elif token.type == TokenType.Backslash:
-            pos = self.tokenizer.position
             new_node = self.parse_newline_escape()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.OpenDoubleBracket:
-            pos = self.tokenizer.position
             new_node = self.parse_html_node()
             if new_node is not None:
                 # if it's an include node, add all tokens into current tokenizer position!
@@ -679,7 +690,6 @@ class Parser(object):
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.OpenComment:
-            pos = self.tokenizer.position
             new_node = self.parse_comment_node()
             if new_node is not None:
                 return new_node
@@ -687,91 +697,81 @@ class Parser(object):
         elif token.type == TokenType.Newline:
             return NewlineNode()
         elif token.type == TokenType.DoubleHash:
-            pos = self.tokenizer.position
             new_node = self.parse_color_node()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.DoubleAt:
-            pos = self.tokenizer.position
             new_node = self.parse_literal()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.OpenHTMLLiteral:
-            pos = self.tokenizer.position
             new_node = self.parse_html_literal()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.OpenSingleBracket:
-            pos = self.tokenizer.position
             new_node = self.parse_external_link()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.OpenTripleBracket:
-            pos = self.tokenizer.position
             new_node = self.parse_internal_link()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.DoubleAsterisk:
-            pos = self.tokenizer.position
             new_node = self.parse_strong()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.DoubleSlash:
-            pos = self.tokenizer.position
             new_node = self.parse_em()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.DoubleUnderline:
-            pos = self.tokenizer.position
             new_node = self.parse_underline()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.DoubleDash:
-            pos = self.tokenizer.position
             new_node = self.parse_strike()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.DoubleSup:
-            pos = self.tokenizer.position
             new_node = self.parse_sup()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.OpenInlineCode:
-            pos = self.tokenizer.position
             new_node = self.parse_inline_code()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
+        elif token.type == TokenType.Equals:
+            new_node = self.parse_align_marker()
+            if new_node is not None:
+                return new_node
+            self.tokenizer.position = pos
         elif token.type == TokenType.HrBeginning:
-            pos = self.tokenizer.position
             new_node = self.parse_hr()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.Plus:
-            pos = self.tokenizer.position
             new_node = self.parse_heading()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.Blockquote:
-            pos = self.tokenizer.position
             new_node = self.parse_blockquote()
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.DoublePipe:
-            pos = self.tokenizer.position
             new_node = self.parse_table()
             if new_node is not None:
                 return new_node
@@ -1287,6 +1287,13 @@ class Parser(object):
 
         children = Parser.parse_subtree(blockquote_content)
         return BlockquoteNode(children)
+
+    def parse_align_marker(self):
+        # = has already been parsed
+        if not self.check_newline(1):
+            return None
+
+        return AlignMarkerNode('center')
 
     def parse_table(self):
         # || has already been parsed
