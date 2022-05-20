@@ -385,7 +385,7 @@ class ModuleNode(Node):
     def module_has_content(name):
         name = name.lower()
         print('module', repr(name))
-        content_modules = ['css', 'listpages', 'listusers']
+        content_modules = ['css', 'listpages', 'listusers', 'countpages']
         return name in content_modules
 
     def render(self, context=None):
