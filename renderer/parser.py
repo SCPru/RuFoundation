@@ -1,4 +1,4 @@
-from .tokenizer import TokenType, WHITESPACE_CHARS
+from .tokenizer import TokenType, WHITESPACE_CHARS, Tokenizer
 from django.utils import html
 from web.controllers import articles
 import copy
@@ -32,6 +32,8 @@ class Node(object):
         self.force_render = False
         # This handles [[div_]] hack (and [[span_]], and god knows what else)
         self.trim_paragraphs = False
+        # Internal
+        self.paragraphs_set = False
 
     def clone(self):
         new_node = copy.copy(self)
@@ -538,6 +540,7 @@ class Parser(object):
                 root_node.append_child(child)
 
         self.create_paragraphs(root_node.children)
+        root_node.paragraphs_set = True
 
         self._context = None
         return context
@@ -633,14 +636,15 @@ class Parser(object):
                     last_paragraph = []
                     new_nodes.append(p_node)
                 if type(node) != NewlineNode:
-                    self.create_paragraphs(node.children)
-                    # special handling
-                    # if current node is div_, collapse first and last paragraph
-                    if node.trim_paragraphs and node.children:
-                        if type(node.children[0]) == ParagraphNode:
-                            node.children[0].collapsed = True
-                        if type(node.children[-1]) == ParagraphNode:
-                            node.children[-1].collapsed = True
+                    if not node.paragraphs_set:
+                        self.create_paragraphs(node.children)
+                        # special handling
+                        # if current node is div_, collapse first and last paragraph
+                        if node.trim_paragraphs and node.children:
+                            if type(node.children[0]) == ParagraphNode:
+                                node.children[0].collapsed = True
+                            if type(node.children[-1]) == ParagraphNode:
+                                node.children[-1].collapsed = True
                     new_nodes.append(node)
                 else:
                     # double newline, i.e. <p>, skip it for next node
@@ -652,6 +656,8 @@ class Parser(object):
             p_node = ParagraphNode(last_paragraph)
             new_nodes.append(p_node)
         nodes[:] = new_nodes[:]
+        for node in nodes:
+            node.paragraphs_set = True
 
     def parse_node(self):
         token = self.tokenizer.read_token()
@@ -1209,11 +1215,19 @@ class Parser(object):
                 return None
             children += new_children
 
+    @staticmethod
+    def parse_subtree(code):
+        p = Parser(Tokenizer(code))
+        result = p.parse()
+        return result.root.children
+
     def parse_blockquote(self):
         # > has already been parsed
         if not self.check_newline(1):
             return None
-        children = []
+
+        blockquote_content = ''
+
         while True:
             tk = self.tokenizer.peek_token()
             if tk.type == TokenType.Null:
@@ -1224,12 +1238,14 @@ class Parser(object):
                     break
                 else:
                     self.tokenizer.position += 2
-                    children.append(NewlineNode())
+                    blockquote_content += '\n'
             else:
-                new_children = self.parse_nodes()
-                if not new_children:
-                    break
-                children += new_children
+                content = self.read_as_value_until([TokenType.Newline, TokenType.Null])
+                blockquote_content += content
+
+        print(blockquote_content)
+
+        children = Parser.parse_subtree(blockquote_content)
         return BlockquoteNode(children)
 
     def parse_table(self):
