@@ -29,7 +29,7 @@ def run(base_path):
             meta = json.load(fp)
             pagename = meta['name']
             title = meta['title'] if 'title' in meta else None
-            top_rev = meta['last_revision']
+            top_rev = meta['revisions'][0]['revision']
             fn_7z = '.'.join(f.split('.')[:-1]) + '.7z'
             fn_7z = '%s/pages/%s' % (base_path, fn_7z)
             if not os.path.exists(fn_7z):
