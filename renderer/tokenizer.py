@@ -122,10 +122,6 @@ class Tokenizer(object):
         token = self.try_read_whitespace()
         if token.type != TokenType.Null:
             return token
-        # check if quoted string
-        token = self.try_read_quoted_string()
-        if token.type != TokenType.Null:
-            return token
         # read plaintext otherwise until anything non-plaintext is found
         return self.read_string()
 
@@ -144,7 +140,7 @@ class Tokenizer(object):
     def try_read_quoted_string(self):
         pos = self.position
         if self.position >= len(self.source) or self.source[self.position] != '"':
-            return Token.null()
+            return self.read_string(ignore_quote_start=True)
         raw = '"'
         content = ''
         self.position += 1
@@ -163,7 +159,7 @@ class Tokenizer(object):
             self.position = pos
             return self.read_string(ignore_quote_start=True)
 
-    def read_string(self, ignore_quote_start=False):
+    def read_string(self, ignore_quote_start=True):
         content = ''
         max_special_chars = len(self.special_tokens[0][0])
         while self.position < len(self.source):

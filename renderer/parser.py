@@ -842,7 +842,7 @@ class Parser(object):
                         self.tokenizer.position = pos
                 else:
                     self.tokenizer.skip_whitespace()
-                    tk = self.tokenizer.read_token()
+                    tk = self.tokenizer.try_read_quoted_string()
                     if tk.type != TokenType.String and tk.type != TokenType.QuotedString:
                         self.tokenizer.position = pos
                         continue
