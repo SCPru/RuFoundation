@@ -33,7 +33,6 @@ class TokenType(Enum):
     Slash = '/'
     Backslash = '\\'
     Tilde = '~'
-    Quote = '"'
 
     Blockquote = '>'
 

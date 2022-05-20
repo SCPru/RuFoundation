@@ -811,6 +811,7 @@ class Parser(object):
                 t.skip_whitespace()
                 t3 = t.read_token()
                 t.position = pos2
+
                 if t2.type == TokenType.Null or t2.type == TokenType.CloseDoubleBracket or\
                         (t2.type == TokenType.String and t3.type == TokenType.Equals) or\
                         t2.type == TokenType.Pipe:
