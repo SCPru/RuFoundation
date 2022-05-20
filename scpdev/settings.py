@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 import mimetypes
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -128,3 +129,11 @@ SECURE_CONTENT_TYPE_NOSNIFF = False
 # Fixes static images
 mimetypes.add_type("text/css", ".css", True)
 mimetypes.add_type("text/javascript", ".js", True)
+
+
+WEBSITE_NAME = 'SCP Foundation'
+WEBSITE_HEADLINE = 'Russian branch'
+
+
+ANONYMOUS_EDITING_ENABLED = not(bool(os.environ.get('NO_ANON_EDITING', None)))
+

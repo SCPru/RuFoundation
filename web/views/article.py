@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.template import loader
+from django.conf import settings
 
 from web.controllers import articles
 
@@ -34,11 +35,14 @@ def index(request, article_name='main'):
 
     options_config = {
         'optionsEnabled': True,
-        'editable': True,
+        'editable': settings.ANONYMOUS_EDITING_ENABLED,
         'pageId': article_name
     }
 
     context = {
+        'site_name': settings.WEBSITE_NAME,
+        'site_headline': settings.WEBSITE_HEADLINE,
+        'site_title': title or settings.WEBSITE_NAME,
         'content': content,
         'nav_top': nav_top,
         'nav_side': nav_side,

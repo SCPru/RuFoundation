@@ -1,4 +1,5 @@
 import json
+from django.conf import settings
 
 from . import render_error, render_json, restrict_method
 
@@ -17,6 +18,8 @@ def _validate_article_data(data, allow_partial=False):
 
 @restrict_method('POST')
 def create(request):
+    if not settings.ANONYMOUS_EDITING_ENABLED:
+        return render_error(403, 'Недостаточно прав')
     data = json.loads(request.body.decode('utf-8'))
     err = _validate_article_data(data)
     if err is not None:
@@ -55,6 +58,8 @@ def fetch(request, full_name):
 
 
 def update(request, full_name):
+    if not settings.ANONYMOUS_EDITING_ENABLED:
+        return render_error(403, 'Недостаточно прав')
     data = json.loads(request.body.decode('utf-8'))
     err = _validate_article_data(data, allow_partial=True)
     if err is not None:
