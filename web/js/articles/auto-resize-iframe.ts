@@ -19,12 +19,22 @@ export function makeAutoResizeFrame(node: HTMLElement) {
         frame.style.minHeight = `${height}px`;
     };
 
-    frame.addEventListener('load', () => {
-       setFrameHeight();
-       const observer = new ResizeObserver(() => {
-           setFrameHeight();
-       });
-       observer.observe(frame.contentDocument.body);
-    });
+    setFrameHeight();
+
+    const setup = () => {
+        setFrameHeight();
+        const observer = new ResizeObserver(() => {
+            setFrameHeight();
+        });
+        observer.observe(frame.contentDocument.body);
+    };
+
+    if (frame.contentDocument.readyState === 'complete') {
+        setup();
+    } else {
+        frame.addEventListener('load', () => {
+            setup();
+        });
+    }
 
 }
