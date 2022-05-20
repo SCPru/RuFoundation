@@ -1,5 +1,6 @@
 from enum import Enum, unique
 import re
+from django.conf import settings
 
 
 WHITESPACE_CHARS = ' \u00a0'
@@ -26,7 +27,6 @@ class TokenType(Enum):
 
     Equals = '='
     Pipe = '|'
-    Dash = '-'
     Asterisk = '*'
     Plus = '+'
     Newline = '\n'
@@ -91,6 +91,9 @@ class Tokenizer(object):
         source = re.sub(r'\n{2,}', '\n\n', source)
         source = re.sub(r'\n\s+\n', '\n\n', source)
         source = '\n'.join([x.strip(ALL_WHITESPACE_CHARS) for x in source.split('\n')])
+        # to-do: delete this shit at some point
+        for k, v in settings.ARTICLE_REPLACE_CONFIG.items():
+            source = source.replace(k, v)
         return source
 
     def __init__(self, source):

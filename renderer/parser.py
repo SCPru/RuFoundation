@@ -818,6 +818,7 @@ class Parser(object):
                     raw += '"'
                     t.position += 1
                     break
+
             elif t.source[t.position] == '\n':
                 raw = ''
                 break
