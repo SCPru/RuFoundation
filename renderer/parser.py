@@ -1,4 +1,4 @@
-from .tokenizer import TokenType, WHITESPACE_CHARS, Tokenizer
+from .tokenizer import TokenType, WHITESPACE_CHARS
 from django.utils import html
 from web.controllers import articles
 import copy
@@ -1106,6 +1106,10 @@ class Parser(object):
 
     def parse_strike(self):
         # -- has already been parsed
+        # check that we should not have whitespace around this token
+        char_after = self.tokenizer.source[self.tokenizer.position] if self.tokenizer.position < len(self.tokenizer.source) else '$'
+        if char_after in WHITESPACE_CHARS:
+            return None
         children = []
         while True:
             pos = self.tokenizer.position
@@ -1113,6 +1117,9 @@ class Parser(object):
             if tk.type == TokenType.Null:
                 return None
             elif tk.type == TokenType.DoubleDash:
+                char_before = self.tokenizer.source[self.tokenizer.position - 3] if self.tokenizer.position - 3 >= 0 else '$'
+                if char_before in WHITESPACE_CHARS:
+                    return None
                 return HTMLNode('strike', [], children, complex_node=False)
             self.tokenizer.position = pos
             new_children = self.parse_nodes()
@@ -1138,13 +1145,19 @@ class Parser(object):
 
     def parse_inline_code(self):
         # {{ has already been parsed
-        content = self.read_as_value_until([TokenType.CloseInlineCode])
-        if content is None:
-            return None
-        token = self.tokenizer.read_token()
-        if token.type != TokenType.CloseInlineCode:
-            return None
-        return HTMLNode('tt', [], [TextNode(content)])
+        children = []
+        while True:
+            pos = self.tokenizer.position
+            tk = self.tokenizer.read_token()
+            if tk.type == TokenType.Null:
+                return None
+            elif tk.type == TokenType.CloseInlineCode:
+                return HTMLNode('tt', [], children, complex_node=False)
+            self.tokenizer.position = pos
+            new_children = self.parse_nodes()
+            if not new_children:
+                return None
+            children += new_children
 
     def check_newline(self, size=1):
         prev_pos = self.tokenizer.position - size - 1
