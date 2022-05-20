@@ -12,21 +12,28 @@ export function makeAutoResizeFrame(node: HTMLElement) {
     const frame: HTMLIFrameElement = node as HTMLIFrameElement;
 
     const setFrameHeight = () => {
-        const body = frame.contentDocument.body;
-        const html = frame.contentDocument.documentElement;
-        const height = Math.max( body.scrollHeight, body.offsetHeight,
-            html.clientHeight, html.scrollHeight, html.offsetHeight );
-        frame.style.minHeight = `${height}px`;
+        try {
+            const body = frame.contentDocument.body;
+            const html = frame.contentDocument.documentElement;
+            const height = Math.max(body.scrollHeight, body.offsetHeight,
+                html.clientHeight, html.scrollHeight, html.offsetHeight, body.getBoundingClientRect().height);
+            const heightProp = `${height}px`;
+            if (frame.style.minHeight !== heightProp) {
+                frame.style.minHeight = heightProp;
+            }
+        } catch(e) {}
     };
 
     setFrameHeight();
 
     const setup = () => {
         setFrameHeight();
-        const observer = new ResizeObserver(() => {
+        // ResizeObserver is not reliable. instead we do this
+        const step = () => {
             setFrameHeight();
-        });
-        observer.observe(frame.contentDocument.body);
+            window.requestAnimationFrame(step);
+        };
+        step();
     };
 
     if (frame.contentDocument.readyState === 'complete') {
