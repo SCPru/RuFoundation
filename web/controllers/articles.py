@@ -18,6 +18,7 @@ def normalize_article_name(name):
 
 def get_article(full_name_or_article):
     if type(full_name_or_article) == str:
+        full_name_or_article = full_name_or_article.lower()
         category, name = get_name(full_name_or_article)
         objects = Article.objects.filter(category=category, name=name)
         if objects:
