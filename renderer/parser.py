@@ -113,7 +113,7 @@ class TextNode(Node):
         # very special logic
         text = html.escape(self.text).replace('--', '&mdash;').replace('&lt;&lt;', '&laquo;').replace('&gt;&gt;', '&raquo;')
         if self.literal and self.force_render:
-            return '<span style="white-space: pre">' + text + '</span>'
+            return '<span style="white-space: pre-wrap">' + text + '</span>'
         return text
 
 
@@ -148,6 +148,8 @@ class ParagraphNode(Node):
     def render(self, context=None):
         content = super().render(context=context)
         if (self.children and self.children[0].complex_node) or self.collapsed:
+            return content
+        if len(self.children) == 1 and self.children[0].force_render:
             return content
         return '<p>' + content + '</p>'
 
@@ -186,15 +188,25 @@ class HorizontalRulerNode(Node):
 class HTMLNode(Node):
     def __init__(self, name, attributes, children, complex_node=True, trim_paragraphs=False):
         super().__init__()
+
+        name_remap = {
+            'row': 'tr',
+            'hcell': 'th',
+            'cell': 'td'
+        }
+
+        if name in name_remap:
+            name = name_remap[name]
+
         self.name = name
         self.attributes = attributes
         self.trim_paragraphs = trim_paragraphs
-        self.block_node = self.name in ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+        self.block_node = self.name in ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'th', 'td']
         self.complex_node = complex_node
         for child in children:
             self.append_child(child)
 
-    allowed_tags = ['a', 'span', 'div', 'div_']
+    allowed_tags = ['a', 'span', 'div', 'div_', 'table', 'row', 'hcell', 'cell']
 
     @staticmethod
     def node_allowed(name):
@@ -217,6 +229,9 @@ class HTMLNode(Node):
         if self.name == 'a':
             attr_whitelist.append('href')
             attr_whitelist.append('target')
+        elif self.name == 'th' or self.name == 'td':
+            attr_whitelist.append('colspan')
+            attr_whitelist.append('rowspan')
         for attr in self.attributes:
             if attr[0] not in attr_whitelist and not attr[0].startswith('data-'):
                 continue
@@ -703,6 +718,12 @@ class Parser(object):
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
+        elif token.type == TokenType.DoubleDash:
+            pos = self.tokenizer.position
+            new_node = self.parse_strike()
+            if new_node is not None:
+                return new_node
+            self.tokenizer.position = pos
         elif token.type == TokenType.OpenInlineCode:
             pos = self.tokenizer.position
             new_node = self.parse_inline_code()
@@ -726,7 +747,13 @@ class Parser(object):
             new_node = self.parse_blockquote()
             if new_node is not None:
                 return new_node
-            self.tokenizer_position = pos
+            self.tokenizer.position = pos
+        elif token.type == TokenType.DoublePipe:
+            pos = self.tokenizer.position
+            new_node = self.parse_table()
+            if new_node is not None:
+                return new_node
+            self.tokenizer.position = pos
         return TextNode(token.raw)
 
     def parse_nodes(self):
@@ -1059,6 +1086,22 @@ class Parser(object):
                 return None
             children += new_children
 
+    def parse_strike(self):
+        # -- has already been parsed
+        children = []
+        while True:
+            pos = self.tokenizer.position
+            tk = self.tokenizer.read_token()
+            if tk.type == TokenType.Null:
+                return None
+            elif tk.type == TokenType.DoubleDash:
+                return HTMLNode('strike', [], children, complex_node=False)
+            self.tokenizer.position = pos
+            new_children = self.parse_nodes()
+            if not new_children:
+                return None
+            children += new_children
+
     def parse_inline_code(self):
         # {{ has already been parsed
         content = self.read_as_value_until([TokenType.CloseInlineCode])
@@ -1072,7 +1115,7 @@ class Parser(object):
     def check_newline(self, size=1):
         prev_pos = self.tokenizer.position - size - 1
         if prev_pos <= 0:
-            return size == 1
+            return self.tokenizer.position == size
         if self.tokenizer.source[prev_pos] != '\n':
             return False
         return True
@@ -1130,12 +1173,10 @@ class Parser(object):
                 break
             elif tk.type == TokenType.Newline:
                 # check if next token is >, if not, break out
-                self.tokenizer.position += 1
-                if self.tokenizer.peek_token().type != TokenType.Blockquote:
-                    self.tokenizer.position -= 1
+                if self.tokenizer.peek_token(offset=1).type != TokenType.Blockquote:
                     break
                 else:
-                    self.tokenizer.position += 1
+                    self.tokenizer.position += 2
                     children.append(NewlineNode())
             else:
                 new_children = self.parse_nodes()
@@ -1143,6 +1184,48 @@ class Parser(object):
                     break
                 children += new_children
         return BlockquoteNode(children)
+
+    def parse_table(self):
+        # || has already been parsed
+        if not self.check_newline(2):
+            return None
+        rows = []
+        table_complete = False
+        while not table_complete:
+            # read row until newline
+            row = []
+            col_type = 'td'
+            col_content = []
+            col_span = 1
+            while True:
+                pos = self.tokenizer.position
+                tk = self.tokenizer.read_token()
+                if tk.type == TokenType.DoublePipe:
+                    if col_content:
+                        col_attrs = [('colspan', col_span)] if col_span > 1 else []
+                        row.append(HTMLNode(col_type, col_attrs, col_content, True, True))
+                        col_content = []
+                        col_type = 'td'
+                    else:
+                        col_span += 1
+                elif tk.type == TokenType.Newline:
+                    if self.tokenizer.peek_token().type != TokenType.DoublePipe:
+                        table_complete = True
+                        self.tokenizer.position -= 1
+                    else:
+                        self.tokenizer.position += 2
+                    break
+                elif tk.type == TokenType.Tilde and not col_content:
+                    col_type = 'th'
+                else:
+                    self.tokenizer.position = pos
+                    new_children = self.parse_nodes()
+                    if not new_children:
+                        table_complete = True
+                        break
+                    col_content += new_children
+            rows.append(HTMLNode('tr', [], row, True, True))
+        return HTMLNode('table', [('class', 'wiki-content-table')], rows)
 
     def parse_newline_escape(self):
         # \ was already parsed

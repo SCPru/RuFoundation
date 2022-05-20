@@ -32,11 +32,14 @@ class TokenType(Enum):
     Newline = '\n'
     Slash = '/'
     Backslash = '\\'
+    Tilde = '~'
 
     Blockquote = '>'
 
     DoubleAt = '@@'
     DoubleHash = '##'
+
+    DoublePipe = '||'
 
     OpenHTMLLiteral = '@<'
     CloseHTMLLiteral = '>@'
@@ -44,6 +47,7 @@ class TokenType(Enum):
     OpenInlineCode = '{{'
     CloseInlineCode = '}}'
 
+    DoubleDash = '--'
     DoubleAsterisk = '**'
     DoubleSlash = '//'
     DoubleUnderline = '__'
@@ -99,8 +103,9 @@ class Tokenizer(object):
         r = self.peek_chars(num_chars)
         self.position += num_chars
 
-    def peek_token(self):
+    def peek_token(self, offset=0):
         p = self.position
+        self.position += offset
         token = self.read_token()
         self.position = p
         return token
