@@ -98,6 +98,8 @@ class Tokenizer(object):
         self.source = self.prepare_source(source)
         self.position = 0
         self.special_tokens = get_sorted_special_types()
+        self.not_string_regex =\
+            re.compile('^(.*?)(' + '|'.join([re.escape(x[0]) for x in self.special_tokens]) + '|' + '|'.join([re.escape(x) for x in ALL_WHITESPACE_CHARS]) + '|$)')
 
     def peek_chars(self, num_chars=1):
         return self.source[self.position:self.position+num_chars]
@@ -141,25 +143,11 @@ class Tokenizer(object):
         return Token.null()
 
     def read_string(self):
-        content = ''
-        max_special_chars = len(self.special_tokens[0][0])
-        while self.position < len(self.source):
-            # expensive but works for now (2)
-            # -- causes double parsing
-            chars = self.peek_chars(max_special_chars)
-            if chars[0:1] in WHITESPACE_CHARS:
-                break
-            found_subtoken = False
-            for value, token_type in self.special_tokens:
-                if chars.startswith(value):
-                    found_subtoken = True
-                    break
-            if found_subtoken:
-                break
-            content += self.source[self.position]
-            self.position += 1
-        if content:
-            return Token(content, TokenType.String, content)
+        #
+        match = self.not_string_regex.match(self.source[self.position:])[1]
+        self.position += len(match)
+        if match:
+            return Token(match, TokenType.String, match)
         return Token.null()
 
     def read_all_tokens(self):
