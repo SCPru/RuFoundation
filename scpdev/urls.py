@@ -25,8 +25,12 @@ import web.views.article
 import web.views.api.articles
 
 
+def partial_quote(url):
+    return url.replace(':', '%3A')
+
+
 def serve_static(request, path, document_root=None, show_indexes=False):
-    path = '/'.join([urllib.parse.quote(x) for x in path.split('/')])
+    path = '/'.join([partial_quote(x) for x in path.split('/')])
     return django.views.static.serve(request, path, document_root=document_root, show_indexes=show_indexes)
 
 
