@@ -238,12 +238,34 @@ class ImageNode(Node):
     def _get_image_url(self, context=None):
         if context is None or context.source_article is None:
             return None
+        src_lower = self.source.lower()
+        if src_lower.startswith('http://') or src_lower.startswith('https://'):
+            return self.source
         return '/local--files/%s/%s' % (articles.get_full_name(context.source_article), self.source)
 
     def render(self, context=None):
         url = self._get_image_url(context)
+        style = HTMLNode.get_attribute(self.attributes, 'style', '')
+        css_class = HTMLNode.get_attribute(self.attributes, 'class', '')
+        # image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
         if self.img_type == 'image':
-            return '<img src="%s" alt="%s">' % (html.escape(url), html.escape(self.source))
+            return '<img src="%s" alt="%s" style="%s" class="%s">' %\
+                   (html.escape(url), html.escape(self.source), html.escape(style), html.escape(css_class))
+        elif self.img_type == '=image':
+            return '<div style="display: flex; justify-content: center"><img src="%s" alt="%s" style="%s" class="%s"></div>' %\
+                   (html.escape(url), html.escape(self.source), html.escape(style), html.escape(css_class))
+        elif self.img_type == '<image':
+            return '<div style="display: flex; justify-content: flex-start"><img src="%s" alt="%s" style="%s" class="%s"></div>' %\
+                   (html.escape(url), html.escape(self.source), html.escape(style), html.escape(css_class))
+        elif self.img_type == '>image':
+            return '<div style="display: flex; justify-content: flex-end"><img src="%s" alt="%s" style="%s" class="%s"></div>' %\
+                   (html.escape(url), html.escape(self.source), html.escape(style), html.escape(css_class))
+        elif self.img_type == 'f<image':
+            return '<img src="%s" alt="%s" style="float: left; %s" class="%s">' %\
+                   (html.escape(url), html.escape(self.source), html.escape(style), html.escape(css_class))
+        elif self.img_type == 'f>image':
+            return '<img src="%s" alt="%s" style="float: right; %s" class="%s">' %\
+                   (html.escape(url), html.escape(self.source), html.escape(style), html.escape(css_class))
         return ''
 
 
