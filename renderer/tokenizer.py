@@ -33,6 +33,7 @@ class TokenType(Enum):
     Slash = '/'
     Backslash = '\\'
     Tilde = '~'
+    Quote = '"'
 
     Blockquote = '>'
 
@@ -139,37 +140,13 @@ class Tokenizer(object):
             return Token(content, TokenType.Whitespace, content)
         return Token.null()
 
-    def try_read_quoted_string(self):
-        pos = self.position
-        if self.position >= len(self.source) or self.source[self.position] != '"':
-            return self.read_string(ignore_quote_start=True)
-        raw = '"'
-        content = ''
-        self.position += 1
-        while self.position < len(self.source):
-            if self.source[self.position] == '"':
-                raw += '"'
-                self.position += 1
-                break
-            content += self.source[self.position]
-            raw += self.source[self.position]
-            self.position += 1
-        if len(raw) > 1 and raw[-1] == '"':
-            return Token(raw, TokenType.QuotedString, content)
-        else:
-            # re-read as string instead. expensive but works for now
-            self.position = pos
-            return self.read_string(ignore_quote_start=True)
-
-    def read_string(self, ignore_quote_start=True):
+    def read_string(self):
         content = ''
         max_special_chars = len(self.special_tokens[0][0])
         while self.position < len(self.source):
             # expensive but works for now (2)
             # -- causes double parsing
             chars = self.peek_chars(max_special_chars)
-            if chars[0:1] == '"' and (not ignore_quote_start or content):
-                break
             if chars[0:1] in WHITESPACE_CHARS:
                 break
             found_subtoken = False

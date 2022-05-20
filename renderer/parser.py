@@ -1,4 +1,4 @@
-from .tokenizer import TokenType, WHITESPACE_CHARS, Tokenizer
+from .tokenizer import TokenType, WHITESPACE_CHARS, Tokenizer, Token
 from django.utils import html
 from web.controllers import articles
 import copy
@@ -789,6 +789,48 @@ class Parser(object):
             return attributes[0][0]
         return ''
 
+    def read_quoted_arg(self):
+        t = self.tokenizer
+        pos = t.position
+        if t.position >= len(t.source) or t.source[t.position] != '"':
+            return t.read_string(ignore_quote_start=True)
+        raw = '"'
+        content = ''
+        t.position += 1
+        while t.position < len(t.source):
+            if t.source[t.position] == '"':
+                # check if we really want to stop
+                # we want to stop, if:
+                # - after " we have whitespace then `]]`
+                # - after " we have valid attribute name then `=`
+
+                pos2 = t.position
+                t.position += 1
+                t.skip_whitespace()
+                t2 = t.read_token()
+                t.skip_whitespace()
+                t3 = t.read_token()
+                t.position = pos2
+                if t2.type == TokenType.Null or t2.type == TokenType.CloseDoubleBracket or\
+                        (t2.type == TokenType.String and t3.type == TokenType.Equals) or\
+                        t2.type == TokenType.Pipe:
+                    raw += '"'
+                    t.position += 1
+                    break
+            elif t.source[t.position] == '\n':
+                raw = ''
+                break
+            content += t.source[t.position]
+            raw += t.source[t.position]
+            t.position += 1
+
+        if len(raw) > 1 and raw[-1] == '"':
+            return Token(raw, TokenType.QuotedString, content)
+        else:
+            # re-read as string instead. expensive but works for now
+            t.position = pos
+            return t.read_string()
+
     def parse_html_node(self):
         # [[ has already been parsed
         self.tokenizer.skip_whitespace()
@@ -854,7 +896,7 @@ class Parser(object):
                         self.tokenizer.position = pos
                 else:
                     self.tokenizer.skip_whitespace()
-                    tk = self.tokenizer.try_read_quoted_string()
+                    tk = self.read_quoted_arg()
                     if tk.type != TokenType.String and tk.type != TokenType.QuotedString:
                         self.tokenizer.position = pos
                         continue
