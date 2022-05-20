@@ -1285,8 +1285,6 @@ class Parser(object):
                 content = self.read_as_value_until([TokenType.Newline, TokenType.Null])
                 blockquote_content += content
 
-        print(blockquote_content)
-
         children = Parser.parse_subtree(blockquote_content)
         return BlockquoteNode(children)
 
