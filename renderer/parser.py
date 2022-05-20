@@ -507,6 +507,16 @@ class BlockquoteNode(Node):
         return '<blockquote>%s</blockquote>' % super().render(context=context)
 
 
+class UnsafeHTMLNode(Node):
+    def __init__(self, code):
+        super().__init__()
+        self.code = code
+        self.block_node = True
+
+    def render(self, context=None):
+        return '<iframe srcdoc="%s" sandbox="allow-same-origin allow-scripts" style="width: 100%%; height: 0" class="w-iframe-autoresize" frameborder="0" allowtransparency="true"></iframe>' % html.escape(self.code)
+
+
 class Parser(object):
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
@@ -779,7 +789,7 @@ class Parser(object):
             trim_paragraphs = True
             name = name[:-1]
         align_tags = ['<', '>', '=', '==']
-        hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview', 'size']
+        hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview', 'size', 'html']
         if self._context._in_tabview:
             hack_tags += ['tab']
         image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
@@ -879,6 +889,8 @@ class Parser(object):
                                 name = first_attr_name
                                 attributes = attributes[1:]
                                 return ModuleNode(name, attributes, module_content)
+                            elif name == 'html':
+                                return UnsafeHTMLNode(module_content)
                             elif name == 'collapsible':
                                 return CollapsibleNode(attributes, children)
                             elif name == 'tabview':
@@ -904,7 +916,7 @@ class Parser(object):
                                         break
                                 return HTMLNode(name, attributes, children, complex_node=name not in ['span'], trim_paragraphs=trim_paragraphs)
 
-            if name != 'module':
+            if name != 'module' and name != 'html':
                 self.tokenizer.position = pos
                 was_in_tabview = self._context._in_tabview
                 self._context._in_tabview = in_tabview

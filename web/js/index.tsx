@@ -4,6 +4,7 @@ import Page404 from './entrypoints/page-404';
 import PageOptions from "./entrypoints/page-options";
 import {makeCollapsible} from "./articles/collapsible";
 import {makeTabView} from "./articles/tabview";
+import {makeAutoResizeFrame} from "./articles/auto-resize-iframe";
 
 
 function renderTo(where: HTMLElement, what: any) {
@@ -21,6 +22,9 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.w-collapsible').forEach((node: HTMLElement) => makeCollapsible(node));
     document.querySelectorAll('.w-tabview').forEach((node: HTMLElement) => makeTabView(node));
 
+    // enable unsafe HTML iframes that will auto-resize to content
+    document.querySelectorAll('.w-iframe-autoresize').forEach((node: HTMLElement) => makeAutoResizeFrame(node));
+
     // establish watcher. will be used later for things like TabView too
     const observer = new MutationObserver((mutationList) => {
         mutationList.forEach(record => {
@@ -31,6 +35,8 @@ window.addEventListener('DOMContentLoaded', () => {
                         makeCollapsible(node);
                     } else if (node.classList.contains('w-tabview')) {
                         makeTabView(node);
+                    } else if (node.classList.contains('w-iframe-autoresize')) {
+                        makeAutoResizeFrame(node);
                     }
                 })
             }
