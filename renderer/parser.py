@@ -167,7 +167,10 @@ class ColorNode(Node):
         self.content = content
 
     def render(self, context=None):
-        return '<span style="color: #%s">%s</span>' % (html.escape(self.color), html.escape(self.content))
+        color = self.color
+        if not color.startswith('#'):
+            color = '#' + color
+        return '<span style="color: %s">%s</span>' % (html.escape(color), html.escape(self.content))
 
 
 class HorizontalRulerNode(Node):
@@ -477,6 +480,18 @@ class FontSizeNode(Node):
         return ('<span style="font-size: %s">' % html.escape(self.size)) + super().render(context=context) + '</span>'
 
 
+class BlockquoteNode(Node):
+    def __init__(self, children):
+        super().__init__()
+        self.block_node = True
+        self.complex_node = True
+        for child in children:
+            self.append_child(child)
+
+    def render(self, context=None):
+        return '<blockquote>%s</blockquote>' % super().render(context=context)
+
+
 class Parser(object):
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
@@ -682,6 +697,18 @@ class Parser(object):
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
+        elif token.type == TokenType.DoubleUnderline:
+            pos = self.tokenizer.position
+            new_node = self.parse_underline()
+            if new_node is not None:
+                return new_node
+            self.tokenizer.position = pos
+        elif token.type == TokenType.OpenInlineCode:
+            pos = self.tokenizer.position
+            new_node = self.parse_inline_code()
+            if new_node is not None:
+                return new_node
+            self.tokenizer.position = pos
         elif token.type == TokenType.HrBeginning:
             pos = self.tokenizer.position
             new_node = self.parse_hr()
@@ -694,6 +721,12 @@ class Parser(object):
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
+        elif token.type == TokenType.Blockquote:
+            pos = self.tokenizer.position
+            new_node = self.parse_blockquote()
+            if new_node is not None:
+                return new_node
+            self.tokenizer_position = pos
         return TextNode(token.raw)
 
     def parse_nodes(self):
@@ -1010,9 +1043,37 @@ class Parser(object):
                 return None
             children += new_children
 
+    def parse_underline(self):
+        # __ has already been parsed
+        children = []
+        while True:
+            pos = self.tokenizer.position
+            tk = self.tokenizer.read_token()
+            if tk.type == TokenType.Null:
+                return None
+            elif tk.type == TokenType.DoubleUnderline:
+                return HTMLNode('u', [], children, complex_node=False)
+            self.tokenizer.position = pos
+            new_children = self.parse_nodes()
+            if not new_children:
+                return None
+            children += new_children
+
+    def parse_inline_code(self):
+        # {{ has already been parsed
+        content = self.read_as_value_until([TokenType.CloseInlineCode])
+        if content is None:
+            return None
+        token = self.tokenizer.read_token()
+        if token.type != TokenType.CloseInlineCode:
+            return None
+        return HTMLNode('tt', [], [TextNode(content)])
+
     def check_newline(self, size=1):
         prev_pos = self.tokenizer.position - size - 1
-        if prev_pos <= 0 or self.tokenizer.source[prev_pos] != '\n':
+        if prev_pos <= 0:
+            return size == 1
+        if self.tokenizer.source[prev_pos] != '\n':
             return False
         return True
 
@@ -1048,17 +1109,40 @@ class Parser(object):
         # parse nodes until newline found
         children = []
         while True:
-            pos = self.tokenizer.position
-            tk = self.tokenizer.read_token()
+            tk = self.tokenizer.peek_token()
             if tk.type == TokenType.Null:
-                return None
+                break
             elif tk.type == TokenType.Newline:
                 return HTMLNode('h%d' % h_count, [], children)
-            self.tokenizer.position = pos
             new_children = self.parse_nodes()
             if not new_children:
                 return None
             children += new_children
+
+    def parse_blockquote(self):
+        # > has already been parsed
+        if not self.check_newline(1):
+            return None
+        children = []
+        while True:
+            tk = self.tokenizer.peek_token()
+            if tk.type == TokenType.Null:
+                break
+            elif tk.type == TokenType.Newline:
+                # check if next token is >, if not, break out
+                self.tokenizer.position += 1
+                if self.tokenizer.peek_token().type != TokenType.Blockquote:
+                    self.tokenizer.position -= 1
+                    break
+                else:
+                    self.tokenizer.position += 1
+                    children.append(NewlineNode())
+            else:
+                new_children = self.parse_nodes()
+                if not new_children:
+                    break
+                children += new_children
+        return BlockquoteNode(children)
 
     def parse_newline_escape(self):
         # \ was already parsed

@@ -168,7 +168,7 @@ def is_full_name_allowed(article_name):
         return False
     if len(article_name) > 128:
         return False
-    if not re.match(r'[^A-Za-z0-9\-_:]+', article_name):
+    if not re.match(r'^[A-Za-z0-9\-_:]+$', article_name):
         return False
     category, name = get_name(article_name)
     if not category.strip() or not name.strip():

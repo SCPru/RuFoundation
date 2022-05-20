@@ -33,14 +33,20 @@ class TokenType(Enum):
     Slash = '/'
     Backslash = '\\'
 
+    Blockquote = '>'
+
     DoubleAt = '@@'
     DoubleHash = '##'
 
     OpenHTMLLiteral = '@<'
     CloseHTMLLiteral = '>@'
 
+    OpenInlineCode = '{{'
+    CloseInlineCode = '}}'
+
     DoubleAsterisk = '**'
     DoubleSlash = '//'
+    DoubleUnderline = '__'
 
     HrBeginning = '----'
 
@@ -78,7 +84,7 @@ class Tokenizer(object):
             .replace('\t', ' ')
         source = re.sub(r'\n{2,}', '\n\n', source)
         source = re.sub(r'\n\s+\n', '\n\n', source)
-        source = '\n'.join([x.lstrip(ALL_WHITESPACE_CHARS) for x in source.split('\n')])
+        source = '\n'.join([x.strip(ALL_WHITESPACE_CHARS) for x in source.split('\n')])
         return source
 
     def __init__(self, source):
