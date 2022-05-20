@@ -1004,6 +1004,7 @@ class Parser(object):
         if tk.type != TokenType.String:
             return None
         color = tk.value.strip()
+        self.tokenizer.skip_whitespace()
         tk = self.tokenizer.read_token()
         if tk.type != TokenType.Pipe:
             return None
