@@ -793,7 +793,7 @@ class Parser(object):
         t = self.tokenizer
         pos = t.position
         if t.position >= len(t.source) or t.source[t.position] != '"':
-            return t.read_string(ignore_quote_start=True)
+            return t.read_string()
         raw = '"'
         content = ''
         t.position += 1
