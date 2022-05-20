@@ -488,7 +488,7 @@ body {
 }
  
 div#container-wrap {
-    background: url('https://scp-wiki.wdfiles.com/local--files/component:theme/body_bg.png') top left repeat-x;
+    background: url('/static/images/scp-bg.png') top left repeat-x;
 }
  
 sup {
