@@ -10,6 +10,13 @@ class RenderContext(object):
         self.source_article = source_article
 
 
+class ParseResult(object):
+    def __init__(self, context, root):
+        self.parser = context.parser
+        self.root = root
+        self.code_blocks = context.code_blocks
+
+
 class ParseContext(object):
     def __init__(self, parser, root_node):
         self.parser = parser
@@ -168,7 +175,7 @@ class ParagraphNode(Node):
         return ('<p%s>' % alignattr) + content + '</p>'
 
 
-class NewlineEscape(Node):
+class NewlineEscapeNode(Node):
     def __init__(self):
         super().__init__()
 
@@ -197,6 +204,40 @@ class HorizontalRulerNode(Node):
 
     def render(self, context=None):
         return '<hr>'
+
+
+class FootnoteNode(Node):
+    def __init__(self, number, children):
+        super().__init__()
+        self.number = number
+        for child in children:
+            self.append_child(child)
+
+    def render_footnote(self, context=None):
+        return super().render(context)
+
+    def render(self, context=None):
+        return '<sup class="footnoteref"><a id="footnoteref-%d" class="footnoteref w-footnoteref" href="#footnote-%d">%d</a></sup>' % (self.number, self.number, self.number)
+
+
+class FootnoteBlockNode(Node):
+    def __init__(self, attributes, footnotes):
+        super().__init__()
+        self.attributes = attributes
+        self.footnotes = footnotes
+
+    def render(self, context=None):
+        if not len(self.footnotes):
+            return ''
+        output = '<div class="footnotes-footer">'
+        output += '<div class="title">%s</div>' % HTMLNode.get_attribute(self.attributes, 'title', 'Сноски')
+        for i in range(len(self.footnotes)):
+            output += '<div id="footnote-%d" class="footnote-footer">' % (i+1)
+            output += '<a href="#footnoteref-%d">%d</a>. ' % (i+1, i+1)
+            output += self.footnotes[i].render_footnote(context)
+            output += '</div>'
+        output += '</div>'
+        return output
 
 
 class HTMLNode(Node):
@@ -532,17 +573,22 @@ class UnsafeHTMLNode(Node):
 
 
 class Parser(object):
-    def __init__(self, tokenizer):
+    def __init__(self, tokenizer, context=None):
         self.tokenizer = tokenizer
-        self._context = None
+        self._context = context
 
     def parse(self):
         self.tokenizer.position = 0
 
+        is_subtree = False
+
         root_node = Node()
         root_node.block_node = True
-        context = ParseContext(self, root_node)
-        self._context = context
+        if self._context is None:
+            context = ParseContext(self, root_node)
+            self._context = context
+        else:
+            is_subtree = True
 
         while True:
             new_children = self.parse_nodes()
@@ -554,8 +600,24 @@ class Parser(object):
         self.create_paragraphs(root_node.children)
         root_node.paragraphs_set = True
 
+        if not is_subtree:
+            # if there is no footnote block, append it.
+            if self.find_node_recursively(FootnoteBlockNode) is None:
+                root_node.append_child(FootnoteBlockNode([], self._context.footnotes))
+
+        result = ParseResult(self._context, root_node)
         self._context = None
-        return context
+        return result
+
+    def find_node_recursively(self, node_type):
+        def find_node(node):
+            for child in node.children:
+                if type(child) == node_type:
+                    return child
+                found = find_node(child)
+                if found is not None:
+                    return found
+        return find_node(self._context.root)
 
     def wrap_text_nodes_in_span(self, node, wrap_with):
         # node should be a block node. wrap_with should be a span node
@@ -845,7 +907,8 @@ class Parser(object):
             trim_paragraphs = True
             name = name[:-1]
         align_tags = ['<', '>', '=', '==']
-        hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview', 'size', 'html']
+        hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview', 'size', 'html', 'footnote', 'footnoteblock']
+        single_hack_tags = ['include', 'iframe', 'footnoteblock']
         if self._context._in_tabview:
             hack_tags += ['tab']
         image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
@@ -905,7 +968,7 @@ class Parser(object):
                     attributes.append((attr_name, tk.value))
         # include is a special case, it does not have/require ending tag. same for img tags. same for module tags, but not all of them
         first_attr_name = self._extract_name_from_attributes(attributes)
-        if name == 'include' or name == 'iframe' or name in image_tags or (name == 'module' and (not attributes or not ModuleNode.module_has_content(first_attr_name))):
+        if name in single_hack_tags or name in image_tags or (name == 'module' and not ModuleNode.module_has_content(first_attr_name)):
             if name == 'include':
                 name = first_attr_name
                 attributes = attributes[1:]
@@ -918,6 +981,8 @@ class Parser(object):
                 name = first_attr_name
                 attributes = attributes[1:]
                 return ModuleNode(name, attributes, None)
+            elif name == 'footnoteblock':
+                return FootnoteBlockNode(attributes, self._context.footnotes)
             else:
                 source = first_attr_name
                 attributes = attributes[1:]
@@ -957,6 +1022,11 @@ class Parser(object):
                             elif name == 'size':
                                 name = first_attr_name
                                 return FontSizeNode(name, children)
+                            elif name == 'footnote':
+                                number = len(self._context.footnotes) + 1
+                                node = FootnoteNode(number, children)
+                                self._context.footnotes.append(node)
+                                return node
                             elif name in align_tags:
                                 return TextAlignNode(name, children)
                             else:
@@ -1260,9 +1330,8 @@ class Parser(object):
                 return None
             children += new_children
 
-    @staticmethod
-    def parse_subtree(code):
-        p = Parser(Tokenizer(code))
+    def parse_subtree(self, code):
+        p = Parser(Tokenizer(code), context=self._context)
         result = p.parse()
         return result.root.children
 
@@ -1288,7 +1357,7 @@ class Parser(object):
                 content = self.read_as_value_until([TokenType.Newline, TokenType.Null])
                 blockquote_content += content
 
-        children = Parser.parse_subtree(blockquote_content)
+        children = self.parse_subtree(blockquote_content)
         return BlockquoteNode(children)
 
     def parse_align_marker(self):
@@ -1345,4 +1414,4 @@ class Parser(object):
         tk = self.tokenizer.read_token()
         if tk.type != TokenType.Newline:
             return None
-        return NewlineEscape()
+        return NewlineEscapeNode()
