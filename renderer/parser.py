@@ -1160,6 +1160,9 @@ class Parser(object):
             tk = self.tokenizer.read_token()
             if tk.type == TokenType.CloseSingleBracket:
                 blank = False
+                # wikidot does not do links if they do not have a slash
+                if '/' not in url:
+                    return None
                 if url[0:1] == '*':
                     blank = True
                     url = url[1:]
