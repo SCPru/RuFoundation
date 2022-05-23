@@ -410,7 +410,7 @@ class IframeNode(Node):
         self.block_node = True
 
     def render(self, context=None):
-        return '<div>Iframe is not supported yet</div>'
+        return '<div><!--Iframe is not supported yet--></div>'
 
 
 class ModuleNode(Node):
@@ -436,7 +436,7 @@ class ModuleNode(Node):
                 .replace('\u00a0', ' ')\
                 .replace('</style>', '\\u003c/style\\u003e')
             return '<style>%s</style>' % code
-        return '<div>Module \'%s\' is not supported yet</div>' % html.escape(self.name)
+        return '<div><!--Module \'%s\' is not supported yet--></div>' % html.escape(self.name)
 
 
 class CollapsibleNode(Node):
