@@ -2,6 +2,7 @@ from .tokenizer import TokenType, WHITESPACE_CHARS, Tokenizer, Token
 from django.utils import html
 from web.controllers import articles
 import copy
+import re
 
 
 class RenderContext(object):
@@ -184,16 +185,17 @@ class NewlineEscapeNode(Node):
 
 
 class ColorNode(Node):
-    def __init__(self, color, content):
+    def __init__(self, color, children):
         super().__init__()
         self.color = color
-        self.content = content
+        for child in children:
+            self.append_child(child)
 
     def render(self, context=None):
         color = self.color
-        if not color.startswith('#'):
+        if not color.startswith('#') and re.match(r'^([0-9A-Fa-f]{3}|[0-9A-Fa-f{6}])$', color):
             color = '#' + color
-        return '<span style="color: %s">%s</span>' % (html.escape(color), html.escape(self.content))
+        return '<span style="color: %s">%s</span>' % (html.escape(color), super().render(context=context))
 
 
 class HorizontalRulerNode(Node):
@@ -1078,14 +1080,19 @@ class Parser(object):
         tk = self.tokenizer.read_token()
         if tk.type != TokenType.Pipe:
             return None
-        content = ''
+        children = []
         while True:
+            pos = self.tokenizer.position
             tk = self.tokenizer.read_token()
             if tk.type == TokenType.DoubleHash:
-                return ColorNode(color, content)
+                return ColorNode(color, children)
             elif tk.type == TokenType.Null:
                 return None
-            content += tk.raw
+            self.tokenizer.position = pos
+            new_children = self.parse_nodes()
+            if not new_children:
+                return None
+            children += new_children
 
     def parse_literal(self):
         # @@ has already been parsed
