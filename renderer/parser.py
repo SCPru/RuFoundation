@@ -446,7 +446,7 @@ class ModuleNode(Node):
     @staticmethod
     def module_has_content(name):
         name = name.lower()
-        content_modules = ['listpages', 'listusers', 'countpages']
+        content_modules = ['listusers', 'countpages']
         # to-do: remove these hack checks and use only module_has_content (once we have all modules)
         return name in content_modules or modules.module_has_content(name)
 
