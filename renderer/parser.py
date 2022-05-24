@@ -290,6 +290,11 @@ class HTMLNode(Node):
             return default
 
     @staticmethod
+    def set_attribute(attributes, name, value):
+        name = name.lower()
+        return [((x[0], value) if x[0].lower() == name else x) for x in attributes]
+
+    @staticmethod
     def render_attributes(attributes, attr_whitelist):
         attr_string = ''
         for attr in attributes:
@@ -340,7 +345,8 @@ class ImageNode(Node):
             style_prefix = 'float: right; '
         elif self.img_type == 'f<image':
             style_prefix = 'float: left; '
-        attributes = [((x[0], style_prefix+x[1]) if x[0] == 'style' else x) for x in self.attributes]
+        attributes = HTMLNode.set_attribute(self.attributes, 'style', style_prefix+HTMLNode.get_attribute(self.attributes, 'style', ''))
+        attributes = HTMLNode.set_attribute(attributes, 'class', HTMLNode.get_attribute(attributes, 'class', '')+' image')
         attr_string = HTMLNode.render_attributes(attributes, ['style', 'class', 'width', 'height'])
         # image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
         if self.img_type in ['image', 'f>image', 'f<image']:
