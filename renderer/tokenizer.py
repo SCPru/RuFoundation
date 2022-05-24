@@ -99,6 +99,7 @@ class Tokenizer(object):
     @staticmethod
     def prepare_source(source):
         source = (source or '')\
+            .strip(ALL_WHITESPACE_CHARS)\
             .replace('\r\n', '\n')\
             .replace('\r', '\n')\
             .replace('\t', ' ')

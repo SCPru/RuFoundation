@@ -262,6 +262,7 @@ class HTMLNode(Node):
         self.attributes = attributes
         self.trim_paragraphs = trim_paragraphs
         self.block_node = self.name in ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'th', 'td']
+        self.paragraphs_set = self.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'th', 'td']
         self.complex_node = complex_node
         for child in children:
             self.append_child(child)
@@ -1354,9 +1355,11 @@ class Parser(object):
         # if anything else, fail
         if not self.check_newline(4):
             return None
-        content = self.read_as_value_until([TokenType.Newline])
+        content = self.read_as_value_until([TokenType.Newline, TokenType.Null])
         if content is None or content.rstrip().replace('-', '') != '':
             return None
+        # include newline
+        self.tokenizer.skip_whitespace()
         return HorizontalRulerNode()
 
     def parse_heading(self):
