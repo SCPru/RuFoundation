@@ -3,12 +3,15 @@ from django.utils import html
 from web.controllers import articles
 import copy
 import re
+import modules
 
 
 class RenderContext(object):
-    def __init__(self, article, source_article):
+    def __init__(self, article, source_article, path_params):
         self.article = article
         self.source_article = source_article
+        self.path_params = path_params
+        self.redirect_to = None
 
 
 class ParseResult(object):
@@ -427,18 +430,16 @@ class ModuleNode(Node):
     @staticmethod
     def module_has_content(name):
         name = name.lower()
-        print('module', repr(name))
-        content_modules = ['css', 'listpages', 'listusers', 'countpages']
-        return name in content_modules
+        content_modules = ['listpages', 'listusers', 'countpages']
+        # to-do: remove these hack checks and use only module_has_content (once we have all modules)
+        return name in content_modules or modules.module_has_content(name)
 
     def render(self, context=None):
         # render only module CSS for now
-        if self.name == 'css':
-            code = self.content\
-                .replace('\u00a0', ' ')\
-                .replace('</style>', '\\u003c/style\\u003e')
-            return '<style>%s</style>' % code
-        return '<div><!--Module \'%s\' is not supported yet--></div>' % html.escape(self.name)
+        params = {}
+        for attr in self.attributes:
+            params[attr[0]] = attr[1]
+        return modules.render_module(self.name, context, params, self.content)
 
 
 class CollapsibleNode(Node):
@@ -887,11 +888,17 @@ class Parser(object):
             return attributes[0][0]
         return ''
 
+    def read_simple_arg(self):
+        value = self.read_as_value_until([TokenType.CloseDoubleBracket, TokenType.Whitespace])
+        if value is None:
+            return Token.null()
+        return Token(value, TokenType.String, value)
+
     def read_quoted_arg(self):
         t = self.tokenizer
         pos = t.position
         if t.position >= len(t.source) or t.source[t.position] != '"':
-            return t.read_string()
+            return self.read_simple_arg()
         raw = '"'
         content = ''
         t.position += 1
@@ -927,9 +934,9 @@ class Parser(object):
         if len(raw) > 1 and raw[-1] == '"':
             return Token(raw, TokenType.QuotedString, content)
         else:
-            # re-read as string instead. expensive but works for now
+            # re-read as string instead.
             t.position = pos
-            return t.read_string()
+            return self.read_simple_arg()
 
     def parse_html_node(self):
         # [[ has already been parsed
@@ -960,7 +967,7 @@ class Parser(object):
                 tab_name = self.read_as_value_until([TokenType.CloseDoubleBracket])
                 if tab_name is None:
                     return None
-                attributes.append((tab_name.strip(), None))
+                attributes.append((tab_name.strip(), True))
                 tk = self.tokenizer.read_token()
                 if tk.type != TokenType.CloseDoubleBracket:
                     return None
@@ -976,14 +983,14 @@ class Parser(object):
                 return None
             elif tk.type == TokenType.CloseDoubleBracket:
                 if attr_name:
-                    attributes.append((attr_name, None))
+                    attributes.append((attr_name, True))
                 break
             else:
                 # read attribute
                 if tk.type != TokenType.Equals:
                     self.tokenizer.position = pos
                     if attr_name:
-                        attributes.append((attr_name, None))
+                        attributes.append((attr_name, True))
                     continue
                 # from here, different handling for include. this is a hack in original Wikidot syntax
                 if name == 'include':
@@ -998,6 +1005,7 @@ class Parser(object):
                 else:
                     self.tokenizer.skip_whitespace()
                     tk = self.read_quoted_arg()
+                    print('read arg: ' + repr(tk))
                     if tk.type != TokenType.String and tk.type != TokenType.QuotedString:
                         self.tokenizer.position = pos
                         continue
@@ -1489,8 +1497,6 @@ class Parser(object):
                 self.tokenizer.position = pos
                 if tk2.type != token_type and (tk2.type not in [TokenType.Asterisk, TokenType.Hash] or not whitespace_size):
                     return result
-                import json
-                print(json.dumps(result.to_json(), indent=2))
                 next_type = 'ul' if tk2.type == TokenType.Asterisk else 'ol'
                 # next line is also list line
                 self.tokenizer.position  = read_next
