@@ -1,7 +1,6 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from django.conf import settings
-from django.shortcuts import redirect
 
 from web.controllers import articles
 
@@ -42,7 +41,7 @@ def index(request, path):
         context = RenderContext(article, article, path_params)
         content = single_pass_render(articles.get_latest_source(article), context)
         if context.redirect_to:
-            return redirect(context.redirect_to)
+            return HttpResponseRedirect(context.redirect_to)
         if article_name != 'main':
             title = article.title
         status = 200
