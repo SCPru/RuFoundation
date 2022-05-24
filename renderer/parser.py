@@ -340,18 +340,15 @@ class ImageNode(Node):
 
     def render(self, context=None):
         url = self._get_image_url(context)
-        style_prefix = ''
-        if self.img_type == 'f>image':
-            style_prefix = 'float: right; '
-        elif self.img_type == 'f<image':
-            style_prefix = 'float: left; '
-        attributes = HTMLNode.set_attribute(self.attributes, 'style', style_prefix+HTMLNode.get_attribute(self.attributes, 'style', ''))
-        attributes = HTMLNode.set_attribute(attributes, 'class', HTMLNode.get_attribute(attributes, 'class', '')+' image')
+        attributes = HTMLNode.set_attribute(self.attributes, 'class', HTMLNode.get_attribute(self.attributes, 'class', '')+' image')
         attr_string = HTMLNode.render_attributes(attributes, ['style', 'class', 'width', 'height'])
         # image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
-        if self.img_type in ['image', 'f>image', 'f<image']:
+        if self.img_type == 'image':
             return '<img src="%s" alt="%s" %s>' %\
                    (html.escape(url), html.escape(self.source), attr_string)
+        elif self.img_type in ['f>image', 'f<image']:
+            outer_cls = 'floatleft' if self.img_type == 'f<image' else 'floatright'
+            return '<div class="image-container %s"><img src="%s" alt="%s" %s></div>' % (outer_cls, html.escape(url), html.escape(self.source), attr_string)
         elif self.img_type == '=image':
             return '<div style="display: flex; justify-content: center"><img src="%s" alt="%s" %s></div>' %\
                    (html.escape(url), html.escape(self.source), attr_string)
