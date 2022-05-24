@@ -51,17 +51,40 @@ def run(base_path):
 def set_parents(base_path):
     allfiles = os.listdir('%s/meta/pages' % base_path)
     print('Setting parents...')
+    pages = []
     for f in allfiles:
         with codecs.open('%s/meta/pages/%s' % (base_path, f), 'r', encoding='utf-8') as fp:
             meta = json.load(fp)
-            pagename = meta['name']
-            parent = None
-            for rev in meta['revisions']:
-                if rev['commentary'].startswith('Parent page set to: "') or rev['commentary'].startswith('Родительской страницей установлена: "'):
-                    parent = rev['commentary'].split('"')[1]
-                    break
-            article = articles.get_article(pagename)
-            if article:
-                if parent:
-                    print('Parent: %s -> %s' % (pagename, parent))
-                articles.set_parent(article, parent or None)
+            pages.append(meta)
+    # collect page renames
+    # (max_date, name, latest)
+    page_renames = []
+    for meta in pages:
+        for rev in meta['revisions']:
+            if rev['commentary'].startswith('You successfully renamed the page: "') or\
+                    rev['commentary'].startswith('Вы переименовали страницу: "'):
+                renamed_from = rev['commentary'].split('"')[1]
+                renamed_at = rev['stamp']
+                page_renames.append((renamed_at, renamed_from, meta['name']))
+    page_renames.sort(key=lambda x: x[0])
+    print(repr(page_renames))
+
+    for meta in pages:
+        pagename = meta['name']
+        parent = None
+        for rev in meta['revisions']:
+            if rev['commentary'].startswith('Parent page set to: "') or\
+                    rev['commentary'].startswith('Родительской страницей установлена: "'):
+                parent = rev['commentary'].split('"')[1]
+                # try to find if it was renamed
+                for rename in page_renames:
+                    if rename[0] >= rev['stamp'] and rename[1] == parent:
+                        print('Parent was renamed: %s -> %s' % (rename[1], parent))
+                        parent = rename[2]
+                break
+
+        article = articles.get_article(pagename)
+        if article:
+            if parent:
+                print('Parent: %s -> %s' % (pagename, parent))
+            articles.set_parent(article, parent or None)

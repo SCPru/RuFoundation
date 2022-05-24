@@ -167,6 +167,8 @@ def set_parent(full_name_or_article, full_name_of_parent):
     article = get_article(full_name_or_article)
     parent = get_article(full_name_of_parent) if full_name_of_parent else None
     prev_parent = get_full_name(article.parent) if article.parent else None
+    if article.parent == parent:
+        return
     article.parent = parent
     article.save()
     log = ArticleLogEntry(

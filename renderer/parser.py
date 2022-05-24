@@ -405,6 +405,8 @@ class IncludeNode(Node):
                 if name not in map_values or (map_values[name].startswith('{$') and map_values[name].endswith('}')):
                     map_values[name] = value
             for name in map_values:
+                if type(map_values[name]) != str:
+                    continue
                 code = re.sub(r'{\$%s}' % re.escape(name), map_values[name], code, flags=re.IGNORECASE)
             self.code = code
 
@@ -1054,6 +1056,8 @@ class Parser(object):
         while True:
             pos = self.tokenizer.position
             tk = self.tokenizer.read_token()
+            first_tk = tk
+            first_pos = self.tokenizer.position
             # [[ / <attr_name> ]]
             if tk.type == TokenType.OpenDoubleBracket:
                 self.tokenizer.skip_whitespace()
@@ -1115,8 +1119,8 @@ class Parser(object):
                     return None
                 children += new_children
             else:
-                self.tokenizer.position = pos + len(tk.raw or '')
-                module_content += tk.raw
+                self.tokenizer.position = first_pos
+                module_content += first_tk.raw
 
     def parse_comment_node(self):
         # [!-- has already been parsed
@@ -1228,7 +1232,7 @@ class Parser(object):
             if tk.type == TokenType.CloseSingleBracket:
                 blank = False
                 # wikidot does not do links if they do not have a slash
-                if '/' not in url:
+                if '/' not in url and '#' not in url:
                     return None
                 if url[0:1] == '*':
                     blank = True
@@ -1240,7 +1244,7 @@ class Parser(object):
                 if tk.type == TokenType.Whitespace:
                     is_text = True
                     # wikidot does not do links if they do not have a slash
-                    if '/' not in url:
+                    if '/' not in url and '#' not in url:
                         return None
                 else:
                     url += tk.raw

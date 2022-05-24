@@ -1,6 +1,7 @@
 import pkgutil
 import sys
 from django.utils import html
+import logging
 
 
 _all_modules = {}
@@ -51,4 +52,5 @@ def render_module(name, context, params, content=None):
         else:
             return modules[name].render(context, params)
     except:
+        logging.error('Module failed: %s, Params = %s, Path = %s, Error:', name, params, context.path_params if context else None, exc_info=True)
         return '<div class="error-block"><p>Ошибка обработки модуля \'%s\'</p></div>' % html.escape(name)
