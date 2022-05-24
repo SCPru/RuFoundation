@@ -19,7 +19,6 @@ def render_date(date):
 
 def render_var(var, page_vars, page):
     var = var[2]
-    print(repr(var))
     if var in page_vars:
         return page_vars[var]
     if var.startswith('created_at|'):
@@ -87,7 +86,9 @@ def render(context, params, content=None):
 
     # if either name, range, or fullname is '.', then we always select the current page.
     if params.get('name') == '.' or params.get('range') == '.' or params.get('fullname') == '.':
-        pages = [context.article]
+        pages = []
+        if context.article:
+            pages.append(context.article)
         total_pages = 1
     elif params.get('fullname'):
         article = articles.get_article(params.get('fullname'))
