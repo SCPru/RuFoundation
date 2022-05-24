@@ -407,7 +407,6 @@ class IncludeNode(Node):
             for name, value in self.attributes:
                 if name not in map_values or (map_values[name].startswith('{$') and map_values[name].endswith('}')):
                     map_values[name] = value
-            print('include ', repr(map_values))
             for name in map_values:
                 code = re.sub(r'{\$%s}' % re.escape(name), map_values[name], code, flags=re.IGNORECASE)
             self.code = code
