@@ -260,11 +260,17 @@ class HTMLNode(Node):
 
         self.name = name
         self.attributes = attributes
-        self.trim_paragraphs = trim_paragraphs or self.name in ['table', 'tr', 'th', 'td']
+        self.trim_paragraphs = trim_paragraphs or self.name in ['th', 'td']
         self.block_node = self.name in ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'th', 'td']
         self.paragraphs_set = self.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'th', 'td']
         self.complex_node = complex_node
         for child in children:
+            # if this is a table, we should not allow _anything_ that is not table structure
+            # otherwise invalid <br>'s are produced (and more)
+            if self.name == 'table' and (type(child) != HTMLNode or child.name != 'tr'):
+                continue
+            elif self.name == 'tr' and (type(child) != HTMLNode or child.name not in ['th', 'td']):
+                continue
             self.append_child(child)
 
     allowed_tags = ['a', 'span', 'div', 'div_', 'table', 'row', 'hcell', 'cell']
