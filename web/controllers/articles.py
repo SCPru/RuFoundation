@@ -162,6 +162,21 @@ def get_latest_source(full_name_or_article):
         return None
 
 
+# Set parent of article
+def set_parent(full_name_or_article, full_name_of_parent):
+    article = get_article(full_name_or_article)
+    parent = get_article(full_name_of_parent) if full_name_of_parent else None
+    prev_parent = get_full_name(article.parent) if article.parent else None
+    article.parent = parent
+    article.save()
+    log = ArticleLogEntry(
+        article=article,
+        type=ArticleLogEntry.LogEntryType.Parent,
+        meta={'parent': full_name_of_parent, 'prev_parent': prev_parent}
+    )
+    add_log_entry(article, log)
+
+
 # Check if name is allowed for creation
 # Pretty much this blocks two 100% special paths, everything else is OK
 def is_full_name_allowed(article_name):

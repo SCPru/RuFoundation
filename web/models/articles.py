@@ -6,6 +6,7 @@ class Article(models.Model):
     name = models.TextField()
     title = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
@@ -28,6 +29,7 @@ class ArticleLogEntry(models.Model):
         Title = 'title'
         Name = 'name'
         New = 'new'
+        Parent = 'parent'
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     type = models.TextField(choices=LogEntryType.choices)

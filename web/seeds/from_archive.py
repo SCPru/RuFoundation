@@ -45,3 +45,23 @@ def run(base_path):
         if time.time() - t > 1:
             print('Added: %d/%d' % (cnt, len(allfiles)))
             t = time.time()
+    set_parents(base_path)
+
+
+def set_parents(base_path):
+    allfiles = os.listdir('%s/meta/pages' % base_path)
+    print('Setting parents...')
+    for f in allfiles:
+        with codecs.open('%s/meta/pages/%s' % (base_path, f), 'r', encoding='utf-8') as fp:
+            meta = json.load(fp)
+            pagename = meta['name']
+            parent = None
+            for rev in meta['revisions']:
+                if rev['commentary'].startswith('Parent page set to: "') or rev['commentary'].startswith('Родительской страницей установлена: "'):
+                    parent = rev['commentary'].split('"')[1]
+                    break
+            article = articles.get_article(pagename)
+            if article:
+                if parent:
+                    print('Parent: %s -> %s' % (pagename, parent))
+                articles.set_parent(article, parent or None)
