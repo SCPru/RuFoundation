@@ -1006,7 +1006,6 @@ class Parser(object):
                 else:
                     self.tokenizer.skip_whitespace()
                     tk = self.read_quoted_arg()
-                    print('read arg: ' + repr(tk))
                     if tk.type != TokenType.String and tk.type != TokenType.QuotedString:
                         self.tokenizer.position = pos
                         continue
