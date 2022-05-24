@@ -186,6 +186,9 @@ class ArticleHistory extends Component<Props, State> {
 
             case 'name':
                 return <span className="spantip" title="страница переименована/удалена">R</span>;
+
+            case 'parent':
+                return <span className="spantip" title="изменилась родительская страница">M</span>;
         }
     }
 
@@ -206,6 +209,16 @@ class ArticleHistory extends Component<Props, State> {
 
             case 'name':
                 return <>Страница переименована из "<em>{entry.meta.prev_name}</em>" в "<em>{entry.meta.name}</em>"</>;
+
+            case 'parent':
+                if (entry.meta.prev_parent && entry.meta.parent) {
+                    return <>Родительская страница изменена с "<em>{entry.meta.prev_parent}</em>" на
+                        "<em>{entry.meta.parent}</em>"</>;
+                } else if (entry.meta.prev_parent) {
+                    return <>Убрана родительская страница "<em>{entry.meta.prev_parent}</em>"</>;
+                } else if (entry.meta.parent) {
+                    return <>Установлена родительская страница "<em>{entry.meta.parent}</em>"</>;
+                }
         }
     }
 
