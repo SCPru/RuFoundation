@@ -289,17 +289,10 @@ class HTMLNode(Node):
         else:
             return default
 
-    def render(self, context=None):
-        content = super().render(context=context)
+    @staticmethod
+    def render_attributes(attributes, attr_whitelist):
         attr_string = ''
-        attr_whitelist = ['class', 'id', 'style']
-        if self.name == 'a':
-            attr_whitelist.append('href')
-            attr_whitelist.append('target')
-        elif self.name == 'th' or self.name == 'td':
-            attr_whitelist.append('colspan')
-            attr_whitelist.append('rowspan')
-        for attr in self.attributes:
+        for attr in attributes:
             if attr[0] not in attr_whitelist and not attr[0].startswith('data-'):
                 continue
             attr_string += ' '
@@ -309,6 +302,18 @@ class HTMLNode(Node):
                 if attr[0] == 'id' and not value.startswith('u-'):
                     value = 'u-' + value
                 attr_string += '="%s"' % html.escape(value)
+        return attr_string
+
+    def render(self, context=None):
+        content = super().render(context=context)
+        attr_whitelist = ['class', 'id', 'style']
+        if self.name == 'a':
+            attr_whitelist.append('href')
+            attr_whitelist.append('target')
+        elif self.name == 'th' or self.name == 'td':
+            attr_whitelist.append('colspan')
+            attr_whitelist.append('rowspan')
+        attr_string = HTMLNode.render_attributes(self.attributes, attr_whitelist)
         return '<%s%s>%s</%s>' % (html.escape(self.name), attr_string, content, html.escape(self.name))
 
 
@@ -330,27 +335,26 @@ class ImageNode(Node):
 
     def render(self, context=None):
         url = self._get_image_url(context)
-        style = HTMLNode.get_attribute(self.attributes, 'style', '')
-        css_class = HTMLNode.get_attribute(self.attributes, 'class', '')
-        # image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
-        if self.img_type == 'image':
-            return '<img src="%s" alt="%s" style="%s" class="%s">' %\
-                   (html.escape(url), html.escape(self.source), html.escape(style), html.escape(css_class))
-        elif self.img_type == '=image':
-            return '<div style="display: flex; justify-content: center"><img src="%s" alt="%s" style="%s" class="%s"></div>' %\
-                   (html.escape(url), html.escape(self.source), html.escape(style), html.escape(css_class))
-        elif self.img_type == '<image':
-            return '<div style="display: flex; justify-content: flex-start"><img src="%s" alt="%s" style="%s" class="%s"></div>' %\
-                   (html.escape(url), html.escape(self.source), html.escape(style), html.escape(css_class))
-        elif self.img_type == '>image':
-            return '<div style="display: flex; justify-content: flex-end"><img src="%s" alt="%s" style="%s" class="%s"></div>' %\
-                   (html.escape(url), html.escape(self.source), html.escape(style), html.escape(css_class))
+        style_prefix = ''
+        if self.img_type == 'f>image':
+            style_prefix = 'float: right; '
         elif self.img_type == 'f<image':
-            return '<img src="%s" alt="%s" style="float: left; %s" class="%s">' %\
-                   (html.escape(url), html.escape(self.source), html.escape(style), html.escape(css_class))
-        elif self.img_type == 'f>image':
-            return '<img src="%s" alt="%s" style="float: right; %s" class="%s">' %\
-                   (html.escape(url), html.escape(self.source), html.escape(style), html.escape(css_class))
+            style_prefix = 'float: left; '
+        attributes = [((x[0], style_prefix+x[1]) if x[0] == 'style' else x) for x in self.attributes]
+        attr_string = HTMLNode.render_attributes(attributes, ['style', 'class', 'width', 'height'])
+        # image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
+        if self.img_type in ['image', 'f>image', 'f<image']:
+            return '<img src="%s" alt="%s" %s>' %\
+                   (html.escape(url), html.escape(self.source), attr_string)
+        elif self.img_type == '=image':
+            return '<div style="display: flex; justify-content: center"><img src="%s" alt="%s" %s></div>' %\
+                   (html.escape(url), html.escape(self.source), attr_string)
+        elif self.img_type == '<image':
+            return '<div style="display: flex; justify-content: flex-start"><img src="%s" alt="%s" %s></div>' %\
+                   (html.escape(url), html.escape(self.source), attr_string)
+        elif self.img_type == '>image':
+            return '<div style="display: flex; justify-content: flex-end"><img src="%s" alt="%s" %s></div>' %\
+                   (html.escape(url), html.escape(self.source), attr_string)
         return ''
 
 
