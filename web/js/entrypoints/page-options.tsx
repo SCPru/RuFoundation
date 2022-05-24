@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom';
 import { Component, ReactNode } from 'react';
 import ArticleEditor from "../articles/article-editor";
 import ArticleHistory from "../articles/article-history";
+import ArticleSource from "../articles/article-source";
 
 
 interface Props {
@@ -13,13 +14,15 @@ interface Props {
 
 
 interface State {
-    subView: 'edit' | 'history' | null
+    subView: 'edit' | 'history' | 'source' | null
+    extOptions: boolean
 }
 
 
 class PageOptions extends Component<Props, State> {
     state = {
-        subView: null
+        subView: null,
+        extOptions: false
     };
 
     onEdit = (e) => {
@@ -44,9 +47,24 @@ class PageOptions extends Component<Props, State> {
         });
     };
 
+    onSource = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ subView: 'source' });
+        setTimeout(() => {
+            window.scrollTo(window.scrollX, document.body.scrollHeight);
+        });
+    };
+
+    toggleExtOptions = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ extOptions: !this.state.extOptions });
+    };
+
     render() {
         const { optionsEnabled, editable } = this.props;
-        const { subView } = this.state;
+        const { extOptions } = this.state;
 
         if (!optionsEnabled) {
             return null
@@ -57,7 +75,11 @@ class PageOptions extends Component<Props, State> {
                 <div id="page-options-bottom" className="page-options-bottom">
                     { editable && <a id="edit-button" className="btn btn-default" href="#" onClick={this.onEdit}>Редактировать</a> }
                     <a id="history-button" className="btn btn-default" href="#" onClick={this.onHistory}>История</a>
+                    <a id="more-options-button" className="btn btn-default" href="#" onClick={this.toggleExtOptions}>{extOptions?'- Опции':'+ Опции'}</a>
                 </div>
+                { extOptions && <div id="page-options-bottom-2" className="page-options-bottom form-actions">
+                    <a id="view-source-button" className="btn btn-default" href="#" onClick={this.onSource}>Исходник страницы</a>
+                </div> }
                 { this.renderSubView() }
             </>
         )
@@ -77,6 +99,9 @@ class PageOptions extends Component<Props, State> {
 
             case 'history':
                 return <ArticleHistory pageId={pageId} onClose={this.onCancelSubView} />;
+
+            case 'source':
+                return <ArticleSource pageId={pageId} onClose={this.onCancelSubView} />;
 
             default:
                 return null
