@@ -37,6 +37,18 @@
                                     {{ title }}
                                 </div>
                             {% endif %}
+                            {% if breadcrumbs|length > 1 %}
+                                <div id="breadcrumbs">
+                                {% for article in breadcrumbs %}
+                                    {% if breadcrumbs|last != article %}
+                                        <a href="{{ article.url }}">{{ article.title }}</a>
+                                        &raquo;
+                                    {% else %}
+                                        {{ article.title }}
+                                    {% endif %}
+                                {% endfor %}
+                                </div>
+                            {% endif %}
                             <div id="page-content">
                                 {{ content|safe }}
                             </div>

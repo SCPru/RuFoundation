@@ -31,6 +31,8 @@ def index(request, path):
     # get article itself
     title = None
     article = articles.get_article(article_name)
+    breadcrumbs = [{'url': '/'+articles.get_full_name(x), 'title': x.title} for x in articles.get_breadcrumbs(article)]
+
     nav_top_article = articles.get_article('nav:top')
     nav_side_article = articles.get_article('nav:side')
 
@@ -64,6 +66,7 @@ def index(request, path):
         'content': content,
         'nav_top': nav_top,
         'nav_side': nav_side,
+        'breadcrumbs': breadcrumbs,
         'title': title,
         'options_config': json.dumps(options_config)
     }

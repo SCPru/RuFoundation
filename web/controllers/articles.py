@@ -177,6 +177,16 @@ def set_parent(full_name_or_article, full_name_of_parent):
     add_log_entry(article, log)
 
 
+# Gets all parents
+def get_breadcrumbs(full_name_or_article):
+    article = get_article(full_name_or_article)
+    output = []
+    while article:
+        output.append(article)
+        article = article.parent
+    return list(reversed(output))
+
+
 # Check if name is allowed for creation
 # Pretty much this blocks two 100% special paths, everything else is OK
 def is_full_name_allowed(article_name):
