@@ -574,6 +574,30 @@ class UnsafeHTMLNode(Node):
         return '<iframe srcdoc="%s" sandbox="allow-same-origin allow-scripts" style="width: 100%%; height: 0" class="w-iframe-autoresize" frameborder="0" allowtransparency="true"></iframe>' % html.escape(self.code)
 
 
+class ListItemNode(Node):
+    def __init__(self):
+        super().__init__()
+        self.block_node = True
+
+
+class ListNode(Node):
+    def __init__(self, lstype):
+        super().__init__()
+        self.block_node = True
+        self.type = lstype
+        self.paragraphs_set = True
+
+    def render(self, context=None):
+        tag = self.type
+        output = '<%s>' % tag
+        for child in self.children:
+            output += '<li>'
+            output += child.render(context)
+            output += '</li>'
+        output += '</%s>' % tag
+        return output
+
+
 class Parser(object):
     def __init__(self, tokenizer, context=None):
         self.tokenizer = tokenizer
@@ -837,6 +861,16 @@ class Parser(object):
             self.tokenizer.position = pos
         elif token.type == TokenType.DoublePipe:
             new_node = self.parse_table()
+            if new_node is not None:
+                return new_node
+            self.tokenizer.position = pos
+        elif token.type == TokenType.Hash:
+            new_node = self.parse_list('ol')
+            if new_node is not None:
+                return new_node
+            self.tokenizer.position = pos
+        elif token.type == TokenType.Asterisk:
+            new_node = self.parse_list('ul')
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
@@ -1294,7 +1328,14 @@ class Parser(object):
         prev_pos = self.tokenizer.position - size - 1
         if prev_pos <= 0:
             return self.tokenizer.position == size
-        if self.tokenizer.source[prev_pos] != '\n':
+        check_pos = prev_pos
+        while check_pos >= 0:
+            c = self.tokenizer.source[check_pos]
+            check_pos -= 1
+            if c == ' ':
+                continue
+            if c == '\n':
+                return True
             return False
         return True
 
@@ -1425,3 +1466,47 @@ class Parser(object):
         if tk.type != TokenType.Newline:
             return None
         return NewlineEscapeNode()
+
+    def parse_list(self, lstype):
+        # # or * has already been parsed
+        if not self.check_newline():
+            return None
+        token_type = TokenType.Hash if lstype == 'ol' else TokenType.Asterisk
+        result = ListNode(lstype)
+        result.append_child(ListItemNode())
+        append_to = result
+        while True:
+            tk = self.tokenizer.peek_token()
+            if tk.type == TokenType.Newline or tk.type == TokenType.Null:
+                append_to = result
+                # check if next after newline is list
+                self.tokenizer.position += 1
+                pos = self.tokenizer.position
+                self.tokenizer.skip_whitespace(' ')
+                whitespace_size = self.tokenizer.position - pos
+                tk2 = self.tokenizer.read_token()
+                read_next = self.tokenizer.position
+                self.tokenizer.position = pos
+                if tk2.type != token_type and (tk2.type not in [TokenType.Asterisk, TokenType.Hash] or not whitespace_size):
+                    return result
+                import json
+                print(json.dumps(result.to_json(), indent=2))
+                next_type = 'ul' if tk2.type == TokenType.Asterisk else 'ol'
+                # next line is also list line
+                self.tokenizer.position  = read_next
+                for i in range(whitespace_size):
+                    if not append_to.children:
+                        append_to.append_child(ListItemNode())
+                    # last node in append_to must be a ListNode. if not, we should append it.
+                    if not append_to.children[-1].children or type(append_to.children[-1].children[-1]) != ListNode or\
+                            (i == whitespace_size-1 and append_to.children[-1].children[-1].type != next_type):
+                        child_list = ListNode(next_type)
+                        append_to.children[-1].append_child(child_list)
+                    append_to = append_to.children[-1].children[-1]
+                append_to.append_child(ListItemNode())
+                continue
+            new_children = self.parse_nodes()
+            if not new_children:
+                return result
+            for child in new_children:
+                append_to.children[-1].append_child(child)

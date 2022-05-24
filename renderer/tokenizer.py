@@ -28,6 +28,7 @@ class TokenType(Enum):
     Equals = '='
     Pipe = '|'
     Asterisk = '*'
+    Hash = '#'
     Plus = '+'
     Newline = '\n'
     Slash = '/'
@@ -83,6 +84,19 @@ class Token(object):
 
 class Tokenizer(object):
     @staticmethod
+    def smart_strip(line):
+        line = line.rstrip()
+        if not line.strip(ALL_WHITESPACE_CHARS):
+            return ''
+        first_non_space = re.search(r'[^%s]' % re.escape(ALL_WHITESPACE_CHARS), line)
+        if first_non_space:
+            first_non_space = first_non_space.start()
+        else:
+            first_non_space = 0
+        line = (' ' * first_non_space) + line[first_non_space:]
+        return line
+
+    @staticmethod
     def prepare_source(source):
         source = (source or '')\
             .replace('\r\n', '\n')\
@@ -90,7 +104,7 @@ class Tokenizer(object):
             .replace('\t', ' ')
         source = re.sub(r'\n{2,}', '\n\n', source)
         source = re.sub(r'\n\s+\n', '\n\n', source)
-        source = '\n'.join([x.strip(ALL_WHITESPACE_CHARS) for x in source.split('\n')])
+        source = '\n'.join([Tokenizer.smart_strip(x) for x in source.split('\n')])
         # to-do: delete this shit at some point
         for k, v in settings.ARTICLE_REPLACE_CONFIG.items():
             source = source.replace(k, v)
@@ -165,9 +179,9 @@ class Tokenizer(object):
         self.position = pos
         return tokens
 
-    def skip_whitespace(self):
+    def skip_whitespace(self, chars=ALL_WHITESPACE_CHARS):
         while self.position < len(self.source):
-            if self.source[self.position] not in ALL_WHITESPACE_CHARS:
+            if self.source[self.position] not in chars:
                 break
             self.position += 1
 
