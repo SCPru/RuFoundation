@@ -47,7 +47,7 @@ def index(request, path):
         status = 200
     else:
         template_404 = loader.get_template('page_404.html')
-        context = {'page_id': article_name, 'allow_create': articles.is_full_name_allowed(article_name)}
+        context = {'page_id': article_name, 'allow_create': articles.is_full_name_allowed(article_name) and settings.ANONYMOUS_EDITING_ENABLED}
         content = template_404.render(context, request)
         status = 404
 
