@@ -1458,17 +1458,24 @@ class Parser(object):
             col_type = 'td'
             col_content = []
             col_span = 1
+            col_align = 'left'
             while True:
                 pos = self.tokenizer.position
                 tk = self.tokenizer.read_token()
                 if tk.type == TokenType.DoublePipe:
                     if col_content:
-                        col_attrs = [('colspan', col_span)] if col_span > 1 else []
+                        col_attrs = \
+                            ([('colspan', col_span)] if col_span > 1 else []) +\
+                            ([('style', 'text-align: %s' % col_align)] if col_align != 'left' else [])
                         row.append(HTMLNode(col_type, col_attrs, col_content, True, True))
                         col_content = []
                         col_type = 'td'
                     else:
                         col_span += 1
+                elif tk.type == TokenType.Underline:
+                    if self.tokenizer.peek_token().type == TokenType.Newline:
+                        col_content.append(NewlineNode())
+                        self.tokenizer.position += 1
                 elif tk.type == TokenType.Newline:
                     if self.tokenizer.peek_token().type != TokenType.DoublePipe:
                         table_complete = True
@@ -1478,6 +1485,8 @@ class Parser(object):
                     break
                 elif tk.type == TokenType.Tilde and not col_content:
                     col_type = 'th'
+                elif tk.type == TokenType.Equals and not col_content:
+                    col_align = 'center'
                 else:
                     self.tokenizer.position = pos
                     new_children = self.parse_nodes()
