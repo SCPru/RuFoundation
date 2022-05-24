@@ -1121,10 +1121,9 @@ class Parser(object):
     def parse_color_node(self):
         # ## has already been parsed
         self.tokenizer.skip_whitespace()
-        tk = self.tokenizer.read_token()
-        if tk.type != TokenType.String:
+        color = self.read_as_value_until([TokenType.Pipe])
+        if color is None:
             return None
-        color = tk.value.strip()
         self.tokenizer.skip_whitespace()
         tk = self.tokenizer.read_token()
         if tk.type != TokenType.Pipe:
