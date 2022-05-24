@@ -391,8 +391,9 @@ class IncludeNode(Node):
             for name, value in self.attributes:
                 if name not in map_values or (map_values[name].startswith('{$') and map_values[name].endswith('}')):
                     map_values[name] = value
+            print('include ', repr(map_values))
             for name in map_values:
-                code = code.replace('{$%s}' % name, map_values[name])
+                code = re.sub(r'{\$%s}' % re.escape(name), map_values[name], code, flags=re.IGNORECASE)
             self.code = code
 
     def render(self, context=None):
@@ -973,7 +974,8 @@ class Parser(object):
                 if tk.type != TokenType.CloseDoubleBracket:
                     return None
                 break
-            attr_name = self.read_as_value_until([TokenType.CloseDoubleBracket, TokenType.Whitespace, TokenType.Equals, TokenType.Newline])
+            maybe_pipe = [TokenType.Pipe] if name == 'include' else []
+            attr_name = self.read_as_value_until([TokenType.CloseDoubleBracket, TokenType.Whitespace, TokenType.Equals, TokenType.Newline] + maybe_pipe)
             if attr_name is None:
                 return None
             attr_name = attr_name.strip()
@@ -986,6 +988,11 @@ class Parser(object):
                 if attr_name:
                     attributes.append((attr_name, True))
                 break
+            elif tk.type == TokenType.Pipe:
+                # there can be random pipes
+                if attr_name:
+                    attributes.append((attr_name, True))
+                continue
             else:
                 # read attribute
                 if tk.type != TokenType.Equals:
