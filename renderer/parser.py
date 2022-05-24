@@ -260,7 +260,7 @@ class HTMLNode(Node):
 
         self.name = name
         self.attributes = attributes
-        self.trim_paragraphs = trim_paragraphs
+        self.trim_paragraphs = trim_paragraphs or self.name in ['table', 'tr', 'th', 'td']
         self.block_node = self.name in ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'th', 'td']
         self.paragraphs_set = self.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'th', 'td']
         self.complex_node = complex_node
