@@ -11,6 +11,20 @@ import codecs
 # This is not characteristic of the rest of the app, so just install it manually if needed
 
 
+def maybe_load_pages_meta(base_path_or_list):
+    if type(base_path_or_list) == str:
+        allfiles = os.listdir('%s/meta/pages' % base_path_or_list)
+        pages = []
+        for f in allfiles:
+            with codecs.open('%s/meta/pages/%s' % (base_path_or_list, f), 'r', encoding='utf-8') as fp:
+                meta = json.load(fp)
+                meta['revisions'].sort(key=lambda x: x['revision'], reverse=True)
+                meta['filename'] = f
+                pages.append(meta)
+        return pages
+    return base_path_or_list
+
+
 def run(base_path):
     # unpacks wikidot archive in DBotThePony's backup format
     # files are just copied
@@ -22,40 +36,33 @@ def run(base_path):
     print('Adding articles...')
     t = time.time()
     cnt = 0
-    allfiles = os.listdir('%s/meta/pages' % base_path)
-    for f in allfiles:
+    pages = maybe_load_pages_meta(base_path)
+    for meta in pages:
         cnt += 1
-        with codecs.open('%s/meta/pages/%s' % (base_path, f), 'r', encoding='utf-8') as fp:
-            meta = json.load(fp)
-            pagename = meta['name']
-            title = meta['title'] if 'title' in meta else None
-            top_rev = meta['revisions'][0]['revision']
-            fn_7z = '.'.join(f.split('.')[:-1]) + '.7z'
-            fn_7z = '%s/pages/%s' % (base_path, fn_7z)
-            if not os.path.exists(fn_7z):
-                continue
-            with py7zr.SevenZipFile(fn_7z) as z:
-                [(_, bio)] = z.read(['%d.txt' % top_rev]).items()
-                content = bio.read().decode('utf-8')
-                article = articles.create_article(pagename)
-                if title is not None:
-                    article.title = title
-                    article.save()
-                articles.create_article_version(article, content)
+        f = meta['filename']
+        pagename = meta['name']
+        title = meta['title'] if 'title' in meta else None
+        top_rev = meta['revisions'][0]['revision']
+        fn_7z = '.'.join(f.split('.')[:-1]) + '.7z'
+        fn_7z = '%s/pages/%s' % (base_path, fn_7z)
+        if not os.path.exists(fn_7z):
+            continue
+        with py7zr.SevenZipFile(fn_7z) as z:
+            [(_, bio)] = z.read(['%d.txt' % top_rev]).items()
+            content = bio.read().decode('utf-8')
+            article = articles.create_article(pagename)
+            if title is not None:
+                article.title = title
+                article.save()
+            articles.create_article_version(article, content)
         if time.time() - t > 1:
-            print('Added: %d/%d' % (cnt, len(allfiles)))
+            print('Added: %d/%d' % (cnt, len(pages)))
             t = time.time()
-    set_parents(base_path)
+    set_parents(pages)
 
 
-def set_parents(base_path):
-    allfiles = os.listdir('%s/meta/pages' % base_path)
-    print('Setting parents...')
-    pages = []
-    for f in allfiles:
-        with codecs.open('%s/meta/pages/%s' % (base_path, f), 'r', encoding='utf-8') as fp:
-            meta = json.load(fp)
-            pages.append(meta)
+def set_parents(base_path_or_list):
+    pages = maybe_load_pages_meta(base_path_or_list)
     # collect page renames
     # (max_date, name, latest)
     page_renames = []
