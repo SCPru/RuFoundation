@@ -408,18 +408,21 @@ class IncludeNode(Node):
                 if type(map_values[name]) != str:
                     continue
                 code = re.sub(r'{\$%s}' % re.escape(name), map_values[name], code, flags=re.IGNORECASE)
-            self.code = code
+            nodes = Parser(Tokenizer(code)).parse().root.children
+            for node in nodes:
+                self.append_child(node)
 
     def render(self, context=None):
         # Include is never rendered directly unless it's broken
-        if self.code is None:
+        if not self.children:
             c = '<div class="error-block"><p>'
             c += 'Вставленная страница &quot;%s&quot; не существует (' % html.escape(self.name)
             c += '<a href="/%s/edit/true" target="_blank">создать её сейчас</a>' % html.escape(self.name)
             c += ')'
             c += '</p></div>'
             return c
-        return ''
+        else:
+            return super().render(context=context)
 
 
 class IframeNode(Node):
@@ -789,9 +792,6 @@ class Parser(object):
         elif token.type == TokenType.OpenDoubleBracket:
             new_node = self.parse_html_node()
             if new_node is not None:
-                # if it's an include node, add all tokens into current tokenizer position!
-                if isinstance(new_node, IncludeNode) and new_node.code is not None:
-                    self.tokenizer.inject_code(new_node.code)
                 return new_node
             self.tokenizer.position = pos
         elif token.type == TokenType.OpenComment:
@@ -1407,7 +1407,8 @@ class Parser(object):
             if tk.type == TokenType.Null:
                 break
             elif tk.type == TokenType.Newline:
-                return HTMLNode('h%d' % h_count, [], children)
+                content = HTMLNode('span', [], children)
+                return HTMLNode('h%d' % h_count, [], [content])
             new_children = self.parse_nodes()
             if not new_children:
                 return None
