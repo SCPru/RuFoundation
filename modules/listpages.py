@@ -161,7 +161,7 @@ def render(context, params, content=None):
         }
         if f_sort[0] not in allowed_sort_columns:
             f_sort = ['created_at', 'desc']
-        direction = 'asc' if f_sort[1:] == ['desc', 'desc'] else 'desc'
+        direction = 'desc' if f_sort[1:] == ['desc'] else 'asc'
         q = q.order_by(getattr(allowed_sort_columns[f_sort[0]], direction)())  # asc/desc is a function call on DB val
         # end sorting
         try:
