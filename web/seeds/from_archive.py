@@ -5,6 +5,7 @@ import json
 from web.controllers import articles
 import time
 import codecs
+import datetime
 
 
 # NOTE: This specific seed file requires py7zr to run.
@@ -43,6 +44,9 @@ def run(base_path):
         pagename = meta['name']
         title = meta['title'] if 'title' in meta else None
         top_rev = meta['revisions'][0]['revision']
+        bot_rev = meta['revisions'][-1]['revision']
+        updated_at = datetime.datetime.fromtimestamp(top_rev['stamp'])
+        created_at = datetime.datetime.fromtimestamp(bot_rev['stamp'])
         fn_7z = '.'.join(f.split('.')[:-1]) + '.7z'
         fn_7z = '%s/pages/%s' % (base_path, fn_7z)
         if not os.path.exists(fn_7z):
@@ -51,9 +55,11 @@ def run(base_path):
             [(_, bio)] = z.read(['%d.txt' % top_rev]).items()
             content = bio.read().decode('utf-8')
             article = articles.create_article(pagename)
+            article.created_at = created_at
+            article.updated_at = updated_at
             if title is not None:
                 article.title = title
-                article.save()
+            article.save()
             articles.create_article_version(article, content)
         if time.time() - t > 1:
             print('Added: %d/%d' % (cnt, len(pages)))
