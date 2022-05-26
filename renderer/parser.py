@@ -412,7 +412,6 @@ class IncludeNode(Node):
                 if type(map_values[name]) != str:
                     continue
                 code = re.sub(r'{\$%s}' % re.escape(name), map_values[name], code, flags=re.IGNORECASE)
-            print('parse include ' + self.name)
             parse_context.include_tree.append(name)
             nodes = Parser(Tokenizer(code), context=parse_context).parse().root.children
             parse_context.include_tree[-2:-1] = []
