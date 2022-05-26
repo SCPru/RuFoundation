@@ -1,9 +1,12 @@
+from django.db.utils import IntegrityError
 from web.controllers import articles
 from django.db import transaction
 
 
 def _create_article(full_name, content):
-    article = articles.create_article(full_name)
+    article = articles.get_article(full_name)
+    if article is None:
+        article = articles.create_article(full_name)
     ver = articles.create_article_version(article, content)
     return ver
 
@@ -340,9 +343,6 @@ SCP-библиотека
 [[/module]]
 [[/div]]
     """)
-
-    if articles.get_article('main') is not None:
-        return
 
     _create_article('main', """
 [[div class="welcome-warning"]]

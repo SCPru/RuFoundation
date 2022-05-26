@@ -26,6 +26,4 @@ This also includes `nav:top` and `nav:side` which are critical for proper appear
 
 You can create some by running the following sequence:
 
-- `python manage.py shell`
-- (from shell) `import web.seeds`
-- (from shell) `web.seeds.run()`
+- `python manage.py seed`
