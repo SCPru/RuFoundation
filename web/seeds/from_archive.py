@@ -44,9 +44,8 @@ def run(base_path):
         pagename = meta['name']
         title = meta['title'] if 'title' in meta else None
         top_rev = meta['revisions'][0]['revision']
-        bot_rev = meta['revisions'][-1]['revision']
-        updated_at = datetime.datetime.fromtimestamp(top_rev['stamp'])
-        created_at = datetime.datetime.fromtimestamp(bot_rev['stamp'])
+        updated_at = datetime.datetime.fromtimestamp(meta['revisions'][0]['stamp'])
+        created_at = datetime.datetime.fromtimestamp(meta['revisions'][-1]['stamp'])
         fn_7z = '.'.join(f.split('.')[:-1]) + '.7z'
         fn_7z = '%s/pages/%s' % (base_path, fn_7z)
         if not os.path.exists(fn_7z):
