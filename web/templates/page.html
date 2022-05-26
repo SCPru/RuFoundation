@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="/static/scp-base.css">
 
     <script src="/static/app.js?v=3" type="text/javascript"></script>
-    <link rel="stylesheet" type="text/css" href="/static/app.css?v=3">
+    <link rel="stylesheet" type="text/css" href="/static/app.css?v=4">
 </head>
 <body id="html-body">
     <div id="skrollr-body">
@@ -22,6 +22,13 @@
                     <div id="header">
                         <h1><a href="/"><span>{{ site_name }}</span></a></h1>
                         <h2><span>{{ site_headline }}</span></h2>
+                        <div id="site-in-dev-warning">
+                            <img src="/static/images/in-dev.svg" alt="IN DEVELOPMENT">
+                            <div>
+                                <h4>Это — аварийная версия сайта.</h4>
+                                <p>Она доступна без VPN, но имеет урезанный функционал и в данный момент работает только для чтения.</p>
+                            </div>
+                        </div>
                         <div id="top-bar">
                             {{ nav_top|safe }}
                         </div>
