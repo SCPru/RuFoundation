@@ -44,6 +44,7 @@ class TokenType(Enum):
     DoublePipe = '||'
 
     DoubleSup = '^^'
+    DoubleSub = ',,'
 
     OpenHTMLLiteral = '@<'
     CloseHTMLLiteral = '>@'

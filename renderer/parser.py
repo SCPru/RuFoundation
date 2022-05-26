@@ -851,6 +851,11 @@ class Parser(object):
             if new_node is not None:
                 return new_node
             self.tokenizer.position = pos
+        elif token.type == TokenType.DoubleSub:
+            new_node = self.parse_sub()
+            if new_node is not None:
+                return new_node
+            self.tokenizer.position = pos
         elif token.type == TokenType.OpenInlineCode:
             new_node = self.parse_inline_code()
             if new_node is not None:
@@ -1332,6 +1337,22 @@ class Parser(object):
                 return None
             elif tk.type == TokenType.DoubleSup:
                 return HTMLNode('sup', [], children, complex_node=False)
+            self.tokenizer.position = pos
+            new_children = self.parse_nodes()
+            if not new_children:
+                return None
+            children += new_children
+
+    def parse_sub(self):
+        # ,, has already been parsed
+        children = []
+        while True:
+            pos = self.tokenizer.position
+            tk = self.tokenizer.read_token()
+            if tk.type == TokenType.Null:
+                return None
+            elif tk.type == TokenType.DoubleSub:
+                return HTMLNode('sub', [], children, complex_node=False)
             self.tokenizer.position = pos
             new_children = self.parse_nodes()
             if not new_children:
