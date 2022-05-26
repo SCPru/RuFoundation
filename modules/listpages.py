@@ -3,7 +3,7 @@ from renderer.parser import RenderContext
 from web.controllers import articles
 import re
 from web.models.articles import Article
-from django.db.models import Q, Value as V
+from django.db.models import Q, Value as V, F
 from django.db.models.functions import Concat
 
 
@@ -98,7 +98,9 @@ def render(context, params, content=None):
             pages.append(article)
             total_pages += 1
     else:
+        # test
         q = Article.objects
+
         f_type = params.get('pagetype', 'normal')
         if f_type != '*':
             if f_type == 'normal':
@@ -147,13 +149,14 @@ def render(context, params, content=None):
             else:
                 article = articles.get_article(f_parent)
                 q = q.filter(parent=article)
-        f_sort = params.get('order', 'created_at desc').split(' ')
+        total_pages = len(q)
         # sorting
+        f_sort = params.get('order', 'created_at desc').split(' ')
         allowed_sort_columns = {
-            'created_at': V('created_at'),
-            'name': V('name'),
-            'title': V('title'),
-            'updated_at': V('updated_at'),
+            'created_at': F('created_at'),
+            'name': F('name'),
+            'title': F('title'),
+            'updated_at': F('updated_at'),
             'fullname': Concat('category', V(':'), 'name')
         }
         if f_sort[0] not in allowed_sort_columns:
@@ -161,25 +164,23 @@ def render(context, params, content=None):
         direction = 'asc' if f_sort[1:] == ['desc', 'desc'] else 'desc'
         q = q.order_by(getattr(allowed_sort_columns[f_sort[0]], direction)())  # asc/desc is a function call on DB val
         # end sorting
-        total_pages = len(q)
         try:
             f_offset = int(params.get('offset', '0'))
         except:
             f_offset = 0
-        q = q[f_offset:]
-        f_limit = params.get('limit')
-        if f_limit:
-            try:
-                f_limit = int(f_limit)
-                q = q[:f_limit]
-            except:
-                pass
+        try:
+            f_limit = int(params.get('limit'))
+            q = q[f_offset:f_offset + f_limit]
+        except:
+            q = q[f_offset:]
         try:
             f_per_page = int(params.get('perPage', '20'))
         except:
             f_per_page = 20
         try:
-            f_page = int(params.get('page', '1'))
+            f_page = int(context.path_params.get('p', '1'))
+            if f_page < 1:
+                f_page = 1
         except:
             f_page = 1
         q = q[(f_page-1)*f_per_page:f_page*f_per_page]
