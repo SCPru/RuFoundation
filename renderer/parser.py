@@ -27,6 +27,7 @@ class ParseContext(object):
         self.footnotes = []
         self.code_blocks = []
         self.root = root_node
+        self.include_tree = []
         self._in_tabview = False
 
 
@@ -391,12 +392,15 @@ class CommentNode(Node):
 
 
 class IncludeNode(Node):
-    def __init__(self, name, attributes):
+    def __init__(self, name, attributes, parse_context):
         super().__init__()
         self.name = name
         self.attributes = attributes
         self.complex_node = True
         self.code = None
+        # if this article was already included, fail
+        if name in parse_context.include_tree:
+            return
         article = articles.get_article(self.name)
         if article is not None:
             code = articles.get_latest_source(article) or ''
@@ -408,7 +412,10 @@ class IncludeNode(Node):
                 if type(map_values[name]) != str:
                     continue
                 code = re.sub(r'{\$%s}' % re.escape(name), map_values[name], code, flags=re.IGNORECASE)
-            nodes = Parser(Tokenizer(code)).parse().root.children
+            print('parse include ' + self.name)
+            parse_context.include_tree.append(name)
+            nodes = Parser(Tokenizer(code), context=parse_context).parse().root.children
+            parse_context.include_tree[-2:-1] = []
             for node in nodes:
                 self.append_child(node)
 
@@ -1042,7 +1049,7 @@ class Parser(object):
             if name == 'include':
                 name = first_attr_name
                 attributes = attributes[1:]
-                return IncludeNode(name, attributes)
+                return IncludeNode(name, attributes, self._context)
             elif name == 'iframe':
                 url = first_attr_name
                 attributes = attributes[1:]
