@@ -5,6 +5,7 @@ import re
 from web.models.articles import Article
 from django.db.models import Q, Value as V, F
 from django.db.models.functions import Concat
+from web import threadvars
 
 
 def has_content():
@@ -44,7 +45,7 @@ def page_to_listpages_vars(page, template):
         'title': page.title,
         'title_linked': '[[[%s|%s]]]' % (articles.get_full_name(page), page.title),
         'link': '/%s' % page.title,  # temporary, must be full page URL based on hostname
-        'content': articles.get_latest_source(page),
+        'content': '[[include %s]]' % (articles.get_full_name(page)),
         # content{n} = content sections are not supported yet
         # preview and preview(n) = first characters of the page are not supported yet
         # summary = wtf is this?
@@ -68,148 +69,149 @@ def page_to_listpages_vars(page, template):
 
 
 def render(context, params, content=None):
-    content = (content or '').strip()
+    with threadvars.context():
+        content = (content or '').strip()
 
-    # do url params
-    for k, v in params.items():
-        if v.startswith('@URL|'):
-            default = v[5:]
-            if k in context.path_params:
-                params[k] = context.path_params[k]
-            else:
-                params[k] = default
+        # do url params
+        for k, v in params.items():
+            if v.startswith('@URL|'):
+                default = v[5:]
+                if k in context.path_params:
+                    params[k] = context.path_params[k]
+                else:
+                    params[k] = default
 
-    prepend = params.get('prependLine', '')
-    append = params.get('appendLine', '')
-    separate = params.get('separate', 'yes') == 'yes'
-    wrapper = params.get('wrapper', 'yes') == 'yes'
+        prepend = params.get('prependLine', '')
+        append = params.get('appendLine', '')
+        separate = params.get('separate', 'yes') == 'yes'
+        wrapper = params.get('wrapper', 'yes') == 'yes'
 
-    # if either name, range, or fullname is '.', then we always select the current page.
-    if params.get('name') == '.' or params.get('range') == '.' or params.get('fullname') == '.':
-        pages = []
-        if context.article:
-            pages.append(context.article)
-        total_pages = 1
-    elif params.get('fullname'):
-        article = articles.get_article(params.get('fullname'))
-        pages = []
-        total_pages = 0
-        if article:
-            pages.append(article)
-            total_pages += 1
-    else:
-        # test
-        q = Article.objects
+        # if either name, range, or fullname is '.', then we always select the current page.
+        if params.get('name') == '.' or params.get('range') == '.' or params.get('fullname') == '.':
+            pages = []
+            if context.article:
+                pages.append(context.article)
+            total_pages = 1
+        elif params.get('fullname'):
+            article = articles.get_article(params.get('fullname'))
+            pages = []
+            total_pages = 0
+            if article:
+                pages.append(article)
+                total_pages += 1
+        else:
+            # test
+            q = Article.objects
 
-        f_type = params.get('pagetype', 'normal')
-        if f_type != '*':
-            if f_type == 'normal':
-                q = q.filter(~Q(name__startswith='_'))
-            elif f_type == 'hidden':
-                q = q.filter(Q(name__startswith='_'))
-        f_name = params.get('name', '*')
-        if f_name != '*':
-            f_name = f_name.replace('%', '*')
-            if f_name == '=':
-                q = q.filter(name=context.article.name)
-            elif '*' in f_name:
-                up_to = f_name.index('*')
-                q = q.filter(name__startswith=f_name[:up_to])
-            else:
-                q = q.filter(name=f_name)
-        f_category = params.get('category', '.')
-        if f_category != '*':
-            f_category = f_category.replace(',', ' ')
-            if f_category == '.':
-                q = q.filter(category=context.article.category)
-            else:
-                categories = []
-                not_allowed = []
-                for category in f_category.split(' '):
-                    if not category:
-                        continue
-                    if category[0] == '-':
-                        not_allowed.append(category[1:])
-                    else:
-                        categories.append(category)
-                if categories:
-                    q = q.filter(category__in=categories)
-                if not_allowed:
-                    q = q.filter(~Q(category__in=not_allowed))
-        f_parent = params.get('parent')
-        if f_parent:
-            if f_parent == '-':
-                q = q.filter(parent=None)
-            elif f_parent == '=':
-                q = q.filter(parent=context.article.parent)
-            elif f_parent == '-=':
-                q = q.filter(~Q(parent=context.article.parent))
-            elif f_parent == '.':
-                q = q.filter(parent=context.article)
-            else:
-                article = articles.get_article(f_parent)
-                q = q.filter(parent=article)
-        total_pages = len(q)
-        # sorting
-        f_sort = params.get('order', 'created_at desc').split(' ')
-        allowed_sort_columns = {
-            'created_at': F('created_at'),
-            'name': F('name'),
-            'title': F('title'),
-            'updated_at': F('updated_at'),
-            'fullname': Concat('category', V(':'), 'name')
-        }
-        if f_sort[0] not in allowed_sort_columns:
-            f_sort = ['created_at', 'desc']
-        direction = 'desc' if f_sort[1:] == ['desc'] else 'asc'
-        q = q.order_by(getattr(allowed_sort_columns[f_sort[0]], direction)())  # asc/desc is a function call on DB val
-        # end sorting
-        try:
-            f_offset = int(params.get('offset', '0'))
-        except:
-            f_offset = 0
-        try:
-            f_limit = int(params.get('limit'))
-            q = q[f_offset:f_offset + f_limit]
-        except:
-            q = q[f_offset:]
-        try:
-            f_per_page = int(params.get('perPage', '20'))
-        except:
-            f_per_page = 20
-        try:
-            f_page = int(context.path_params.get('p', '1'))
-            if f_page < 1:
+            f_type = params.get('pagetype', 'normal')
+            if f_type != '*':
+                if f_type == 'normal':
+                    q = q.filter(~Q(name__startswith='_'))
+                elif f_type == 'hidden':
+                    q = q.filter(Q(name__startswith='_'))
+            f_name = params.get('name', '*')
+            if f_name != '*':
+                f_name = f_name.replace('%', '*')
+                if f_name == '=':
+                    q = q.filter(name=context.article.name)
+                elif '*' in f_name:
+                    up_to = f_name.index('*')
+                    q = q.filter(name__startswith=f_name[:up_to])
+                else:
+                    q = q.filter(name=f_name)
+            f_category = params.get('category', '.')
+            if f_category != '*':
+                f_category = f_category.replace(',', ' ')
+                if f_category == '.':
+                    q = q.filter(category=context.article.category)
+                else:
+                    categories = []
+                    not_allowed = []
+                    for category in f_category.split(' '):
+                        if not category:
+                            continue
+                        if category[0] == '-':
+                            not_allowed.append(category[1:])
+                        else:
+                            categories.append(category)
+                    if categories:
+                        q = q.filter(category__in=categories)
+                    if not_allowed:
+                        q = q.filter(~Q(category__in=not_allowed))
+            f_parent = params.get('parent')
+            if f_parent:
+                if f_parent == '-':
+                    q = q.filter(parent=None)
+                elif f_parent == '=':
+                    q = q.filter(parent=context.article.parent)
+                elif f_parent == '-=':
+                    q = q.filter(~Q(parent=context.article.parent))
+                elif f_parent == '.':
+                    q = q.filter(parent=context.article)
+                else:
+                    article = articles.get_article(f_parent)
+                    q = q.filter(parent=article)
+            total_pages = len(q)
+            # sorting
+            f_sort = params.get('order', 'created_at desc').split(' ')
+            allowed_sort_columns = {
+                'created_at': F('created_at'),
+                'name': F('name'),
+                'title': F('title'),
+                'updated_at': F('updated_at'),
+                'fullname': Concat('category', V(':'), 'name')
+            }
+            if f_sort[0] not in allowed_sort_columns:
+                f_sort = ['created_at', 'desc']
+            direction = 'desc' if f_sort[1:] == ['desc'] else 'asc'
+            q = q.order_by(getattr(allowed_sort_columns[f_sort[0]], direction)())  # asc/desc is a function call on DB val
+            # end sorting
+            try:
+                f_offset = int(params.get('offset', '0'))
+            except:
+                f_offset = 0
+            try:
+                f_limit = int(params.get('limit'))
+                q = q[f_offset:f_offset + f_limit]
+            except:
+                q = q[f_offset:]
+            try:
+                f_per_page = int(params.get('perPage', '20'))
+            except:
+                f_per_page = 20
+            try:
+                f_page = int(context.path_params.get('p', '1'))
+                if f_page < 1:
+                    f_page = 1
+            except:
                 f_page = 1
-        except:
-            f_page = 1
-        q = q[(f_page-1)*f_per_page:f_page*f_per_page]
-        pages = list(q)
-        if params.get('reverse', 'no') == 'yes':
-            pages = reversed(pages)
+            q = q[(f_page-1)*f_per_page:f_page*f_per_page]
+            pages = list(q)
+            if params.get('reverse', 'no') == 'yes':
+                pages = reversed(pages)
 
-    output = ''
-    common_context = RenderContext(context.article, context.article, context.path_params)
+        output = ''
+        common_context = RenderContext(context.article, context.article, context.path_params)
 
-    if separate:
-        if prepend:
-            output += renderer.single_pass_render(prepend+'\n', common_context)
-        for page in pages:
-            page_content = page_to_listpages_vars(page, content)
-            output += renderer.single_pass_render(page_content+'\n', RenderContext(page, page, context.path_params))
-        if append:
-            output += renderer.single_pass_render(append, common_context)
-    else:
-        source = ''
-        if prepend:
-            source += prepend+'\n'
-        for page in pages:
-            page_content = page_to_listpages_vars(page, content)
-            source += page_content+'\n'
-        source += append
-        output += renderer.single_pass_render(source, common_context)
+        if separate:
+            if prepend:
+                output += renderer.single_pass_render(prepend+'\n', common_context)
+            for page in pages:
+                page_content = page_to_listpages_vars(page, content)
+                output += renderer.single_pass_render(page_content+'\n', RenderContext(page, page, context.path_params))
+            if append:
+                output += renderer.single_pass_render(append, common_context)
+        else:
+            source = ''
+            if prepend:
+                source += prepend+'\n'
+            for page in pages:
+                page_content = page_to_listpages_vars(page, content)
+                source += page_content+'\n'
+            source += append
+            output += renderer.single_pass_render(source, common_context)
 
-    if wrapper:
-        output = '<div class="list-pages-box">' + output + '</div>'
+        if wrapper:
+            output = '<div class="list-pages-box">' + output + '</div>'
 
-    return output
+        return output

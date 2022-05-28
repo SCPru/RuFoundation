@@ -2,6 +2,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from django.conf import settings
 
+import threading
+
 from web.controllers import articles
 
 from renderer import single_pass_render
