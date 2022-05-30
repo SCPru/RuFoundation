@@ -1,8 +1,7 @@
 from django.http import HttpRequest, HttpResponse
-from django.views.generic import View
 from django.conf import settings
 
-from . import CSRFExemptMixin, render_error, render_json
+from . import APIView, render_error, render_json
 
 from web.controllers import articles
 
@@ -20,7 +19,7 @@ def _validate_article_data(data, allow_partial=False) -> Optional[HttpResponse]:
     return None
 
 
-class CreateView(CSRFExemptMixin, View):
+class CreateView(APIView):
     def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         if not settings.ANONYMOUS_EDITING_ENABLED and not request.user.has_perm("web.create_article"):
             return render_error(403, "Недостаточно прав")
@@ -44,7 +43,7 @@ class CreateView(CSRFExemptMixin, View):
         return render_json(201, {'status': 'ok'})
 
 
-class FetchOrUpdateView(CSRFExemptMixin, View):
+class FetchOrUpdateView(APIView):
     def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
         # find page
         article = articles.get_article(full_name)
@@ -93,7 +92,7 @@ class FetchOrUpdateView(CSRFExemptMixin, View):
         return render_json(200, {'status': 'ok'})
 
 
-class FetchLogView(CSRFExemptMixin, View):
+class FetchLogView(APIView):
     def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
         try:
             c_from = int(request.GET.get('from', '0'))
