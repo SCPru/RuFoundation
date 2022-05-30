@@ -1,74 +1,101 @@
-from django.http import HttpResponse, HttpResponseRedirect
-from django.template import loader
+from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
+from django.template.loader import render_to_string
+from django.shortcuts import redirect
 from django.conf import settings
 
+from web.models.articles import Article
 from web.controllers import articles
 
 from renderer import single_pass_render
 from renderer.parser import RenderContext
 
+from typing import Optional
 import json
 
 
-def index(request, path):
-    path = path.split('/')
-    article_name = path[0]
-    if not article_name:
-        article_name = 'main'
+class ArticleView(TemplateResponseMixin, ContextMixin, View):
+    template_name = "page.html"
+    template_404 = "page_404.html"
 
-    path_params = {}
-    path = path[1:]
-    i = 0
-    while i < len(path):
-        key = path[i]
-        value = path[i+1] if i+1 < len(path) else None
-        if key or value:
-            path_params[key.lower()] = value
-        i += 2
+    @staticmethod
+    def get_path_params(path: str) -> tuple[str, dict[str, str]]:
+        path = path.split('/')
+        article_name = path[0]
+        if not article_name:
+            article_name = 'main'
 
-    template = loader.get_template('page.html')
+        path_params = {}
+        path = path[1:]
+        i = 0
+        while i < len(path):
+            key = path[i]
+            value = path[i + 1] if i + 1 < len(path) else None
+            if key or value:
+                path_params[key.lower()] = value
+            i += 2
 
-    # get article itself
-    title = None
-    article = articles.get_article(article_name)
-    breadcrumbs = [{'url': '/'+articles.get_full_name(x), 'title': x.title} for x in articles.get_breadcrumbs(article)]
+        return article_name, path_params
 
-    nav_top_article = articles.get_article('nav:top')
-    nav_side_article = articles.get_article('nav:side')
+    @staticmethod
+    def _render_nav(name: str, article: Article, path_params: dict[str, str]) -> str:
+        nav = articles.get_article(name)
+        if nav:
+            return single_pass_render(articles.get_latest_source(nav), RenderContext(article, nav, path_params))
+        return ""
 
-    nav_top = single_pass_render(articles.get_latest_source(nav_top_article), RenderContext(article, nav_top_article, path_params)) if nav_top_article else ''
-    nav_side = single_pass_render(articles.get_latest_source(nav_side_article), RenderContext(article, nav_side_article, path_params)) if nav_side_article else ''
+    def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str]]:
+        if article is not None:
+            context = RenderContext(article, article, path_params)
+            redirect_to = context.redirect_to
+            content = single_pass_render(articles.get_latest_source(article), context)
+            status = 200
+        else:
+            context = {'page_id': fullname, 'allow_create': articles.is_full_name_allowed(
+                fullname) and settings.ANONYMOUS_EDITING_ENABLED}
+            redirect_to = None
+            content = render_to_string(self.template_404, context)
+            status = 404
+        return content, status, redirect_to
 
-    if article is not None:
-        context = RenderContext(article, article, path_params)
-        content = single_pass_render(articles.get_latest_source(article), context)
-        if context.redirect_to:
-            return HttpResponseRedirect(context.redirect_to)
-        if article_name != 'main':
-            title = article.title
-        status = 200
-    else:
-        template_404 = loader.get_template('page_404.html')
-        context = {'page_id': article_name, 'allow_create': articles.is_full_name_allowed(article_name) and settings.ANONYMOUS_EDITING_ENABLED}
-        content = template_404.render(context, request)
-        status = 404
+    def get_context_data(self, **kwargs):
+        path = kwargs["path"]
 
-    options_config = {
-        'optionsEnabled': True,
-        'editable': settings.ANONYMOUS_EDITING_ENABLED,
-        'pageId': article_name
-    }
+        article_name, path_params = self.get_path_params(path)
 
-    context = {
-        'site_name': settings.WEBSITE_NAME,
-        'site_headline': settings.WEBSITE_HEADLINE,
-        'site_title': title or settings.WEBSITE_NAME,
-        'content': content,
-        'nav_top': nav_top,
-        'nav_side': nav_side,
-        'breadcrumbs': breadcrumbs,
-        'title': title,
-        'options_config': json.dumps(options_config)
-    }
+        article = articles.get_article(article_name)
+        title = article.title if article and article_name != 'main' else None
+        breadcrumbs = [{'url': '/' + articles.get_full_name(x), 'title': x.title} for x in
+                       articles.get_breadcrumbs(article)]
 
-    return HttpResponse(template.render(context, request), status=status)
+        content, status, redirect_to = self.render(article_name, article, path_params)
+
+        context = super(ArticleView, self).get_context_data(**kwargs)
+
+        options_config = {
+            'optionsEnabled': True,
+            'editable': settings.ANONYMOUS_EDITING_ENABLED,
+            'pageId': article_name
+        }
+
+        context.update({
+            'site_name': settings.WEBSITE_NAME,
+            'site_headline': settings.WEBSITE_HEADLINE,
+            'site_title': title or settings.WEBSITE_NAME,
+            'content': content,
+            'nav_top': self._render_nav("nav:top", article, path_params),
+            'nav_side': self._render_nav("nav:side", article, path_params),
+            'breadcrumbs': breadcrumbs,
+            'title': title,
+            'status': status,
+            'options_config': json.dumps(options_config),
+            'redirect_to': redirect_to
+        })
+
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        if context['redirect_to']:
+            return redirect(context['redirect_to'])
+        return self.render_to_response(context, status=context['status'])
+

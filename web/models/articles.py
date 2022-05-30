@@ -9,6 +9,13 @@ class Article(models.Model):
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def fullname(self) -> str:
+        return f"{self.category}:{self.name}"
+
+    def __str__(self) -> str:
+        return self.fullname
+
     class Meta:
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['category', 'name'])]
@@ -17,7 +24,7 @@ class Article(models.Model):
 class ArticleVersion(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     source = models.TextField()
-    rendered = models.TextField(null=True)
+    rendered = models.TextField(blank=True, null=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -34,7 +41,7 @@ class ArticleLogEntry(models.Model):
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     type = models.TextField(choices=LogEntryType.choices)
-    meta = models.JSONField(default=dict())
+    meta = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     comment = models.TextField(default='')
     rev_number = models.PositiveIntegerField()
