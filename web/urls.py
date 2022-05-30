@@ -14,16 +14,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path, re_path
-from django.views.decorators.csrf import csrf_exempt
 
-import web.views.api.articles
-
+from web.views.api.articles import CreateView, FetchOrUpdateView, FetchLogView
 from web.views.article import ArticleView
 
 
 urlpatterns = [
-    path('api/articles/new', csrf_exempt(web.views.api.articles.create)),
-    path('api/articles/<str:full_name>', csrf_exempt(web.views.api.articles.fetch_or_update)),
-    path('api/articles/<str:full_name>/log', csrf_exempt(web.views.api.articles.fetch_log)),
+    path('api/articles/new', CreateView.as_view()),
+    path('api/articles/<str:full_name>', FetchOrUpdateView.as_view()),
+    path('api/articles/<str:full_name>/log', FetchLogView.as_view()),
+
     re_path(r'(?P<path>.*)$', ArticleView.as_view())
 ]
