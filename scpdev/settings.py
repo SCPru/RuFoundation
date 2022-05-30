@@ -142,6 +142,11 @@ MEDIA_URL = "local--files/"
 MEDIA_ROOT = BASE_DIR / "files"
 
 
+# Fixes slash at the end of URLs
+APPEND_SLASH = False
+REMOVE_SLASH = True
+
+
 # Fixes custom includes
 SECURE_CONTENT_TYPE_NOSNIFF = False
 
