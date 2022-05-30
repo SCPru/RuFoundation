@@ -17,15 +17,19 @@ import mimetypes
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SQLITE_DIRECTORY = BASE_DIR
+if 'SQLITE_DIRECTORY' in os.environ:
+    SQLITE_DIRECTORY = Path(os.environ['SQLITE_DIRECTORY']).resolve()
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)wy0h9z6x4o3t4@=s_keq0x$illy9yqyo!4g8wk%mo8l+8imun'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-)wy0h9z6x4o3t4@=s_keq0x$illy9yqyo!4g8wk%mo8l+8imun')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'true') == 'true'
 
 ALLOWED_HOSTS = [x.strip() for x in os.environ.get('ALLOWED_HOSTS', '').split(',') if x.strip()]
 CSRF_TRUSTED_ORIGINS = [origin for host in ALLOWED_HOSTS for origin in ['http://'+host, 'https://'+host]]
@@ -84,7 +88,7 @@ WSGI_APPLICATION = 'scpdev.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': SQLITE_DIRECTORY / 'db.sqlite3',
         'ATOMIC_REQUESTS': True
     }
 }
