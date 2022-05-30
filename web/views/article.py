@@ -1,6 +1,6 @@
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 from django.template.loader import render_to_string
-from django.shortcuts import redirect
+from django.http import HttpResponseRedirect
 from django.conf import settings
 
 from web.models.articles import Article
@@ -46,14 +46,14 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
     def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str]]:
         if article is not None:
             context = RenderContext(article, article, path_params)
-            redirect_to = context.redirect_to
             content = single_pass_render(articles.get_latest_source(article), context)
+            redirect_to = context.redirect_to
             status = 200
         else:
             context = {'page_id': fullname, 'allow_create': articles.is_full_name_allowed(
                 fullname) and settings.ANONYMOUS_EDITING_ENABLED}
-            redirect_to = None
             content = render_to_string(self.template_404, context)
+            redirect_to = None
             status = 404
         return content, status, redirect_to
 
@@ -96,6 +96,5 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         if context['redirect_to']:
-            return redirect(context['redirect_to'])
+            return HttpResponseRedirect(context['redirect_to'])
         return self.render_to_response(context, status=context['status'])
-
