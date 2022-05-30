@@ -33,10 +33,7 @@ def get_full_name(full_name_or_article):
     if type(full_name_or_article) == str:
         return full_name_or_article
     else:
-        if full_name_or_article.category == '_default':
-            return full_name_or_article.name
-        else:
-            return '%s:%s' % (full_name_or_article.category, full_name_or_article.name)
+        return full_name_or_article.full_name
 
 
 # Creates article with specified id. Does not add versions

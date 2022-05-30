@@ -30,11 +30,13 @@ class Article(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
 
     @property
-    def fullname(self) -> str:
-        return f"{self.category}:{self.name}"
+    def full_name(self) -> str:
+        if self.category != '_default':
+            return f"{self.category}:{self.name}"
+        return self.name
 
     def __str__(self) -> str:
-        return f"{self.title} ({self.fullname})"
+        return f"{self.title} ({self.full_name})"
 
 
 class ArticleVersion(models.Model):
