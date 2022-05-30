@@ -28,6 +28,7 @@ SECRET_KEY = 'django-insecure-)wy0h9z6x4o3t4@=s_keq0x$illy9yqyo!4g8wk%mo8l+8imun
 DEBUG = True
 
 ALLOWED_HOSTS = [x.strip() for x in os.environ.get('ALLOWED_HOSTS', '').split(',') if x.strip()]
+CSRF_TRUSTED_ORIGINS = [origin for host in ALLOWED_HOSTS for origin in ['http://'+host, 'https://'+host]]
 
 
 # Application definition
