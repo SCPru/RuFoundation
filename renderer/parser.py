@@ -337,7 +337,7 @@ class ImageNode(Node):
         if context is None or context.source_article is None:
             return None
         src_lower = self.source.lower()
-        if src_lower.startswith('http://') or src_lower.startswith('https://'):
+        if '/' in src_lower:
             return self.source
         path = '%s%s/%s' % (settings.MEDIA_URL, articles.get_full_name(context.source_article), self.source)
         if settings.MEDIA_HOST is not None:
