@@ -33,8 +33,8 @@ def serve_static(request, dir_path, document_root=None, show_indexes=False):
 
 
 urlpatterns = [
-    path('_/admin', RedirectView.as_view(url='/_/admin/', permanent=True)),
-    path('_/admin/', admin.site.urls),
+    path('-/admin', RedirectView.as_view(url='/_/admin/', permanent=True)),
+    path('-/admin/', admin.site.urls),
 
     re_path(r'^%s(?P<dir_path>.*)$' % re.escape(settings.MEDIA_URL.lstrip('/')), serve_static, {'document_root': settings.MEDIA_ROOT}),
 
