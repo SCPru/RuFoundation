@@ -58,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'web.middleware.MediaHostMiddleware'
 ]
 
 ROOT_URLCONF = 'scpdev.urls'
@@ -138,6 +139,7 @@ STATIC_ROOT = BASE_DIR / "static"
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+MEDIA_HOST = os.environ.get('MEDIA_HOST', None)
 MEDIA_URL = "local--files/"
 MEDIA_ROOT = BASE_DIR / "files"
 
