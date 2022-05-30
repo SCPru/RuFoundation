@@ -22,7 +22,7 @@ def _validate_article_data(data, allow_partial=False) -> Optional[HttpResponse]:
 
 class CreateView(CSRFExemptMixin, View):
     def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        if not settings.ANONYMOUS_EDITING_ENABLED:
+        if not settings.ANONYMOUS_EDITING_ENABLED and not request.user.has_perm("web.create_article"):
             return render_error(403, "Недостаточно прав")
 
         data = json.loads(request.body.decode('utf-8'))
@@ -61,7 +61,12 @@ class FetchOrUpdateView(CSRFExemptMixin, View):
         })
 
     def put(self, request: HttpRequest, full_name: str) -> HttpResponse:
-        if not settings.ANONYMOUS_EDITING_ENABLED:
+        # find page
+        article = articles.get_article(full_name)
+        if article is None:
+            return render_error(404, 'Страница не найдена')
+
+        if not settings.ANONYMOUS_EDITING_ENABLED and not request.user.has_perm("web.edit_article", article):
             return render_error(403, 'Недостаточно прав')
 
         data = json.loads(request.body.decode('utf-8'))
@@ -69,11 +74,6 @@ class FetchOrUpdateView(CSRFExemptMixin, View):
         err = _validate_article_data(data, allow_partial=True)
         if err is not None:
             return err
-
-        # find page
-        article = articles.get_article(full_name)
-        if article is None:
-            return render_error(404, 'Страница не найдена')
 
         # check if renaming
         if data['pageId'] != full_name:

@@ -33,7 +33,7 @@ def serve_static(request, dir_path, document_root=None, show_indexes=False):
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    re_path(r'^'+settings.MEDIA_URL+r'(?P<path>.*)$', serve_static, {'document_root': settings.MEDIA_ROOT}),
+    re_path('^'+settings.MEDIA_URL+r'(?P<path>.*)$', serve_static, {'document_root': settings.MEDIA_ROOT}),
 
     path("", include("web.urls"))
 ]

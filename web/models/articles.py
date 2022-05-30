@@ -1,12 +1,26 @@
 from django.db import models
 
 
+class Tag(models.Model):
+    class Meta:
+        verbose_name = "Тэг"
+        verbose_name_plural = "Тэги"
+
+    name = models.TextField(verbose_name="Название")
+
+
 class Article(models.Model):
     class Meta:
         verbose_name = "Статья"
         verbose_name_plural = "Статьи"
+
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['category', 'name'])]
+
+        permissions = [
+            ("create_article", "Can create a new article"),
+            ("edit_article", "Can edit an article")
+        ]
 
     category = models.TextField(default="_default", verbose_name="Категория")
     name = models.TextField(verbose_name="Имя")
@@ -27,6 +41,7 @@ class ArticleVersion(models.Model):
     class Meta:
         verbose_name = "Версия статьи"
         verbose_name_plural = "Версии статей"
+
         indexes = [models.Index(fields=['article', 'created_at'])]
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
@@ -40,8 +55,9 @@ class ArticleVersion(models.Model):
 
 class ArticleLogEntry(models.Model):
     class Meta:
-        verbose_name = "Запись статьи"
-        verbose_name_plural = "Записи статей"
+        verbose_name = "Запись в журнале изменений"
+        verbose_name_plural = "Записи в журнале изменений"
+
         constraints = [models.UniqueConstraint(fields=['article', 'rev_number'], name='%(app_label)s_%(class)s_unique')]
 
     class LogEntryType(models.TextChoices):
