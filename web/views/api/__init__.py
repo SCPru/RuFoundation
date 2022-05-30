@@ -12,12 +12,10 @@ class APIView(View):
     def http_method_not_allowed(self, request, *args, **kwargs):
         # log
         super().http_method_not_allowed(request, *args, **kwargs)
-        return render_error(405, 'Некорректный метод запроса')
+        return self.render_error(405, 'Некорректный метод запроса')
 
+    def render_json(self, code, o):
+        return JsonResponse(o, status=code)
 
-def render_json(code, o):
-    return JsonResponse(o, status=code)
-
-
-def render_error(code, error):
-    return render_json(code, {'error': error})
+    def render_error(self, code, error):
+        return self.render_json(code, {'error': error})
