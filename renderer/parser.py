@@ -4,6 +4,7 @@ from web.controllers import articles
 import copy
 import re
 import modules
+from web import threadvars
 
 
 class RenderContext(object):
@@ -27,6 +28,7 @@ class ParseContext(object):
         self.footnotes = []
         self.code_blocks = []
         self.root = root_node
+        self.include_tree = []
         self._in_tabview = False
 
 
@@ -391,12 +393,15 @@ class CommentNode(Node):
 
 
 class IncludeNode(Node):
-    def __init__(self, name, attributes):
+    def __init__(self, name, attributes, parse_context):
         super().__init__()
         self.name = name
         self.attributes = attributes
         self.complex_node = True
         self.code = None
+        # if this article was already included, fail
+        if self.name in threadvars.get('include_tree', []):
+            return
         article = articles.get_article(self.name)
         if article is not None:
             code = articles.get_latest_source(article) or ''
@@ -408,7 +413,9 @@ class IncludeNode(Node):
                 if type(map_values[name]) != str:
                     continue
                 code = re.sub(r'{\$%s}' % re.escape(name), map_values[name], code, flags=re.IGNORECASE)
-            nodes = Parser(Tokenizer(code)).parse().root.children
+            threadvars.put('include_tree', threadvars.get('include_tree', []) + [self.name])
+            nodes = Parser(Tokenizer(code), context=parse_context).parse().root.children
+            threadvars.put('include_tree', [x for x in threadvars.get('include_tree', []) if x != self.name])
             for node in nodes:
                 self.append_child(node)
 
@@ -624,36 +631,37 @@ class Parser(object):
         self._context = context
 
     def parse(self):
-        self.tokenizer.position = 0
+        with threadvars.context():
+            self.tokenizer.position = 0
 
-        is_subtree = False
+            is_subtree = False
 
-        root_node = Node()
-        root_node.block_node = True
-        if self._context is None:
-            context = ParseContext(self, root_node)
-            self._context = context
-        else:
-            is_subtree = True
+            root_node = Node()
+            root_node.block_node = True
+            if self._context is None:
+                context = ParseContext(self, root_node)
+                self._context = context
+            else:
+                is_subtree = True
 
-        while True:
-            new_children = self.parse_nodes()
-            if not new_children:
-                break
-            for child in new_children:
-                root_node.append_child(child)
+            while True:
+                new_children = self.parse_nodes()
+                if not new_children:
+                    break
+                for child in new_children:
+                    root_node.append_child(child)
 
-        self.create_paragraphs(root_node.children)
-        root_node.paragraphs_set = True
+            self.create_paragraphs(root_node.children)
+            root_node.paragraphs_set = True
 
-        if not is_subtree:
-            # if there is no footnote block, append it.
-            if self.find_node_recursively(FootnoteBlockNode) is None:
-                root_node.append_child(FootnoteBlockNode([], self._context.footnotes))
+            if not is_subtree:
+                # if there is no footnote block, append it.
+                if self.find_node_recursively(FootnoteBlockNode) is None:
+                    root_node.append_child(FootnoteBlockNode([], self._context.footnotes))
 
-        result = ParseResult(self._context, root_node)
-        self._context = None
-        return result
+            result = ParseResult(self._context, root_node)
+            self._context = None
+            return result
 
     def find_node_recursively(self, node_type):
         def find_node(node):
@@ -1042,7 +1050,7 @@ class Parser(object):
             if name == 'include':
                 name = first_attr_name
                 attributes = attributes[1:]
-                return IncludeNode(name, attributes)
+                return IncludeNode(name, attributes, self._context)
             elif name == 'iframe':
                 url = first_attr_name
                 attributes = attributes[1:]
