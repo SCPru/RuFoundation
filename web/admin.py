@@ -1,3 +1,8 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models.articles import Article, ArticleVersion, ArticleLogEntry
+
+
+@admin.register(Article, ArticleVersion, ArticleLogEntry)
+class BaseAdmin(admin.ModelAdmin):
+    pass

@@ -33,12 +33,15 @@ ALLOWED_HOSTS = [x.strip() for x in os.environ.get('ALLOWED_HOSTS', '').split(',
 # Application definition
 
 INSTALLED_APPS = [
-    'web.apps.WebConfig',
+    "jazzmin",
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.messages'
+    'django.contrib.messages',
+
+    'web',
 ]
 
 MIDDLEWARE = [
@@ -126,9 +129,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Static and media files
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "static"
+
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-MEDIA_URL = "/local--files/"
+MEDIA_URL = "local--files/"
 MEDIA_ROOT = BASE_DIR / "files"
 
 
