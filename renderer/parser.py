@@ -5,6 +5,7 @@ import copy
 import re
 import modules
 from web import threadvars
+from django.conf import settings
 
 
 class RenderContext(object):
@@ -338,7 +339,10 @@ class ImageNode(Node):
         src_lower = self.source.lower()
         if src_lower.startswith('http://') or src_lower.startswith('https://'):
             return self.source
-        return '/local--files/%s/%s' % (articles.get_full_name(context.source_article), self.source)
+        path = '%s%s/%s' % (settings.MEDIA_URL, articles.get_full_name(context.source_article), self.source)
+        if settings.MEDIA_HOST is not None:
+            path = '//' + settings.MEDIA_HOST + path
+        return path
 
     def render(self, context=None):
         url = self._get_image_url(context)
