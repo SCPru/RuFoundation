@@ -192,7 +192,8 @@ def get_breadcrumbs(full_name_or_article):
 # Check if name is allowed for creation
 # Pretty much this blocks two 100% special paths, everything else is OK
 def is_full_name_allowed(article_name):
-    if article_name == '_' or article_name == 'api':
+    reserved = ['_', 'api', 'local--files']
+    if article_name in reserved:
         return False
     if len(article_name) > 128:
         return False
