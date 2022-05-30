@@ -10,7 +10,7 @@ class MediaHostMiddleware(object):
 
     def __call__(self, request):
         if settings.MEDIA_HOST is not None:
-            is_media_host = request.get_host() == settings.MEDIA_HOST
+            is_media_host = request.get_host().split(':')[0] == settings.MEDIA_HOST
             is_media_url = request.path.startswith(settings.MEDIA_URL)
 
             non_media_host = [x for x in settings.ALLOWED_HOSTS if x != settings.MEDIA_HOST][0]
