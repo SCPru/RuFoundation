@@ -17,7 +17,7 @@ class MediaHostMiddleware(object):
 
             if is_media_host and not is_media_url:
                 return HttpResponseRedirect('//%s%s' % (non_media_host, request.get_full_path()))
-            elif not is_media_host and is_media_host:
+            elif not is_media_host and is_media_url:
                 return HttpResponseRedirect('//%s%s' % (settings.MEDIA_HOST, request.get_full_path()))
 
         return self.get_response(request)
