@@ -184,6 +184,9 @@ class ArticleHistory extends Component<Props, State> {
             case 'source':
                 return <span className="spantip" title="изменился текст статьи">S</span>;
 
+            case 'tags':
+                return <span className="spantip" title="метки изменились">A</span>;
+
             case 'name':
                 return <span className="spantip" title="страница переименована/удалена">R</span>;
 
@@ -209,6 +212,15 @@ class ArticleHistory extends Component<Props, State> {
 
             case 'name':
                 return <>Страница переименована из "<em>{entry.meta.prev_name}</em>" в "<em>{entry.meta.name}</em>"</>;
+
+            case 'tags':
+                if (entry.meta.added_tags && entry.meta.removed_tags) {
+                    return <>Добавлены теги: {entry.meta.added_tags}. Удалены теги: {entry.meta.removed_tags}.</>;
+                } else if (entry.meta.added_tags) {
+                    return <>Добавлены теги: {entry.meta.added_tags}.</>;
+                } else if (entry.meta.removed_tags) {
+                    return <>Удалены теги: {entry.meta.removed_tags}.</>;
+                }
 
             case 'parent':
                 if (entry.meta.prev_parent && entry.meta.parent) {

@@ -81,14 +81,19 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'site_name': settings.WEBSITE_NAME,
             'site_headline': settings.WEBSITE_HEADLINE,
             'site_title': title or settings.WEBSITE_NAME,
-            'content': content,
+
             'nav_top': self._render_nav("nav:top", article, path_params),
             'nav_side': self._render_nav("nav:side", article, path_params),
-            'breadcrumbs': breadcrumbs,
+
             'title': title,
-            'status': status,
+            'content': content,
+            'tags': articles.get_tags(article).order_by("name"),
+            'breadcrumbs': breadcrumbs,
+
             'options_config': json.dumps(options_config),
-            'redirect_to': redirect_to
+
+            'status': status,
+            'redirect_to': redirect_to,
         })
 
         return context

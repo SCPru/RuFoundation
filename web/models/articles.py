@@ -1,12 +1,26 @@
+from django.conf import settings
 from django.db import models
 
 
 class Tag(models.Model):
     class Meta:
-        verbose_name = "Тэг"
-        verbose_name_plural = "Тэги"
+        verbose_name = "Тег"
+        verbose_name_plural = "Теги"
 
     name = models.TextField(verbose_name="Название")
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def hidden(self) -> bool:
+        if self.name.startswith("_"):
+            return True
+        return False
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.lower()
+        return super(Tag, self).save(*args, **kwargs)
 
 
 class Article(models.Model):
@@ -25,8 +39,12 @@ class Article(models.Model):
     category = models.TextField(default="_default", verbose_name="Категория")
     name = models.TextField(verbose_name="Имя")
     title = models.TextField(verbose_name="Заголовок")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
+
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Родитель")
+    tags = models.ManyToManyField(Tag, blank=True, related_name="articles", verbose_name="Тэги")
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Автор")
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
 
     @property
@@ -66,6 +84,7 @@ class ArticleLogEntry(models.Model):
         Source = 'source'
         Title = 'title'
         Name = 'name'
+        Tags = 'tags'
         New = 'new'
         Parent = 'parent'
 

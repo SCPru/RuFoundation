@@ -14,8 +14,7 @@ def get_name(full_name: str) -> tuple[str, str]:
     split = full_name.split(':', 1)
     if len(split) == 2:
         return split[0], split[1]
-    else:
-        return '_default', split[0]
+    return '_default', split[0]
 
 
 def normalize_article_name(name: str) -> str:
@@ -31,15 +30,13 @@ def get_article(full_name_or_article: _FullNameOrArticle) -> Optional[Article]:
             return objects[0]
         else:
             return None
-    else:
-        return full_name_or_article
+    return full_name_or_article
 
 
 def get_full_name(full_name_or_article: _FullNameOrArticle) -> str:
     if type(full_name_or_article) == str:
         return full_name_or_article
-    else:
-        return full_name_or_article.full_name
+    return full_name_or_article.full_name
 
 
 # Creates article with specified id. Does not add versions
@@ -152,8 +149,6 @@ def get_latest_version(full_name_or_article: _FullNameOrArticle) -> Optional[Art
     latest_version = ArticleVersion.objects.filter(article=article).order_by('-created_at')[:1]
     if latest_version:
         return latest_version[0]
-    else:
-        return None
 
 
 # Get latest source of article
@@ -161,8 +156,6 @@ def get_latest_source(full_name_or_article: _FullNameOrArticle) -> Optional[str]
     ver = get_latest_version(full_name_or_article)
     if ver is not None:
         return ver.source
-    else:
-        return None
 
 
 # Set parent of article
@@ -190,6 +183,62 @@ def get_breadcrumbs(full_name_or_article: _FullNameOrArticle) -> list[Article]:
         output.append(article)
         article = article.parent
     return list(reversed(output))
+
+
+# Get tags from article
+def get_tag(name_or_tag: Union[Tag, str]) -> Tag:
+    if type(name_or_tag) == str:
+        return Tag.objects.get_or_create(name=name_or_tag)[0]
+    return name_or_tag
+
+
+def get_tags(full_name_or_article: _FullNameOrArticle) -> QuerySet[Tag]:
+    article = get_article(full_name_or_article)
+    if article:
+        return article.tags.all()
+    return Tag.objects.none()
+
+
+def get_tags_from_string(tags: str) -> QuerySet[Tag]:
+    tags = [get_tag(tag).name for tag in set(tags.split())]
+    return Tag.objects.filter(name__in=tags)
+
+
+def get_string_from_tags(tags: QuerySet[Tag]) -> str:
+    return ' '.join(tag.name for tag in tags)
+
+
+def get_tags_string(full_name_or_article: _FullNameOrArticle) -> str:
+    article = get_article(full_name_or_article)
+    return get_string_from_tags(article.tags.all().order_by("name"))
+
+
+def set_tags(full_name_or_article: _FullNameOrArticle, tags: QuerySet[Tag]):
+    article = get_article(full_name_or_article)
+    article_tags = get_tags(article)
+
+    removed_tags = []
+    added_tags = []
+
+    for tag in article_tags:
+        if tag not in tags:
+            article.tags.remove(tag)
+            removed_tags.append(tag.name)
+            if not tag.articles.exists():
+                tag.delete()
+
+    for tag in tags:
+        if tag not in article_tags:
+            article.tags.add(tag)
+            added_tags.append(tag.name)
+
+    if removed_tags or added_tags:
+        log = ArticleLogEntry(
+            article=article,
+            type=ArticleLogEntry.LogEntryType.Tags,
+            meta={'added_tags': ", ".join(added_tags), 'removed_tags': ", ".join(removed_tags)}
+        )
+        add_log_entry(article, log)
 
 
 # Check if name is allowed for creation

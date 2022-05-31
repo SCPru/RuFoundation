@@ -59,7 +59,15 @@
                             <div id="page-content">
                                 {{ content|safe }}
                             </div>
-                            <div class="page-tags"></div>
+                            <div class="page-tags">
+                                <span>
+                                    {% for tag in tags %}
+                                        {% if not tag.hidden %}
+                                            <a href="/system:page-tags/tag/{{ tag.name }}#pages">{{ tag.name }}</a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </span>
+                            </div>
                             <div id="page-info-break"></div>
                             <div id="page-options-container" data-config="{{ options_config }}"></div>
                             <div id="action-area"></div>

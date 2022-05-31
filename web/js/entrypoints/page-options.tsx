@@ -4,6 +4,7 @@ import { Component, ReactNode } from 'react';
 import ArticleEditor from "../articles/article-editor";
 import ArticleHistory from "../articles/article-history";
 import ArticleSource from "../articles/article-source";
+import ArticleTags from "../articles/article-tags";
 
 
 interface Props {
@@ -14,7 +15,7 @@ interface Props {
 
 
 interface State {
-    subView: 'edit' | 'history' | 'source' | null
+    subView: 'edit' | 'tags' | 'history' | 'source' | null
     extOptions: boolean
 }
 
@@ -29,6 +30,15 @@ class PageOptions extends Component<Props, State> {
         e.preventDefault();
         e.stopPropagation();
         this.setState({ subView: 'edit' });
+        setTimeout(() => {
+            window.scrollTo(window.scrollX, document.body.scrollHeight);
+        }, 1);
+    };
+
+    onTags = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ subView: 'tags' });
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         }, 1);
@@ -74,6 +84,7 @@ class PageOptions extends Component<Props, State> {
             <>
                 <div id="page-options-bottom" className="page-options-bottom">
                     { editable && <a id="edit-button" className="btn btn-default" href="#" onClick={this.onEdit}>Редактировать</a> }
+                    { editable && <a id="tags-button" className="btn btn-default" href="#" onClick={this.onTags}>Теги</a> }
                     <a id="history-button" className="btn btn-default" href="#" onClick={this.onHistory}>История</a>
                     <a id="more-options-button" className="btn btn-default" href="#" onClick={this.toggleExtOptions}>{extOptions?'- Опции':'+ Опции'}</a>
                 </div>
@@ -96,6 +107,9 @@ class PageOptions extends Component<Props, State> {
         switch (subView) {
             case 'edit':
                 return <ArticleEditor pageId={pageId} onCancel={this.onCancelSubView} />;
+
+            case 'tags':
+                return <ArticleTags pageId={pageId} onCancel={this.onCancelSubView} />;
 
             case 'history':
                 return <ArticleHistory pageId={pageId} onClose={this.onCancelSubView} />;

@@ -57,7 +57,8 @@ class FetchOrUpdateView(ArticleView):
         return self.render_json(200, {
             'pageId': full_name,
             'title': article.title,
-            'source': source
+            'source': source,
+            'tags': articles.get_tags_string(article)
         })
 
     def put(self, request: HttpRequest, full_name: str) -> HttpResponse:
@@ -89,6 +90,10 @@ class FetchOrUpdateView(ArticleView):
         # check if changing source
         if 'source' in data and data['source'] != articles.get_latest_source(article):
             articles.create_article_version(article, data['source'])
+
+        # check if changing tags
+        if 'tags' in data and data['tags'] != articles.get_tags_string(article):
+            articles.set_tags(article, articles.get_tags_from_string(data['tags']))
 
         return self.render_json(200, {'status': 'ok'})
 
