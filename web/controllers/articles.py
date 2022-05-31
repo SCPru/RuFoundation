@@ -1,10 +1,16 @@
+from django.db.models import QuerySet
 from web.models.articles import *
+
+from typing import Optional, Union
 import datetime
 import re
 
 
+_FullNameOrArticle = Union[str, Article]
+
+
 # Returns (category, name) from a full name
-def get_name(full_name):
+def get_name(full_name: str) -> tuple[str, str]:
     split = full_name.split(':', 1)
     if len(split) == 2:
         return split[0], split[1]
@@ -12,11 +18,11 @@ def get_name(full_name):
         return '_default', split[0]
 
 
-def normalize_article_name(name):
+def normalize_article_name(name: str) -> str:
     return re.sub(r'[^A-Za-z0-9\-_:]+', '-', name).lower().strip('-')
 
 
-def get_article(full_name_or_article):
+def get_article(full_name_or_article: _FullNameOrArticle) -> Optional[Article]:
     if type(full_name_or_article) == str:
         full_name_or_article = full_name_or_article.lower()
         category, name = get_name(full_name_or_article)
@@ -29,7 +35,7 @@ def get_article(full_name_or_article):
         return full_name_or_article
 
 
-def get_full_name(full_name_or_article):
+def get_full_name(full_name_or_article: _FullNameOrArticle) -> str:
     if type(full_name_or_article) == str:
         return full_name_or_article
     else:
@@ -37,7 +43,7 @@ def get_full_name(full_name_or_article):
 
 
 # Creates article with specified id. Does not add versions
-def create_article(full_name):
+def create_article(full_name: str) -> Article:
     category, name = get_name(full_name)
     article = Article(
         category=category,
@@ -50,7 +56,7 @@ def create_article(full_name):
 
 
 # Adds log entry to article
-def add_log_entry(full_name_or_article, log_entry):
+def add_log_entry(full_name_or_article: _FullNameOrArticle, log_entry: ArticleLogEntry):
     article = get_article(full_name_or_article)
     existing_entry = get_latest_log_entry(article)
     if existing_entry is None:
@@ -61,13 +67,13 @@ def add_log_entry(full_name_or_article, log_entry):
 
 
 # Gets all log entries of article, sorted
-def get_log_entries(full_name_or_article):
+def get_log_entries(full_name_or_article: _FullNameOrArticle) -> QuerySet[ArticleLogEntry]:
     article = get_article(full_name_or_article)
     return ArticleLogEntry.objects.filter(article=article).order_by('-rev_number')
 
 
 # Gets latest log entry of article
-def get_latest_log_entry(full_name_or_article):
+def get_latest_log_entry(full_name_or_article: _FullNameOrArticle) -> Optional[ArticleLogEntry]:
     log_entry = get_log_entries(full_name_or_article)[:1]
     if log_entry:
         return log_entry[0]
@@ -75,14 +81,14 @@ def get_latest_log_entry(full_name_or_article):
 
 
 # Gets list of log entries from article, sorted, with specified bounds
-def get_log_entries_paged(full_name_or_article, c_from, c_to):
+def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int, c_to: int) -> tuple[QuerySet[ArticleLogEntry], int]:
     log_entries = get_log_entries(full_name_or_article)
     total_count = len(log_entries)
     return log_entries[c_from:c_to], total_count
 
 
 # Creates new article version for specified article
-def create_article_version(full_name_or_article, source):
+def create_article_version(full_name_or_article: _FullNameOrArticle, source: str) -> ArticleVersion:
     article = get_article(full_name_or_article)
     is_new = get_latest_version(article) is None
     version = ArticleVersion(
@@ -109,7 +115,7 @@ def create_article_version(full_name_or_article, source):
 
 
 # Updates name of article
-def update_full_name(full_name_or_article, new_full_name):
+def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: str):
     article = get_article(full_name_or_article)
     prev_full_name = get_full_name(full_name_or_article)
     category, name = get_name(new_full_name)
@@ -125,7 +131,7 @@ def update_full_name(full_name_or_article, new_full_name):
 
 
 # Updates title of article
-def update_title(full_name_or_article, new_title):
+def update_title(full_name_or_article: _FullNameOrArticle, new_title: str):
     article = get_article(full_name_or_article)
     prev_title = article.title
     article.title = new_title
@@ -139,7 +145,7 @@ def update_title(full_name_or_article, new_title):
 
 
 # Get latest version of article
-def get_latest_version(full_name_or_article):
+def get_latest_version(full_name_or_article: _FullNameOrArticle) -> Optional[ArticleVersion]:
     article = get_article(full_name_or_article)
     if article is None:
         return None
@@ -151,7 +157,7 @@ def get_latest_version(full_name_or_article):
 
 
 # Get latest source of article
-def get_latest_source(full_name_or_article):
+def get_latest_source(full_name_or_article: _FullNameOrArticle) -> Optional[str]:
     ver = get_latest_version(full_name_or_article)
     if ver is not None:
         return ver.source
@@ -160,7 +166,7 @@ def get_latest_source(full_name_or_article):
 
 
 # Set parent of article
-def set_parent(full_name_or_article, full_name_of_parent):
+def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _FullNameOrArticle):
     article = get_article(full_name_or_article)
     parent = get_article(full_name_of_parent) if full_name_of_parent else None
     prev_parent = get_full_name(article.parent) if article.parent else None
@@ -177,7 +183,7 @@ def set_parent(full_name_or_article, full_name_of_parent):
 
 
 # Gets all parents
-def get_breadcrumbs(full_name_or_article):
+def get_breadcrumbs(full_name_or_article: _FullNameOrArticle) -> list[Article]:
     article = get_article(full_name_or_article)
     output = []
     while article:
@@ -188,7 +194,7 @@ def get_breadcrumbs(full_name_or_article):
 
 # Check if name is allowed for creation
 # Pretty much this blocks two 100% special paths, everything else is OK
-def is_full_name_allowed(article_name):
+def is_full_name_allowed(article_name: str) -> bool:
     reserved = ['-', '_', 'api', 'local--files', 'local--code']
     if article_name in reserved:
         return False
