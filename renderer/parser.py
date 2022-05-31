@@ -583,6 +583,27 @@ class FontSizeNode(Node):
         return ('<span style="font-size: %s">' % html.escape(self.size)) + super().render(context=context) + '</span>'
 
 
+class IfTagsNode(Node):
+    def __init__(self, condition, children):
+        super().__init__()
+        self.condition = condition
+        self.complex_node = True
+        self.block_node = True
+        self.paragraphs_set = True
+        for child in children:
+            self.append_child(child)
+
+    def evaluate_condition(self, context=None):
+        # render if condition is true
+        # condition = ['+tag1', '-tag2', 'tag3']
+        return False
+
+    def render(self, context=None):
+        if context is None or not self.evaluate_condition(context):
+            return ''
+        return super().render(context=context)
+
+
 class BlockquoteNode(Node):
     def __init__(self, children):
         super().__init__()
@@ -983,7 +1004,7 @@ class Parser(object):
             trim_paragraphs = True
             name = name[:-1]
         align_tags = ['<', '>', '=', '==']
-        hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview', 'size', 'html', 'footnote', 'footnoteblock']
+        hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview', 'size', 'html', 'footnote', 'footnoteblock', 'iftags']
         single_hack_tags = ['include', 'iframe', 'footnoteblock']
         if self._context._in_tabview:
             hack_tags += ['tab']
@@ -1006,7 +1027,8 @@ class Parser(object):
                     return None
                 break
             maybe_pipe = [TokenType.Pipe] if name == 'include' else []
-            attr_name = self.read_as_value_until([TokenType.CloseDoubleBracket, TokenType.Whitespace, TokenType.Equals, TokenType.Newline] + maybe_pipe)
+            maybe_equals = [TokenType.Equals] if name != 'iftags' else []
+            attr_name = self.read_as_value_until([TokenType.CloseDoubleBracket, TokenType.Whitespace, TokenType.Newline] + maybe_pipe + maybe_equals)
             if attr_name is None:
                 return None
             attr_name = attr_name.strip()
@@ -1111,6 +1133,9 @@ class Parser(object):
                                 node = FootnoteNode(number, children)
                                 self._context.footnotes.append(node)
                                 return node
+                            elif name == 'iftags':
+                                conditions = [x[0] for x in attributes]
+                                return IfTagsNode(conditions, children)
                             elif name in align_tags:
                                 return TextAlignNode(name, children)
                             else:
