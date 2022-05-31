@@ -62,9 +62,7 @@
                             <div class="page-tags">
                                 <span>
                                     {% for tag in tags %}
-                                        {% if not tag.hidden %}
-                                            <a href="/system:page-tags/tag/{{ tag.name }}#pages">{{ tag.name }}</a>
-                                        {% endif %}
+                                        <a href="/system:page-tags/tag/{{ tag }}#pages">{{ tag }}</a>
                                     {% endfor %}
                                 </span>
                             </div>

@@ -4,7 +4,7 @@ export interface ArticleData {
     pageId: string
     title?: string
     source?: string
-    tags?: string
+    tags?: Array<string>
 }
 
 export async function createArticle(data: ArticleData) {

@@ -58,12 +58,20 @@ class ArticleTags extends Component<Props, State> {
         }
     }
 
+    static tagsToTagString(tags: Array<string>): string {
+        return tags.join(' ');
+    }
+
+    static tagStringToTags(tagString: string): Array<string> {
+        return tagString.split(' ').map(x => x.trim()).filter(x => !!x);
+    }
+
     async componentDidMount() {
         const { pageId } = this.props;
         this.setState({ loading: true });
         try {
             const data = await fetchArticle(pageId);
-            this.setState({ loading: false, tags: data.tags });
+            this.setState({ loading: false, tags: ArticleTags.tagsToTagString(data.tags) });
         } catch (e) {
             this.setState({loading: false, fatalError: true, error: e.error || 'Ошибка связи с сервером'});
         }
@@ -74,7 +82,7 @@ class ArticleTags extends Component<Props, State> {
         this.setState({ saving: true, error: null, savingSuccess: false });
         const input = {
             pageId: this.props.pageId,
-            tags: this.state.tags
+            tags: ArticleTags.tagStringToTags(this.state.tags)
         };
         try {
             await updateArticle(pageId, input);

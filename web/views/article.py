@@ -87,7 +87,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
             'title': title,
             'content': content,
-            'tags': articles.get_tags(article).order_by("name"),
+            'tags': [x for x in articles.get_tags(article) if not x.startswith('_')],
             'breadcrumbs': breadcrumbs,
 
             'options_config': json.dumps(options_config),

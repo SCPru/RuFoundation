@@ -1,7 +1,7 @@
 from django.db.models import QuerySet
 from web.models.articles import *
 
-from typing import Optional, Union
+from typing import Optional, Union, Sequence, Tuple
 import datetime
 import re
 
@@ -10,7 +10,7 @@ _FullNameOrArticle = Union[str, Article]
 
 
 # Returns (category, name) from a full name
-def get_name(full_name: str) -> tuple[str, str]:
+def get_name(full_name: str) -> Tuple[str, str]:
     split = full_name.split(':', 1)
     if len(split) == 2:
         return split[0], split[1]
@@ -185,37 +185,24 @@ def get_breadcrumbs(full_name_or_article: _FullNameOrArticle) -> list[Article]:
     return list(reversed(output))
 
 
+# Tag name validation
+def is_tag_name_allowed(name: str) -> bool:
+    return ' ' not in name
+
+
 # Get tags from article
-def get_tag(name_or_tag: Union[Tag, str]) -> Tag:
-    if type(name_or_tag) == str:
-        return Tag.objects.get_or_create(name=name_or_tag)[0]
-    return name_or_tag
-
-
-def get_tags(full_name_or_article: _FullNameOrArticle) -> QuerySet[Tag]:
+def get_tags(full_name_or_article: _FullNameOrArticle) -> Sequence[str]:
     article = get_article(full_name_or_article)
     if article:
-        return article.tags.all()
-    return Tag.objects.none()
+        return sorted([x.name.lower() for x in article.tags.all()])
+    return []
 
 
-def get_tags_from_string(tags: str) -> QuerySet[Tag]:
-    tags = [get_tag(tag).name for tag in set(tags.split())]
-    return Tag.objects.filter(name__in=tags)
-
-
-def get_string_from_tags(tags: QuerySet[Tag]) -> str:
-    return ' '.join(tag.name for tag in tags)
-
-
-def get_tags_string(full_name_or_article: _FullNameOrArticle) -> str:
+# Set tags for article
+def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str]):
     article = get_article(full_name_or_article)
-    return get_string_from_tags(article.tags.all().order_by("name"))
-
-
-def set_tags(full_name_or_article: _FullNameOrArticle, tags: QuerySet[Tag]):
-    article = get_article(full_name_or_article)
-    article_tags = get_tags(article)
+    article_tags = article.tags.all()
+    tags = [Tag.objects.get_or_create(name=x.lower())[0] for x in tags if is_tag_name_allowed(x)]
 
     removed_tags = []
     added_tags = []
@@ -224,11 +211,12 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: QuerySet[Tag]):
         if tag not in tags:
             article.tags.remove(tag)
             removed_tags.append(tag.name)
-            if not tag.articles.exists():
+            if not tag.articles:
                 tag.delete()
 
     for tag in tags:
         if tag not in article_tags:
+            # possibly create the tag here
             article.tags.add(tag)
             added_tags.append(tag.name)
 
@@ -236,7 +224,7 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: QuerySet[Tag]):
         log = ArticleLogEntry(
             article=article,
             type=ArticleLogEntry.LogEntryType.Tags,
-            meta={'added_tags': ", ".join(added_tags), 'removed_tags': ", ".join(removed_tags)}
+            meta={'added_tags': added_tags, 'removed_tags': removed_tags}
         )
         add_log_entry(article, log)
 

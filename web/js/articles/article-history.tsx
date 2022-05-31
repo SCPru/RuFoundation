@@ -214,12 +214,12 @@ class ArticleHistory extends Component<Props, State> {
                 return <>Страница переименована из "<em>{entry.meta.prev_name}</em>" в "<em>{entry.meta.name}</em>"</>;
 
             case 'tags':
-                if (entry.meta.added_tags && entry.meta.removed_tags) {
-                    return <>Добавлены теги: {entry.meta.added_tags}. Удалены теги: {entry.meta.removed_tags}.</>;
-                } else if (entry.meta.added_tags) {
-                    return <>Добавлены теги: {entry.meta.added_tags}.</>;
-                } else if (entry.meta.removed_tags) {
-                    return <>Удалены теги: {entry.meta.removed_tags}.</>;
+                if (Array.isArray(entry.meta.added_tags) && entry.meta.added_tags.length && Array.isArray(entry.meta.removed_tags) && entry.meta.removed_tags.length) {
+                    return <>Добавлены теги: {entry.meta.added_tags.join(', ')}. Удалены теги: {entry.meta.removed_tags.join(', ')}.</>;
+                } else if (Array.isArray(entry.meta.added_tags) && entry.meta.added_tags.length) {
+                    return <>Добавлены теги: {entry.meta.added_tags.join(', ')}.</>;
+                } else if (Array.isArray(entry.meta.removed_tags) && entry.meta.removed_tags.length) {
+                    return <>Удалены теги: {entry.meta.removed_tags.join(', ')}.</>;
                 }
 
             case 'parent':

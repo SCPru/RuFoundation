@@ -44,6 +44,7 @@ def run(base_path):
         pagename = meta['name']
         title = meta['title'] if 'title' in meta else None
         top_rev = meta['revisions'][0]['revision']
+        tags = meta['tags'] if 'tags' in meta else []
         updated_at = datetime.datetime.fromtimestamp(meta['revisions'][0]['stamp'], tz=datetime.timezone.utc)
         created_at = datetime.datetime.fromtimestamp(meta['revisions'][-1]['stamp'], tz=datetime.timezone.utc)
         fn_7z = '.'.join(f.split('.')[:-1]) + '.7z'
@@ -60,6 +61,8 @@ def run(base_path):
                 article.title = title
             article.save()
             articles.create_article_version(article, content)
+            if tags:
+                articles.set_tags(article, tags)
         if time.time() - t > 1:
             print('Added: %d/%d' % (cnt, len(pages)))
             t = time.time()
