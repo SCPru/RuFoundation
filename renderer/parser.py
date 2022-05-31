@@ -596,9 +596,19 @@ class IfTagsNode(Node):
     def evaluate_condition(self, context=None):
         # render if condition is true
         # condition = ['+tag1', '-tag2', 'tag3']
-        return False
+        match = False
+        for tag in self.condition:
+            if tag.startswith("+") and not context.article.tags.filter(name=tag[1:]).exists():
+                return False
+            elif tag.startswith("-") and context.article.tags.filter(name=tag[1:]).exists():
+                return False
+            else:
+                if context.article.tags.filter(name=tag).exists():
+                    match = True
+        return match
 
     def render(self, context=None):
+        print(self.evaluate_condition(context))
         if context is None or not self.evaluate_condition(context):
             return ''
         return super().render(context=context)
