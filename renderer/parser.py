@@ -6,6 +6,7 @@ import re
 import modules
 from web import threadvars
 from django.conf import settings
+import uuid
 
 
 class RenderContext(object):
@@ -643,7 +644,29 @@ class UnsafeHTMLNode(Node):
         self.block_node = True
 
     def render(self, context=None):
-        return '<iframe srcdoc="%s" sandbox="allow-same-origin allow-scripts" style="width: 100%%; height: 0" class="w-iframe-autoresize" frameborder="0" allowtransparency="true"></iframe>' % html.escape(self.code)
+        frame_id = str(uuid.uuid4())
+        resize_code = """
+        <script>
+        (function(){
+            let lastHeight = 0;
+            function doFrame() {
+                const body = document.body;
+                const html = document.documentElement;
+                const height = Math.max(body && body.scrollHeight, body && body.offsetHeight,
+                    html.clientHeight, html.scrollHeight, html.offsetHeight, body && body.getBoundingClientRect().height);
+                console.log('height', height);
+                window.requestAnimationFrame(doFrame);
+                if (lastHeight !== height) {
+                    parent.postMessage({type: 'iframe-change-height', payload: { height, id: '%s' }}, '*');
+                    lastHeight = height;
+                }
+            }
+            doFrame();
+        })();
+        </script>
+        """ % frame_id
+        code = resize_code + self.code
+        return '<iframe id="%s" srcdoc="%s" sandbox="allow-scripts allow-top-navigation allow-popups" style="width: 100%%; height: 0" class="w-iframe-autoresize" frameborder="0" allowtransparency="true"></iframe>' % (frame_id, html.escape(code))
 
 
 class ListItemNode(Node):
