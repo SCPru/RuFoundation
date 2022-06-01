@@ -27,10 +27,8 @@ class ParseResult(object):
 class ParseContext(object):
     def __init__(self, parser, root_node):
         self.parser = parser
-        self.footnotes = []
         self.code_blocks = []
         self.root = root_node
-        self.include_tree = []
         self._in_tabview = False
 
 
@@ -38,6 +36,7 @@ class Node(object):
     def __init__(self):
         self.children = []
         self.parent = None
+        self.root = None
         # Block node is a node that will always close current paragraph
         self.block_node = False
         # Complex node is a node that prevents treating the line as plain text paragraph
@@ -60,6 +59,7 @@ class Node(object):
             self.children[-1].text += child.text
             return
         child.parent = self
+        child.root = self.root
         self.children.append(child)
 
     @staticmethod
@@ -216,34 +216,44 @@ class HorizontalRulerNode(Node):
 
 
 class FootnoteNode(Node):
-    def __init__(self, number, children):
+    def __init__(self, children):
         super().__init__()
-        self.number = number
         for child in children:
             self.append_child(child)
 
     def render_footnote(self, context=None):
         return super().render(context)
 
+    def get_number(self):
+        all_footnotes = Parser.find_nodes_recursively(self.root, FootnoteNode)
+        for i in range(len(all_footnotes)):
+            if all_footnotes[i] == self:
+                return i+1
+        return 0
+
     def render(self, context=None):
-        return '<sup class="footnoteref"><a id="footnoteref-%d" class="footnoteref w-footnoteref" href="#footnote-%d">%d</a></sup>' % (self.number, self.number, self.number)
+        number = self.get_number()
+        return '<sup class="footnoteref"><a id="footnoteref-%d" class="footnoteref w-footnoteref" href="#footnote-%d">%d</a></sup>' % (number, number, number)
 
 
 class FootnoteBlockNode(Node):
-    def __init__(self, attributes, footnotes):
+    def __init__(self, attributes):
         super().__init__()
         self.attributes = attributes
-        self.footnotes = footnotes
+
+    def get_footnotes(self):
+        return Parser.find_nodes_recursively(self.root, FootnoteNode)
 
     def render(self, context=None):
-        if not len(self.footnotes):
+        footnotes = self.get_footnotes()
+        if not len(footnotes):
             return ''
         output = '<div class="footnotes-footer">'
         output += '<div class="title">%s</div>' % HTMLNode.get_attribute(self.attributes, 'title', 'Сноски')
-        for i in range(len(self.footnotes)):
+        for i in range(len(footnotes)):
             output += '<div id="footnote-%d" class="footnote-footer">' % (i+1)
             output += '<a href="#footnoteref-%d">%d</a>. ' % (i+1, i+1)
-            output += self.footnotes[i].render_footnote(context)
+            output += footnotes[i].render_footnote(context)
             output += '</div>'
         output += '</div>'
         return output
@@ -724,14 +734,23 @@ class Parser(object):
 
             if not is_subtree:
                 # if there is no footnote block, append it.
-                if self.find_node_recursively(FootnoteBlockNode) is None:
-                    root_node.append_child(FootnoteBlockNode([], self._context.footnotes))
+                if Parser.find_node_recursively(root_node, FootnoteBlockNode) is None:
+                    root_node.append_child(FootnoteBlockNode([]))
+
+            # set root for all nodes. this is needed in rendering
+            def set_root(node):
+                node.root = root_node
+                for c in node.children:
+                    set_root(c)
+
+            set_root(root_node)
 
             result = ParseResult(self._context, root_node)
             self._context = None
             return result
 
-    def find_node_recursively(self, node_type):
+    @staticmethod
+    def find_node_recursively(root, node_type):
         def find_node(node):
             for child in node.children:
                 if type(child) == node_type:
@@ -739,7 +758,20 @@ class Parser(object):
                 found = find_node(child)
                 if found is not None:
                     return found
-        return find_node(self._context.root)
+        return find_node(root)
+
+    @staticmethod
+    def find_nodes_recursively(root, node_type):
+        lst = []
+
+        def find_node(node):
+            for child in node.children:
+                if type(child) == node_type:
+                    lst.append(child)
+                find_node(child)
+
+        find_node(root)
+        return lst
 
     def wrap_text_nodes_in_span(self, node, wrap_with):
         # node should be a block node. wrap_with should be a span node
@@ -1139,7 +1171,7 @@ class Parser(object):
                 attributes = attributes[1:]
                 return ModuleNode(name, attributes, None)
             elif name == 'footnoteblock':
-                return FootnoteBlockNode(attributes, self._context.footnotes)
+                return FootnoteBlockNode(attributes)
             else:
                 source = first_attr_name
                 attributes = attributes[1:]
@@ -1182,9 +1214,7 @@ class Parser(object):
                                 name = first_attr_name
                                 return FontSizeNode(name, children)
                             elif name == 'footnote':
-                                number = len(self._context.footnotes) + 1
-                                node = FootnoteNode(number, children)
-                                self._context.footnotes.append(node)
+                                node = FootnoteNode(children)
                                 return node
                             elif name == 'iftags':
                                 conditions = [x[0].lower() for x in attributes]
