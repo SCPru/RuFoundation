@@ -59,6 +59,6 @@ class context(object):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if self.registered:
             unregister()
-        return True
+        return False
 
 

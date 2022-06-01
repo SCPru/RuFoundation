@@ -1,4 +1,4 @@
-from .tokenizer import TokenType, WHITESPACE_CHARS, Tokenizer, Token
+from .tokenizer import TokenType, WHITESPACE_CHARS, StaticTokenizer, Token
 from django.utils import html
 from web.controllers import articles
 import copy
@@ -428,7 +428,7 @@ class IncludeNode(Node):
                     continue
                 code = re.sub(r'{\$%s}' % re.escape(name), map_values[name], code, flags=re.IGNORECASE)
             threadvars.put('include_tree', threadvars.get('include_tree', []) + [self.name])
-            nodes = Parser(Tokenizer(code), context=parse_context).parse().root.children
+            nodes = Parser(StaticTokenizer(code), context=parse_context).parse().root.children
             threadvars.put('include_tree', [x for x in threadvars.get('include_tree', []) if x != self.name])
             for node in nodes:
                 self.append_child(node)
@@ -992,13 +992,15 @@ class Parser(object):
     def read_quoted_arg(self):
         t = self.tokenizer
         pos = t.position
-        if t.position >= len(t.source) or t.source[t.position] != '"':
+        if t.peek_token().type != TokenType.Quote:
             return self.read_simple_arg()
         raw = '"'
         content = ''
         t.position += 1
-        while t.position < len(t.source):
-            if t.source[t.position] == '"':
+        while t.position < len(t.tokens):
+            token = t.peek_token()
+
+            if token.type == TokenType.Quote:
                 # check if we really want to stop
                 # we want to stop, if:
                 # - after " we have whitespace then `]]`
@@ -1019,11 +1021,12 @@ class Parser(object):
                     t.position += 1
                     break
 
-            elif t.source[t.position] == '\n':
+            elif token.type == TokenType.Newline:
                 raw = ''
                 break
-            content += t.source[t.position]
-            raw += t.source[t.position]
+
+            content += token.raw
+            raw += token.raw
             t.position += 1
 
         if len(raw) > 1 and raw[-1] == '"':
@@ -1385,8 +1388,8 @@ class Parser(object):
     def parse_strike(self):
         # -- has already been parsed
         # check that we should not have whitespace around this token
-        char_after = self.tokenizer.source[self.tokenizer.position] if self.tokenizer.position < len(self.tokenizer.source) else '$'
-        if char_after in WHITESPACE_CHARS:
+        token_after = self.tokenizer.peek_token()
+        if token_after.type == TokenType.Whitespace or token_after.type == TokenType.Newline:
             return None
         children = []
         while True:
@@ -1395,8 +1398,8 @@ class Parser(object):
             if tk.type == TokenType.Null:
                 return None
             elif tk.type == TokenType.DoubleDash:
-                char_before = self.tokenizer.source[self.tokenizer.position - 3] if self.tokenizer.position - 3 >= 0 else '$'
-                if char_before in WHITESPACE_CHARS:
+                token_before = self.tokenizer.peek_token(-1)
+                if token_before.type == TokenType.Whitespace or token_before.type == TokenType.Newline:
                     return None
                 return HTMLNode('strike', [], children, complex_node=False)
             self.tokenizer.position = pos
@@ -1459,11 +1462,11 @@ class Parser(object):
             return self.tokenizer.position == size
         check_pos = prev_pos
         while check_pos >= 0:
-            c = self.tokenizer.source[check_pos]
+            c = self.tokenizer.tokens[check_pos]
             check_pos -= 1
-            if c == ' ':
+            if c.type == TokenType.Whitespace:
                 continue
-            if c == '\n':
+            if c.type == TokenType.Newline:
                 return True
             return False
         return True
@@ -1473,7 +1476,7 @@ class Parser(object):
         # we require that there is either strictly no text or a newline.
         # after this token we should have either more hyphens or a newline
         # if anything else, fail
-        if not self.check_newline(4):
+        if not self.check_newline():
             return None
         content = self.read_as_value_until([TokenType.Newline, TokenType.Null])
         if content is None or content.rstrip().replace('-', '') != '':
@@ -1486,7 +1489,7 @@ class Parser(object):
         # + has already been parsed (one)
         # we require one to 6 + then space then heading text
         # if more than 6, invalid input, fail
-        if not self.check_newline(1):
+        if not self.check_newline():
             return None
         h_count = 1
         while True:
@@ -1514,13 +1517,13 @@ class Parser(object):
             children += new_children
 
     def parse_subtree(self, code):
-        p = Parser(Tokenizer(code), context=self._context)
+        p = Parser(StaticTokenizer(code), context=self._context)
         result = p.parse()
         return result.root.children
 
     def parse_blockquote(self):
         # > has already been parsed
-        if not self.check_newline(1):
+        if not self.check_newline():
             return None
 
         blockquote_content = ''
@@ -1545,14 +1548,14 @@ class Parser(object):
 
     def parse_align_marker(self):
         # = has already been parsed
-        if not self.check_newline(1):
+        if not self.check_newline():
             return None
 
         return AlignMarkerNode('center')
 
     def parse_table(self):
         # || has already been parsed
-        if not self.check_newline(2):
+        if not self.check_newline():
             return None
         rows = []
         table_complete = False
@@ -1623,7 +1626,7 @@ class Parser(object):
                 # check if next after newline is list
                 self.tokenizer.position += 1
                 pos = self.tokenizer.position
-                self.tokenizer.skip_whitespace(' ')
+                self.tokenizer.skip_whitespace(also_newlines=False)
                 whitespace_size = self.tokenizer.position - pos
                 tk2 = self.tokenizer.read_token()
                 read_next = self.tokenizer.position
@@ -1632,7 +1635,7 @@ class Parser(object):
                     return result
                 next_type = 'ul' if tk2.type == TokenType.Asterisk else 'ol'
                 # next line is also list line
-                self.tokenizer.position  = read_next
+                self.tokenizer.position = read_next
                 for i in range(whitespace_size):
                     if not append_to.children:
                         append_to.append_child(ListItemNode())

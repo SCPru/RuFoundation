@@ -36,6 +36,8 @@ class TokenType(Enum):
     Tilde = '~'
     Underline = '_'
 
+    Quote = '"'
+
     Blockquote = '>'
 
     DoubleAt = '@@'
@@ -188,6 +190,31 @@ class Tokenizer(object):
                 break
             self.position += 1
 
-    def inject_code(self, code):
-        code = self.prepare_source(code)
-        self.source = self.source[:self.position] + code + self.source[self.position:]
+
+class StaticTokenizer(object):
+    def __init__(self, source):
+        t = Tokenizer(source)
+        self.tokens = t.read_all_tokens()
+        self.position = 0
+
+    def read_token(self):
+        t = self.peek_token()
+        if t.type != TokenType.Null:
+            self.position += 1
+        return t
+
+    def peek_token(self, offset=0):
+        pos = self.position+offset
+        if pos >= 0 and pos < len(self.tokens):
+            return self.tokens[pos]
+        return Token.null()
+
+    def skip_whitespace(self, also_newlines=True):
+        while self.position < len(self.tokens):
+            if self.tokens[self.position].type != TokenType.Whitespace and\
+                    (self.tokens[self.position].type != TokenType.Newline or not also_newlines):
+                break
+            self.position += 1
+
+    def read_all_tokens(self):
+        return list(self.tokens[:])
