@@ -12,12 +12,6 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
-    @property
-    def hidden(self) -> bool:
-        if self.name.startswith("_"):
-            return True
-        return False
-
     def save(self, *args, **kwargs):
         self.name = self.name.lower()
         return super(Tag, self).save(*args, **kwargs)
@@ -30,11 +24,6 @@ class Article(models.Model):
 
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['category', 'name'])]
-
-        permissions = [
-            ("create_article", "Can create a new article"),
-            ("edit_article", "Can edit an article")
-        ]
 
     category = models.TextField(default="_default", verbose_name="Категория")
     name = models.TextField(verbose_name="Имя")

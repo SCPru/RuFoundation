@@ -51,7 +51,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             status = 200
         else:
             context = {'page_id': fullname, 'allow_create': articles.is_full_name_allowed(
-                fullname) and (settings.ANONYMOUS_EDITING_ENABLED or self.request.user.has_perm("web.create_article"))}
+                fullname) and (settings.ANONYMOUS_EDITING_ENABLED or self.request.user.has_perm("web.add_article"))}
             content = render_to_string(self.template_404, context)
             redirect_to = None
             status = 404
@@ -73,7 +73,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
         options_config = {
             'optionsEnabled': True,
-            'editable': settings.ANONYMOUS_EDITING_ENABLED or self.request.user.has_perm("web.edit_article", article),
+            'editable': settings.ANONYMOUS_EDITING_ENABLED or self.request.user.has_perm("web.change_article"),
             'pageId': article_name
         }
 

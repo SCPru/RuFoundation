@@ -230,7 +230,7 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str]):
 
 
 # Check if name is allowed for creation
-# Pretty much this blocks two 100% special paths, everything else is OK
+# Pretty much this blocks six 100% special paths, everything else is OK
 def is_full_name_allowed(article_name: str) -> bool:
     reserved = ['-', '_', 'api', 'forum', 'local--files', 'local--code']
     if article_name in reserved:

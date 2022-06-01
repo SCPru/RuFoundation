@@ -22,7 +22,7 @@ class ArticleView(APIView):
 
 class CreateView(ArticleView):
     def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        if not settings.ANONYMOUS_EDITING_ENABLED and not request.user.has_perm("web.create_article"):
+        if not settings.ANONYMOUS_EDITING_ENABLED and not request.user.has_perm("web.add_article"):
             return self.render_error(403, "Недостаточно прав")
 
         data = json.loads(request.body.decode('utf-8'))
@@ -67,7 +67,7 @@ class FetchOrUpdateView(ArticleView):
         if article is None:
             return self.render_error(404, 'Страница не найдена')
 
-        if not settings.ANONYMOUS_EDITING_ENABLED and not request.user.has_perm("web.edit_article", article):
+        if not settings.ANONYMOUS_EDITING_ENABLED and not request.user.has_perm("web.change_article"):
             return self.render_error(403, 'Недостаточно прав')
 
         data = json.loads(request.body.decode('utf-8'))
