@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
 
+    'system',
     'web',
 ]
 
@@ -143,6 +144,8 @@ MEDIA_HOST = os.environ.get('MEDIA_HOST', None)
 MEDIA_URL = "local--files/"
 MEDIA_ROOT = BASE_DIR / "files"
 
+
+LOGIN_REDIRECT_URL = "/"
 
 # Fixes slash at the end of URLs
 APPEND_SLASH = False

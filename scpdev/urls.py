@@ -16,8 +16,6 @@ Including another URLconf
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import path, re_path, include
 from django.conf import settings
-from django.contrib import admin
-from django.views.generic.base import RedirectView
 import re
 
 import django.views.static
@@ -33,10 +31,8 @@ def serve_static(request, dir_path, document_root=None, show_indexes=False):
 
 
 urlpatterns = [
-    path('-/admin', RedirectView.as_view(url='/-/admin/', permanent=True)),
-    path('-/admin/', admin.site.urls),
-
     re_path(r'^%s(?P<dir_path>.*)$' % re.escape(settings.MEDIA_URL.lstrip('/')), serve_static, {'document_root': settings.MEDIA_ROOT}),
 
+    path("-/", include("system.urls")),
     path("", include("web.urls"))
 ]
