@@ -694,6 +694,7 @@ class ListNode(Node):
 class Parser(object):
     def __init__(self, tokenizer, context=None):
         self.tokenizer = tokenizer
+        self.node_cache = dict()
         self._context = context
 
     def parse(self):
@@ -710,6 +711,7 @@ class Parser(object):
             else:
                 is_subtree = True
 
+            self.node_cache = dict()
             while True:
                 new_children = self.parse_nodes()
                 if not new_children:
@@ -973,10 +975,17 @@ class Parser(object):
         return TextNode(token.raw)
 
     def parse_nodes(self):
-        node = self.parse_node()
-        if node is None:
-            return []
-        return [node]
+        pos = self.tokenizer.position
+        if pos in self.node_cache:
+            node = self.node_cache[pos]['node']
+            self.tokenizer.position = self.node_cache[pos]['next_pos']
+            return [node]
+        else:
+            node = self.parse_node()
+            if node is None:
+                return []
+            self.node_cache[pos] = {'node': node, 'next_pos': self.tokenizer.position}
+            return [node]
 
     def _extract_name_from_attributes(self, attributes):
         if attributes and attributes[0]:
