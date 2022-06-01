@@ -3,9 +3,11 @@ from renderer.parser import RenderContext
 from web.controllers import articles
 import re
 from web.models.articles import Article
-from django.db.models import Q, Value as V, F
+from django.db.models import Q, Value as V, F, Count
 from django.db.models.functions import Concat
 from web import threadvars
+import operator
+from functools import reduce
 
 
 def has_content():
@@ -119,6 +121,35 @@ def render(context, params, content=None):
                     q = q.filter(name__startswith=f_name[:up_to])
                 else:
                     q = q.filter(name=f_name)
+            f_tags = params.get('tags', '*')
+            if f_tags != '*':
+                f_tags = f_tags.replace(',', ' ')
+                if f_tags == '-':
+                    q = q.filter(tags__isnull=True)
+                elif f_tags == '=':
+                    tags = articles.get_tags(context.article)
+                    q = q.filter(tags__name__in=tags)
+                elif f_tags == '==':
+                    tags = articles.get_tags(context.article)
+                    q = q.filter(tags__name__in=tags).annotate(num_tags=Count('tags')).filter(num_tags=len(tags))
+                else:
+                    f_tags = [x.strip() for x in f_tags.split(' ') if x.strip()]
+                    required_tags = []
+                    not_allowed_tags = []
+                    required_one = []
+                    for tag in f_tags:
+                        if tag[0] == '-':
+                            not_allowed_tags.append(tag[1:])
+                        elif tag[0] == '+':
+                            required_tags.append(tag[1:])
+                        else:
+                            required_one.append(tag)
+                    if required_one:
+                        q = q.filter(tags__name__in=required_one)
+                    for tag in required_tags:
+                        q = q.filter(tags__name__in=[tag])
+                    if not_allowed_tags:
+                        q = q.filter(~Q(tags__name__in=not_allowed_tags))
             f_category = params.get('category', '.')
             if f_category != '*':
                 f_category = f_category.replace(',', ' ')
@@ -165,6 +196,7 @@ def render(context, params, content=None):
                 f_sort = ['created_at', 'desc']
             direction = 'desc' if f_sort[1:] == ['desc'] else 'asc'
             q = q.order_by(getattr(allowed_sort_columns[f_sort[0]], direction)())  # asc/desc is a function call on DB val
+            q = q.distinct()
             # end sorting
             try:
                 f_offset = int(params.get('offset', '0'))
