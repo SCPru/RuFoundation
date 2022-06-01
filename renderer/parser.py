@@ -653,7 +653,6 @@ class UnsafeHTMLNode(Node):
                 const html = document.documentElement;
                 const height = Math.max(body && body.scrollHeight, body && body.offsetHeight,
                     html.clientHeight, html.scrollHeight, html.offsetHeight, body && body.getBoundingClientRect().height);
-                console.log('height', height);
                 window.requestAnimationFrame(doFrame);
                 if (lastHeight !== height) {
                     parent.postMessage({type: 'iframe-change-height', payload: { height, id: '%s' }}, '*');
