@@ -5,7 +5,6 @@ function getFrameByEvent(event) {
 }
 
 window.addEventListener('message', (event) => {
-    console.log('message event', event);
     if (event.data && event.data.type === 'iframe-change-height') {
         const { payload: { height, id } } = event.data;
         const frame = document.getElementById(id);
