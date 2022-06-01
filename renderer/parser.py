@@ -619,7 +619,6 @@ class IfTagsNode(Node):
         return match
 
     def render(self, context=None):
-        print(self.evaluate_condition(context))
         if context is None or not self.evaluate_condition(context):
             return ''
         return super().render(context=context)
