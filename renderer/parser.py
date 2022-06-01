@@ -309,6 +309,8 @@ class HTMLNode(Node):
                 value = attr[1]
                 if attr[0] == 'id' and not value.startswith('u-'):
                     value = 'u-' + value
+                elif attr[0] == 'href':
+                    value = LinkNode.filter_url(value)
                 attr_string += '="%s"' % html.escape(value)
         return attr_string
 
@@ -370,7 +372,7 @@ class ImageNode(Node):
 class LinkNode(Node):
     def __init__(self, url, text, blank=False, exists=True):
         super().__init__()
-        self.url = url
+        self.url = LinkNode.filter_url(url)
         self.text = text
         self.blank = blank
         self.exists = exists
@@ -378,6 +380,13 @@ class LinkNode(Node):
     @staticmethod
     def article_exists(article):
         return articles.get_article(article) is not None
+
+    @staticmethod
+    def filter_url(url):
+        url = url.strip()
+        if url.startswith('javascript:'):
+            return '#'
+        return url
 
     def render(self, context=None):
         blank = ' target="_blank"' if self.blank else ''

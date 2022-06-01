@@ -59,6 +59,8 @@ def run(base_path):
             article.updated_at = updated_at
             if title is not None:
                 article.title = title
+            else:
+                article.title = ''
             article.save()
             articles.create_article_version(article, content)
             if tags:

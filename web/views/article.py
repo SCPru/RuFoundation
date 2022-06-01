@@ -63,7 +63,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         article_name, path_params = self.get_path_params(path)
 
         article = articles.get_article(article_name)
-        title = article.title if article and article_name != 'main' else None
+        title = article.title.strip() if article and article_name != 'main' else None
         breadcrumbs = [{'url': '/' + articles.get_full_name(x), 'title': x.title} for x in
                        articles.get_breadcrumbs(article)]
 

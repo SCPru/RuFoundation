@@ -15,7 +15,7 @@ class ArticleView(APIView):
             return self.render_error(400, 'Некорректный ID страницы')
         if ('source' not in data or not (data['source'] or '').strip()) and not (allow_partial and 'source' not in data):
             return self.render_error(400, 'Отсутствует исходный код страницы')
-        if ('title' not in data or not (data['title'] or '').strip()) and not (allow_partial and 'title' not in data):
+        if ('title' not in data or data['title'] is None) and not (allow_partial and 'title' not in data):
             return self.render_error(400, 'Отсутствует название страницы')
         return None
 
