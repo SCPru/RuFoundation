@@ -78,7 +78,7 @@ def get_latest_log_entry(full_name_or_article: _FullNameOrArticle) -> Optional[A
 
 
 # Gets list of log entries from article, sorted, with specified bounds
-def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int, c_to: int) -> tuple[QuerySet[ArticleLogEntry], int]:
+def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int, c_to: int) -> Tuple[QuerySet[ArticleLogEntry], int]:
     log_entries = get_log_entries(full_name_or_article)
     total_count = len(log_entries)
     return log_entries[c_from:c_to], total_count
@@ -176,7 +176,7 @@ def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _F
 
 
 # Gets all parents
-def get_breadcrumbs(full_name_or_article: _FullNameOrArticle) -> list[Article]:
+def get_breadcrumbs(full_name_or_article: _FullNameOrArticle) -> Sequence[Article]:
     article = get_article(full_name_or_article)
     output = []
     while article:
