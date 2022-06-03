@@ -5,7 +5,11 @@ async function onClick(id: string, vote: number): Promise<VotesData> {
 }
 
 function updateRating(element: HTMLElement, votesData: VotesData) {
-    element.innerText = String(votesData.rating);
+    let rating = String(votesData.rating);
+    if (votesData.rating > 0) {
+        rating = "+" + rating
+    }
+    element.innerText = rating;
 }
 
 export function makeRateModule(node: HTMLElement) {
