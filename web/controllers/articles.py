@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db.models import QuerySet
 from web.models.articles import *
 
@@ -227,6 +228,30 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str]):
             meta={'added_tags': added_tags, 'removed_tags': removed_tags}
         )
         add_log_entry(article, log)
+
+
+# Get article rating
+def get_rating(full_name_or_article: _FullNameOrArticle) -> int:
+    article = get_article(full_name_or_article)
+    return sum([vote.rate for vote in Vote.objects.filter(article=article) if vote])
+
+
+def add_vote(full_name_or_article: _FullNameOrArticle, user: settings.AUTH_USER_MODEL, rate: int):
+    if rate not in [-1, 0, 1]:
+        raise ValueError(f"Rate {rate} is not valid")
+
+    article = get_article(full_name_or_article)
+
+    try:
+        user_vote = Vote.objects.get(article=article, user=user)
+        if user_vote.rate == rate:
+            return
+        user_vote.delete()
+    except Vote.DoesNotExist:
+        pass
+    finally:
+        if rate:
+            Vote(article=article, user=user, rate=rate).save()
 
 
 # Check if name is allowed for creation

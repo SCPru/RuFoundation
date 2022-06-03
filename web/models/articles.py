@@ -7,6 +7,9 @@ class Tag(models.Model):
         verbose_name = "Тег"
         verbose_name_plural = "Теги"
 
+        constraints = [models.UniqueConstraint(fields=['name'], name='%(app_label)s_%(class)s_unique')]
+        indexes = [models.Index(fields=['name'])]
+
     name = models.TextField(verbose_name="Название", unique=True)
 
     def __str__(self):
@@ -24,6 +27,8 @@ class Article(models.Model):
 
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['category', 'name'])]
+
+        permissions = [("can_vote_article", "Can voting for an article")]
 
     category = models.TextField(default="_default", verbose_name="Категория")
     name = models.TextField(verbose_name="Имя")
@@ -86,3 +91,18 @@ class ArticleLogEntry(models.Model):
 
     def __str__(self) -> str:
         return f"№{self.rev_number} - {self.article}"
+
+
+class Vote(models.Model):
+    class Meta:
+        verbose_name = "Оценка"
+        verbose_name_plural = "Оценки"
+
+        constraints = [models.UniqueConstraint(fields=['article', 'user'], name='%(app_label)s_%(class)s_unique')]
+
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
+    rate = models.IntegerField(verbose_name="Оценка")
+
+    def __str__(self) -> str:
+        return f"{self.article}: {self.user} - {self.rate}"

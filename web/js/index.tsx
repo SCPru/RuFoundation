@@ -4,6 +4,7 @@ import Page404 from './entrypoints/page-404';
 import PageOptions from "./entrypoints/page-options";
 import {makeCollapsible} from "./articles/collapsible";
 import {makeTabView} from "./articles/tabview";
+import {makeRateModule} from "./articles/rate";
 import "./articles/auto-resize-iframe";
 
 
@@ -21,6 +22,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // enable collapsibles that loaded with HTML
     document.querySelectorAll('.w-collapsible').forEach((node: HTMLElement) => makeCollapsible(node));
     document.querySelectorAll('.w-tabview').forEach((node: HTMLElement) => makeTabView(node));
+    document.querySelectorAll('.w-tabview').forEach((node: HTMLElement) => makeTabView(node));
+    document.querySelectorAll('.w-rate-module').forEach((node: HTMLElement) => makeRateModule(node));
 
     // establish watcher. will be used later for things like TabView too
     const observer = new MutationObserver((mutationList) => {

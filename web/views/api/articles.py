@@ -5,7 +5,7 @@ from . import APIView
 
 from web.controllers import articles
 
-from typing import Optional, Sequence
+from typing import Optional
 import json
 
 
@@ -67,7 +67,7 @@ class FetchOrUpdateView(ArticleView):
         if article is None:
             return self.render_error(404, 'Страница не найдена')
 
-        if not settings.ANONYMOUS_EDITING_ENABLED and not request.user.has_perm("web.change_article"):
+        if not settings.ANONYMOUS_EDITING_ENABLED and not request.user.has_perm("web.change_article", article):
             return self.render_error(403, 'Недостаточно прав')
 
         data = json.loads(request.body.decode('utf-8'))
@@ -119,3 +119,30 @@ class FetchLogView(APIView):
             })
 
         return self.render_json(200, {'count': total_count, 'entries': output})
+
+
+class VotesView(APIView):
+    def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        article = articles.get_article(full_name)
+        if article is None:
+            return self.render_error(404, 'Страница не найдена')
+
+        return self.render_json(200, {"rating": articles.get_rating(article)})
+
+    def put(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        article = articles.get_article(full_name)
+        if article is None:
+            return self.render_error(404, 'Страница не найдена')
+
+        if not request.user and not request.user.has_perm("web.can_vote_article"):
+            return self.render_error(403, 'Недостаточно прав')
+
+        data = json.loads(request.body.decode('utf-8'))
+
+        try:
+            articles.add_vote(article, request.user, data["vote"])
+        except Exception as ex:
+            return self.render_error(400, str(ex))
+
+        return self.render_json(200, {"rating": articles.get_rating(article)})
+

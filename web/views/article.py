@@ -73,7 +73,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
         options_config = {
             'optionsEnabled': True,
-            'editable': settings.ANONYMOUS_EDITING_ENABLED or self.request.user.has_perm("web.change_article"),
+            'editable': settings.ANONYMOUS_EDITING_ENABLED or self.request.user.has_perm("web.change_article", article),
             'pageId': article_name
         }
 

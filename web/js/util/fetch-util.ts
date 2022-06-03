@@ -1,3 +1,5 @@
+import {getCookie} from "./cookie-util";
+
 interface WRequestInit extends RequestInit {
     sendJson?: boolean
     headers?: Record<string, string>
@@ -67,12 +69,15 @@ export async function wFetch<T>(url: string, props?: WRequestInit): Promise<T> {
     props = Object.assign({}, props);
 
     const headers = (props && props.headers) || {};
+    headers['X-CSRFToken'] = getCookie("csrftoken");
     if (props.sendJson) {
         headers['Content-Type'] = 'application/json';
         if (typeof props.body !== 'string') {
             props.body = JSON.stringify(props.body);
         }
     }
+
+    props.headers = headers;
 
     let rsp, j;
     try {
