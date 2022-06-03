@@ -1,11 +1,9 @@
 import * as React from 'react';
 import { Component } from 'react';
-import Loader from "../util/loader";
 import styled from "styled-components";
 import WikidotModal from "../util/wikidot-modal";
 import sleep from "../util/async-sleep";
-import {wFetch} from "../util/fetch-util";
-import {createArticle, fetchArticle, updateArticle} from "../api/articles";
+import {fetchArticle, updateArticle} from "../api/articles";
 
 
 interface Props {
