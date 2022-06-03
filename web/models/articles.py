@@ -60,7 +60,7 @@ class ArticleVersion(models.Model):
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
     source = models.TextField(verbose_name="Исходник")
-    rendered = models.TextField(blank=True, null=True, editable=False, verbose_name="Рендер статьи")
+    rendered = models.TextField(blank=True, null=True, verbose_name="Рендер статьи")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
 
     def __str__(self) -> str:
@@ -84,7 +84,7 @@ class ArticleLogEntry(models.Model):
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
     type = models.TextField(choices=LogEntryType.choices, verbose_name="Тип")
-    meta = models.JSONField(default=dict, editable=False, blank=True, verbose_name="Мета")
+    meta = models.JSONField(default=dict, blank=True, verbose_name="Мета")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
     comment = models.TextField(blank=True, verbose_name="Комментарий")
     rev_number = models.PositiveIntegerField(verbose_name="Номер правки")
