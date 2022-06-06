@@ -1,6 +1,8 @@
+from django.db import models
+
 from .tokenizer import TokenType, WHITESPACE_CHARS, StaticTokenizer, Token
 from django.utils import html
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, User
 from web.controllers import articles
 import copy
 import re
@@ -8,6 +10,7 @@ import modules
 from web import threadvars
 from django.conf import settings
 import uuid
+from modules.listusers import render_user_to_html
 
 
 class RenderContext(object):
@@ -468,6 +471,20 @@ class IframeNode(Node):
 
     def render(self, context=None):
         return '<div><!--Iframe is not supported yet--></div>'
+
+
+class UserNode(Node):
+    def __init__(self, username, avatar):
+        super().__init__()
+        self.username = username
+        self.avatar = avatar
+
+    def render(self, context=None):
+        try:
+            user = User.objects.get(username=self.username)
+            return render_user_to_html(user, avatar=self.avatar)
+        except User.DoesNotExist:
+            return '<span class="error-inline">Пользователь \'%s\' не существует</span>' % html.escape(self.username)
 
 
 class ModuleNode(Node):
@@ -1094,8 +1111,8 @@ class Parser(object):
             trim_paragraphs = True
             name = name[:-1]
         align_tags = ['<', '>', '=', '==']
-        hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview', 'size', 'html', 'footnote', 'footnoteblock', 'iftags']
-        single_hack_tags = ['include', 'iframe', 'footnoteblock']
+        hack_tags = ['module', 'include', 'iframe', 'collapsible', 'tabview', 'size', 'html', 'footnote', 'footnoteblock', 'iftags', 'user', '*user']
+        single_hack_tags = ['include', 'iframe', 'footnoteblock', 'user', '*user']
         if self._context._in_tabview:
             hack_tags += ['tab']
         image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
@@ -1107,7 +1124,7 @@ class Parser(object):
         module_content = ''
         while True:
             self.tokenizer.skip_whitespace()
-            if name == 'tab':
+            if name in ['tab', 'user', '*user']:
                 tab_name = self.read_as_value_until([TokenType.CloseDoubleBracket])
                 if tab_name is None:
                     return None
@@ -1177,6 +1194,8 @@ class Parser(object):
                 return ModuleNode(name, attributes, None)
             elif name == 'footnoteblock':
                 return FootnoteBlockNode(attributes)
+            elif name in ['user', '*user']:
+                return UserNode(first_attr_name, avatar=(name == '*user'))
             else:
                 source = first_attr_name
                 attributes = attributes[1:]

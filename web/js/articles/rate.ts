@@ -1,5 +1,6 @@
-import {callModule, ModuleRateResponse} from "../api/modules";
+import {callModule} from "../api/modules";
 import {showErrorModal} from "../util/wikidot-modal";
+import {ModuleRateResponse} from "../api/rate";
 
 async function onClick(e: MouseEvent, pageId: string, vote: number): Promise<ModuleRateResponse> {
     e.preventDefault();

@@ -16,12 +16,6 @@ export interface ModuleRenderResponse {
 }
 
 
-export interface ModuleRateResponse {
-    pageId: string
-    rating: number
-}
-
-
 export async function callModule<T>(request: ModuleRequest) {
     return await wFetch<T>(`/api/modules`, {method: 'POST', sendJson: true, body: request});
 }

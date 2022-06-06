@@ -20,7 +20,6 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user = AnonymousUser()
 
     @staticmethod
     def get_path_params(path: str) -> tuple[str, dict[str, str]]:
@@ -44,12 +43,12 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
     def _render_nav(self, name: str, article: Article, path_params: dict[str, str]) -> str:
         nav = articles.get_article(name)
         if nav:
-            return single_pass_render(articles.get_latest_source(nav), RenderContext(article, nav, path_params, self.user))
+            return single_pass_render(articles.get_latest_source(nav), RenderContext(article, nav, path_params, self.request.user))
         return ""
 
     def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str]]:
         if article is not None:
-            context = RenderContext(article, article, path_params, self.user)
+            context = RenderContext(article, article, path_params, self.request.user)
             content = single_pass_render(articles.get_latest_source(article), context)
             redirect_to = context.redirect_to
             status = 200
@@ -78,7 +77,9 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         options_config = {
             'optionsEnabled': True,
             'editable': settings.ANONYMOUS_EDITING_ENABLED or self.request.user.has_perm("web.change_article", article),
-            'pageId': article_name
+            'pageId': article_name,
+            'rating': articles.get_rating(article),
+            'canRate': self.request.user.has_perm("web.can_vote_article")
         }
 
         context.update({
@@ -103,7 +104,6 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         return context
 
     def get(self, request, *args, **kwargs):
-        self.user = request.user
         context = self.get_context_data(**kwargs)
         if context['redirect_to']:
             return HttpResponseRedirect(context['redirect_to'])

@@ -1,17 +1,35 @@
-import {wFetch} from "../util/fetch-util";
+import {callModule} from "./modules";
+import {UserData} from "./user";
 
-export interface VotesData {
+export interface ModuleRateResponse {
+    pageId: string
     rating: number
 }
 
-export interface Vote {
-    vote: number
+export interface ModuleRateVote {
+    user: UserData
+    value: number
 }
 
-export function fetchVotes(id: string): Promise<VotesData> {
-    return wFetch<VotesData>(`/api/articles/${id}/votes`);
+export interface ModuleRateVotesResponse {
+    pageId: string
+    rating: number
+    votes: Array<ModuleRateVote>
 }
 
-export async function updateVotes(id: string, data: Vote): Promise<VotesData> {
-    return await wFetch(`/api/articles/${id}/votes`, {method: 'PUT', sendJson: true, body: data});
+export interface ModuleRateRequest {
+    pageId: string
+    value: number
+}
+
+export async function ratePage({pageId, value}: ModuleRateRequest): Promise<ModuleRateResponse> {
+    return await callModule<ModuleRateResponse>({module: 'rate', method: 'rate', pageId, params: {value}});
+}
+
+export async function fetchPageRating(pageId: string) {
+    return await callModule<ModuleRateResponse>({module: 'rate', method: 'get_rating', pageId});
+}
+
+export async function fetchPageVotes(pageId: string) {
+    return await callModule<ModuleRateVotesResponse>({module: 'rate', method: 'get_votes', pageId});
 }

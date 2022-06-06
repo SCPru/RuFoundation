@@ -1,4 +1,5 @@
 import renderer
+from modules.listusers import render_user_to_text
 from renderer.parser import RenderContext
 from web.controllers import articles
 import re
@@ -55,6 +56,8 @@ def page_to_listpages_vars(page: Article, template, index, total):
         'revisions': str(len(ArticleVersion.objects.filter(article=page))),
         'index': str(index),
         'total': str(total),
+        'created_by': render_user_to_text(page.author),
+        'created_by_linked': ('[[*user %s]]' % page.author.username) if page.author and 'username' in page.author.__dict__ else render_user_to_text(page.author),
         # content{n} = content sections are not supported yet
         # preview and preview(n) = first characters of the page are not supported yet
         # summary = wtf is this?

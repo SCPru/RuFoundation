@@ -5,17 +5,20 @@ import ArticleEditor from "../articles/article-editor";
 import ArticleHistory from "../articles/article-history";
 import ArticleSource from "../articles/article-source";
 import ArticleTags from "../articles/article-tags";
+import ArticleRating from "../articles/article-rating";
 
 
 interface Props {
     pageId?: string
     optionsEnabled?: boolean
     editable?: boolean
+    rating?: number
+    canRate?: boolean
 }
 
 
 interface State {
-    subView: 'edit' | 'tags' | 'history' | 'source' | null
+    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | null
     extOptions: boolean
 }
 
@@ -34,6 +37,15 @@ class PageOptions extends Component<Props, State> {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         }, 1);
     };
+
+    onRate = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ subView: 'rating' });
+        setTimeout(() => {
+            window.scrollTo(window.scrollX, document.body.scrollHeight);
+        }, 1);
+    }
 
     onTags = (e) => {
         e.preventDefault();
@@ -73,7 +85,7 @@ class PageOptions extends Component<Props, State> {
     };
 
     render() {
-        const { optionsEnabled, editable } = this.props;
+        const { optionsEnabled, editable, rating, canRate } = this.props;
         const { extOptions } = this.state;
 
         if (!optionsEnabled) {
@@ -84,6 +96,7 @@ class PageOptions extends Component<Props, State> {
             <>
                 <div id="page-options-bottom" className="page-options-bottom">
                     { editable && <a id="edit-button" className="btn btn-default" href="#" onClick={this.onEdit}>Редактировать</a> }
+                    <a id="pagerate-button" className="btn btn-default" href="#" onClick={this.onRate}>{canRate?'Оценить':'Оценки'} ({rating>=0?`+${rating}`:rating})</a>
                     { editable && <a id="tags-button" className="btn btn-default" href="#" onClick={this.onTags}>Теги</a> }
                     <a id="history-button" className="btn btn-default" href="#" onClick={this.onHistory}>История</a>
                     <a id="more-options-button" className="btn btn-default" href="#" onClick={this.toggleExtOptions}>{extOptions?'- Опции':'+ Опции'}</a>
@@ -102,11 +115,14 @@ class PageOptions extends Component<Props, State> {
 
     pickSubView() {
         const { subView } = this.state;
-        const { pageId } = this.props;
+        const { pageId, rating } = this.props;
 
         switch (subView) {
             case 'edit':
                 return <ArticleEditor pageId={pageId} onCancel={this.onCancelSubView} />;
+
+            case 'rating':
+                return <ArticleRating pageId={pageId} rating={rating} onClose={this.onCancelSubView} />;
 
             case 'tags':
                 return <ArticleTags pageId={pageId} onCancel={this.onCancelSubView} />;

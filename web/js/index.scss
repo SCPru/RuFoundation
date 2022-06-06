@@ -50,3 +50,15 @@
 .w-list-pages {
   position: relative;
 }
+
+.printuser img.small {
+  padding: 0;
+  margin-right: 8px;
+  border: 1px solid #777;
+  transition: all 0.25s ease;
+  pointer-events: none;
+}
+
+.printuser a:hover img.small, .printuser span:hover img.small {
+  transform: scale(4);
+}

@@ -1,7 +1,9 @@
-from web.controllers.articles import get_rating
+from web.controllers.articles import get_rating, Vote
 from . import ModuleError
 from web.controllers import articles
 from django.utils import html
+
+from .listusers import render_user_to_json
 
 
 def render(context, _params):
@@ -25,6 +27,15 @@ def api_get_rating(context, _params):
     if not context.article:
         raise ModuleError('Страница не указана')
     return {'pageId': context.article.full_name, 'rating': articles.get_rating(context.article)}
+
+
+def api_get_votes(context, _params):
+    if not context.article:
+        raise ModuleError('Страница не указана')
+    votes = []
+    for db_vote in Vote.objects.filter(article=context.article).order_by('-user__username'):
+        votes.append({'user': render_user_to_json(db_vote.user), 'value': db_vote.rate})
+    return {'pageId': context.article.full_name, 'votes': votes, 'rating': articles.get_rating(context.article)}
 
 
 def api_rate(context, params):
