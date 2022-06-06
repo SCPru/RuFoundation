@@ -34,6 +34,8 @@ window.addEventListener('DOMContentLoaded', () => {
                         makeCollapsible(node);
                     } else if (node.classList.contains('w-tabview')) {
                         makeTabView(node);
+                    } else if (node.classList.contains('w-rate-module')) {
+                        makeRateModule(node);
                     }
                 })
             }
