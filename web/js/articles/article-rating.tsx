@@ -113,7 +113,7 @@ class ArticleRating extends Component<Props, State> {
                 </p>
                 <div id="who-rated-page-area" className={`${loading?'loading':''}`}>
                     { loading && <Loader className="loader" /> }
-                    { votes && votes.length && <h2>Список голосовавших за страницу</h2>}
+                    { !!(votes && votes.length) && <h2>Список голосовавших за страницу</h2>}
                     { votes.map((vote, i) => (
                         <React.Fragment key={i}>
                             <UserView data={vote.user} />&nbsp;{vote.value>0?'+':'-'}<br/>
