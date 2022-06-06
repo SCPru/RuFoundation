@@ -1,6 +1,5 @@
 import pkgutil
 import sys
-from django.utils import html
 import logging
 from types import ModuleType
 
