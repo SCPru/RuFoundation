@@ -187,7 +187,6 @@ def render(context: RenderContext, params, content=None):
                 else:
                     article = articles.get_article(f_parent)
                     q = q.filter(parent=article)
-            total_pages = len(q)
             # sorting
             f_sort = params.get('order', 'created_at desc').split(' ')
             allowed_sort_columns = {
@@ -212,6 +211,7 @@ def render(context: RenderContext, params, content=None):
                 q = q[f_offset:f_offset + f_limit]
             except:
                 q = q[f_offset:]
+            total_pages = len(q)
             try:
                 f_per_page = int(params.get('perPage', '20'))
             except:
@@ -265,9 +265,9 @@ def render(context: RenderContext, params, content=None):
             # add pagination if any
             if pagination_total_pages > 1:
                 output += '<div class="pager">'
-                output += '<span class="pager-no">страница %d из %d</span>' % (pagination_page, pagination_total_pages)
+                output += '<span class="pager-no">страница&nbsp;%d&nbsp;из&nbsp;%d</span>' % (pagination_page, pagination_total_pages)
                 if pagination_page > 1:
-                    output += '<span class="target"><a href="%s/p/%d" data-pagination-target="%d">&laquo; предыдущая</a></span>' % (base_path, pagination_page+1, pagination_page+1)
+                    output += '<span class="target"><a href="%s/p/%d" data-pagination-target="%d">&laquo;&nbsp;предыдущая</a></span>' % (base_path, pagination_page+1, pagination_page+1)
                 around_pages = 2
                 left_from = 1
                 left_to = left_from + 1
@@ -299,7 +299,7 @@ def render(context: RenderContext, params, content=None):
                     else:
                         output += '<span class="target"><a href="%s/p/%d" data-pagination-target="%d">%d</a></span>' % (base_path, i, i, i)
                 if pagination_page < pagination_total_pages:
-                    output += '<span class="target"><a href="%s/p/%d" data-pagination-target="%d">следующая &raquo;</a></span>' % (base_path, pagination_page+1, pagination_page+1)
+                    output += '<span class="target"><a href="%s/p/%d" data-pagination-target="%d">следующая&nbsp;&raquo;</a></span>' % (base_path, pagination_page+1, pagination_page+1)
                 print('left: %s, center: %s, right: %s' % (repr((left_from, left_to)), repr((center_from, center_to)), repr((right_from, right_to))))
                 output += '</div>'
 
