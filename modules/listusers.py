@@ -25,8 +25,8 @@ def render_user_to_html(user, avatar=True):
         return ret
     ret = '<span class="printuser w-user" data-user-name="%s">' % html.escape(user.username)
     if avatar:
-        ret += '<a href="/-/users/%d-%s"><img class="small" src="/static/images/default_avatar.png" alt="%s"></a>' % (urllib.parse.quote_plus(user.username), user.id, html.escape(user.username))
-    ret += '<a href="/-/users/%d-%s">%s</a>' % (urllib.parse.quote_plus(user.username), user.id, html.escape(user.username))
+        ret += '<a href="/-/users/%d-%s"><img class="small" src="/static/images/default_avatar.png" alt="%s"></a>' % (user.id, urllib.parse.quote_plus(user.username), html.escape(user.username))
+    ret += '<a href="/-/users/%d-%s">%s</a>' % (user.id, urllib.parse.quote_plus(user.username), html.escape(user.username))
     ret += '</span>'
     return ret
 
