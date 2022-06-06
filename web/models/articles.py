@@ -100,7 +100,7 @@ class Vote(models.Model):
 
         constraints = [models.UniqueConstraint(fields=['article', 'user'], name='%(app_label)s_%(class)s_unique')]
 
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья", related_name='votes')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
     rate = models.IntegerField(verbose_name="Оценка")
 

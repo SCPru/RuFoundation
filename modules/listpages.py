@@ -2,8 +2,8 @@ import renderer
 from renderer.parser import RenderContext
 from web.controllers import articles
 import re
-from web.models.articles import Article
-from django.db.models import Q, Value as V, F, Count
+from web.models.articles import Article, Vote, ArticleVersion
+from django.db.models import Q, Value as V, F, Count, Sum
 from django.db.models.functions import Concat
 from web import threadvars
 import json
@@ -41,7 +41,7 @@ def render_var(var, page_vars, page):
     return '%%' + var + '%%'
 
 
-def page_to_listpages_vars(page, template):
+def page_to_listpages_vars(page: Article, template, index, total):
     page_vars = {
         'name': page.name,
         'category': page.category,
@@ -50,6 +50,11 @@ def page_to_listpages_vars(page, template):
         'title_linked': '[[[%s|%s]]]' % (articles.get_full_name(page), page.title),
         'link': '/%s' % page.title,  # temporary, must be full page URL based on hostname
         'content': '[[include %s]]' % (articles.get_full_name(page)),
+        'rating': '%+d' % articles.get_rating(page),
+        'rating_votes': str(len(Vote.objects.filter(article=page))),
+        'revisions': str(len(ArticleVersion.objects.filter(article=page))),
+        'index': str(index),
+        'total': str(total),
         # content{n} = content sections are not supported yet
         # preview and preview(n) = first characters of the page are not supported yet
         # summary = wtf is this?
@@ -92,6 +97,8 @@ def render(context: RenderContext, params, content=None):
 
         pagination_page = 1
         pagination_total_pages = 1
+        page_index = 0
+        total_pages = 0
 
         # if either name, range, or fullname is '.', then we always select the current page.
         if params.get('name') == '.' or params.get('range') == '.' or params.get('fullname') == '.':
@@ -99,6 +106,7 @@ def render(context: RenderContext, params, content=None):
             if context.article:
                 pages.append(context.article)
             pagination_total_pages = 1
+            total_pages = 1
         elif params.get('fullname'):
             article = articles.get_article(params.get('fullname'))
             pages = []
@@ -106,6 +114,7 @@ def render(context: RenderContext, params, content=None):
             if article:
                 pages.append(article)
                 pagination_total_pages += 1
+                total_pages = 1
         else:
             # test
             q = Article.objects
@@ -194,11 +203,14 @@ def render(context: RenderContext, params, content=None):
                 'name': F('name'),
                 'title': F('title'),
                 'updated_at': F('updated_at'),
-                'fullname': Concat('category', V(':'), 'name')
+                'fullname': Concat('category', V(':'), 'name'),
+                'rating': F('rating')
             }
             if f_sort[0] not in allowed_sort_columns:
                 f_sort = ['created_at', 'desc']
             direction = 'desc' if f_sort[1:] == ['desc'] else 'asc'
+            if f_sort[0] == 'rating':
+                q = q.annotate(rating=Sum('votes__rate'))
             q = q.order_by(getattr(allowed_sort_columns[f_sort[0]], direction)())  # asc/desc is a function call on DB val
             q = q.distinct()
             # end sorting
@@ -206,6 +218,7 @@ def render(context: RenderContext, params, content=None):
                 f_offset = int(params.get('offset', '0'))
             except:
                 f_offset = 0
+            page_index += f_offset
             try:
                 f_limit = int(params.get('limit'))
                 q = q[f_offset:f_offset + f_limit]
@@ -222,6 +235,8 @@ def render(context: RenderContext, params, content=None):
                     f_page = 1
             except:
                 f_page = 1
+            if f_page != 1:
+                page_index += f_page * f_per_page
             q = q[(f_page-1)*f_per_page:f_page*f_per_page]
             pages = list(q)
             if params.get('reverse', 'no') == 'yes':
@@ -236,7 +251,8 @@ def render(context: RenderContext, params, content=None):
             if prepend:
                 output += renderer.single_pass_render(prepend+'\n', common_context)
             for page in pages:
-                page_content = page_to_listpages_vars(page, content)
+                page_index += 1
+                page_content = page_to_listpages_vars(page, content, page_index, total_pages)
                 output += renderer.single_pass_render(page_content+'\n', RenderContext(page, page, context.path_params, context.user))
             if append:
                 output += renderer.single_pass_render(append, common_context)
@@ -245,7 +261,8 @@ def render(context: RenderContext, params, content=None):
             if prepend:
                 source += prepend+'\n'
             for page in pages:
-                page_content = page_to_listpages_vars(page, content)
+                page_index += 1
+                page_content = page_to_listpages_vars(page, content, page_index, total_pages)
                 source += page_content+'\n'
             source += append
             output += renderer.single_pass_render(source, common_context)
