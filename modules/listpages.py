@@ -255,12 +255,15 @@ def render(context: RenderContext, params, content=None):
             list_pages_attrs += 'data-list-pages-path-params="%s"' % html.escape(json.dumps(context.path_params))
             list_pages_attrs += ' data-list-pages-params="%s"' % html.escape(json.dumps(params))
             list_pages_attrs += ' data-list-pages-content="%s"' % html.escape(json.dumps(content))
-            list_pages_attrs += ' data-list-pages-page-id="%s"' % html.escape(context.article.full_name)
+            list_pages_attrs += ' data-list-pages-page-id="%s"' % html.escape(articles.get_full_name(context.article) or '')
 
-            base_path = '/%s' % context.article.full_name
-            for k, v in context.path_params.items():
-                if k != 'p':
-                    base_path += '/%s/%s' % (urllib.parse.quote_plus(str(k)), urllib.parse.quote_plus(str(v)))
+            if context.article:
+                base_path = '/%s' % context.article.full_name
+                for k, v in context.path_params.items():
+                    if k != 'p':
+                        base_path += '/%s/%s' % (urllib.parse.quote_plus(str(k)), urllib.parse.quote_plus(str(v)))
+            else:
+                base_path = '#'
 
             # add pagination if any
             if pagination_total_pages > 1:

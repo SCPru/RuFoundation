@@ -7,7 +7,7 @@ import datetime
 import re
 
 
-_FullNameOrArticle = Union[str, Article]
+_FullNameOrArticle = Union[str, Article, None]
 
 
 # Returns (category, name) from a full name
@@ -39,6 +39,8 @@ def get_article(full_name_or_article: _FullNameOrArticle) -> Optional[Article]:
 
 
 def get_full_name(full_name_or_article: _FullNameOrArticle) -> str:
+    if full_name_or_article is None:
+        return ''
     if type(full_name_or_article) == str:
         return full_name_or_article
     return full_name_or_article.full_name
