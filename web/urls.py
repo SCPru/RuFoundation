@@ -15,7 +15,9 @@ Including another URLconf
 """
 from django.urls import path, re_path
 
-from web.views.api.articles import CreateView, FetchOrUpdateView, FetchLogView, VotesView
+from web.views.api.articles import CreateView, FetchOrUpdateView, FetchLogView
+from web.views.api.module import ModuleView
+
 from web.views.article import ArticleView
 
 
@@ -23,7 +25,8 @@ urlpatterns = [
     path('api/articles/new', CreateView.as_view()),
     path('api/articles/<str:full_name>', FetchOrUpdateView.as_view()),
     path('api/articles/<str:full_name>/log', FetchLogView.as_view()),
-    path('api/articles/<str:full_name>/votes', VotesView.as_view()),
+
+    path('api/modules', ModuleView.as_view()),
 
     re_path(r'(?P<path>.*)$', ArticleView.as_view())
 ]

@@ -23,6 +23,8 @@ def normalize_article_name(name: str) -> str:
 
 
 def get_article(full_name_or_article: _FullNameOrArticle) -> Optional[Article]:
+    if full_name_or_article is None:
+        return None
     if type(full_name_or_article) == str:
         full_name_or_article = full_name_or_article.lower()
         category, name = get_name(full_name_or_article)
@@ -31,6 +33,8 @@ def get_article(full_name_or_article: _FullNameOrArticle) -> Optional[Article]:
             return objects[0]
         else:
             return None
+    if not isinstance(full_name_or_article, Article):
+        raise ValueError('Expected str or Article')
     return full_name_or_article
 
 

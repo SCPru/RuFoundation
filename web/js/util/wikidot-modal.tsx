@@ -1,6 +1,8 @@
 import * as React from 'react';
-import { Component } from 'react';
+import * as ReactDOM from 'react-dom';
+import {Component} from 'react';
 import styled from 'styled-components';
+import { v4 as uuid4 } from 'uuid';
 
 
 interface Button {
@@ -15,7 +17,37 @@ interface Props {
     buttons?: Array<Button>
 }
 
+interface State {
+    modalId?: string
+}
 
+
+class WikidotModal extends Component<Props, State> {
+    state = {
+        modalId: null
+    };
+
+    componentDidMount() {
+        const modalId = uuid4();
+        this.setState({modalId});
+        addModalContainer(modalId);
+    }
+
+    componentWillUnmount() {
+        removeModalContainer(this.state.modalId);
+    }
+
+    // returning a portal without explicit "any" type results in compatibility issues with older stuff
+    render(): any {
+        const container = getModalContainer(this.state.modalId);
+        if (container)
+            return ReactDOM.createPortal(<WikidotModalWindow {...this.props}/>, container);
+        return null;
+    }
+}
+
+
+//
 const Styles = styled.div`
 .odialog-container {
   position: fixed;
@@ -49,7 +81,7 @@ const Styles = styled.div`
 `;
 
 
-class WikidotModal extends Component<Props> {
+class WikidotModalWindow extends Component<Props> {
     handleCallback(e, callback) {
         e.preventDefault();
         e.stopPropagation();
@@ -82,6 +114,65 @@ class WikidotModal extends Component<Props> {
             </Styles>
         )
     }
+}
+
+
+function getModalContainerElement() {
+    return document.getElementById('w-modals');
+}
+
+function addModalContainer(id) {
+    const node = document.createElement('div');
+    node.setAttribute('id', `modal-${id}`);
+    getModalContainerElement()?.appendChild(node);
+    return node;
+}
+
+function getModalContainer(id) {
+    return getModalContainerElement()?.querySelector(`#modal-${id}`);
+}
+
+function removeModalContainer(id) {
+    const node = getModalContainer(id);
+    node?.parentNode.removeChild(node);
+}
+
+export function addUnmanagedModal(modal) {
+    const id = uuid4();
+    const container = addModalContainer(id);
+    ReactDOM.render(modal, container);
+    return id;
+}
+
+export function updateUnmanagedModal(id, modal) {
+    const container = getModalContainer(id);
+    if (container) {
+        ReactDOM.render(modal, container);
+    }
+}
+
+export function removeUnmanagedModal(id) {
+    const container = getModalContainer(id);
+    if (container) {
+        ReactDOM.unmountComponentAtNode(container);
+    }
+    removeModalContainer(id);
+}
+
+
+export function showErrorModal(error) {
+    let uuid: string | null = null;
+
+    const onCloseError = () => {
+        removeUnmanagedModal(uuid);
+    };
+
+    const modal =
+        <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]}>
+            <strong>Ошибка:</strong> {error}
+        </WikidotModal>;
+
+    uuid = addUnmanagedModal(modal);
 }
 
 

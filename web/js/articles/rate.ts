@@ -1,12 +1,20 @@
-import {updateVotes, VotesData} from "../api/rate";
+import {callModule, ModuleRateResponse} from "../api/modules";
+import {showErrorModal} from "../util/wikidot-modal";
 
-async function onClick(id: string, vote: number): Promise<VotesData> {
-    return await updateVotes(id, {"vote": vote});
+async function onClick(e: MouseEvent, pageId: string, vote: number): Promise<ModuleRateResponse> {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+        return await callModule<ModuleRateResponse>({module: 'rate', method: 'rate', pageId, params: {value: vote}});
+    } catch (e) {
+        showErrorModal(e.error || 'Ошибка связи с сервером');
+        throw e;
+    }
 }
 
-function updateRating(element: HTMLElement, votesData: VotesData) {
+function updateRating(element: HTMLElement, votesData: ModuleRateResponse) {
     let rating = String(votesData.rating);
-    if (votesData.rating > 0) {
+    if (votesData.rating >= 0) {
         rating = "+" + rating
     }
     element.innerText = rating;
@@ -18,6 +26,8 @@ export function makeRateModule(node: HTMLElement) {
     }
     (node as any)._rate = true;
 
+    const pageId = node.dataset.pageId;
+
     const number: HTMLElement = node.querySelector('.number');
     const rateup: HTMLElement = node.querySelector('.rateup a');
     const ratedown: HTMLElement = node.querySelector('.ratedown a');
@@ -27,7 +37,7 @@ export function makeRateModule(node: HTMLElement) {
         updateRating(number, votesData)
     };
 
-    rateup.onclick = function() {onClick("test", 1).then(callback)};
-    ratedown.onclick = function() {onClick("test", -1).then(callback)};
-    cancel.onclick = function() {onClick("test", 0).then(callback)};
+    rateup.addEventListener('click', (e) => onClick(e, pageId, 1).then(callback));
+    ratedown.addEventListener('click', (e) => onClick(e, pageId, -1).then(callback));
+    cancel.addEventListener('click', (e) => onClick(e, pageId, 0).then(callback));
 }

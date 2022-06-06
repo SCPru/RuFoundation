@@ -1,5 +1,6 @@
 from .tokenizer import TokenType, WHITESPACE_CHARS, StaticTokenizer, Token
 from django.utils import html
+from django.contrib.auth.models import AnonymousUser
 from web.controllers import articles
 import copy
 import re
@@ -10,10 +11,11 @@ import uuid
 
 
 class RenderContext(object):
-    def __init__(self, article, source_article, path_params):
+    def __init__(self, article, source_article, path_params, user):
         self.article = article
         self.source_article = source_article
         self.path_params = path_params
+        self.user = user or AnonymousUser()
         self.redirect_to = None
 
 
@@ -489,7 +491,10 @@ class ModuleNode(Node):
         params = {}
         for attr in self.attributes:
             params[attr[0]] = attr[1]
-        return modules.render_module(self.name, context, params, self.content)
+        try:
+            return modules.render_module(self.name, context, params, self.content)
+        except modules.ModuleError as e:
+            return '<div class="error-block"><p>%s</p></div>' % html.escape(e.message)
 
 
 class CollapsibleNode(Node):

@@ -6,8 +6,6 @@ from web.models.articles import Article
 from django.db.models import Q, Value as V, F, Count
 from django.db.models.functions import Concat
 from web import threadvars
-import operator
-from functools import reduce
 
 
 def has_content():
@@ -70,7 +68,7 @@ def page_to_listpages_vars(page, template):
     return template
 
 
-def render(context, params, content=None):
+def render(context: RenderContext, params, content=None):
     with threadvars.context():
         content = (content or '').strip()
 
@@ -223,14 +221,14 @@ def render(context, params, content=None):
                 pages = reversed(pages)
 
         output = ''
-        common_context = RenderContext(context.article, context.article, context.path_params)
+        common_context = RenderContext(context.article, context.article, context.path_params, context.user)
 
         if separate:
             if prepend:
                 output += renderer.single_pass_render(prepend+'\n', common_context)
             for page in pages:
                 page_content = page_to_listpages_vars(page, content)
-                output += renderer.single_pass_render(page_content+'\n', RenderContext(page, page, context.path_params))
+                output += renderer.single_pass_render(page_content+'\n', RenderContext(page, page, context.path_params, context.user))
             if append:
                 output += renderer.single_pass_render(append, common_context)
         else:

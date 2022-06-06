@@ -2,10 +2,21 @@ import pkgutil
 import sys
 from django.utils import html
 import logging
+from types import ModuleType
 
 
 _all_modules = {}
 _initialized = False
+
+
+class ModuleError(Exception):
+    def __init__(self, message, *args):
+        super().__init__(message, *args)
+        self.message = message
+
+
+def check_function_exists_and_callable(m, func):
+    return func in m.__dict__ and callable(m.__dict__[func])
 
 
 def get_all_modules():
@@ -17,40 +28,77 @@ def get_all_modules():
         if ispkg:
             continue
         try:
-            m = importer.find_module(modname).load_module(modname)
+            fullname = 'modules.%s' % modname
+            m = importer.find_module(fullname).load_module(fullname)
         except:
+            logging.error('Failed to load module \'%s\':', modname.lower(), exc_info=True)
             continue
-        if 'render' not in m.__dict__:
-            continue
-        if not callable(m.render):
+        if not check_function_exists_and_callable(m, 'render') and not check_function_exists_and_callable(m, 'allow_api'):
             continue
         _all_modules[modname.lower()] = m
     _initialized = True
     return _all_modules
 
 
-def module_has_content(name):
-    name = name.lower()
-    modules = get_all_modules()
-    if name not in modules:
+def get_module(name_or_module) -> any:
+    if type(name_or_module) == str:
+        name = name_or_module.lower()
+        modules = get_all_modules()
+        return modules.get(name, None)
+    if not isinstance(name_or_module, ModuleType):
+        raise ValueError('Expected str or module')
+    return name_or_module
+
+
+def module_has_content(name_or_module):
+    m = get_module(name_or_module)
+    if m is None:
         return False
-    m = modules[name]
-    if 'has_content' not in m.__dict__ or not callable(m.has_content):
+    if 'has_content' not in m.__dict__ or not callable(m.__dict__['has_content']):
         return False
-    return m.has_content()
+    return m.__dict__['has_content']
+
+
+def module_allows_api(name_or_module):
+    m = get_module(name_or_module)
+    if m is None:
+        return False
+    if 'allow_api' not in m.__dict__ or not callable(m.__dict__['allow_api']):
+        return False
+    return m.__dict__['allow_api']()
 
 
 def render_module(name, context, params, content=None):
-    name = name.lower()
-    modules = get_all_modules()
-    if name not in modules:
-        #return '<div class="error-block"><p>Модуль \'%s\' не существует</p></div>' % html.escape(name)
-        return ''
+    m = get_module(name)
+    if m is None:
+        raise ModuleError('Модуль \'%s\' не существует' % name)
     try:
-        if module_has_content(name):
-            return modules[name].render(context, params, content)
+        render = m.__dict__.get('render', None)
+        if render is None:
+            raise ModuleError('Модуль \'%s\' не поддерживает использование на странице')
+        if module_has_content(m):
+            return render(context, params, content)
         else:
-            return modules[name].render(context, params)
+            return render(context, params)
     except:
         logging.error('Module failed: %s, Params = %s, Path = %s, Error:', name, params, context.path_params if context else None, exc_info=True)
-        return '<div class="error-block"><p>Ошибка обработки модуля \'%s\'</p></div>' % html.escape(name)
+        raise ModuleError('Ошибка обработки модуля \'%s\'' % name)
+
+
+def handle_api(name, method, context, params):
+    m = get_module(name)
+    if m is None:
+        raise ModuleError('Модуль \'%s\' не существует' % name)
+    try:
+        if module_allows_api(m):
+            api_method = 'api_%s' % method
+            if api_method not in m.__dict__ or not callable(m.__dict__[api_method]):
+                raise ModuleError('Некорректный метод для модуля \'%s\'')
+            return m.__dict__[api_method](context, params)
+        else:
+            raise ModuleError('Модуль \'%s\' не поддерживает API')
+    except ModuleError:
+        raise
+    except:
+        logging.error('Module failed: %s, API = %s, Params = %s, Path = %s, Error:', name, method, params, context.path_params if context else None, exc_info=True)
+        raise ModuleError('Ошибка обработки модуля \'%s\'' % name)

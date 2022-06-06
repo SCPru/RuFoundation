@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 from django.template.loader import render_to_string
 from django.http import HttpResponseRedirect
@@ -16,6 +17,10 @@ import json
 class ArticleView(TemplateResponseMixin, ContextMixin, View):
     template_name = "page.html"
     template_404 = "page_404.html"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = AnonymousUser()
 
     @staticmethod
     def get_path_params(path: str) -> tuple[str, dict[str, str]]:
@@ -36,16 +41,15 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
         return article_name, path_params
 
-    @staticmethod
-    def _render_nav(name: str, article: Article, path_params: dict[str, str]) -> str:
+    def _render_nav(self, name: str, article: Article, path_params: dict[str, str]) -> str:
         nav = articles.get_article(name)
         if nav:
-            return single_pass_render(articles.get_latest_source(nav), RenderContext(article, nav, path_params))
+            return single_pass_render(articles.get_latest_source(nav), RenderContext(article, nav, path_params, self.user))
         return ""
 
     def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str]]:
         if article is not None:
-            context = RenderContext(article, article, path_params)
+            context = RenderContext(article, article, path_params, self.user)
             content = single_pass_render(articles.get_latest_source(article), context)
             redirect_to = context.redirect_to
             status = 200
@@ -99,6 +103,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         return context
 
     def get(self, request, *args, **kwargs):
+        self.user = request.user
         context = self.get_context_data(**kwargs)
         if context['redirect_to']:
             return HttpResponseRedirect(context['redirect_to'])
