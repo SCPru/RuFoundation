@@ -6,6 +6,7 @@ import {makeCollapsible} from "./articles/collapsible";
 import {makeTabView} from "./articles/tabview";
 import {makeRateModule} from "./articles/rate";
 import "./articles/auto-resize-iframe";
+import {makeListPages} from "./articles/list-pages";
 
 
 function renderTo(where: HTMLElement, what: any) {
@@ -23,6 +24,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.w-collapsible').forEach((node: HTMLElement) => makeCollapsible(node));
     document.querySelectorAll('.w-tabview').forEach((node: HTMLElement) => makeTabView(node));
     document.querySelectorAll('.w-rate-module').forEach((node: HTMLElement) => makeRateModule(node));
+    document.querySelectorAll('.w-list-pages').forEach((node: HTMLElement) => makeListPages(node));
 
     // establish watcher. will be used later for things like TabView too
     const observer = new MutationObserver((mutationList) => {
@@ -36,6 +38,8 @@ window.addEventListener('DOMContentLoaded', () => {
                         makeTabView(node);
                     } else if (node.classList.contains('w-rate-module')) {
                         makeRateModule(node);
+                    } else if (node.classList.contains('w-list-pages')) {
+                        makeListPages(node);
                     }
                 })
             }

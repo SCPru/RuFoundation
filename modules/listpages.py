@@ -6,6 +6,9 @@ from web.models.articles import Article
 from django.db.models import Q, Value as V, F, Count
 from django.db.models.functions import Concat
 from web import threadvars
+import json
+from django.utils import html
+import math
 
 
 def has_content():
@@ -86,19 +89,22 @@ def render(context: RenderContext, params, content=None):
         separate = params.get('separate', 'yes') == 'yes'
         wrapper = params.get('wrapper', 'yes') == 'yes'
 
+        pagination_page = 1
+        pagination_total_pages = 1
+
         # if either name, range, or fullname is '.', then we always select the current page.
         if params.get('name') == '.' or params.get('range') == '.' or params.get('fullname') == '.':
             pages = []
             if context.article:
                 pages.append(context.article)
-            total_pages = 1
+            pagination_total_pages = 1
         elif params.get('fullname'):
             article = articles.get_article(params.get('fullname'))
             pages = []
-            total_pages = 0
+            pagination_total_pages = 0
             if article:
                 pages.append(article)
-                total_pages += 1
+                pagination_total_pages += 1
         else:
             # test
             q = Article.objects
@@ -219,6 +225,8 @@ def render(context: RenderContext, params, content=None):
             pages = list(q)
             if params.get('reverse', 'no') == 'yes':
                 pages = reversed(pages)
+            pagination_page = f_page
+            pagination_total_pages = int(math.ceil(total_pages / f_per_page))
 
         output = ''
         common_context = RenderContext(context.article, context.article, context.path_params, context.user)
@@ -242,6 +250,58 @@ def render(context: RenderContext, params, content=None):
             output += renderer.single_pass_render(source, common_context)
 
         if wrapper:
-            output = '<div class="list-pages-box">' + output + '</div>'
+            list_pages_attrs = ''
+            list_pages_attrs += 'data-list-pages-path-params="%s"' % html.escape(json.dumps(context.path_params))
+            list_pages_attrs += ' data-list-pages-params="%s"' % html.escape(json.dumps(params))
+            list_pages_attrs += ' data-list-pages-content="%s"' % html.escape(json.dumps(content))
+            list_pages_attrs += ' data-list-pages-page-id="%s"' % html.escape(context.article.full_name)
+
+            base_path = '/%s' % context.article.full_name
+            for k, v in context.path_params.items():
+                if k != 'p':
+                    base_path += '/%s/%s' % (html.urlencode(str(k)), html.urlencode(str(v)))
+
+            # add pagination if any
+            if pagination_total_pages > 1:
+                output += '<div class="pager">'
+                output += '<span class="pager-no">страница %d из %d</span>' % (pagination_page, pagination_total_pages)
+                if pagination_page > 1:
+                    output += '<span class="target"><a href="%s/p/%d" data-pagination-target="%d">&laquo; предыдущая</a></span>' % (base_path, pagination_page+1, pagination_page+1)
+                around_pages = 2
+                left_from = 1
+                left_to = left_from + 1
+                if pagination_page < (around_pages*2+1):
+                    left_to = around_pages+1
+                right_to = pagination_total_pages
+                right_from = max(left_to+1, right_to - 1)
+                if pagination_page > (right_to - (around_pages*2+1)):
+                    right_from = max(left_to+1, pagination_total_pages - (around_pages+1))
+                center_from = max(left_to+1, pagination_page - around_pages)
+                center_to = min(right_from-1, pagination_page + around_pages)
+                for i in range(left_from, left_to+1):
+                    if pagination_page == i:
+                        output += '<span class="target current">%d</span>' % (i)
+                    else:
+                        output += '<span class="target"><a href="%s/p/%d" data-pagination-target="%d">%d</a></span>' % (base_path, i, i, i)
+                if center_from > left_to+1:
+                    output += '<span class="dots">...</span>'
+                for i in range(center_from, center_to+1):
+                    if pagination_page == i:
+                        output += '<span class="target current">%d</span>' % (i)
+                    else:
+                        output += '<span class="target"><a href="%s/p/%d" data-pagination-target="%d">%d</a></span>' % (base_path, i, i, i)
+                if center_to < right_from-1:
+                    output += '<span class="dots">...</span>'
+                for i in range(right_from, right_to+1):
+                    if pagination_page == i:
+                        output += '<span class="target current">%d</span>' % (i)
+                    else:
+                        output += '<span class="target"><a href="%s/p/%d" data-pagination-target="%d">%d</a></span>' % (base_path, i, i, i)
+                if pagination_page < pagination_total_pages:
+                    output += '<span class="target"><a href="%s/p/%d" data-pagination-target="%d">следующая &raquo;</a></span>' % (base_path, pagination_page+1, pagination_page+1)
+                print('left: %s, center: %s, right: %s' % (repr((left_from, left_to)), repr((center_from, center_to)), repr((right_from, right_to))))
+                output += '</div>'
+
+            output = '<div class="list-pages-box w-list-pages" %s>%s</div>' % (list_pages_attrs, output)
 
         return output
