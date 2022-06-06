@@ -7,7 +7,7 @@ from django.db.models import Q, Value as V, F, Count
 from django.db.models.functions import Concat
 from web import threadvars
 import json
-from django.utils import html
+from django.utils import html, http
 import math
 
 
@@ -259,7 +259,7 @@ def render(context: RenderContext, params, content=None):
             base_path = '/%s' % context.article.full_name
             for k, v in context.path_params.items():
                 if k != 'p':
-                    base_path += '/%s/%s' % (html.urlencode(str(k)), html.urlencode(str(v)))
+                    base_path += '/%s/%s' % (http.urlencode(str(k)), http.urlencode(str(v)))
 
             # add pagination if any
             if pagination_total_pages > 1:
