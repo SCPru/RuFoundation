@@ -24,6 +24,6 @@ By default, there are no pages in the website.
 
 This also includes `nav:top` and `nav:side` which are critical for proper appearance.
 
-You can create some by running the following sequence:
+You can create some by running the following command:
 
 - `python manage.py seed`
