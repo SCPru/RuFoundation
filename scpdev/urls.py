@@ -31,7 +31,7 @@ def serve_static(request, dir_path, document_root=None, show_indexes=False):
 
 
 urlpatterns = [
-    re_path(r'^%s(?P<dir_path>.*)$' % re.escape(settings.MEDIA_URL.lstrip('/')), serve_static, {'document_root': settings.MEDIA_ROOT}),
+    re_path(r'^%s(?P<dir_path>.*)$' % re.escape(settings.MEDIA_URL.lstrip('/')), serve_static, {'document_root': settings.MEDIA_ROOT}, name="local_files"),
 
     path("-/", include("system.urls")),
     path("", include("web.urls"))

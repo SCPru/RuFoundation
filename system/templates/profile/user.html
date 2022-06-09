@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}{{ object.username|escape }}{% endblock %}
+
+{% block content %}
+    <h1>{{ object.username|escape }}</h1>
+    <img src="{% url "local_files" object.profile.avatar %}" alt="{{ object.username|escape }}">
+    {{ object.profile.bio|escape }}
+{% endblock %}

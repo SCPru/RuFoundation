@@ -1,5 +1,5 @@
 from django.views.generic import FormView
-from django.shortcuts import render, redirect, resolve_url
+from django.shortcuts import redirect, resolve_url
 from django.core.mail import send_mail, BadHeaderError
 from django.http import HttpResponse
 from django.contrib.auth.forms import PasswordResetForm

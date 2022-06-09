@@ -24,8 +24,8 @@ class UserView extends Component<Props> {
         }
         return (
             <span className="printuser" data-user-name={data.username}>
-                {data.showAvatar&&<a href={`/-/users/${data.id}-${encodeURIComponent(data.username)}`}><img className="small" src="/static/images/default_avatar.png" alt={data.name} /></a>}
-                <a href={`/-/users/${data.id}-${encodeURIComponent(data.username)}`}>{data.name}</a>
+                {data.showAvatar&&<a href={`/-/users/${encodeURIComponent(data.username)}`}><img className="small" src={data.avatar} alt={data.name} /></a>}
+                <a href={`/-/users/${encodeURIComponent(data.username)}`}>{data.name}</a>
             </span>
         )
     }

@@ -1,3 +1,5 @@
+@import 'css/system';
+
 .rimg img, .scp-image-block img {
   // compatibility patch for some unobvious stuff that started working differently after moving away from XHTML
   // https://stackoverflow.com/questions/10844205/html-5-strange-img-always-adds-3px-margin-at-bottom

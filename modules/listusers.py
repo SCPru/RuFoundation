@@ -1,11 +1,12 @@
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, User
+from django.shortcuts import resolve_url
 import urllib.parse
 from django.utils import html
 import re
 import renderer
 
 
-def render_user_to_text(user):
+def render_user_to_text(user: User):
     if user is None:
         return 'system'
     if isinstance(user, AnonymousUser):
@@ -13,7 +14,7 @@ def render_user_to_text(user):
     return user.username
 
 
-def render_user_to_html(user, avatar=True):
+def render_user_to_html(user: User, avatar=True):
     if user is None:
         return '<span class="printuser"><strong>system</strong></span>'
     if isinstance(user, AnonymousUser):
@@ -31,12 +32,12 @@ def render_user_to_html(user, avatar=True):
     return ret
 
 
-def render_user_to_json(user, avatar=True):
+def render_user_to_json(user: User, avatar=True):
     if user is None:
         return {'type': 'system'}
     if isinstance(user, AnonymousUser):
         return {'type': 'anonymous', 'avatar': '/static/images/anon_avatar.png', 'name': 'Anonymous User', 'username': None, 'showAvatar': avatar}
-    return {'type': 'user', 'id': user.id, 'avatar': '/static/images/default_avatar.png', 'name': user.username, 'username': user.username, 'showAvatar': avatar}
+    return {'type': 'user', 'id': user.id, 'avatar': resolve_url("local_files", user.profile.avatar), 'name': user.username, 'username': user.username, 'showAvatar': avatar}
 
 
 def has_content():
