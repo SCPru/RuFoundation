@@ -48,6 +48,8 @@ INSTALLED_APPS = [
 
     'guardian',
 
+    'extra_views',
+
     'system',
     'web',
 ]
@@ -154,6 +156,7 @@ MEDIA_ROOT = BASE_DIR / "files"
 
 
 LOGIN_REDIRECT_URL = "/"
+LOGIN_URL = "/-/login"
 
 # Fixes slash at the end of URLs
 APPEND_SLASH = False

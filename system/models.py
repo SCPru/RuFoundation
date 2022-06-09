@@ -11,7 +11,7 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, verbose_name="Пользователь")
 
-    avatar = models.ImageField(default='/static/images/default_avatar.png', blank=True, upload_to='avatars', verbose_name="Аватар")
+    avatar = models.ImageField(default='/static/images/default_avatar.png', blank=True, upload_to='-/users', verbose_name="Аватар")
     bio = models.TextField(blank=True, verbose_name="Описание")
 
     def __str__(self):

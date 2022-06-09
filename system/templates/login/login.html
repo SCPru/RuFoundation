@@ -2,12 +2,28 @@
 
 {% block title %}Вход{% endblock %}
 
+{% block head %}<script src="https://kit.fontawesome.com/323e9a4b71.js" crossorigin="anonymous"></script>{% endblock %}
+
 {% block content %}
     <div class="container p-5">
         <h2 class="font-weight-bold mt-3">Вход в аккаунт</h2>
         <form method="POST">
             {% csrf_token %}
-                {{ form.as_p }}
+            <div class="flex relative w-500px h-48px group justify-center items-center z-1001">
+                <span class="flex absolute bg-transparent rounded text-base text-gray-600 left-4 top-[2.5rem]">
+                    <i class="fa-solid fa-user"></i>
+                </span>
+                <input class="text-input w-35vw pl-12 mt-6" type="text" placeholder="Ваш логин" name="username" autofocus="" autocapitalize="none" autocomplete="username" maxlength="150" required="" id="id_username">
+            </div>
+            <div class="flex relative w-500px h-48px group justify-center items-center z-1001">
+                <span class="flex absolute bg-transparent rounded text-base text-gray-600 left-4 top-[1.75rem]">
+                    <i class="fa-solid fa-lock"></i>
+                </span>
+                <input class="text-input w-35vw mt-3 pl-12 pr-12" type="password" placeholder="Ваш пароль" name="password" autocomplete="current-password" required="" id="id_password">
+                <span class="flex absolute right-5 top-7 bg-transparent rounded text-base text-gray-600">
+                    <i class="fa-solid fa-eye-slash cursor-pointer" id="togglePassword"></i>
+                </span>
+            </div>
             <button class="btn btn-primary" type="submit">Войти</button>
         </form>
         <a href="{% url "password_reset" %}">Забыли пароль?</a>
