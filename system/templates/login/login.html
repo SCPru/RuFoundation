@@ -1,0 +1,13 @@
+{% extends "login/base.html" %}
+
+{% block content %}
+    <div class="container p-5">
+        <h2 class="font-weight-bold mt-3">Вход в аккаунт</h2>
+        <form method="POST">
+            {% csrf_token %}
+                {{ form.as_p }}
+            <button class="btn btn-primary" type="submit">Войти</button>
+        </form>
+        <a href="{% url "password_reset" %}">Забыли пароль?</a>
+    </div>
+{% endblock %}

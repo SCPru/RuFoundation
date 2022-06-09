@@ -181,3 +181,6 @@ for v in os.environ.get('ARTICLE_REPLACE_CONFIG', '').split(','):
         continue
     [k, v] = v.split('::')
     ARTICLE_REPLACE_CONFIG[k] = v
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
