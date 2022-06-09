@@ -15,7 +15,8 @@ class ArticleView(APIView):
             raise APIError('Некорректный запрос', 400)
         if 'pageId' not in data or not data['pageId'] or not articles.is_full_name_allowed(data['pageId']):
             raise APIError('Некорректный ID страницы', 400)
-        if ('source' not in data or not (data['source'] or '').strip()) and not (allow_partial and 'source' not in data):
+        if ('source' not in data or not (data['source'] or '').strip()) and not (
+                allow_partial and 'source' not in data):
             raise APIError('Отсутствует исходный код страницы', 400)
         if ('title' not in data or data['title'] is None) and not (allow_partial and 'title' not in data):
             raise APIError('Отсутствует название страницы', 400)
@@ -24,12 +25,16 @@ class ArticleView(APIView):
 class CreateView(ArticleView):
     @takes_json
     def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        if not settings.ANONYMOUS_EDITING_ENABLED and not request.user.has_perm("web.add_article"):
-            raise APIError('Недостаточно прав', 403)
-
         data = self.json_input
 
         self._validate_article_data(data)
+
+        category = articles.get_article(data['pageId'])
+
+        if not settings.ANONYMOUS_EDITING_ENABLED and (not articles.has_perm(request.user, "web.add_article")
+                                                       or not request.user.has_perm("web.add_article_in_category",
+                                                                                    category)):
+            raise APIError('Недостаточно прав', 403)
 
         article = articles.get_article(data['pageId'])
         if article is not None:
@@ -68,7 +73,7 @@ class FetchOrUpdateView(ArticleView):
         if article is None:
             raise APIError('Страница не найдена', 404)
 
-        if not settings.ANONYMOUS_EDITING_ENABLED and not request.user.has_perm("web.change_article", article):
+        if not settings.ANONYMOUS_EDITING_ENABLED and not articles.has_perm(request.user, "web.change_article", article):
             raise APIError('Недостаточно прав', 403)
 
         data = self.json_input

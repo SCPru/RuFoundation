@@ -2,7 +2,7 @@ from guardian.admin import GuardedModelAdmin
 from django.contrib import admin
 from django import forms
 
-from .models.articles import Article, ArticleVersion, ArticleLogEntry, Tag, Vote
+from .models.articles import *
 
 
 class ArticleForm(forms.ModelForm):
@@ -19,6 +19,20 @@ class ArticleForm(forms.ModelForm):
 @admin.register(Article)
 class ArticleAdmin(GuardedModelAdmin):
     form = ArticleForm
+
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        widgets = {
+            'name': forms.TextInput,
+        }
+        fields = '__all__'
+
+
+@admin.register(Category)
+class CategoryAdmin(GuardedModelAdmin):
+    form = CategoryForm
 
 
 class TagForm(forms.ModelForm):

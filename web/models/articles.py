@@ -20,6 +20,25 @@ class Tag(models.Model):
         return super(Tag, self).save(*args, **kwargs)
 
 
+class Category(models.Model):
+    class Meta:
+        verbose_name = "Категория"
+        verbose_name_plural = "Категории"
+
+        constraints = [models.UniqueConstraint(fields=['name'], name='%(app_label)s_%(class)s_unique')]
+        indexes = [models.Index(fields=['name'])]
+
+        permissions = [("add_article_in_category", "Может добавлять новые статьи в категорию"),
+                       ("change_article_in_category", "Может изменять статьи в категории"),
+                       ("delete_article_in_category", "Может удалять статьи в категории"),
+                       ("can_vote_article_in_category", "Может голосовать за статьи в категории")]
+
+    name = models.TextField(verbose_name="Имя")
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Article(models.Model):
     class Meta:
         verbose_name = "Статья"
@@ -28,7 +47,7 @@ class Article(models.Model):
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['category', 'name'])]
 
-        permissions = [("can_vote_article", "Can voting for an article")]
+        permissions = [("can_vote_article", "Может голосовать за статью")]
 
     category = models.TextField(default="_default", verbose_name="Категория")
     name = models.TextField(verbose_name="Имя")

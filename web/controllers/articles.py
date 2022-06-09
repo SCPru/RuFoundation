@@ -1,5 +1,6 @@
-from django.conf import settings
+from django.contrib.auth.models import AbstractUser as _UserType
 from django.db.models import QuerySet
+from django.conf import settings
 from web.models.articles import *
 
 from typing import Optional, Union, Sequence, Tuple
@@ -192,6 +193,15 @@ def get_breadcrumbs(full_name_or_article: _FullNameOrArticle) -> Sequence[Articl
     return list(reversed(output))
 
 
+# Get page category
+def get_category(full_name_or_article: _FullNameOrArticle) -> Optional[Category]:
+    name = get_name(full_name_or_article)[0] if type(full_name_or_article) == str else full_name_or_article.category
+    try:
+        return Category.objects.get(name=name)
+    except Category.DoesNotExist:
+        return
+
+
 # Tag name validation
 def is_tag_name_allowed(name: str) -> bool:
     return ' ' not in name
@@ -258,6 +268,16 @@ def add_vote(full_name_or_article: _FullNameOrArticle, user: settings.AUTH_USER_
     finally:
         if rate:
             Vote(article=article, user=user, rate=rate).save()
+
+
+# Has user permissions for do anything with article
+def has_perm(user: _UserType, perm: str, full_name_or_article: Optional[_FullNameOrArticle] = None) -> bool:
+    if full_name_or_article:
+        article = get_article(full_name_or_article)
+        category = get_category(article)
+        print(user.has_perm(perm, article), (not category, user.has_perm(perm + "_in_category", category)), perm + "_in_category")
+        return user.has_perm(perm, article) and (not category or user.has_perm(perm + "_in_category", category))
+    return user.has_perm(perm)
 
 
 # Check if name is allowed for creation
