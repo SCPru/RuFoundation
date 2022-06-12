@@ -1,0 +1,20 @@
+{% extends "admin/base_site.html" %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
+{% endblock %}
+
+
+{% block content %}
+        <h2>Отправить инвайт пользователю</h2>
+    </div>
+    <br>
+    <div class="row">
+        <form action="" method="post">
+            {% csrf_token %}
+            {{ form }}
+            <input type="hidden" name="action" value="invite" />
+            <input type="submit" name="apply" value="Отправить" />
+        </form>
+{% endblock %}
+
