@@ -70,7 +70,6 @@ class InviteView(FormView):
 
 class ActivateView(FormView):
     form_class = CreateAccountForm
-    success_url = "/"
 
     def __init__(self, *args, **kwargs):
         super(ActivateView, self).__init__(*args, **kwargs)
@@ -83,6 +82,9 @@ class ActivateView(FormView):
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
         return user
+
+    def get_success_url(self):
+        return resolve_url("profile_edit")
 
     def form_valid(self, form):
         self.user = self.get_user()
