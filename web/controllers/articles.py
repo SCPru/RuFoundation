@@ -275,7 +275,6 @@ def has_perm(user: _UserType, perm: str, full_name_or_article: Optional[_FullNam
     if full_name_or_article:
         article = get_article(full_name_or_article)
         category = get_category(article)
-        print(user.has_perm(perm, article), (not category, user.has_perm(perm + "_in_category", category)), perm + "_in_category")
         return user.has_perm(perm, article) and (not category or user.has_perm(perm + "_in_category", category))
     return user.has_perm(perm)
 

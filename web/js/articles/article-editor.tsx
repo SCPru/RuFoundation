@@ -4,12 +4,14 @@ import Loader from "../util/loader";
 import styled from "styled-components";
 import WikidotModal from "../util/wikidot-modal";
 import sleep from "../util/async-sleep";
-import {wFetch} from "../util/fetch-util";
+import {makePreview} from "../api/preview";
+import {showPreviewMessage} from "../util/wikidot-message";
 import {createArticle, fetchArticle, updateArticle} from "../api/articles";
 
 
 interface Props {
     pageId: string
+    pathParams?: { [key: string]: string }
     isNew?: boolean
     onCancel?: () => void
 }
@@ -138,6 +140,20 @@ class ArticleEditor extends Component<Props, State> {
         }
     };
 
+    onPreview = () => {
+        const data = {
+            pageId: this.props.pageId,
+            title: this.state.title,
+            source: this.state.source,
+            pathParams: this.props.pathParams,
+        }
+        showPreviewMessage();
+        makePreview(data).then(function (resp) {
+            document.getElementById("page-title").innerText = resp.title
+            document.getElementById("page-content").innerHTML = resp.content;
+        });
+    };
+
     onCancel = () => {
         if (this.props.onCancel)
             this.props.onCancel()
@@ -188,6 +204,7 @@ class ArticleEditor extends Component<Props, State> {
                     </div>
                     <div className="buttons alignleft">
                         <input id="edit-cancel-button" className="btn btn-danger" type="button" name="cancel" value="Отмена" onClick={this.onCancel} disabled={loading||saving} />
+                        <input id="edit-preview-button" className="btn btn-primary" type="button" name="preview" value="Предпросмотр" onClick={this.onPreview} disabled={loading||saving} />
                         <input id="edit-save-button" className="btn btn-primary" type="button" name="save" value="Сохранить" onClick={this.onSubmit} disabled={loading||saving} />
                     </div>
                 </form>

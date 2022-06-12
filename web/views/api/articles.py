@@ -5,9 +5,6 @@ from . import APIView, APIError, takes_json
 
 from web.controllers import articles
 
-from typing import Optional
-import json
-
 
 class ArticleView(APIView):
     def _validate_article_data(self, data, allow_partial=False):

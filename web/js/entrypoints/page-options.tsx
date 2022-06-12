@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Component, ReactNode } from 'react';
+import { Component } from 'react';
 import ArticleEditor from "../articles/article-editor";
 import ArticleHistory from "../articles/article-history";
 import ArticleSource from "../articles/article-source";
@@ -13,6 +13,7 @@ interface Props {
     optionsEnabled?: boolean
     editable?: boolean
     rating?: number
+    pathParams?: { [key: string]: string }
     canRate?: boolean
 }
 
@@ -115,11 +116,11 @@ class PageOptions extends Component<Props, State> {
 
     pickSubView() {
         const { subView } = this.state;
-        const { pageId, rating } = this.props;
+        const { pageId, rating, pathParams } = this.props;
 
         switch (subView) {
             case 'edit':
-                return <ArticleEditor pageId={pageId} onCancel={this.onCancelSubView} />;
+                return <ArticleEditor pageId={pageId} pathParams={pathParams} onCancel={this.onCancelSubView} />;
 
             case 'rating':
                 return <ArticleRating pageId={pageId} rating={rating} onClose={this.onCancelSubView} />;

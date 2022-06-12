@@ -1,4 +1,3 @@
-from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 from django.template.loader import render_to_string
 from django.http import HttpResponseRedirect
@@ -79,7 +78,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'editable': settings.ANONYMOUS_EDITING_ENABLED or articles.has_perm(self.request.user, "web.change_article", article),
             'pageId': article_name,
             'rating': articles.get_rating(article),
-            'canRate': self.request.user.has_perm("web.can_vote_article")
+            'pathParams': path_params,
+            'canRate': articles.has_perm(self.request.user, "web.can_vote_article", article)
         }
 
         context.update({
