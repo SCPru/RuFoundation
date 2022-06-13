@@ -11,7 +11,7 @@ import modules
 from web import threadvars
 from django.conf import settings
 import uuid
-from modules.listusers import render_user_to_html
+from renderer.utils import render_user_to_html
 
 
 User = get_user_model()

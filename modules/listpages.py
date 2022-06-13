@@ -1,5 +1,5 @@
 import renderer
-from modules.listusers import render_user_to_text
+from renderer.utils import render_user_to_text
 from renderer.parser import RenderContext
 from web.controllers import articles
 import re

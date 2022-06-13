@@ -100,7 +100,7 @@ class ArticleRating extends Component<Props, State> {
                 ) }
                 <a className="action-area-close btn btn-danger" href="#" onClick={this.onClose}>Закрыть</a>
                 <h1>Рейтинг страницы</h1>
-                <p>
+                <span>
                     Оценить страницу:
                     &nbsp;
                     &nbsp;
@@ -110,7 +110,7 @@ class ArticleRating extends Component<Props, State> {
                         <span className="ratedown btn btn-default"><a title="Мне не нравится" href="#">-</a></span>
                         <span className="cancel btn btn-default"><a title="Отменить голос" href="#">X</a></span>
                     </div>
-                </p>
+                </span>
                 <div id="who-rated-page-area" className={`${loading?'loading':''}`}>
                     { loading && <Loader className="loader" /> }
                     { !!(votes && votes.length) && <h2>Список голосовавших за страницу</h2>}

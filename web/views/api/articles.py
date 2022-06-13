@@ -5,6 +5,8 @@ from . import APIView, APIError, takes_json
 
 from web.controllers import articles
 
+from renderer.utils import render_user_to_json
+
 
 class ArticleView(APIView):
     def _validate_article_data(self, data, allow_partial=False):
@@ -41,7 +43,7 @@ class CreateView(ArticleView):
         article = articles.create_article(data['pageId'])
         article.title = data['title']
         article.save()
-        articles.create_article_version(article, data['source'])
+        articles.create_article_version(article, request.user, data['source'])
 
         return self.render_json(201, {'status': 'ok'})
 
@@ -86,15 +88,15 @@ class FetchOrUpdateView(ArticleView):
 
         # check if changing title
         if 'title' in data and data['title'] != article.title:
-            articles.update_title(article, data['title'])
+            articles.update_title(article, request.user, data['title'])
 
         # check if changing source
         if 'source' in data and data['source'] != articles.get_latest_source(article):
-            articles.create_article_version(article, data['source'])
+            articles.create_article_version(article, request.user, data['source'])
 
         # check if changing tags
         if 'tags' in data:
-            articles.set_tags(article, data['tags'])
+            articles.set_tags(article, request.user, data['tags'])
 
         return self.render_json(200, {'status': 'ok'})
 
@@ -113,6 +115,7 @@ class FetchLogView(APIView):
         for entry in log_entries:
             output.append({
                 'revNumber': entry.rev_number,
+                'user': render_user_to_json(entry.user),
                 'comment': entry.comment,
                 'createdAt': entry.created_at.isoformat(),
                 'type': entry.type,

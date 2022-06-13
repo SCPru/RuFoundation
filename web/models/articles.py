@@ -102,6 +102,7 @@ class ArticleLogEntry(models.Model):
         Parent = 'parent'
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
     type = models.TextField(choices=LogEntryType.choices, verbose_name="Тип")
     meta = models.JSONField(default=dict, blank=True, verbose_name="Мета")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")

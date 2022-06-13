@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser as _UserType
 from django.db.models import QuerySet
-from django.conf import settings
 from web.models.articles import *
 
 from typing import Optional, Union, Sequence, Tuple
@@ -93,7 +92,7 @@ def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int,
 
 
 # Creates new article version for specified article
-def create_article_version(full_name_or_article: _FullNameOrArticle, source: str) -> ArticleVersion:
+def create_article_version(full_name_or_article: _FullNameOrArticle, user: _UserType, source: str) -> ArticleVersion:
     article = get_article(full_name_or_article)
     is_new = get_latest_version(article) is None
     version = ArticleVersion(
@@ -106,12 +105,14 @@ def create_article_version(full_name_or_article: _FullNameOrArticle, source: str
     if is_new:
         log = ArticleLogEntry(
             article=article,
+            user=user,
             type=ArticleLogEntry.LogEntryType.New,
             meta={'version_id': version.id, 'title': article.title}
         )
     else:
         log = ArticleLogEntry(
             article=article,
+            user=user,
             type=ArticleLogEntry.LogEntryType.Source,
             meta={'version_id': version.id}
         )
@@ -120,7 +121,7 @@ def create_article_version(full_name_or_article: _FullNameOrArticle, source: str
 
 
 # Updates name of article
-def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: str):
+def update_full_name(full_name_or_article: _FullNameOrArticle, user: _UserType, new_full_name: str):
     article = get_article(full_name_or_article)
     prev_full_name = get_full_name(full_name_or_article)
     category, name = get_name(new_full_name)
@@ -129,6 +130,7 @@ def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: st
     article.save()
     log = ArticleLogEntry(
         article=article,
+        user=user,
         type=ArticleLogEntry.LogEntryType.Name,
         meta={'name': new_full_name, 'prev_name': prev_full_name}
     )
@@ -136,13 +138,14 @@ def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: st
 
 
 # Updates title of article
-def update_title(full_name_or_article: _FullNameOrArticle, new_title: str):
+def update_title(full_name_or_article: _FullNameOrArticle, user: _UserType, new_title: str):
     article = get_article(full_name_or_article)
     prev_title = article.title
     article.title = new_title
     article.save()
     log = ArticleLogEntry(
         article=article,
+        user=user,
         type=ArticleLogEntry.LogEntryType.Title,
         meta={'title': new_title, 'prev_title': prev_title}
     )
@@ -167,7 +170,7 @@ def get_latest_source(full_name_or_article: _FullNameOrArticle) -> Optional[str]
 
 
 # Set parent of article
-def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _FullNameOrArticle):
+def set_parent(full_name_or_article: _FullNameOrArticle, user: _UserType, full_name_of_parent: _FullNameOrArticle):
     article = get_article(full_name_or_article)
     parent = get_article(full_name_of_parent) if full_name_of_parent else None
     prev_parent = get_full_name(article.parent) if article.parent else None
@@ -177,6 +180,7 @@ def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _F
     article.save()
     log = ArticleLogEntry(
         article=article,
+        user=user,
         type=ArticleLogEntry.LogEntryType.Parent,
         meta={'parent': full_name_of_parent, 'prev_parent': prev_parent}
     )
@@ -216,7 +220,7 @@ def get_tags(full_name_or_article: _FullNameOrArticle) -> Sequence[str]:
 
 
 # Set tags for article
-def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str]):
+def set_tags(full_name_or_article: _FullNameOrArticle, user: _UserType, tags: Sequence[str]):
     article = get_article(full_name_or_article)
     article_tags = article.tags.all()
     tags = [Tag.objects.get_or_create(name=x.lower())[0] for x in tags if is_tag_name_allowed(x)]
@@ -240,6 +244,7 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str]):
     if removed_tags or added_tags:
         log = ArticleLogEntry(
             article=article,
+            user=user,
             type=ArticleLogEntry.LogEntryType.Tags,
             meta={'added_tags': added_tags, 'removed_tags': removed_tags}
         )
