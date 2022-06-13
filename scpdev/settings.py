@@ -187,3 +187,5 @@ for v in os.environ.get('ARTICLE_REPLACE_CONFIG', '').split(','):
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+AUTH_USER_MODEL = "system.User"

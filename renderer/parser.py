@@ -2,7 +2,8 @@ from django.db import models
 
 from .tokenizer import TokenType, WHITESPACE_CHARS, StaticTokenizer, Token
 from django.utils import html
-from django.contrib.auth.models import AnonymousUser, User
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth import get_user_model
 from web.controllers import articles
 import copy
 import re
@@ -11,6 +12,9 @@ from web import threadvars
 from django.conf import settings
 import uuid
 from modules.listusers import render_user_to_html
+
+
+User = get_user_model()
 
 
 class RenderContext(object):

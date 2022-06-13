@@ -1,9 +1,13 @@
-from django.contrib.auth.models import AnonymousUser, User
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth import get_user_model
 from django.shortcuts import resolve_url
 import urllib.parse
 from django.utils import html
 import re
 import renderer
+
+
+User = get_user_model()
 
 
 def render_user_to_text(user: User):

@@ -6,8 +6,8 @@ from django.core.mail import send_mail, BadHeaderError
 from django.utils.decorators import method_decorator
 from django.template.loader import render_to_string
 from django.shortcuts import redirect, resolve_url
+from django.contrib.auth import get_user_model
 from django.http import HttpResponseBadRequest
-from django.contrib.auth.models import User
 from django.views.generic import FormView
 from django.contrib.auth import login
 from django.contrib.admin import site
@@ -16,6 +16,9 @@ from django.conf import settings
 
 
 from system.forms import InviteForm, CreateAccountForm
+
+
+User = get_user_model()
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
@@ -29,7 +32,7 @@ account_activation_token = TokenGenerator()
 @method_decorator(staff_member_required, name='dispatch')
 class InviteView(FormView):
     form_class = InviteForm
-    email_template_name = "mails/invite_email.txt"
+    email_template_name = "mails/invite_email.html"
 
     def get_context_data(self, **kwargs):
         context = super(InviteView, self).get_context_data(**kwargs)
@@ -49,12 +52,12 @@ class InviteView(FormView):
             subject = f"Приглашение на {settings.WEBSITE_NAME}"
             c = {
                 "email": user.email,
-                'domain': "scpfoundation.net",
+                'domain': self.request.get_host(),
                 'site_name': settings.WEBSITE_NAME,
                 "uid": urlsafe_base64_encode(force_bytes(user.pk)),
                 "user": user,
                 'token': account_activation_token.make_token(user),
-                'protocol': 'https',
+                'protocol': self.request.scheme,
             }
             content = render_to_string(self.email_template_name, c)
             try:
