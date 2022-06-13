@@ -43,7 +43,7 @@ class CreateView(ArticleView):
         article = articles.create_article(data['pageId'])
         article.title = data['title']
         article.save()
-        articles.create_article_version(article, request.user, data['source'])
+        articles.create_article_version(article, data['source'], request.user)
 
         return self.render_json(201, {'status': 'ok'})
 
@@ -84,19 +84,19 @@ class FetchOrUpdateView(ArticleView):
             article2 = articles.get_article(data['pageId'])
             if article2 is not None:
                 raise APIError('Страница с таким ID уже существует', 409)
-            articles.update_full_name(article, data['pageId'])
+            articles.update_full_name(article, data['pageId'], request.user)
 
         # check if changing title
         if 'title' in data and data['title'] != article.title:
-            articles.update_title(article, request.user, data['title'])
+            articles.update_title(article, data['title'], request.user)
 
         # check if changing source
         if 'source' in data and data['source'] != articles.get_latest_source(article):
-            articles.create_article_version(article, request.user, data['source'])
+            articles.create_article_version(article, data['source'], request.user)
 
         # check if changing tags
         if 'tags' in data:
-            articles.set_tags(article, request.user, data['tags'])
+            articles.set_tags(article, data['tags'], request.user)
 
         return self.render_json(200, {'status': 'ok'})
 

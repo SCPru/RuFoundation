@@ -8,11 +8,9 @@ from .models import User
 
 @admin.register(User)
 class AdvancedUserAdmin(UserAdmin):
-    def get_fieldsets(self, request, obj=None):
-        fieldsets = super(AdvancedUserAdmin, self).get_fieldsets(request, obj)
-        # fs now contains [(None, {'fields': fields})], do with it whatever you want
-        fieldsets[1][1]["fields"] += ("bio", "avatar")
-        return fieldsets
+    fieldsets = UserAdmin.fieldsets
+    fieldsets[1][1]["fields"] += ("bio", "avatar")
+    fieldsets[0][1]["fields"] += ("type",)
 
     def get_urls(self):
         urls = super(AdvancedUserAdmin, self).get_urls()
