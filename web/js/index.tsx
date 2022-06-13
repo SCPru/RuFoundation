@@ -50,7 +50,6 @@ window.addEventListener('DOMContentLoaded', () => {
             if (record.type === 'childList') {
                 record.addedNodes.forEach((node: HTMLElement) => {
                     processNode(node);
-                    console.log(node);
                     node.querySelectorAll('*').forEach((subnode: HTMLElement) => {
                         if (subnode.nodeType === Node.ELEMENT_NODE) {
                             processNode(subnode);

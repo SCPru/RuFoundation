@@ -6,6 +6,7 @@ export interface ArticleData {
     title?: string
     source?: string
     tags?: Array<string>
+    parent?: string
 }
 
 export async function createArticle(data: ArticleData) {

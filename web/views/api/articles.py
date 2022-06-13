@@ -62,7 +62,8 @@ class FetchOrUpdateView(ArticleView):
             'pageId': full_name,
             'title': article.title,
             'source': source,
-            'tags': articles.get_tags(article)
+            'tags': articles.get_tags(article),
+            'parent': articles.get_parent(article)
         })
 
     @takes_json
@@ -97,6 +98,10 @@ class FetchOrUpdateView(ArticleView):
         # check if changing tags
         if 'tags' in data:
             articles.set_tags(article, data['tags'], request.user)
+
+        # check if changing parent
+        if 'parent' in data:
+            articles.set_parent(article, data['parent'], request.user)
 
         return self.render_json(200, {'status': 'ok'})
 

@@ -13,7 +13,7 @@ interface Props {
     pageId: string
     pathParams?: { [key: string]: string }
     isNew?: boolean
-    onCancel?: () => void
+    onClose?: () => void
 }
 
 interface State {
@@ -155,8 +155,8 @@ class ArticleEditor extends Component<Props, State> {
     };
 
     onCancel = () => {
-        if (this.props.onCancel)
-            this.props.onCancel()
+        if (this.props.onClose)
+            this.props.onClose()
     };
 
     onChange = (e) => {

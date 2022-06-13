@@ -169,6 +169,13 @@ def get_latest_source(full_name_or_article: _FullNameOrArticle) -> Optional[str]
         return ver.source
 
 
+# Get parent of article
+def get_parent(full_name_or_article: _FullNameOrArticle) -> Optional[str]:
+    article = get_article(full_name_or_article)
+    if article is not None and article.parent:
+        return article.parent.full_name
+
+
 # Set parent of article
 def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _FullNameOrArticle, user: Optional[_UserType] = True):
     article = get_article(full_name_or_article)

@@ -6,6 +6,7 @@ import ArticleHistory from "../articles/article-history";
 import ArticleSource from "../articles/article-source";
 import ArticleTags from "../articles/article-tags";
 import ArticleRating from "../articles/article-rating";
+import ArticleParent from "../articles/article-parent";
 
 
 interface Props {
@@ -19,7 +20,7 @@ interface Props {
 
 
 interface State {
-    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | null
+    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | null
     extOptions: boolean
 }
 
@@ -79,6 +80,15 @@ class PageOptions extends Component<Props, State> {
         });
     };
 
+    onParent = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ subView: 'parent' });
+        setTimeout(() => {
+            window.scrollTo(window.scrollX, document.body.scrollHeight);
+        });
+    };
+
     toggleExtOptions = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -104,6 +114,7 @@ class PageOptions extends Component<Props, State> {
                 </div>
                 { extOptions && <div id="page-options-bottom-2" className="page-options-bottom form-actions">
                     <a id="view-source-button" className="btn btn-default" href="#" onClick={this.onSource}>Исходник страницы</a>
+                    <a id="parent-button" className="btn btn-default" href="#" onClick={this.onParent}>Родитель</a>
                 </div> }
                 { this.renderSubView() }
             </>
@@ -120,19 +131,22 @@ class PageOptions extends Component<Props, State> {
 
         switch (subView) {
             case 'edit':
-                return <ArticleEditor pageId={pageId} pathParams={pathParams} onCancel={this.onCancelSubView} />;
+                return <ArticleEditor pageId={pageId} pathParams={pathParams} onClose={this.onCancelSubView} />;
 
             case 'rating':
                 return <ArticleRating pageId={pageId} rating={rating} onClose={this.onCancelSubView} />;
 
             case 'tags':
-                return <ArticleTags pageId={pageId} onCancel={this.onCancelSubView} />;
+                return <ArticleTags pageId={pageId} onClose={this.onCancelSubView} />;
 
             case 'history':
                 return <ArticleHistory pageId={pageId} onClose={this.onCancelSubView} />;
 
             case 'source':
                 return <ArticleSource pageId={pageId} onClose={this.onCancelSubView} />;
+
+            case 'parent':
+                return <ArticleParent pageId={pageId} onClose={this.onCancelSubView} />;
 
             default:
                 return null
