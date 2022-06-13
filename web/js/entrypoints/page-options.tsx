@@ -114,7 +114,7 @@ class PageOptions extends Component<Props, State> {
                 </div>
                 { extOptions && <div id="page-options-bottom-2" className="page-options-bottom form-actions">
                     <a id="view-source-button" className="btn btn-default" href="#" onClick={this.onSource}>Исходник страницы</a>
-                    <a id="parent-button" className="btn btn-default" href="#" onClick={this.onParent}>Родитель</a>
+                    { editable && <a id="parent-button" className="btn btn-default" href="#" onClick={this.onParent}>Родитель</a> }
                 </div> }
                 { this.renderSubView() }
             </>
