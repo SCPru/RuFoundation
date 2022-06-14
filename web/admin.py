@@ -20,6 +20,8 @@ class ArticleForm(forms.ModelForm):
 @admin.register(Article)
 class ArticleAdmin(GuardedModelAdmin):
     form = ArticleForm
+    search_fields = ["name", "title"]
+    list_filter = ['site__domain', 'category']
 
 
 class CategoryForm(forms.ModelForm):
@@ -34,6 +36,7 @@ class CategoryForm(forms.ModelForm):
 @admin.register(Category)
 class CategoryAdmin(GuardedModelAdmin):
     form = CategoryForm
+    list_filter = ['site__domain']
 
 
 class TagForm(forms.ModelForm):
@@ -48,12 +51,13 @@ class TagForm(forms.ModelForm):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     form = TagForm
+    list_filter = ['site__domain']
 
 
 @admin.register(Vote)
 class VoteAdmin(admin.ModelAdmin):
     list_display = ['article', 'user', 'rate']
-    list_filter = ['article', 'user']
+    list_filter = ['site__domain', 'article', 'user']
 
     exclude = ['article', 'user', 'rate']
     readonly_fields = ['article', 'user', 'rate']
@@ -82,6 +86,6 @@ class ArticleAdmin(GuardedModelAdmin):
 
 @admin.register(ArticleVersion, ArticleLogEntry)
 class BaseAdmin(admin.ModelAdmin):
-    pass
+    list_filter = ['site__domain']
 
 
