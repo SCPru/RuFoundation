@@ -7,6 +7,7 @@ import ArticleSource from "../articles/article-source";
 import ArticleTags from "../articles/article-tags";
 import ArticleRating from "../articles/article-rating";
 import ArticleParent from "../articles/article-parent";
+import ArticleRename from "../articles/article-rename";
 
 
 interface Props {
@@ -20,7 +21,7 @@ interface Props {
 
 
 interface State {
-    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | null
+    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'rename' | null
     extOptions: boolean
 }
 
@@ -89,6 +90,15 @@ class PageOptions extends Component<Props, State> {
         });
     };
 
+    onRename = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ subView: 'rename' });
+        setTimeout(() => {
+            window.scrollTo(window.scrollX, document.body.scrollHeight);
+        });
+    };
+
     toggleExtOptions = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -115,6 +125,7 @@ class PageOptions extends Component<Props, State> {
                 { extOptions && <div id="page-options-bottom-2" className="page-options-bottom form-actions">
                     <a id="view-source-button" className="btn btn-default" href="#" onClick={this.onSource}>Исходник страницы</a>
                     { editable && <a id="parent-button" className="btn btn-default" href="#" onClick={this.onParent}>Родитель</a> }
+                    { editable && <a id="rename-button" className="btn btn-default" href="#" onClick={this.onRename}>Переименовать</a> }
                 </div> }
                 { this.renderSubView() }
             </>
@@ -147,6 +158,9 @@ class PageOptions extends Component<Props, State> {
 
             case 'parent':
                 return <ArticleParent pageId={pageId} onClose={this.onCancelSubView} />;
+
+            case 'rename':
+                return <ArticleRename pageId={pageId} onClose={this.onCancelSubView} />;
 
             default:
                 return null
