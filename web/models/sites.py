@@ -29,7 +29,7 @@ class Site(models.Model):
 
 
 # This should be used with metaclass=, not parent class name.
-# Example: class Tag(metaclass=SiteLimitedModel)
+# Example: class Tag(metaclass=_SiteLimitedMetaclass)
 class _SiteLimitedMetaclass(models.base.ModelBase):
     def __new__(cls, name, bases, attrs, **kwargs):
         super_new = super().__new__

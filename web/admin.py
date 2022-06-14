@@ -3,6 +3,7 @@ from django.contrib import admin
 from django import forms
 
 from .models.articles import *
+from .models.sites import Site
 
 
 class ArticleForm(forms.ModelForm):
@@ -61,6 +62,26 @@ class VoteAdmin(admin.ModelAdmin):
         return False
 
 
+class SiteForm(forms.ModelForm):
+    class Meta:
+        model = Article
+        widgets = {
+            'slug': forms.TextInput,
+            'title': forms.TextInput,
+            'headline': forms.TextInput,
+            'domain': forms.TextInput,
+            'media_domain': forms.TextInput
+        }
+        fields = '__all__'
+
+
+@admin.register(Site)
+class ArticleAdmin(GuardedModelAdmin):
+    form = SiteForm
+
+
 @admin.register(ArticleVersion, ArticleLogEntry)
 class BaseAdmin(admin.ModelAdmin):
     pass
+
+
