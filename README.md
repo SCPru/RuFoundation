@@ -20,10 +20,12 @@ Note: this is what I tested with, your mileage may differ.
 
 ## Seeding the database
 
-By default, there are no pages in the website.
+To start working, the following objects are required:
 
-This also includes `nav:top` and `nav:side` which are critical for proper appearance.
+- Minimally one website record (for localhost)
+- Some pages (such as `nav:top` or `nav:side`) that are critical for proper appearance 
 
-You can create some by running the following command:
+You can provision these basic structures by running the following commands:
 
-- `python manage.py seed`
+- `python manage.py createsite -s scp-ru -d localhost -t "SCP Foundation" -H "Russian branch"`
+- `python manage.py seed -s scp-ru`
