@@ -4,10 +4,10 @@ from web import seeds
 
 
 class Command(BaseCommand):
-    help = 'Seeding the database'
+    help = 'Seeds the database'
 
     def add_arguments(self, parser):
-        parser.add_argument("-a", "--archive", required=False, help="Seeding from specified archive")
+        parser.add_argument("-a", "--archive", required=False, help="Seeds from specified archive")
 
     def handle(self, *args, **options):
         if options["archive"]:
