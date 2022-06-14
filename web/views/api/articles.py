@@ -30,9 +30,7 @@ class CreateView(ArticleView):
 
         category = articles.get_article(data['pageId'])
 
-        if not settings.ANONYMOUS_EDITING_ENABLED and (not articles.has_perm(request.user, "web.add_article")
-                                                       or not request.user.has_perm("web.add_article_in_category",
-                                                                                    category)):
+        if not articles.has_perm(request.user, "web.add_article") or not request.user.has_perm("web.add_article_in_category", category):
             raise APIError('Недостаточно прав', 403)
 
         article = articles.get_article(data['pageId'])
@@ -73,7 +71,7 @@ class FetchOrUpdateView(ArticleView):
         if article is None:
             raise APIError('Страница не найдена', 404)
 
-        if not settings.ANONYMOUS_EDITING_ENABLED and not articles.has_perm(request.user, "web.change_article", article):
+        if not articles.has_perm(request.user, "web.change_article", article):
             raise APIError('Недостаточно прав', 403)
 
         data = self.json_input

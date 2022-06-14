@@ -176,8 +176,6 @@ WEBSITE_NAME = 'SCP Foundation'
 WEBSITE_HEADLINE = 'Russian branch'
 
 
-ANONYMOUS_EDITING_ENABLED = not(bool(os.environ.get('NO_ANON_EDITING', None)))
-
 ARTICLE_REPLACE_CONFIG = {}
 for v in os.environ.get('ARTICLE_REPLACE_CONFIG', '').split(','):
     if not v.strip():
