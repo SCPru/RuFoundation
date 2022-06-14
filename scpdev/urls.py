@@ -29,8 +29,9 @@ def partial_quote(url):
 
 
 def serve_static(request, dir_path, document_root=None, show_indexes=False):
-    site = get_current_site()
-    document_root = Path(document_root) / site.slug
+    if not dir_path.startswith('-/'):
+        site = get_current_site()
+        document_root = Path(document_root) / site.slug
     dir_path = '/'.join([partial_quote(x) for x in dir_path.split('/')])
     return django.views.static.serve(request, dir_path, document_root=document_root, show_indexes=show_indexes)
 
