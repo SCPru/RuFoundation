@@ -13,7 +13,7 @@ interface Props {
 }
 
 interface State {
-    tags: string
+    parent: string
     loading: boolean
     saving: boolean
     savingSuccess?: boolean
@@ -46,22 +46,14 @@ const Styles = styled.div`
 `;
 
 
-class ArticleTags extends Component<Props, State> {
+class ArticleParent extends Component<Props, State> {
     constructor(props) {
         super(props);
         this.state = {
-            tags: '',
+            parent: '',
             loading: true,
             saving: false
         }
-    }
-
-    static tagsToTagString(tags: Array<string>): string {
-        return tags.join(' ');
-    }
-
-    static tagStringToTags(tagString: string): Array<string> {
-        return tagString.split(' ').map(x => x.trim()).filter(x => !!x);
     }
 
     async componentDidMount() {
@@ -69,7 +61,7 @@ class ArticleTags extends Component<Props, State> {
         this.setState({ loading: true });
         try {
             const data = await fetchArticle(pageId);
-            this.setState({ loading: false, tags: ArticleTags.tagsToTagString(data.tags) });
+            this.setState({ loading: false, parent: data.parent});
         } catch (e) {
             this.setState({loading: false, fatalError: true, error: e.error || 'Ошибка связи с сервером'});
         }
@@ -80,7 +72,7 @@ class ArticleTags extends Component<Props, State> {
         this.setState({ saving: true, error: null, savingSuccess: false });
         const input = {
             pageId: this.props.pageId,
-            tags: ArticleTags.tagStringToTags(this.state.tags)
+            parent: this.state.parent
         };
         try {
             await updateArticle(pageId, input);
@@ -106,7 +98,7 @@ class ArticleTags extends Component<Props, State> {
 
     onClear = (e) => {
         // @ts-ignore
-        this.setState({"tags": ""})
+        this.setState({"parent": ""})
     };
 
     onCloseError = () => {
@@ -118,7 +110,7 @@ class ArticleTags extends Component<Props, State> {
     };
 
     render() {
-        const { tags, loading, saving, savingSuccess, error } = this.state;
+        const { parent, loading, saving, savingSuccess, error } = this.state;
         return (
             <Styles>
                 { saving && <WikidotModal isLoading>Сохранение...</WikidotModal> }
@@ -129,21 +121,19 @@ class ArticleTags extends Component<Props, State> {
                     </WikidotModal>
                 ) }
                 <a className="action-area-close btn btn-danger" href="#" onClick={this.onCancel}>Закрыть</a>
-                <h1>Теги страницы</h1>
-                <p>Теги (метки) это хороший способ для организации содержимого на сайте, для создания "горизонтальной навигации" между связанными по смыслу страницами. Вы можете добавить несколько тегов к каждой из ваших страниц. Читайте подробнее про <a href="http://ru.wikipedia.org/wiki/%D0%A2%D0%B5%D0%B3" target="_blank"> теги</a>, про <a href="http://ru.wikipedia.org/wiki/%D0%9E%D0%B1%D0%BB%D0%B0%D0%BA%D0%BE_%D1%82%D0%B5%D0%B3%D0%BE%D0%B2" target="_blank">облако тегов </a></p>
+                <h1>Родительская страница и цепочка навигации</h1>
+                <p>Хотите создать крутую цепочку навигации "назад"? Структуировать сайт? Установите родительскую страницу (один уровень выше) для этой страницы.</p>
+                <p>Если Вы не хотите <a href="https://ru.wikipedia.org/wiki/%D0%9D%D0%B0%D0%B2%D0%B8%D0%B3%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D0%B0%D1%8F_%D1%86%D0%B5%D0%BF%D0%BE%D1%87%D0%BA%D0%B0" target="_blank">навигационную цепочку</a> для этой страницы - просто оставьте поле ввода - пустым.</p>
 
                 <form method="POST" onSubmit={this.onSubmit}>
                     <table className="form">
                         <tbody>
                         <tr>
                             <td>
-                                Теги:
+                                Название родительской страницы:
                             </td>
                             <td>
-                                <input type="text" name="tags" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-tags-input" defaultValue={tags} disabled={loading||saving}/>
-                                    <div className="sub">
-                                        Список тегов через пробел.
-                                    </div>
+                                <input type="text" name="parent" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-parent-input" defaultValue={parent} disabled={loading||saving}/>
                             </td>
                         </tr>
                         </tbody>
@@ -160,4 +150,4 @@ class ArticleTags extends Component<Props, State> {
 }
 
 
-export default ArticleTags
+export default ArticleParent

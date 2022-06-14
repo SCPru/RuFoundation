@@ -1,0 +1,137 @@
+:root {
+  --background-color: rgb(235 235 235);
+  --input-background: rgb(250 250 250);
+  --icon-color: rgb(75 85 99);
+
+  --shadow: 0 0 #000, 0 0 #000, 0 0 15px -6px rgb(0 0 0 / 0.5);
+  --btn-background: rgb(115 115 115);
+  --btn-color: rgb(250 250 250);
+
+  --under-text-color: rgb(163 163 163);
+
+  --error-color: rgb(127 29 29);
+  --error-border: rgb(252 165 165);
+  --error-background: rgb(254 226 226);
+}
+
+html {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+body {
+  margin: 0;
+}
+
+.system.content {
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  display: flex;
+  height: 100vh;
+  background-color: var(--background-color);
+
+  #title {
+    font-size: 30px;
+    margin: 0;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  hr {
+    width: 50%;
+  }
+
+  .error {
+    border: 1px dashed var(--error-border);
+    padding: 0 1em;
+    background-color: var(--error-background);
+    color: var(--error-color);
+  }
+
+  .text-input {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    position: relative;
+
+    .icon {
+      color: var(--icon-color);
+      font-size: 1rem;
+      line-height: 1.5rem;
+      background-color: transparent;
+      border-radius: 0.25rem;
+      display: flex;
+      position: absolute;
+      top: 1.5rem;
+
+      &.begin {
+        left: 1rem;
+      }
+
+      &.end {
+        right: 1rem;
+      }
+
+      .cursor-pointer {
+        cursor: pointer;
+      }
+    }
+
+    input {
+      padding-left: 3rem;
+    }
+  }
+
+  input {
+    margin-top: .5rem;
+    flex: 1 1 0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    background-color: var(--input-background) !important;
+    border: 0;
+  }
+
+  input:-webkit-autofill {
+    -webkit-transition: background-color 5000s ease-in-out 0s;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  .btn {
+    margin-top: 0.5rem;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    background-color: var(--btn-background);
+    color: var(--btn-color);
+    transition-duration: 300ms;
+    font-weight: bold;
+    border: 0;
+    width: 25rem;
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--btn-color);
+      color: var(--btn-background);
+    }
+  }
+
+  .under-text {
+    color: var(--under-text-color);
+    font-size: 15px;
+    margin-top: 0.5rem;
+
+    a {
+      color: inherit;
+      text-decoration: inherit;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}

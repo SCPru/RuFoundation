@@ -6,6 +6,7 @@ import sleep from "../util/async-sleep";
 import styled from "styled-components";
 import Loader from "../util/loader";
 import formatDate from "../util/date-format";
+import UserView from "../util/user-view";
 
 
 interface Props {
@@ -155,7 +156,9 @@ class ArticleHistory extends Component<Props, State> {
                                             {this.renderFlags(entry)}
                                         </td>
                                         <td>&nbsp;</td>
-                                        <td>n/a</td>
+                                        <td>
+                                            {this.renderUser(entry)}
+                                        </td>
                                         <td>
                                             {this.renderDate(entry)}
                                         </td>
@@ -193,6 +196,10 @@ class ArticleHistory extends Component<Props, State> {
             case 'parent':
                 return <span className="spantip" title="изменилась родительская страница">M</span>;
         }
+    }
+
+    renderUser (entry: ArticleLogEntry) {
+        return <UserView data={entry.user} />;
     }
 
     renderDate(entry: ArticleLogEntry) {

@@ -1,9 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}{{ object.username|escape }}{% endblock %}
+{% block h1 %}{% block title %}{{ object.username|escape }}{% endblock %}{% endblock %}
+
+
+{% block before %}
+    <img src="{% url "local_files" object.avatar %}" alt="{{ object.username|escape }}">
+{% endblock %}
 
 {% block content %}
-    <h1>{{ object.username|escape }}</h1>
-    <img src="{% url "local_files" object.profile.avatar %}" alt="{{ object.username|escape }}">
-    {{ object.profile.bio|escape }}
+    {% if object.first_name %}<p><b>Имя:</b> {{ object.first_name|escape }}</p>{% endif %}
+    {% if object.last_name %}<p><b>Фамилия:</b> {{ object.last_name|escape }}</p>{% endif %}
+    {% if object.bio %}<p><b>Описание:</b> {{ object.bio|escape }}</p>{% endif %}
 {% endblock %}

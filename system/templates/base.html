@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <title>{% block title %}{% endblock %} - SCP Foundation</title>
 
+    <script src="https://kit.fontawesome.com/323e9a4b71.js" crossorigin="anonymous"></script>
+
     <script src="/static/app.js?v=3" type="text/javascript"></script>
     <link rel="stylesheet" type="text/css" href="/static/app.css?v=4">
 
     {% block head %}{% endblock %}
 </head>
 <body>
-    <div class="content">
+    <div class="system content">
+        {% block before %}{% endblock %}
+        <h1 id="title">{% block h1 %}{% endblock %}</h1>
+        <br>
+        <hr>
         {% block content %}{% endblock %}
     </div>
 </body>

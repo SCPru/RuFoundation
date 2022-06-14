@@ -1,6 +1,6 @@
-# SCP-dev
+# RuFoundation
 
-Experimental pet project Wiki engine compatible with Wikidot
+**RuFoundation** is a Wiki engine compatible with Wikidot developed by Russian SCP Branch.
 
 ## Requirements
 

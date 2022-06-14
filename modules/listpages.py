@@ -1,5 +1,5 @@
 import renderer
-from modules.listusers import render_user_to_text
+from renderer.utils import render_user_to_text
 from renderer.parser import RenderContext
 from web.controllers import articles
 import re
@@ -80,6 +80,160 @@ def page_to_listpages_vars(page: Article, template, index, total):
     return template
 
 
+def query_pages(context: RenderContext, params, allow_pagination=True):
+    pagination_page = 1
+    page_index = 0
+    total_pages = 0
+
+    # if either name, range, or fullname is '.', then we always select the current page.
+    if params.get('name') == '.' or params.get('range') == '.' or params.get('fullname') == '.':
+        pages = []
+        if context.article:
+            pages.append(context.article)
+        pagination_total_pages = 1
+        total_pages = 1
+    elif params.get('fullname'):
+        article = articles.get_article(params.get('fullname'))
+        pages = []
+        pagination_total_pages = 0
+        if article:
+            pages.append(article)
+            pagination_total_pages += 1
+            total_pages = 1
+    else:
+        # test
+        q = Article.objects
+
+        f_type = params.get('pagetype', 'normal')
+        if f_type != '*':
+            if f_type == 'normal':
+                q = q.filter(~Q(name__startswith='_'))
+            elif f_type == 'hidden':
+                q = q.filter(Q(name__startswith='_'))
+        f_name = params.get('name', '*')
+        if f_name != '*':
+            f_name = f_name.replace('%', '*')
+            if f_name == '=':
+                q = q.filter(name=context.article.name)
+            elif '*' in f_name:
+                up_to = f_name.index('*')
+                q = q.filter(name__startswith=f_name[:up_to])
+            else:
+                q = q.filter(name=f_name)
+        f_tags = params.get('tags', '*')
+        if f_tags != '*':
+            f_tags = f_tags.replace(',', ' ')
+            if f_tags == '-':
+                q = q.filter(tags__isnull=True)
+            elif f_tags == '=':
+                tags = articles.get_tags(context.article)
+                q = q.filter(tags__name__in=tags)
+            elif f_tags == '==':
+                tags = articles.get_tags(context.article)
+                q = q.filter(tags__name__in=tags).annotate(num_tags=Count('tags')).filter(num_tags=len(tags))
+            else:
+                f_tags = [x.strip() for x in f_tags.split(' ') if x.strip()]
+                required_tags = []
+                not_allowed_tags = []
+                required_one = []
+                for tag in f_tags:
+                    if tag[0] == '-':
+                        not_allowed_tags.append(tag[1:])
+                    elif tag[0] == '+':
+                        required_tags.append(tag[1:])
+                    else:
+                        required_one.append(tag)
+                if required_one:
+                    q = q.filter(tags__name__in=required_one)
+                for tag in required_tags:
+                    q = q.filter(tags__name__in=[tag])
+                if not_allowed_tags:
+                    q = q.filter(~Q(tags__name__in=not_allowed_tags))
+        f_category = params.get('category', '.')
+        if f_category != '*':
+            f_category = f_category.replace(',', ' ')
+            if f_category == '.':
+                q = q.filter(category=context.article.category)
+            else:
+                categories = []
+                not_allowed = []
+                for category in f_category.split(' '):
+                    if not category:
+                        continue
+                    if category[0] == '-':
+                        not_allowed.append(category[1:])
+                    else:
+                        categories.append(category)
+                if categories:
+                    q = q.filter(category__in=categories)
+                if not_allowed:
+                    q = q.filter(~Q(category__in=not_allowed))
+        f_parent = params.get('parent')
+        if f_parent:
+            if f_parent == '-':
+                q = q.filter(parent=None)
+            elif f_parent == '=':
+                q = q.filter(parent=context.article.parent)
+            elif f_parent == '-=':
+                q = q.filter(~Q(parent=context.article.parent))
+            elif f_parent == '.':
+                q = q.filter(parent=context.article)
+            else:
+                article = articles.get_article(f_parent)
+                q = q.filter(parent=article)
+        # sorting
+        f_sort = params.get('order', 'created_at desc').split(' ')
+        allowed_sort_columns = {
+            'created_at': F('created_at'),
+            'name': F('name'),
+            'title': F('title'),
+            'updated_at': F('updated_at'),
+            'fullname': Concat('category', V(':'), 'name'),
+            'rating': F('rating')
+        }
+        if f_sort[0] not in allowed_sort_columns:
+            f_sort = ['created_at', 'desc']
+        direction = 'desc' if f_sort[1:] == ['desc'] else 'asc'
+        if f_sort[0] == 'rating':
+            q = q.annotate(rating=Sum('votes__rate'))
+        q = q.order_by(getattr(allowed_sort_columns[f_sort[0]], direction)())  # asc/desc is a function call on DB val
+        q = q.distinct()
+        # end sorting
+        try:
+            f_offset = int(params.get('offset', '0'))
+        except:
+            f_offset = 0
+        page_index += f_offset
+        try:
+            f_limit = int(params.get('limit'))
+            q = q[f_offset:f_offset + f_limit]
+        except:
+            q = q[f_offset:]
+        total_pages = len(q)
+        if allow_pagination:
+            try:
+                f_per_page = int(params.get('perPage', '20'))
+            except:
+                f_per_page = 20
+            try:
+                f_page = int(context.path_params.get('p', '1'))
+                if f_page < 1:
+                    f_page = 1
+            except:
+                f_page = 1
+            if f_page != 1:
+                page_index += f_page * f_per_page
+            q = q[(f_page - 1) * f_per_page:f_page * f_per_page]
+            pagination_page = f_page
+            pagination_total_pages = int(math.ceil(total_pages / f_per_page))
+        else:
+            pagination_page = 1
+            pagination_total_pages = 1
+        pages = q
+
+    return pages, page_index, pagination_page, pagination_total_pages, total_pages
+
+
 def render(context: RenderContext, params, content=None):
     with threadvars.context():
         content = (content or '').strip()
@@ -98,154 +252,11 @@ def render(context: RenderContext, params, content=None):
         separate = params.get('separate', 'yes') == 'yes'
         wrapper = params.get('wrapper', 'yes') == 'yes'
 
-        pagination_page = 1
-        pagination_total_pages = 1
-        page_index = 0
-        total_pages = 0
+        pages, page_index, pagination_page, pagination_total_pages, total_pages = query_pages(context, params)
 
-        # if either name, range, or fullname is '.', then we always select the current page.
-        if params.get('name') == '.' or params.get('range') == '.' or params.get('fullname') == '.':
-            pages = []
-            if context.article:
-                pages.append(context.article)
-            pagination_total_pages = 1
-            total_pages = 1
-        elif params.get('fullname'):
-            article = articles.get_article(params.get('fullname'))
-            pages = []
-            pagination_total_pages = 0
-            if article:
-                pages.append(article)
-                pagination_total_pages += 1
-                total_pages = 1
-        else:
-            # test
-            q = Article.objects
-
-            f_type = params.get('pagetype', 'normal')
-            if f_type != '*':
-                if f_type == 'normal':
-                    q = q.filter(~Q(name__startswith='_'))
-                elif f_type == 'hidden':
-                    q = q.filter(Q(name__startswith='_'))
-            f_name = params.get('name', '*')
-            if f_name != '*':
-                f_name = f_name.replace('%', '*')
-                if f_name == '=':
-                    q = q.filter(name=context.article.name)
-                elif '*' in f_name:
-                    up_to = f_name.index('*')
-                    q = q.filter(name__startswith=f_name[:up_to])
-                else:
-                    q = q.filter(name=f_name)
-            f_tags = params.get('tags', '*')
-            if f_tags != '*':
-                f_tags = f_tags.replace(',', ' ')
-                if f_tags == '-':
-                    q = q.filter(tags__isnull=True)
-                elif f_tags == '=':
-                    tags = articles.get_tags(context.article)
-                    q = q.filter(tags__name__in=tags)
-                elif f_tags == '==':
-                    tags = articles.get_tags(context.article)
-                    q = q.filter(tags__name__in=tags).annotate(num_tags=Count('tags')).filter(num_tags=len(tags))
-                else:
-                    f_tags = [x.strip() for x in f_tags.split(' ') if x.strip()]
-                    required_tags = []
-                    not_allowed_tags = []
-                    required_one = []
-                    for tag in f_tags:
-                        if tag[0] == '-':
-                            not_allowed_tags.append(tag[1:])
-                        elif tag[0] == '+':
-                            required_tags.append(tag[1:])
-                        else:
-                            required_one.append(tag)
-                    if required_one:
-                        q = q.filter(tags__name__in=required_one)
-                    for tag in required_tags:
-                        q = q.filter(tags__name__in=[tag])
-                    if not_allowed_tags:
-                        q = q.filter(~Q(tags__name__in=not_allowed_tags))
-            f_category = params.get('category', '.')
-            if f_category != '*':
-                f_category = f_category.replace(',', ' ')
-                if f_category == '.':
-                    q = q.filter(category=context.article.category)
-                else:
-                    categories = []
-                    not_allowed = []
-                    for category in f_category.split(' '):
-                        if not category:
-                            continue
-                        if category[0] == '-':
-                            not_allowed.append(category[1:])
-                        else:
-                            categories.append(category)
-                    if categories:
-                        q = q.filter(category__in=categories)
-                    if not_allowed:
-                        q = q.filter(~Q(category__in=not_allowed))
-            f_parent = params.get('parent')
-            if f_parent:
-                if f_parent == '-':
-                    q = q.filter(parent=None)
-                elif f_parent == '=':
-                    q = q.filter(parent=context.article.parent)
-                elif f_parent == '-=':
-                    q = q.filter(~Q(parent=context.article.parent))
-                elif f_parent == '.':
-                    q = q.filter(parent=context.article)
-                else:
-                    article = articles.get_article(f_parent)
-                    q = q.filter(parent=article)
-            # sorting
-            f_sort = params.get('order', 'created_at desc').split(' ')
-            allowed_sort_columns = {
-                'created_at': F('created_at'),
-                'name': F('name'),
-                'title': F('title'),
-                'updated_at': F('updated_at'),
-                'fullname': Concat('category', V(':'), 'name'),
-                'rating': F('rating')
-            }
-            if f_sort[0] not in allowed_sort_columns:
-                f_sort = ['created_at', 'desc']
-            direction = 'desc' if f_sort[1:] == ['desc'] else 'asc'
-            if f_sort[0] == 'rating':
-                q = q.annotate(rating=Sum('votes__rate'))
-            q = q.order_by(getattr(allowed_sort_columns[f_sort[0]], direction)())  # asc/desc is a function call on DB val
-            q = q.distinct()
-            # end sorting
-            try:
-                f_offset = int(params.get('offset', '0'))
-            except:
-                f_offset = 0
-            page_index += f_offset
-            try:
-                f_limit = int(params.get('limit'))
-                q = q[f_offset:f_offset + f_limit]
-            except:
-                q = q[f_offset:]
-            total_pages = len(q)
-            try:
-                f_per_page = int(params.get('perPage', '20'))
-            except:
-                f_per_page = 20
-            try:
-                f_page = int(context.path_params.get('p', '1'))
-                if f_page < 1:
-                    f_page = 1
-            except:
-                f_page = 1
-            if f_page != 1:
-                page_index += f_page * f_per_page
-            q = q[(f_page-1)*f_per_page:f_page*f_per_page]
-            pages = list(q)
-            if params.get('reverse', 'no') == 'yes':
-                pages = reversed(pages)
-            pagination_page = f_page
-            pagination_total_pages = int(math.ceil(total_pages / f_per_page))
+        pages = list(pages)
+        if params.get('reverse', 'no') == 'yes':
+            pages = reversed(pages)
 
         output = ''
         common_context = RenderContext(context.article, context.article, context.path_params, context.user)

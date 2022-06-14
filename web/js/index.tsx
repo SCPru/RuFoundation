@@ -7,6 +7,7 @@ import {makeTabView} from "./articles/tabview";
 import {makeRateModule} from "./articles/rate";
 import "./articles/auto-resize-iframe";
 import {makeListPages} from "./articles/list-pages";
+import {makePasswordToggle} from "./util/password";
 
 
 function renderTo(where: HTMLElement, what: any) {
@@ -19,6 +20,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('#create-new-page').forEach((node: HTMLElement) => renderTo(node, <Page404 {...node.dataset} />));
     document.querySelectorAll('#page-options-container').forEach((node: HTMLElement) => renderTo(node, <PageOptions {...JSON.parse(node.dataset.config)} />));
+
+    makePasswordToggle();
 
     // add new things here!
     const processNode = (node: HTMLElement) => {
@@ -47,7 +50,6 @@ window.addEventListener('DOMContentLoaded', () => {
             if (record.type === 'childList') {
                 record.addedNodes.forEach((node: HTMLElement) => {
                     processNode(node);
-                    console.log(node);
                     node.querySelectorAll('*').forEach((subnode: HTMLElement) => {
                         if (subnode.nodeType === Node.ELEMENT_NODE) {
                             processNode(subnode);

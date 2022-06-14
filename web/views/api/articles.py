@@ -5,6 +5,8 @@ from . import APIView, APIError, takes_json
 
 from web.controllers import articles
 
+from renderer.utils import render_user_to_json
+
 
 class ArticleView(APIView):
     def _validate_article_data(self, data, allow_partial=False):
@@ -28,9 +30,7 @@ class CreateView(ArticleView):
 
         category = articles.get_article(data['pageId'])
 
-        if not settings.ANONYMOUS_EDITING_ENABLED and (not articles.has_perm(request.user, "web.add_article")
-                                                       or not request.user.has_perm("web.add_article_in_category",
-                                                                                    category)):
+        if not articles.has_perm(request.user, "web.add_article") or not request.user.has_perm("web.add_article_in_category", category):
             raise APIError('Недостаточно прав', 403)
 
         article = articles.get_article(data['pageId'])
@@ -41,7 +41,7 @@ class CreateView(ArticleView):
         article = articles.create_article(data['pageId'])
         article.title = data['title']
         article.save()
-        articles.create_article_version(article, data['source'])
+        articles.create_article_version(article, data['source'], request.user)
 
         return self.render_json(201, {'status': 'ok'})
 
@@ -60,7 +60,8 @@ class FetchOrUpdateView(ArticleView):
             'pageId': full_name,
             'title': article.title,
             'source': source,
-            'tags': articles.get_tags(article)
+            'tags': articles.get_tags(article),
+            'parent': articles.get_parent(article)
         })
 
     @takes_json
@@ -70,7 +71,7 @@ class FetchOrUpdateView(ArticleView):
         if article is None:
             raise APIError('Страница не найдена', 404)
 
-        if not settings.ANONYMOUS_EDITING_ENABLED and not articles.has_perm(request.user, "web.change_article", article):
+        if not articles.has_perm(request.user, "web.change_article", article):
             raise APIError('Недостаточно прав', 403)
 
         data = self.json_input
@@ -82,19 +83,23 @@ class FetchOrUpdateView(ArticleView):
             article2 = articles.get_article(data['pageId'])
             if article2 is not None:
                 raise APIError('Страница с таким ID уже существует', 409)
-            articles.update_full_name(article, data['pageId'])
+            articles.update_full_name(article, data['pageId'], request.user)
 
         # check if changing title
         if 'title' in data and data['title'] != article.title:
-            articles.update_title(article, data['title'])
+            articles.update_title(article, data['title'], request.user)
 
         # check if changing source
         if 'source' in data and data['source'] != articles.get_latest_source(article):
-            articles.create_article_version(article, data['source'])
+            articles.create_article_version(article, data['source'], request.user)
 
         # check if changing tags
         if 'tags' in data:
-            articles.set_tags(article, data['tags'])
+            articles.set_tags(article, data['tags'], request.user)
+
+        # check if changing parent
+        if 'parent' in data:
+            articles.set_parent(article, data['parent'], request.user)
 
         return self.render_json(200, {'status': 'ok'})
 
@@ -113,6 +118,7 @@ class FetchLogView(APIView):
         for entry in log_entries:
             output.append({
                 'revNumber': entry.rev_number,
+                'user': render_user_to_json(entry.user),
                 'comment': entry.comment,
                 'createdAt': entry.created_at.isoformat(),
                 'type': entry.type,

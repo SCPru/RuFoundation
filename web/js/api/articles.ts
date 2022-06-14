@@ -1,10 +1,12 @@
 import {wFetch} from "../util/fetch-util";
+import {UserData} from "./user";
 
 export interface ArticleData {
     pageId: string
     title?: string
     source?: string
     tags?: Array<string>
+    parent?: string
 }
 
 export async function createArticle(data: ArticleData) {
@@ -21,6 +23,7 @@ export async function updateArticle(id: string, data: ArticleData) {
 
 export interface ArticleLogEntry {
     revNumber: number
+    user: UserData
     comment: string
     createdAt: string
     type: string

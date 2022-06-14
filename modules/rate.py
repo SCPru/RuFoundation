@@ -3,7 +3,7 @@ from . import ModuleError
 from web.controllers import articles
 from django.utils import html
 
-from .listusers import render_user_to_json
+from renderer.utils import render_user_to_json
 
 
 def render(context, _params):

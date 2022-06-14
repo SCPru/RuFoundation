@@ -1,9 +1,12 @@
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
+{% extends "base.html" %}
 
-    {% for formset in inlines %}
-        {{ formset.as_p }}
-    {% endfor %}
-    <input type="submit" value="Submit" />
-</form>
+{% block h1 %}{% block title %}Изменение профиля{% endblock %}{% endblock %}
+
+
+{% block content %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">Сохранить</button>
+    </form>
+{% endblock %}

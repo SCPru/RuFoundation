@@ -13,7 +13,7 @@ interface Props {
 }
 
 interface State {
-    tags: string
+    new_name: string
     loading: boolean
     saving: boolean
     savingSuccess?: boolean
@@ -46,22 +46,14 @@ const Styles = styled.div`
 `;
 
 
-class ArticleTags extends Component<Props, State> {
+class ArticleRename extends Component<Props, State> {
     constructor(props) {
         super(props);
         this.state = {
-            tags: '',
+            new_name: this.props.pageId,
             loading: true,
             saving: false
         }
-    }
-
-    static tagsToTagString(tags: Array<string>): string {
-        return tags.join(' ');
-    }
-
-    static tagStringToTags(tagString: string): Array<string> {
-        return tagString.split(' ').map(x => x.trim()).filter(x => !!x);
     }
 
     async componentDidMount() {
@@ -69,7 +61,7 @@ class ArticleTags extends Component<Props, State> {
         this.setState({ loading: true });
         try {
             const data = await fetchArticle(pageId);
-            this.setState({ loading: false, tags: ArticleTags.tagsToTagString(data.tags) });
+            this.setState({ loading: false, new_name: data.pageId});
         } catch (e) {
             this.setState({loading: false, fatalError: true, error: e.error || 'Ошибка связи с сервером'});
         }
@@ -77,10 +69,10 @@ class ArticleTags extends Component<Props, State> {
 
     onSubmit = async () => {
         const { pageId } = this.props;
+        const { new_name } = this.state;
         this.setState({ saving: true, error: null, savingSuccess: false });
         const input = {
-            pageId: this.props.pageId,
-            tags: ArticleTags.tagStringToTags(this.state.tags)
+            pageId: new_name,
         };
         try {
             await updateArticle(pageId, input);
@@ -88,7 +80,7 @@ class ArticleTags extends Component<Props, State> {
             await sleep(1000);
             this.setState({ savingSuccess: false });
             window.scrollTo(window.scrollX, 0);
-            window.location.reload();
+            window.location.replace(new_name);
         } catch (e) {
             this.setState({ saving: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
         }
@@ -104,11 +96,6 @@ class ArticleTags extends Component<Props, State> {
         this.setState({[e.target.name]: e.target.value})
     };
 
-    onClear = (e) => {
-        // @ts-ignore
-        this.setState({"tags": ""})
-    };
-
     onCloseError = () => {
         const { fatalError } = this.state;
         this.setState({error: null});
@@ -118,7 +105,8 @@ class ArticleTags extends Component<Props, State> {
     };
 
     render() {
-        const { tags, loading, saving, savingSuccess, error } = this.state;
+        const { pageId } = this.props;
+        const { new_name, loading, saving, savingSuccess, error } = this.state;
         return (
             <Styles>
                 { saving && <WikidotModal isLoading>Сохранение...</WikidotModal> }
@@ -129,29 +117,33 @@ class ArticleTags extends Component<Props, State> {
                     </WikidotModal>
                 ) }
                 <a className="action-area-close btn btn-danger" href="#" onClick={this.onCancel}>Закрыть</a>
-                <h1>Теги страницы</h1>
-                <p>Теги (метки) это хороший способ для организации содержимого на сайте, для создания "горизонтальной навигации" между связанными по смыслу страницами. Вы можете добавить несколько тегов к каждой из ваших страниц. Читайте подробнее про <a href="http://ru.wikipedia.org/wiki/%D0%A2%D0%B5%D0%B3" target="_blank"> теги</a>, про <a href="http://ru.wikipedia.org/wiki/%D0%9E%D0%B1%D0%BB%D0%B0%D0%BA%D0%BE_%D1%82%D0%B5%D0%B3%D0%BE%D0%B2" target="_blank">облако тегов </a></p>
+                <h1>Переименовать/переместить страницу</h1>
+                <p>Действие <em>переименования</em> изменит "unix-имя" страницы, то есть адрес, по которому доступна страница.	</p>
 
                 <form method="POST" onSubmit={this.onSubmit}>
                     <table className="form">
                         <tbody>
                         <tr>
                             <td>
-                                Теги:
+                                Название страницы:
                             </td>
                             <td>
-                                <input type="text" name="tags" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-tags-input" defaultValue={tags} disabled={loading||saving}/>
-                                    <div className="sub">
-                                        Список тегов через пробел.
-                                    </div>
+                                {pageId}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Новое название страницы:
+                            </td>
+                            <td>
+                                <input type="text" name="new_name" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-rename-input" defaultValue={new_name} disabled={loading||saving}/>
                             </td>
                         </tr>
                         </tbody>
                     </table>
                     <div className="buttons form-actions">
                         <input type="button" className="btn btn-danger" value="Закрыть" onClick={this.onCancel} />
-                        <input type="button" className="btn btn-default" value="Очистить" onClick={this.onClear} />
-                        <input type="button" className="btn btn-primary" value="Сохранить теги" onClick={this.onSubmit}/>
+                        <input type="button" className="btn btn-primary" value="Переименовать/переместить" onClick={this.onSubmit}/>
                     </div>
                 </form>
             </Styles>
@@ -160,4 +152,4 @@ class ArticleTags extends Component<Props, State> {
 }
 
 
-export default ArticleTags
+export default ArticleRename
