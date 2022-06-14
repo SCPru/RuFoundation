@@ -172,10 +172,6 @@ mimetypes.add_type("text/css", ".css", True)
 mimetypes.add_type("text/javascript", ".js", True)
 
 
-WEBSITE_NAME = 'SCP Foundation'
-WEBSITE_HEADLINE = 'Russian branch'
-
-
 ARTICLE_REPLACE_CONFIG = {}
 for v in os.environ.get('ARTICLE_REPLACE_CONFIG', '').split(','):
     if not v.strip():

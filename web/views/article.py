@@ -12,6 +12,8 @@ from renderer.parser import RenderContext
 from typing import Optional
 import json
 
+from web.models.sites import get_current_site
+
 
 class ArticleView(TemplateResponseMixin, ContextMixin, View):
     template_name = "page.html"
@@ -82,10 +84,12 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'canRate': articles.has_perm(self.request.user, "web.can_vote_article", article)
         }
 
+        site = get_current_site()
+
         context.update({
-            'site_name': settings.WEBSITE_NAME,
-            'site_headline': settings.WEBSITE_HEADLINE,
-            'site_title': title or settings.WEBSITE_NAME,
+            'site_name': site.title,
+            'site_headline': site.headline,
+            'site_title': title or site.title,
 
             'nav_top': self._render_nav("nav:top", article, path_params),
             'nav_side': self._render_nav("nav:side", article, path_params),

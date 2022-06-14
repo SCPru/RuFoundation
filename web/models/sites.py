@@ -58,22 +58,17 @@ class _SiteLimitedMetaclass(models.base.ModelBase):
         # call regular model creator
         new_class = super_new(cls, name, bases, attrs)
 
-        # modify objects field
-        parent_getattribute = new_class.__getattribute__
-
-        def objects_wrapper(self, attr):
-            parent = parent_getattribute(self, attr)
-            if attr != 'objects':
-                return parent
-            site_filter = get_cross_site_filter()
-            if site_filter == 'all':
-                return parent
-            return parent.filter(site__in=site_filter)
-
-        new_class.__getattribute__ = objects_wrapper
-
         # add site reference
         return new_class
+
+    def __getattribute__(cls, attr):
+        parent = super().__getattribute__(attr)
+        if attr != 'objects':
+            return parent
+        site_filter = get_cross_site_filter()
+        if site_filter == 'all':
+            return parent
+        return parent.filter(site__in=site_filter)
 
 
 class SiteLimitedModel(models.Model, metaclass=_SiteLimitedMetaclass):
@@ -81,10 +76,9 @@ class SiteLimitedModel(models.Model, metaclass=_SiteLimitedMetaclass):
         abstract = True
 
     def __init__(self, *args, **kwargs):
-        if 'site' in kwargs:
-            super().__init__(*args, **kwargs)
-        else:
-            super().__init__(*args, site=get_current_site(), **kwargs)
+        super().__init__(*args, **kwargs)
+        if self._state.adding:
+            self.site = get_current_site()
 
 
 def get_current_site(required=True) -> Optional[Site]:

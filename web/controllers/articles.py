@@ -92,7 +92,7 @@ def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int,
 
 
 # Creates new article version for specified article
-def create_article_version(full_name_or_article: _FullNameOrArticle, source: str, user: Optional[_UserType] = True) -> ArticleVersion:
+def create_article_version(full_name_or_article: _FullNameOrArticle, source: str, user: Optional[_UserType] = None) -> ArticleVersion:
     article = get_article(full_name_or_article)
     is_new = get_latest_version(article) is None
     version = ArticleVersion(
@@ -121,7 +121,7 @@ def create_article_version(full_name_or_article: _FullNameOrArticle, source: str
 
 
 # Updates name of article
-def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: str, user: Optional[_UserType] = True):
+def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: str, user: Optional[_UserType] = None):
     article = get_article(full_name_or_article)
     prev_full_name = get_full_name(full_name_or_article)
     category, name = get_name(new_full_name)
@@ -138,7 +138,7 @@ def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: st
 
 
 # Updates title of article
-def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user: Optional[_UserType] = True):
+def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user: Optional[_UserType] = None):
     article = get_article(full_name_or_article)
     prev_title = article.title
     article.title = new_title
@@ -177,7 +177,7 @@ def get_parent(full_name_or_article: _FullNameOrArticle) -> Optional[str]:
 
 
 # Set parent of article
-def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _FullNameOrArticle, user: Optional[_UserType] = True):
+def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _FullNameOrArticle, user: Optional[_UserType] = None):
     article = get_article(full_name_or_article)
     parent = get_article(full_name_of_parent) if full_name_of_parent else None
     prev_parent = get_full_name(article.parent) if article.parent else None
@@ -227,7 +227,7 @@ def get_tags(full_name_or_article: _FullNameOrArticle) -> Sequence[str]:
 
 
 # Set tags for article
-def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user: Optional[_UserType] = True):
+def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user: Optional[_UserType] = None):
     article = get_article(full_name_or_article)
     article_tags = article.tags.all()
     tags = [Tag.objects.get_or_create(name=x.lower())[0] for x in tags if is_tag_name_allowed(x)]

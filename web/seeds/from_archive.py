@@ -6,10 +6,13 @@ from web.controllers import articles
 import time
 import codecs
 import datetime
+from pathlib import Path
+from django.conf import settings
 
 
 # NOTE: This specific seed file requires py7zr to run.
 # This is not characteristic of the rest of the app, so just install it manually if needed
+from web.models.sites import get_current_site
 
 
 def maybe_load_pages_meta(base_path_or_list):
@@ -31,7 +34,11 @@ def run(base_path):
     # files are just copied
     base_path = base_path.rstrip('/')
     from_files = '%s/files/' % base_path
-    to_files = './files/'
+    site = get_current_site()
+    to_files = str(Path(settings.MEDIA_ROOT) / site.slug)
+    if os.path.exists(to_files):
+        print('Removing old files...')
+        shutil.rmtree(to_files, ignore_errors=False)
     print('Copying files...')
     shutil.copytree(from_files, to_files, dirs_exist_ok=True)
     print('Adding articles...')

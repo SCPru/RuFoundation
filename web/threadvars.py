@@ -22,7 +22,7 @@ def unregister():
     with _CONTEXTS_LOCK:
         t = threading.current_thread().ident
         if t in _CONTEXTS:
-            parent = t['__parent']
+            parent = _CONTEXTS[t]['__parent']
             if parent:
                 _CONTEXTS[t] = parent
             else:

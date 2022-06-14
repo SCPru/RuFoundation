@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db.models import Q
 from django.http import HttpResponseRedirect
-from web.models.sites import get_current_site, Site
+from web.models.sites import Site
 from web import threadvars
 
 
@@ -15,7 +15,7 @@ class MediaHostMiddleware(object):
         # set current site
         with threadvars.context():
             # find site by domain
-            raw_host = request.get_host().split(':')
+            raw_host = request.get_host().split(':')[0]
             possible_sites = Site.objects.filter(Q(domain=raw_host) | Q(media_domain=raw_host))
             if not possible_sites:
                 raise RuntimeError('Site for this domain (\'%s\') is not configured' % raw_host)
