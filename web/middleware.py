@@ -1,5 +1,8 @@
 from django.conf import settings
+from django.db.models import Q
 from django.http import HttpResponseRedirect
+from web.models.sites import Site
+from web import threadvars
 
 
 # This class redirects the user if they are trying to access media file using non-media host and the other way around.
@@ -9,15 +12,26 @@ class MediaHostMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
-        if settings.MEDIA_HOST is not None:
-            is_media_host = request.get_host().split(':')[0] == settings.MEDIA_HOST
-            is_media_url = request.path.startswith(settings.MEDIA_URL)
+        # set current site
+        with threadvars.context():
+            # find site by domain
+            raw_host = request.get_host().split(':')[0]
+            possible_sites = Site.objects.filter(Q(domain=raw_host) | Q(media_domain=raw_host))
+            if not possible_sites:
+                raise RuntimeError('Site for this domain (\'%s\') is not configured' % raw_host)
 
-            non_media_host = [x for x in settings.ALLOWED_HOSTS if x != settings.MEDIA_HOST][0]
+            site = possible_sites[0]
+            threadvars.put('current_site', site)
 
-            if is_media_host and not is_media_url:
-                return HttpResponseRedirect('//%s%s' % (non_media_host, request.get_full_path()))
-            elif not is_media_host and is_media_url:
-                return HttpResponseRedirect('//%s%s' % (settings.MEDIA_HOST, request.get_full_path()))
+            if site.media_domain != site.domain:
+                is_media_host = request.get_host().split(':')[0] == site.media_domain
+                is_media_url = request.path.startswith(settings.MEDIA_URL)
 
-        return self.get_response(request)
+                non_media_host = site.domain
+
+                if is_media_host and not is_media_url:
+                    return HttpResponseRedirect('//%s%s' % (non_media_host, request.get_full_path()))
+                elif not is_media_host and is_media_url:
+                    return HttpResponseRedirect('//%s%s' % (site.media_domain, request.get_full_path()))
+
+            return self.get_response(request)

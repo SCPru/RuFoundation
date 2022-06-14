@@ -1,6 +1,7 @@
 # This file implements global variables per thread
 # This is so that the state doesn't need to be passed down to each and every handler.
 import threading
+import copy
 
 
 _CONTEXTS_LOCK = threading.RLock()
@@ -10,19 +11,22 @@ _CONTEXTS = dict()
 def register():
     with _CONTEXTS_LOCK:
         t = threading.current_thread().ident
-        if t not in _CONTEXTS:
-            #print('register %s' % repr(t))
-            _CONTEXTS[t] = dict()
-            return True
-        return False
+        parent = _CONTEXTS.get(t)
+        new_dict = copy.copy(parent or dict())
+        new_dict['__parent'] = parent
+        _CONTEXTS[t] = new_dict
+        return True
 
 
 def unregister():
     with _CONTEXTS_LOCK:
         t = threading.current_thread().ident
-        #print('unregister %s' % repr(t))
         if t in _CONTEXTS:
-            del _CONTEXTS[t]
+            parent = _CONTEXTS[t]['__parent']
+            if parent:
+                _CONTEXTS[t] = parent
+            else:
+                del _CONTEXTS[t]
 
 
 def registered():
@@ -34,7 +38,6 @@ def registered():
 def get(key, default=None):
     with _CONTEXTS_LOCK:
         t = threading.current_thread().ident
-        #print('get %s [%s]' % (repr(t), repr(key)))
         if t in _CONTEXTS:
             return _CONTEXTS[t].get(key, default)
         return default
@@ -43,12 +46,11 @@ def get(key, default=None):
 def put(key, value):
     with _CONTEXTS_LOCK:
         t = threading.current_thread().ident
-        #print('put %s [%s] = %s' % (repr(t), repr(key), repr(value)))
         if t in _CONTEXTS:
             _CONTEXTS[t][key] = value
 
 
-class context(object):
+class ThreadVarsContext(object):
     def __init__(self):
         pass
 
@@ -62,3 +64,5 @@ class context(object):
         return False
 
 
+def context():
+    return ThreadVarsContext()

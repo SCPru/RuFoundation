@@ -31,7 +31,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-)wy0h9z6x4o3t4@=s_keq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'true') == 'true'
 
-ALLOWED_HOSTS = [x.strip() for x in os.environ.get('ALLOWED_HOSTS', '').split(',') if x.strip()]
+ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [origin for host in ALLOWED_HOSTS for origin in ['http://'+host, 'https://'+host]]
 
 
@@ -170,10 +170,6 @@ SECURE_CONTENT_TYPE_NOSNIFF = False
 # Fixes static images
 mimetypes.add_type("text/css", ".css", True)
 mimetypes.add_type("text/javascript", ".js", True)
-
-
-WEBSITE_NAME = 'SCP Foundation'
-WEBSITE_HEADLINE = 'Russian branch'
 
 
 ARTICLE_REPLACE_CONFIG = {}

@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.db import models
+from .sites import SiteLimitedModel
 
 
-class Tag(models.Model):
+class Tag(SiteLimitedModel):
     class Meta:
         verbose_name = "Тег"
         verbose_name_plural = "Теги"
@@ -20,7 +21,7 @@ class Tag(models.Model):
         return super(Tag, self).save(*args, **kwargs)
 
 
-class Category(models.Model):
+class Category(SiteLimitedModel):
     class Meta:
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
@@ -39,7 +40,7 @@ class Category(models.Model):
         return self.name
 
 
-class Article(models.Model):
+class Article(SiteLimitedModel):
     class Meta:
         verbose_name = "Статья"
         verbose_name_plural = "Статьи"
@@ -70,7 +71,7 @@ class Article(models.Model):
         return f"{self.title} ({self.full_name})"
 
 
-class ArticleVersion(models.Model):
+class ArticleVersion(SiteLimitedModel):
     class Meta:
         verbose_name = "Версия статьи"
         verbose_name_plural = "Версии статей"
@@ -86,7 +87,7 @@ class ArticleVersion(models.Model):
         return f"{self.created_at.strftime('%Y-%m-%d, %H:%M:%S')} - {self.article}"
 
 
-class ArticleLogEntry(models.Model):
+class ArticleLogEntry(SiteLimitedModel):
     class Meta:
         verbose_name = "Запись в журнале изменений"
         verbose_name_plural = "Записи в журнале изменений"
@@ -113,7 +114,7 @@ class ArticleLogEntry(models.Model):
         return f"№{self.rev_number} - {self.article}"
 
 
-class Vote(models.Model):
+class Vote(SiteLimitedModel):
     class Meta:
         verbose_name = "Оценка"
         verbose_name_plural = "Оценки"
