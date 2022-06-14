@@ -42,7 +42,7 @@ class _SiteLimitedMetaclass(models.base.ModelBase):
         # add site field
         if 'site' in attrs:
             raise KeyError('Field \'site\' already exists in \'%s\'. This is not compatible with SiteLimitedModel.' % name)
-        attrs['site'] = models.ForeignKey(to=Site, on_delete=models.CASCADE, null=False)
+        attrs['site'] = models.ForeignKey(to=Site, on_delete=models.CASCADE, null=False, verbose_name="Сайт")
 
         # modify unique constraints and add site field
         meta = attrs.get('Meta')
