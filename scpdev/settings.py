@@ -44,8 +44,6 @@ INSTALLED_APPS = [
 
     'guardian',
 
-    'extra_views',
-
     'system',
     'web',
 ]
