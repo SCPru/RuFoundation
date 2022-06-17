@@ -4,3 +4,5 @@
 .git
 files
 db.sqlite3
+postgresql
+archive

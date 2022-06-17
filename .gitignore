@@ -6,3 +6,5 @@ files/*
 node_modules
 *.log
 .env
+postgresql
+archive

@@ -100,6 +100,9 @@ if database_engine == 'sqlite':
 
 elif database_engine == 'pg':
 
+    # wait until postgres becomes available
+
+
     default_db = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_PG_DATABASE', 'scpwiki'),
