@@ -52,3 +52,6 @@ To create users, sites and seed inside the database, start the project and after
 
 - `docker exec -it scpdev_web python manage.py createsite -s scp-ru -d localhost -t "SCP Foundation" -H "Russian branch"`
 - `docker exec -it scpdev_web seed -s scp-ru`
+
+Note: in more recent versions, you may want to use `docker compose` instead of `docker-compose`.
+
