@@ -29,3 +29,26 @@ You can provision these basic structures by running the following commands:
 
 - `python manage.py createsite -s scp-ru -d localhost -t "SCP Foundation" -H "Russian branch"`
 - `python manage.py seed -s scp-ru`
+
+## Running in Docker
+
+### Requirements (tested with):
+
+- Docker 20.10.14
+- Docker-Compose 1.29.2
+
+### Getting started
+
+To start the project, use:
+
+- `docker-compose up`
+
+To completely delete all data, use:
+
+- `docker-compose down`
+- `rm -rf ./files ./archive ./postgresql`
+
+To create users, sites and seed inside the database, start the project and afterwards use syntax such as this:
+
+- `docker exec -it scpdev_web python manage.py createsite -s scp-ru -d localhost -t "SCP Foundation" -H "Russian branch"`
+- `docker exec -it scpdev_web seed -s scp-ru`
