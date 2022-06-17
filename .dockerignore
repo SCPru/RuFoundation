@@ -6,3 +6,4 @@ files
 db.sqlite3
 postgresql
 archive
+prod.env
