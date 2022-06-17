@@ -8,6 +8,10 @@ import codecs
 import datetime
 from pathlib import Path
 from django.conf import settings
+import math
+import threading
+import logging
+from web import threadvars
 
 
 # NOTE: This specific seed file requires py7zr to run.
@@ -29,6 +33,31 @@ def maybe_load_pages_meta(base_path_or_list):
     return base_path_or_list
 
 
+def run_in_threads(fn, pages):
+    thread_count = 4
+    per_thread_pages = []
+    for i in range(thread_count):
+        single_thread_cnt = int(math.ceil(len(pages) / thread_count))
+        per_thread_pages.append(pages[i*single_thread_cnt:(i+1)*single_thread_cnt])
+    threads = []
+    site = get_current_site()
+    for thread_work in per_thread_pages:
+        def fn_wrapper(thread_work):
+            with threadvars.context():
+                threadvars.put('current_site', site)
+                fn(thread_work)
+        t = threading.Thread(target=fn_wrapper, args=(thread_work,))
+        t.daemon = True
+        t.start()
+        threads.append(t)
+    while True:
+        any_alive = [t for t in threads if t.is_alive()]
+        if any_alive:
+            time.sleep(1)
+        else:
+            break
+
+
 def run(base_path):
     # unpacks wikidot archive in DBotThePony's backup format
     # files are just copied
@@ -37,45 +66,55 @@ def run(base_path):
     site = get_current_site()
     to_files = str(Path(settings.MEDIA_ROOT) / site.slug)
     if os.path.exists(to_files):
-        print('Removing old files...')
+        logging.info('Removing old files...')
         shutil.rmtree(to_files, ignore_errors=False)
-    print('Copying files...')
+    logging.info('Copying files...')
     shutil.copytree(from_files, to_files, dirs_exist_ok=True)
-    print('Adding articles...')
+    logging.info('Adding articles...')
     t = time.time()
-    cnt = 0
+    t_lock = threading.RLock()
     pages = maybe_load_pages_meta(base_path)
-    for meta in pages:
-        cnt += 1
-        f = meta['filename']
-        pagename = meta['name']
-        title = meta['title'] if 'title' in meta else None
-        top_rev = meta['revisions'][0]['revision']
-        tags = meta['tags'] if 'tags' in meta else []
-        updated_at = datetime.datetime.fromtimestamp(meta['revisions'][0]['stamp'], tz=datetime.timezone.utc)
-        created_at = datetime.datetime.fromtimestamp(meta['revisions'][-1]['stamp'], tz=datetime.timezone.utc)
-        fn_7z = '.'.join(f.split('.')[:-1]) + '.7z'
-        fn_7z = '%s/pages/%s' % (base_path, fn_7z)
-        if not os.path.exists(fn_7z):
-            continue
-        with py7zr.SevenZipFile(fn_7z) as z:
-            [(_, bio)] = z.read(['%d.txt' % top_rev]).items()
-            content = bio.read().decode('utf-8')
-            article = articles.create_article(pagename)
-            article.created_at = created_at
-            article.updated_at = updated_at
-            if title is not None:
-                article.title = title
-            else:
-                article.title = ''
-            article.save()
-            articles.create_article_version(article, content)
-            if tags:
-                articles.set_tags(article, tags)
-        if time.time() - t > 1:
-            print('Added: %d/%d' % (cnt, len(pages)))
-            t = time.time()
-    set_parents(pages)
+
+    total_pages = len(pages)
+    total_cnt = 0
+
+    def worker_thread(pages):
+        nonlocal total_cnt
+        nonlocal t
+        for meta in pages:
+            total_cnt += 1
+            f = meta['filename']
+            pagename = meta['name']
+            title = meta['title'] if 'title' in meta else None
+            top_rev = meta['revisions'][0]['revision']
+            tags = meta['tags'] if 'tags' in meta else []
+            updated_at = datetime.datetime.fromtimestamp(meta['revisions'][0]['stamp'], tz=datetime.timezone.utc)
+            created_at = datetime.datetime.fromtimestamp(meta['revisions'][-1]['stamp'], tz=datetime.timezone.utc)
+            fn_7z = '.'.join(f.split('.')[:-1]) + '.7z'
+            fn_7z = '%s/pages/%s' % (base_path, fn_7z)
+            if not os.path.exists(fn_7z):
+                continue
+            with py7zr.SevenZipFile(fn_7z) as z:
+                [(_, bio)] = z.read(['%d.txt' % top_rev]).items()
+                content = bio.read().decode('utf-8')
+                article = articles.create_article(pagename)
+                article.created_at = created_at
+                article.updated_at = updated_at
+                if title is not None:
+                    article.title = title
+                else:
+                    article.title = ''
+                article.save()
+                articles.create_article_version(article, content)
+                if tags:
+                    articles.set_tags(article, tags)
+            with t_lock:
+                if time.time() - t > 1:
+                    logging.info('Added: %d/%d' % (total_cnt, total_pages))
+                    t = time.time()
+
+    run_in_threads(worker_thread, pages)
+    run_in_threads(set_parents, pages)
 
 
 def set_parents(base_path_or_list):
@@ -91,7 +130,6 @@ def set_parents(base_path_or_list):
                 renamed_at = rev['stamp']
                 page_renames.append((renamed_at, renamed_from, meta['name']))
     page_renames.sort(key=lambda x: x[0])
-    print(repr(page_renames))
 
     for meta in pages:
         pagename = meta['name']
@@ -103,12 +141,12 @@ def set_parents(base_path_or_list):
                 # try to find if it was renamed
                 for rename in page_renames:
                     if rename[0] >= rev['stamp'] and rename[1] == parent:
-                        print('Parent was renamed: %s -> %s' % (rename[1], parent))
+                        logging.info('Parent was renamed: %s -> %s' % (rename[1], parent))
                         parent = rename[2]
                 break
 
         article = articles.get_article(pagename)
         if article:
             if parent:
-                print('Parent: %s -> %s' % (pagename, parent))
+                logging.info('Parent: %s -> %s' % (pagename, parent))
             articles.set_parent(article, parent or None)

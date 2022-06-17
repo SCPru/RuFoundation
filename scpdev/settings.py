@@ -17,10 +17,6 @@ import mimetypes
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SQLITE_DIRECTORY = BASE_DIR
-if 'SQLITE_DIRECTORY' in os.environ:
-    SQLITE_DIRECTORY = Path(os.environ['SQLITE_DIRECTORY']).resolve()
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -91,12 +87,35 @@ WSGI_APPLICATION = 'scpdev.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
+database_engine = os.environ.get('DB_ENGINE', 'sqlite')
+if database_engine == 'sqlite':
+
+    sqlite_dir = BASE_DIR
+    if 'DB_SQLITE_DIRECTORY' in os.environ:
+        sqlite_dir = Path(os.environ['DB_SQLITE_DIRECTORY']).resolve()
+
+    default_db = {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': SQLITE_DIRECTORY / 'db.sqlite3',
+        'NAME': sqlite_dir / 'db.sqlite3',
         'ATOMIC_REQUESTS': True
     }
+
+elif database_engine == 'pg':
+
+    default_db = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_PG_DATABASE', 'scpwiki'),
+        'USER': os.environ.get('DB_PG_USERNAME', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PG_PASSWORD', 'zaq123'),
+        'HOST': os.environ.get('DB_PG_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PG_PORT', '5432')
+    }
+
+else:
+    raise ValueError('Unsupported database "%s"' % database_engine)
+
+DATABASES = {
+    'default': default_db
 }
 
 
@@ -183,3 +202,23 @@ for v in os.environ.get('ARTICLE_REPLACE_CONFIG', '').split(','):
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 AUTH_USER_MODEL = "system.User"
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'class': 'scpdev.logger.SimpleFormatter'
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': os.environ.get('LOGLEVEL', 'INFO'),
+    },
+}

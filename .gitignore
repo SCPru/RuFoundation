@@ -5,3 +5,4 @@ files/*
 !files/.gitkeep
 node_modules
 *.log
+.env
