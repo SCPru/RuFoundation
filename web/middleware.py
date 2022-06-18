@@ -58,11 +58,5 @@ class ForwardedPortMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
-        try:
-            if request.scheme == 'https':
-                request.META['SERVER_PORT'] = '443'
-            elif request.scheme == 'http':
-                request.META['SERVER_PORT'] = '80'
-        except KeyError:
-            pass
+        request.META['HTTP_HOST'] = request.META['HTTP_HOST'].split(':')[0]
         return self.get_response(request)
