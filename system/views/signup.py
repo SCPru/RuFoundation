@@ -12,11 +12,10 @@ from django.views.generic import FormView
 from django.contrib.auth import login
 from django.contrib.admin import site
 from django.contrib import messages
-from django.conf import settings
 
 
 from system.forms import InviteForm, CreateAccountForm
-
+from web.models.sites import get_current_site
 
 User = get_user_model()
 
@@ -46,14 +45,15 @@ class InviteView(FormView):
     def form_valid(self, form):
         email = form.cleaned_data['email']
         user, created = User.objects.get_or_create(email=email)
+        site = get_current_site()
         if created:
             user.is_active = False
             user.save()
-            subject = f"Приглашение на {settings.WEBSITE_NAME}"
+            subject = f"Приглашение на {site.title}"
             c = {
                 "email": user.email,
                 'domain': self.request.get_host(),
-                'site_name': settings.WEBSITE_NAME,
+                'site_name': site.title,
                 "uid": urlsafe_base64_encode(force_bytes(user.pk)),
                 "user": user,
                 'token': account_activation_token.make_token(user),
