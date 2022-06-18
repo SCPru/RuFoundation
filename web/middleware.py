@@ -39,18 +39,30 @@ class MediaHostMiddleware(object):
 
 
 class CsrfViewMiddleware(django.middleware.csrf.CsrfViewMiddleware):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = None
+
     @property
     def csrf_trusted_origins_hosts(self):
         return [site.domain for site in Site.objects.all()]
 
     @property
     def allowed_origins_exact(self):
+        port = ':'+str(self.request.META['SERVER_PORT'])
         hosts = self.csrf_trusted_origins_hosts
-        return ['http://'+host for host in hosts] + ['https://'+host for host in hosts]
+        return \
+            ['http://'+host+port for host in hosts] +\
+            ['http://'+host for host in hosts] +\
+            ['https://'+host for host in hosts]
 
     @property
     def allowed_origin_subdomains(self):
         return dict()
+
+    def process_view(self, request, callback, callback_args, callback_kwargs):
+        self.request = request
+        return super().process_view(request, callback, callback_args, callback_kwargs)
 
 
 class ForwardedPortMiddleware(object):

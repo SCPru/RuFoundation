@@ -12,12 +12,16 @@
     {% block head %}{% endblock %}
 </head>
 <body>
-    <div class="system content">
-        {% block before %}{% endblock %}
-        <h1 id="title">{% block h1 %}{% endblock %}</h1>
-        <br>
-        <hr>
-        {% block content %}{% endblock %}
+    <div class="system-container">
+        <div class="system-content">
+            {% block before %}{% endblock %}
+            <div class="heading">
+                <h1 id="title">{% block h1 %}{% endblock %}</h1>
+            </div>
+            <div class="content">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
     </div>
 </body>
 </html>
