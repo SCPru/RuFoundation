@@ -18,9 +18,8 @@ COPY requirements.txt .
 RUN python -m pip install -r requirements.txt
 RUN python -m pip install gunicorn
 
-COPY --from=js_build /build/static/* ./static/
-
 COPY . .
+COPY --from=js_build /build/static/* ./static/
 
 RUN useradd -u 8877 scpwiki
 USER scpwiki

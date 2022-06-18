@@ -7,3 +7,7 @@ db.sqlite3
 postgresql
 archive
 prod.env
+static/app.css
+static/app.css.map
+static/app.js
+static/app.js.map
