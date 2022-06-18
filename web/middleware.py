@@ -51,3 +51,11 @@ class CsrfViewMiddleware(django.middleware.csrf.CsrfViewMiddleware):
     @property
     def allowed_origin_subdomains(self):
         return dict()
+
+
+class ForwardedPortMiddleware(object):
+    def process_request(self, request):
+        try:
+            request.META['SERVER_PORT'] = request.META['HTTP_X_FORWARDED_PORT']
+        except KeyError:
+            pass

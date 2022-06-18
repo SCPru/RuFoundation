@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'web.middleware.ForwardedPortMiddleware'
     'django.middleware.security.SecurityMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -184,6 +185,8 @@ REMOVE_SLASH = True
 
 # Fixes custom includes
 SECURE_CONTENT_TYPE_NOSNIFF = False
+# Fixes
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Fixes static images
