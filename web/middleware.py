@@ -3,6 +3,7 @@ from django.db.models import Q
 from django.http import HttpResponseRedirect
 from web.models.sites import Site
 from web import threadvars
+import django.middleware.csrf
 
 
 # This class redirects the user if they are trying to access media file using non-media host and the other way around.
@@ -35,3 +36,8 @@ class MediaHostMiddleware(object):
                     return HttpResponseRedirect('//%s%s' % (site.media_domain, request.get_full_path()))
 
             return self.get_response(request)
+
+
+class CsrfViewMiddleware(django.middleware.csrf.CsrfViewMiddleware):
+    def csrf_trusted_origins_hosts(self):
+        return [site.domain for site in Site.objects.all()]
