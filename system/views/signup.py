@@ -48,6 +48,7 @@ class InviteView(FormView):
         site = get_current_site()
         if created:
             user.is_active = False
+            user.username = 'user-%d' % user.id
             user.save()
             subject = f"Приглашение на {site.title}"
             c = {
