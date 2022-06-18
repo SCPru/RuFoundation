@@ -6,7 +6,7 @@ files
 db.sqlite3
 postgresql
 archive
-prod.env
+*.env
 static/app.css
 static/app.css.map
 static/app.js

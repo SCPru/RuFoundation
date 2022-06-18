@@ -28,7 +28,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-)wy0h9z6x4o3t4@=s_keq
 DEBUG = os.environ.get('DEBUG', 'true') == 'true'
 
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = [origin for host in ALLOWED_HOSTS for origin in ['http://'+host, 'https://'+host]]
 
 
 # Application definition
@@ -200,7 +199,22 @@ for v in os.environ.get('ARTICLE_REPLACE_CONFIG', '').split(','):
     ARTICLE_REPLACE_CONFIG[k] = v
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+mail_backend = os.environ.get('EMAIL_ENGINE', 'console')
+if mail_backend == 'console':
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+elif mail_backend == 'smtp':
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '1025'))
+    EMAIL_USER = os.environ.get('EMAIL_USERNAME', '')
+    EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'false') == 'true'
+    if 'EMAIL_DEFAULT_FROM' not in os.environ:
+        raise KeyError('EMAIL_DEFAULT_FROM environment variable is required for SMTP')
+    DEFAULT_FROM_EMAIL = os.environ['EMAIL_DEFAULT_FROM']
+else:
+    raise ValueError('Unknown email engine "%s"' % mail_backend)
+
 
 AUTH_USER_MODEL = "system.User"
 
