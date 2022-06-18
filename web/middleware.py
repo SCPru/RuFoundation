@@ -54,8 +54,12 @@ class CsrfViewMiddleware(django.middleware.csrf.CsrfViewMiddleware):
 
 
 class ForwardedPortMiddleware(object):
-    def process_request(self, request):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
         try:
             request.META['SERVER_PORT'] = request.META['HTTP_X_FORWARDED_PORT']
         except KeyError:
             pass
+        return self.get_response(request)
