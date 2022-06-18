@@ -1,14 +1,19 @@
 {% extends "base.html" %}
 
-{% block h1 %}{% block title %}{{ object.username|escape }}{% endblock %}{% endblock %}
-
-
-{% block before %}
-    <img src="{% url "local_files" object.avatar %}" alt="{{ object.username|escape }}">
+{% block h1 %}
+    <img class="system-heading-avatar" src="{% url "local_files" object.avatar %}" alt="{{ object.username|escape }}">
+    {% block title %}
+        {{ object.username|escape }}
+    {% endblock %}
 {% endblock %}
 
 {% block content %}
-    {% if object.first_name %}<p><b>Имя:</b> {{ object.first_name|escape }}</p>{% endif %}
-    {% if object.last_name %}<p><b>Фамилия:</b> {{ object.last_name|escape }}</p>{% endif %}
-    {% if object.bio %}<p><b>Описание:</b> {{ object.bio|escape }}</p>{% endif %}
+    <div class="profile-form">
+        {% if not object.first_name and not object.last_name and not object.bio %}
+            Профиль пользователя пуст.
+        {% endif %}
+        {% if object.first_name %}<p><b>Имя:</b> {{ object.first_name|escape }}</p>{% endif %}
+        {% if object.last_name %}<p><b>Фамилия:</b> {{ object.last_name|escape }}</p>{% endif %}
+        {% if object.bio %}<p><b>Описание:</b> {{ object.bio|escape }}</p>{% endif %}
+    </div>
 {% endblock %}

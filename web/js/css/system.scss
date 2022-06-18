@@ -42,6 +42,7 @@ html {
     box-shadow: 0 -1px 3px #0000007f inset;
     color: white;
     padding: 16px;
+    overflow: hidden;
 
     h1 {
       font-size: 20px;
@@ -136,4 +137,18 @@ html {
   .under-text {
     margin-top: 16px;
   }
+}
+
+.system-content .profile-form {
+  min-width: 300px;
+  max-width: 600px;
+}
+
+.system-heading-avatar {
+  float: left;
+  display: block;
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  margin-right: 16px;
 }
