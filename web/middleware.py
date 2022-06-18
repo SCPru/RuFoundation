@@ -59,6 +59,7 @@ class ForwardedPortMiddleware(object):
 
     def __call__(self, request):
         try:
+            print(repr(request.META))
             request.META['SERVER_PORT'] = request.META['HTTP_X_FORWARDED_PORT']
         except KeyError:
             pass
