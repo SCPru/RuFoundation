@@ -39,5 +39,15 @@ class MediaHostMiddleware(object):
 
 
 class CsrfViewMiddleware(django.middleware.csrf.CsrfViewMiddleware):
+    @property
     def csrf_trusted_origins_hosts(self):
         return [site.domain for site in Site.objects.all()]
+
+    @property
+    def allowed_origins_exact(self):
+        hosts = self.csrf_trusted_origins_hosts
+        return ['http://'+host for host in hosts] + ['https://'+host for host in hosts]
+
+    @property
+    def allowed_origin_subdomains(self):
+        return dict()
