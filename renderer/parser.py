@@ -1209,6 +1209,8 @@ class Parser(object):
             pos = self.tokenizer.position
             tk = self.tokenizer.read_token()
             first_tk = tk
+            if first_tk.type == TokenType.Null:
+                return None
             first_pos = self.tokenizer.position
             # [[ / <attr_name> ]]
             if tk.type == TokenType.OpenDoubleBracket:
