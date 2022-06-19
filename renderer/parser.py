@@ -1708,6 +1708,8 @@ class Parser(object):
         # # or * has already been parsed
         if not self.check_newline():
             return None
+        if not self.check_whitespace(0):
+            return None
         token_type = TokenType.Hash if lstype == 'ol' else TokenType.Asterisk
         result = ListNode(lstype)
         result.append_child(ListItemNode())
