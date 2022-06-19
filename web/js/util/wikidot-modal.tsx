@@ -76,7 +76,7 @@ const Styles = styled.div`
   justify-content: center;
 }
 .owindow.owait .content {
-  background-image: url(/static/images/progressbar.gif);
+  background-image: url(/-/static/images/progressbar.gif);
 }
 `;
 

@@ -14,7 +14,7 @@ class User(AbstractUser):
 
     type = models.TextField(choices=UserType.choices, default=UserType.Normal, verbose_name="Тип")
 
-    avatar = models.ImageField(default='../static/images/default_avatar.png', blank=True, upload_to='-/users', verbose_name="Аватар")
+    avatar = models.ImageField(default='../-/static/images/default_avatar.png', blank=True, upload_to='-/users', verbose_name="Аватар")
     bio = models.TextField(blank=True, verbose_name="Описание")
 
     def __str__(self):

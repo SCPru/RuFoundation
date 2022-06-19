@@ -17,7 +17,7 @@ class UserView extends Component<Props> {
         if (data.type === 'anonymous') {
             return (
                 <span className="printuser">
-                    {data.showAvatar&&<span><img className="small" src="/static/images/anon_avatar.png" alt="Anonymous User" /></span>}
+                    {data.showAvatar&&<span><img className="small" src="/-/static/images/anon_avatar.png" alt="Anonymous User" /></span>}
                     <span>Anonymous User</span>
                 </span>
             )
