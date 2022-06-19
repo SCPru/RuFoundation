@@ -7,6 +7,9 @@ db.sqlite3
 postgresql
 archive
 *.env
+*.sh
+*.cmd
+*.bat
 static/app.css
 static/app.css.map
 static/app.js
