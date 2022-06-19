@@ -14,9 +14,9 @@ services:
       DB_PG_HOST: postgres
       DB_PG_USERNAME: pguser
       DB_PG_PASSWORD: pguser
-      EMAIL_ENGINE: smtp
-      EMAIL_HOST: mailer
-      EMAIL_PORT: 587
+      # EMAIL_ENGINE: smtp
+      # EMAIL_HOST: mailer
+      # EMAIL_PORT: 587
   postgres:
     image: "postgres:14"
     volumes:
@@ -25,7 +25,7 @@ services:
       POSTGRES_USER: pguser
       POSTGRES_PASSWORD: pguser
       POSTGRES_DB: scpwiki
-  mailer:
-    image: "boky/postfix"
-    env_file:
-      - prod-mailer.env
+  # mailer:
+  #   image: "boky/postfix"
+  #   env_file:
+  #     - prod-mailer.env
