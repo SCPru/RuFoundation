@@ -13,6 +13,9 @@
 </head>
 <body class="system">
     <div class="system-container">
+        {% block back_link %}
+        <a class="back-link" href="/"><span class="fa fa-arrow-left"></span> Назад на сайт</a>
+        {% endblock %}
         <div class="system-content">
             {% block before %}{% endblock %}
             <div class="heading">
