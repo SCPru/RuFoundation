@@ -209,8 +209,8 @@ elif mail_backend == 'smtp':
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
     EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '1025'))
-    EMAIL_USER = os.environ.get('EMAIL_USERNAME', '')
-    EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
+    EMAIL_HOST_USER = os.environ.get('EMAIL_USERNAME', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
     EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'false') == 'true'
     if 'EMAIL_DEFAULT_FROM' not in os.environ:
         raise KeyError('EMAIL_DEFAULT_FROM environment variable is required for SMTP')
