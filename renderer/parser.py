@@ -1636,6 +1636,13 @@ class Parser(object):
                 content = self.read_as_value_until([TokenType.Newline, TokenType.Null])
                 blockquote_content += content
 
+        # remove one space to the left of blockquote. hack, but wikidot did this.
+        blockquote_lines = blockquote_content.split('\n')
+        for i in range(len(blockquote_lines)):
+            if blockquote_lines[i] and blockquote_lines[i][0] == ' ':
+                blockquote_lines[i] = blockquote_lines[i][1:]
+        blockquote_content = '\n'.join(blockquote_lines)
+
         children = self.parse_subtree(blockquote_content)
         return BlockquoteNode(children)
 
