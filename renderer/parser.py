@@ -1408,13 +1408,19 @@ class Parser(object):
 
     def parse_strong(self):
         # ** has already been parsed
+        if self.check_whitespace(0):
+            return None
         children = []
         while True:
             pos = self.tokenizer.position
             tk = self.tokenizer.read_token()
             if tk.type == TokenType.Null:
                 return None
+            elif tk.type == TokenType.Newline:
+                return None
             elif tk.type == TokenType.DoubleAsterisk:
+                if self.check_whitespace(-1):
+                    return None
                 return HTMLNode('strong', [], children, complex_node=False)
             self.tokenizer.position = pos
             new_children = self.parse_nodes()
@@ -1424,13 +1430,19 @@ class Parser(object):
 
     def parse_em(self):
         # // has already been parsed
+        if self.check_whitespace(0):
+            return None
         children = []
         while True:
             pos = self.tokenizer.position
             tk = self.tokenizer.read_token()
             if tk.type == TokenType.Null:
                 return None
+            elif tk.type == TokenType.Newline:
+                return None
             elif tk.type == TokenType.DoubleSlash:
+                if self.check_whitespace(-1):
+                    return None
                 return HTMLNode('em', [], children, complex_node=False)
             self.tokenizer.position = pos
             new_children = self.parse_nodes()
@@ -1440,13 +1452,19 @@ class Parser(object):
 
     def parse_underline(self):
         # __ has already been parsed
+        if self.check_whitespace(0):
+            return None
         children = []
         while True:
             pos = self.tokenizer.position
             tk = self.tokenizer.read_token()
             if tk.type == TokenType.Null:
                 return None
+            elif tk.type == TokenType.Newline:
+                return None
             elif tk.type == TokenType.DoubleUnderline:
+                if self.check_whitespace(-1):
+                    return None
                 return HTMLNode('u', [], children, complex_node=False)
             self.tokenizer.position = pos
             new_children = self.parse_nodes()
@@ -1456,9 +1474,7 @@ class Parser(object):
 
     def parse_strike(self):
         # -- has already been parsed
-        # check that we should not have whitespace around this token
-        token_after = self.tokenizer.peek_token()
-        if token_after.type == TokenType.Whitespace or token_after.type == TokenType.Newline:
+        if self.check_whitespace(0):
             return None
         children = []
         while True:
@@ -1466,9 +1482,10 @@ class Parser(object):
             tk = self.tokenizer.read_token()
             if tk.type == TokenType.Null:
                 return None
+            elif tk.type == TokenType.Newline:
+                return None
             elif tk.type == TokenType.DoubleDash:
-                token_before = self.tokenizer.peek_token(-1)
-                if token_before.type == TokenType.Whitespace or token_before.type == TokenType.Newline:
+                if self.check_whitespace(-1):
                     return None
                 return HTMLNode('strike', [], children, complex_node=False)
             self.tokenizer.position = pos
@@ -1524,6 +1541,13 @@ class Parser(object):
             if not new_children:
                 return None
             children += new_children
+
+    def check_whitespace(self, offset):
+        prev_pos = self.tokenizer.position+offset
+        if prev_pos >= 0 and prev_pos < len(self.tokenizer.tokens):
+            tt = self.tokenizer.tokens[prev_pos].type
+            return tt == TokenType.Whitespace or tt == TokenType.Newline
+        return True
 
     def check_newline(self, size=1):
         prev_pos = self.tokenizer.position - size - 1
