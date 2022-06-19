@@ -488,7 +488,7 @@ body {
 }
  
 div#container-wrap {
-    background: url('/static/images/scp-bg.png') top left repeat-x;
+    background: url('/-/static/images/scp-bg.png') top left repeat-x;
 }
  
 sup {
@@ -503,7 +503,7 @@ sup {
     position: relative;
     z-index: 10;
     padding-bottom: 22px; /* FOR MENU */
-    background: url('/static/images/scp-logo.png') 10px 40px no-repeat;
+    background: url('/-/static/images/scp-logo.png') 10px 40px no-repeat;
 }
  
 #search-top-box {
