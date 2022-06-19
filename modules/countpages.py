@@ -9,7 +9,6 @@ def has_content():
 
 
 def render(context, params, content=None):
-    print(context, params, content)
     total = str(len(query_pages(context, params, False)[0]))
 
     tpl_vars = {
