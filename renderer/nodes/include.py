@@ -9,8 +9,8 @@ import re
 
 
 class IncludeNode(HTMLBaseNode):
-    # this is used for user and tab tag, where basically everything after name is single line of text until the end
-    is_single_argument = True
+    # allows having | between attrs
+    pipe_separated_attributes = True
 
     @classmethod
     def is_allowed(cls, tag, _parser):
