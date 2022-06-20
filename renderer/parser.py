@@ -3,15 +3,6 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth import get_user_model
 from web import threadvars
 
-from .nodes import Node
-
-from .nodes.footnote_block import FootnoteBlockNode
-from .nodes.html_literal import HTMLLiteralNode
-from .nodes.html_plain import HTMLPlainNode
-from .nodes.newline import NewlineNode
-from .nodes.paragraph import ParagraphNode
-from .nodes.text import TextNode
-
 
 User = get_user_model()
 
@@ -47,6 +38,9 @@ class Parser(object):
         self._context = context
 
     def parse(self):
+        from .nodes import Node
+        from .nodes.footnote_block import FootnoteBlockNode
+
         with threadvars.context():
             self.tokenizer.position = 0
 
@@ -91,6 +85,9 @@ class Parser(object):
             return result
 
     def wrap_text_nodes_in_span(self, node, wrap_with):
+        from .nodes.html_literal import HTMLLiteralNode
+        from .nodes.text import TextNode
+
         # node should be a block node. wrap_with should be a span node
         new_nodes = []
         for child in node.children:
@@ -105,6 +102,10 @@ class Parser(object):
         node.children[:] = new_nodes
 
     def flatten_inline_node(self, node):
+        from .nodes import Node
+        from .nodes.html_plain import HTMLPlainNode
+        from .nodes.newline import NewlineNode
+
         if node.trim_paragraphs:
             node.children[:] = Node.strip(node.children)
         self.flatten_inline_nodes(node.children)
@@ -148,6 +149,11 @@ class Parser(object):
         nodes[:] = new_nodes[:]
 
     def create_paragraphs(self, nodes):
+        from .nodes import Node
+        from .nodes.newline import NewlineNode
+        from .nodes.paragraph import ParagraphNode
+        from .nodes.text import TextNode
+
         # flatten inline first
         self.flatten_inline_nodes(nodes)
         #
@@ -205,6 +211,9 @@ class Parser(object):
             node.paragraphs_set = True
 
     def parse_node(self):
+        from .nodes import Node
+        from .nodes.text import TextNode
+
         token = self.tokenizer.peek_token()
         if token.type == TokenType.Null:
             return None

@@ -11,6 +11,7 @@ class ListNode(Node):
             return None
         if not p.check_whitespace(0):
             return None
+        p.tokenizer.skip_whitespace(also_newlines=False)
         token_type = TokenType.Hash if lstype == 'ol' else TokenType.Asterisk
         result = ListNode(lstype)
         result.append_child(ListItemNode())
@@ -42,6 +43,7 @@ class ListNode(Node):
                         append_to.children[-1].append_child(child_list)
                     append_to = append_to.children[-1].children[-1]
                 append_to.append_child(ListItemNode())
+                p.tokenizer.skip_whitespace(also_newlines=False)
                 continue
             new_children = p.parse_nodes()
             if not new_children:

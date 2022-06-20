@@ -6,6 +6,9 @@ import sys
 import logging
 
 
+from ..parser import Parser
+
+
 NODE_CLASSES = None
 _NODE_CLASSES_LOCK = threading.RLock()
 
@@ -30,7 +33,7 @@ class Node(object):
         self.paragraphs_set = False
 
     @classmethod
-    def parse(cls, p):
+    def parse(cls, p: Parser):
         with _NODE_CLASSES_LOCK:
             global NODE_CLASSES
             if NODE_CLASSES is None:
