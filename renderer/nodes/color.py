@@ -40,6 +40,6 @@ class ColorNode(Node):
 
     def render(self, context=None):
         color = self.color
-        if not color.startswith('#') and re.match(r'^([0-9A-Fa-f]{3}|[0-9A-Fa-f{6}])$', color):
+        if not color.startswith('#') and re.match(r'^([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$', color):
             color = '#' + color
         return '<span style="color: %s">%s</span>' % (html.escape(color), super().render(context=context))
