@@ -189,6 +189,11 @@ SECURE_CONTENT_TYPE_NOSNIFF = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
+# Default avatars
+ANNON_AVATAR = "/-/static/images/anon_avatar.png"
+DEFAULT_AVATAR = "/-/static/images/default_avatar.png"
+
+
 # Fixes static images
 mimetypes.add_type("text/css", ".css", True)
 mimetypes.add_type("text/javascript", ".js", True)

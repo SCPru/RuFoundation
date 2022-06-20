@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block h1 %}
-    <img class="system-heading-avatar" src="{% url "local_files" object.avatar %}" alt="{{ object.username|escape }}">
+    <img class="system-heading-avatar" src="{{ object.get_avatar }}" alt="{{ object.username|escape }}">
     {% block title %}
         {{ object.username|escape }}
     {% endblock %}
