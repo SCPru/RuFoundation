@@ -82,7 +82,7 @@ class DropWikidotAuthMiddleware(object):
         rsp = self.get_response(request)
         for cookie in request.COOKIES:
             if cookie in ['wikidot_token7', 'wikidot_udsession', 'WIKIDOT_SESSION_ID']:
-                rsp.delete_cookie(cookie, path='/', domain=str(request.get_host()))
+                rsp.delete_cookie(cookie, path='/', domain=str(request.get_host()), samesite='lax')
             if cookie.startswith('WIKIDOT_SESSION_ID_'):
-                rsp.delete_cookie(cookie, path='/', domain='.'+str(request.get_host()))
+                rsp.delete_cookie(cookie, path='/', domain='.'+str(request.get_host()), samesite='lax')
         return rsp
