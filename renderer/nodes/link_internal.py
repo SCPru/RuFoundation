@@ -40,4 +40,14 @@ class InternalLinkNode(LinkNode):
             external = True
             article_url = article
             article_id = ''
-        super().__init__(article_url, text, exists=InternalLinkNode.article_exists(article_id) or external)
+        article_obj = None
+        if not text:
+            if external:
+                text = article_url
+            else:
+                article_obj = articles.get_article(article)
+                if article_obj is not None:
+                    text = article_obj.title
+                else:
+                    text = article
+        super().__init__(article_url, text, exists=article_obj is not None or external)
