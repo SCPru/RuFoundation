@@ -1,6 +1,3 @@
-import re
-
-
 def has_content():
     return True
 
