@@ -5,6 +5,11 @@
     {% block title %}
         {{ object.username|escape }}
     {% endblock %}
+    {% if request.user == object %}
+        <div class="edit-button">
+            <a href="{% url "profile_edit" %}" title="Редактирование" class="icon"><span>Edit</span> <i class="fa-solid fa-pen"></i></a>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
