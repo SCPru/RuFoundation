@@ -3,6 +3,8 @@ from .html_base import HTMLBaseNode
 
 
 class TabViewTabNode(HTMLBaseNode):
+    is_single_argument = True
+
     @classmethod
     def is_allowed(cls, tag, _parser):
         return tag == 'tab'
