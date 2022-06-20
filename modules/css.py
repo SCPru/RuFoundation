@@ -6,6 +6,5 @@ def has_content():
 
 
 def render(_context, _params, content=''):
-    code = content.replace('\u00a0', ' ')
-    code = re.sub(r'<\s*/\s*style\s*/*\s*>', '\\\\u003c/style\\\\u003e', code)
+    code = content.replace('\u00a0', ' ').replace('<', '\\u003c')
     return '<style>%s</style>' % code
