@@ -40,7 +40,7 @@ class InternalLinkNode(LinkNode):
             external = True
             article_url = article
             article_id = ''
-        article_obj = articles.get_article(article) if not external else None
+        article_obj = articles.get_article(article_id) if not external else None
         if not text:
             if external:
                 text = article_url
@@ -48,5 +48,5 @@ class InternalLinkNode(LinkNode):
                 if article_obj is not None:
                     text = article_obj.title
                 else:
-                    text = article
+                    text = article_id
         super().__init__(article_url, text, exists=article_obj is not None or external)
