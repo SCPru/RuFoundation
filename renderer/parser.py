@@ -324,7 +324,7 @@ class HTMLNode(Node):
             if attr[0] not in attr_whitelist and not attr[0].startswith('data-'):
                 continue
             attr_string += ' '
-            attr_string += attr[0]
+            attr_string += html.escape(attr[0])
             if attr[1] is not None:
                 value = attr[1]
                 if attr[0] == 'id' and not value.startswith('u-'):
