@@ -31,7 +31,7 @@ account_activation_token = TokenGenerator()
 @method_decorator(staff_member_required, name='dispatch')
 class InviteView(FormView):
     form_class = InviteForm
-    email_template_name = "mails/invite_email.html"
+    email_template_name = "mails/invite_email.txt"
 
     def get_context_data(self, **kwargs):
         context = super(InviteView, self).get_context_data(**kwargs)
