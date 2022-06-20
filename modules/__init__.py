@@ -28,7 +28,10 @@ def get_all_modules():
             continue
         try:
             fullname = 'modules.%s' % modname
-            m = importer.find_module(fullname).load_module(fullname)
+            if fullname in sys.modules:
+                m = sys.modules[fullname]
+            else:
+                m = importer.find_module(fullname).load_module(fullname)
         except:
             logging.error('Failed to load module \'%s\':', modname.lower(), exc_info=True)
             continue

@@ -1,4 +1,4 @@
-from renderer.parser import LinkNode
+from renderer.nodes.link import LinkNode
 
 
 def render(context, params):

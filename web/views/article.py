@@ -71,6 +71,10 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         breadcrumbs = [{'url': '/' + articles.get_full_name(x), 'title': x.title} for x in
                        articles.get_breadcrumbs(article)]
 
+        # this is needed for parser debug logging so that page content is always the last printed
+        nav_top = self._render_nav("nav:top", article, path_params)
+        nav_side = self._render_nav("nav:side", article, path_params)
+
         content, status, redirect_to = self.render(article_name, article, path_params)
 
         context = super(ArticleView, self).get_context_data(**kwargs)
@@ -91,8 +95,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'site_headline': site.headline,
             'site_title': title or site.title,
 
-            'nav_top': self._render_nav("nav:top", article, path_params),
-            'nav_side': self._render_nav("nav:side", article, path_params),
+            'nav_top': nav_top,
+            'nav_side': nav_side,
 
             'title': title,
             'content': content,
