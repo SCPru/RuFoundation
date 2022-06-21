@@ -12,7 +12,7 @@ class LinkNode(Node):
 
     @staticmethod
     def filter_url(url):
-        url = url.strip()
+        url = url.strip().lower()
         if url.startswith('javascript:'):
             return '#'
         return url
