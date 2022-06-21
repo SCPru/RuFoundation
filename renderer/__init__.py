@@ -10,7 +10,7 @@ def single_pass_render(source, context=None):
     result = p.parse()
     debug = False
     if context is not None and context.source_article == context.article:
-        print('rendering took %.3fs (%s)' % (time.time()-t, context.source_article.full_name))
+        print('rendering took %.3fs (%s)' % (time.time()-t, context.source_article.full_name if hasattr(context.source_article, "full_name") else ""))
         if debug:
             print('rendering tree')
             print(json.dumps(result.root.to_json()))
