@@ -32,7 +32,8 @@ class Category(SiteLimitedModel):
         permissions = [("add_article_in_category", "Может добавлять новые статьи в категорию"),
                        ("change_article_in_category", "Может изменять статьи в категории"),
                        ("delete_article_in_category", "Может удалять статьи в категории"),
-                       ("can_vote_article_in_category", "Может голосовать за статьи в категории")]
+                       ("can_vote_article_in_category", "Может голосовать за статьи в категории"),
+                       ("can_lock_article_in_category", "Может заблокировать страницу для правок в категории")]
 
     name = models.TextField(verbose_name="Имя")
 
@@ -48,7 +49,10 @@ class Article(SiteLimitedModel):
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['category', 'name'])]
 
-        permissions = [("can_vote_article", "Может голосовать за статью")]
+        permissions = [
+            ("can_vote_article", "Может голосовать за статью"),
+            ("can_lock_article", "Может заблокировать страницу для правок")
+        ]
 
     category = models.TextField(default="_default", verbose_name="Категория")
     name = models.TextField(verbose_name="Имя")
@@ -57,6 +61,8 @@ class Article(SiteLimitedModel):
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Родитель")
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles", verbose_name="Тэги")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Автор")
+
+    locked = models.BooleanField(default=False, verbose_name="Страница защищена")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Время изменения")

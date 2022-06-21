@@ -7,6 +7,7 @@ export interface ArticleData {
     source?: string
     tags?: Array<string>
     parent?: string
+    locked?: boolean
 }
 
 export async function createArticle(data: ArticleData) {

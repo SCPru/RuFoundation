@@ -8,12 +8,14 @@ import ArticleTags from "../articles/article-tags";
 import ArticleRating from "../articles/article-rating";
 import ArticleParent from "../articles/article-parent";
 import ArticleRename from "../articles/article-rename";
+import ArticleLock from "../articles/article-lock";
 
 
 interface Props {
     pageId?: string
     optionsEnabled?: boolean
     editable?: boolean
+    lockable?: boolean
     rating?: number
     pathParams?: { [key: string]: string }
     canRate?: boolean
@@ -21,7 +23,7 @@ interface Props {
 
 
 interface State {
-    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'rename' | null
+    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'lock' | 'rename' | null
     extOptions: boolean
 }
 
@@ -90,6 +92,15 @@ class PageOptions extends Component<Props, State> {
         });
     };
 
+    onLock = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ subView: 'lock' });
+        setTimeout(() => {
+            window.scrollTo(window.scrollX, document.body.scrollHeight);
+        });
+    };
+
     onRename = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -106,7 +117,7 @@ class PageOptions extends Component<Props, State> {
     };
 
     render() {
-        const { optionsEnabled, editable, rating, canRate } = this.props;
+        const { optionsEnabled, editable, lockable, rating, canRate } = this.props;
         const { extOptions } = this.state;
 
         if (!optionsEnabled) {
@@ -125,6 +136,7 @@ class PageOptions extends Component<Props, State> {
                 { extOptions && <div id="page-options-bottom-2" className="page-options-bottom form-actions">
                     <a id="view-source-button" className="btn btn-default" href="#" onClick={this.onSource}>Исходник страницы</a>
                     { editable && <a id="parent-button" className="btn btn-default" href="#" onClick={this.onParent}>Родитель</a> }
+                    { lockable && <a id="lock-button" className="btn btn-default" href="#" onClick={this.onLock}>Заблокировать страницу</a> }
                     { editable && <a id="rename-button" className="btn btn-default" href="#" onClick={this.onRename}>Переименовать</a> }
                 </div> }
                 { this.renderSubView() }
@@ -158,6 +170,9 @@ class PageOptions extends Component<Props, State> {
 
             case 'parent':
                 return <ArticleParent pageId={pageId} onClose={this.onCancelSubView} />;
+
+            case 'lock':
+                return <ArticleLock pageId={pageId} onClose={this.onCancelSubView} />;
 
             case 'rename':
                 return <ArticleRename pageId={pageId} onClose={this.onCancelSubView} />;

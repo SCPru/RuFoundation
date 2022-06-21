@@ -7,7 +7,8 @@ import datetime
 import re
 
 
-_FullNameOrArticle = Union[str, Article, None]
+_FullNameOrArticle = Optional[Union[str, Article]]
+_FullNameOrCategory = Optional[Union[str, Category]]
 
 
 # Returns (category, name) from a full name
@@ -205,12 +206,18 @@ def get_breadcrumbs(full_name_or_article: _FullNameOrArticle) -> Sequence[Articl
 
 
 # Get page category
-def get_category(full_name_or_article: _FullNameOrArticle) -> Optional[Category]:
+def get_category(full_name_or_category: _FullNameOrCategory) -> Optional[Category]:
+    if type(full_name_or_category) == str:
+        try:
+            return Category.objects.get(name=full_name_or_category)
+        except Category.DoesNotExist:
+            return
+    return full_name_or_category
+
+
+def get_article_category(full_name_or_article: _FullNameOrArticle) -> Optional[Category]:
     name = get_name(full_name_or_article)[0] if type(full_name_or_article) == str else full_name_or_article.category
-    try:
-        return Category.objects.get(name=name)
-    except Category.DoesNotExist:
-        return
+    return get_category(name)
 
 
 # Tag name validation
@@ -282,13 +289,29 @@ def add_vote(full_name_or_article: _FullNameOrArticle, user: settings.AUTH_USER_
             Vote(article=article, user=user, rate=rate).save()
 
 
+# Set article lock status
+def set_lock(full_name_or_article: _FullNameOrArticle, locked: bool, user: Optional[_UserType] = None):
+    article = get_article(full_name_or_article)
+    article.locked = locked
+    article.save()
+
+
 # Has user permissions for do anything with article
-def has_perm(user: _UserType, perm: str, full_name_or_article: Optional[_FullNameOrArticle] = None) -> bool:
+def has_perm(user: _UserType, perm: str, full_name_or_article: _FullNameOrArticle = None) -> bool:
     if full_name_or_article:
         article = get_article(full_name_or_article)
-        category = get_category(article)
-        return user.has_perm(perm, article) and (not category or user.has_perm(perm + "_in_category", category))
+        category = get_article_category(article)
+        if not (article.locked and perm in ("web.add_article", "web.change_article", "web.delete_article")) \
+                or has_perm(user, "web.can_lock_article", article):
+            print(f"{perm}_in_category", user.has_perm(f"{perm}_in_category", category))
+            return user.has_perm(f"{perm}_in_category", category) or user.has_perm(perm, article)
+        return False
     return user.has_perm(perm)
+
+
+def has_category_perm(user: _UserType, perm: str, full_name_or_category: _FullNameOrCategory) -> bool:
+    category = get_category(full_name_or_category)
+    return has_perm(user, f"{perm}_in_category") or user.has_perm(f"{perm}_in_category", category)
 
 
 # Check if name is allowed for creation

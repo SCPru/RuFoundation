@@ -28,9 +28,8 @@ class CreateView(ArticleView):
 
         self._validate_article_data(data)
 
-        category = articles.get_article(data['pageId'])
-
-        if not articles.has_perm(request.user, "web.add_article") or not request.user.has_perm("web.add_article_in_category", category):
+        category = articles.get_article_category(data['pageId'])
+        if not articles.has_category_perm(request.user, "web.add_article", category):
             raise APIError('Недостаточно прав', 403)
 
         article = articles.get_article(data['pageId'])
@@ -61,7 +60,8 @@ class FetchOrUpdateView(ArticleView):
             'title': article.title,
             'source': source,
             'tags': articles.get_tags(article),
-            'parent': articles.get_parent(article)
+            'parent': articles.get_parent(article),
+            'locked': article.locked
         })
 
     @takes_json
@@ -100,6 +100,14 @@ class FetchOrUpdateView(ArticleView):
         # check if changing parent
         if 'parent' in data:
             articles.set_parent(article, data['parent'], request.user)
+
+        # check if lock article
+        if 'locked' in data:
+            if data['locked'] != article.locked:
+                if articles.has_perm(request.user, "web.can_lock_article", article):
+                    articles.set_lock(article, data['locked'], request.user)
+                else:
+                    raise APIError('Недостаточно прав', 403)
 
         return self.render_json(200, {'status': 'ok'})
 

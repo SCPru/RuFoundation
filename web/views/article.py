@@ -55,7 +55,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             status = 200
         else:
             context = {'page_id': fullname, 'allow_create': articles.is_full_name_allowed(
-                fullname) and articles.has_perm(self.request.user, "web.add_article")}
+                fullname) and articles.has_category_perm(self.request.user, "web.add_article",
+                                                         articles.get_article_category(fullname))}
             content = render_to_string(self.template_404, context)
             redirect_to = None
             status = 404
@@ -78,6 +79,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         options_config = {
             'optionsEnabled': True,
             'editable': articles.has_perm(self.request.user, "web.change_article", article),
+            'lockable': articles.has_perm(self.request.user, "web.can_lock_article", article),
             'pageId': article_name,
             'rating': articles.get_rating(article),
             'pathParams': path_params,

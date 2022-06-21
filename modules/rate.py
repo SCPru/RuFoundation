@@ -1,4 +1,4 @@
-from web.controllers.articles import get_rating, Vote
+from web.controllers.articles import get_rating, Vote, has_perm
 from . import ModuleError
 from web.controllers import articles
 from django.utils import html
@@ -42,7 +42,7 @@ def api_rate(context, params):
     if not context.article:
         raise ModuleError('Страница не указана')
 
-    if not context.user.has_perm("web.can_vote_article", context.article):
+    if not has_perm(context.user, "web.can_vote_article", context.article):
         raise ModuleError('Недостаточно прав')
 
     if 'value' not in params:
