@@ -13,8 +13,8 @@ class LinkNode(Node):
     @staticmethod
     def filter_url(url):
         url = url.strip().lower()
-        if url.startswith('javascript:'):
-            return '#'
+        if url.startswith('javascript:') or url.startswith('data:'):
+            return '#invalid-url'
         return url
 
     def render(self, context=None):
