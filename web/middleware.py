@@ -72,3 +72,17 @@ class ForwardedPortMiddleware(object):
     def __call__(self, request):
         request.META['HTTP_HOST'] = request.META['HTTP_HOST'].split(':')[0]
         return self.get_response(request)
+
+
+class DropWikidotAuthMiddleware(object):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        rsp = self.get_response(request)
+        for cookie in request.COOKIES:
+            if cookie in ['wikidot_token7', 'wikidot_udsession', 'WIKIDOT_SESSION_ID']:
+                rsp.delete_cookie(cookie, path='/')
+            if cookie.startswith('WIKIDOT_SESSION_ID_'):
+                rsp.delete_cookie(cookie, path='/')
+        return rsp

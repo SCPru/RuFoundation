@@ -82,22 +82,20 @@ class SiteLimitedModel(models.Model, metaclass=_SiteLimitedMetaclass):
 
 
 def get_current_site(required=True) -> Optional[Site]:
-    with threadvars.context():
-        site = threadvars.get('current_site')
-        if site is None and required:
-            raise ValueError('There is no current site while it was required')
-        return site
+    site = threadvars.get('current_site')
+    if site is None and required:
+        raise ValueError('There is no current site while it was required')
+    return site
 
 
 def get_cross_site_filter() -> Union['all', Sequence[Site]]:
-    with threadvars.context():
-        f = threadvars.get('cross_site_filter')
-        site = get_current_site(required=False)
-        if f is None and site:
-            return [site]
-        if f is None and not site:
-            return 'all'
-        return f
+    f = threadvars.get('cross_site_filter')
+    site = get_current_site(required=False)
+    if f is None and site:
+        return [site]
+    if f is None and not site:
+        return 'all'
+    return f
 
 
 class CrossSiteFilterContext(object):
