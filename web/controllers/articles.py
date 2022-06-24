@@ -303,7 +303,6 @@ def has_perm(user: _UserType, perm: str, full_name_or_article: _FullNameOrArticl
         category = get_article_category(article)
         if not (article.locked and perm in ("web.add_article", "web.change_article", "web.delete_article")) \
                 or has_perm(user, "web.can_lock_article", article):
-            print(f"{perm}_in_category", user.has_perm(f"{perm}_in_category", category))
             return user.has_perm(f"{perm}_in_category", category) or user.has_perm(perm, article)
         return False
     return user.has_perm(perm)
