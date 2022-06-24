@@ -39,6 +39,7 @@ class Parser(object):
 
     def parse(self):
         from .nodes import Node
+        from .nodes.root import RootNode
         from .nodes.footnote_block import FootnoteBlockNode
 
         with threadvars.context():
@@ -46,7 +47,7 @@ class Parser(object):
 
             is_subtree = False
 
-            root_node = Node()
+            root_node = RootNode()
             root_node.block_node = True
             if self._context is None:
                 context = ParseContext(self, root_node)

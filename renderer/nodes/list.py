@@ -58,11 +58,16 @@ class ListNode(Node):
         self.paragraphs_set = True
 
     def render(self, context=None):
-        tag = self.type
-        output = '<%s>' % tag
-        for child in self.children:
-            output += '<li>'
-            output += child.render(context)
-            output += '</li>'
-        output += '</%s>' % tag
-        return output
+        return self.render_template(
+            """
+            <{{tag}}>
+                {% for child in children %}
+                <li>
+                    {{child}}
+                </li>
+                {% endfor %}
+            </{{tag}}>
+            """,
+            tag=self.type,
+            children=self.children
+        )

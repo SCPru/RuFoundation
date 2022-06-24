@@ -46,4 +46,4 @@ class BlockquoteNode(Node):
             self.append_child(child)
 
     def render(self, context=None):
-        return '<blockquote>%s</blockquote>' % super().render(context=context)
+        return self.render_template('<blockquote>{{content}}</blockquote>', content=super().render(context=context))

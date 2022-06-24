@@ -24,12 +24,25 @@ class FootnoteBlockNode(HTMLBaseNode):
         footnotes = self.get_footnotes()
         if not len(footnotes):
             return ''
-        output = '<div class="footnotes-footer">'
-        output += '<div class="title">%s</div>' % HTMLNode.get_attribute(self.attributes, 'title', 'Сноски')
+
+        render_footnotes = []
         for i in range(len(footnotes)):
-            output += '<div id="footnote-%d" class="footnote-footer">' % (i+1)
-            output += '<a href="#footnoteref-%d">%d</a>. ' % (i+1, i+1)
-            output += footnotes[i].render_footnote(context)
-            output += '</div>'
-        output += '</div>'
-        return output
+            render_footnotes.append({
+                'number': i+1,
+                'content': footnotes[i].render_footnote()
+            })
+
+        return self.render_template(
+            """
+            <div class="footnotes-footer">
+                <div class="title">{{title}}</div>
+                {% for footnote in footnotes %}
+                <div id="footnote-{{footnote.number}}" class="footnote-footer">
+                    <a href="#footnoteref-{{footnote.number}}">{{footnote.number}}</a>. {{footnote.content}}
+                </div>
+                {% endfor %}
+            </div>
+            """,
+            title=HTMLNode.get_attribute(self.attributes, 'title', 'Сноски'),
+            footnotes=render_footnotes
+        )

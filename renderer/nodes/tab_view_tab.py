@@ -20,7 +20,8 @@ class TabViewTabNode(HTMLBaseNode):
             self.append_child(child)
 
     def render(self, context=None):
-        code = '<div class="w-tabview-tab" style="display: block">' if self.visible else '<div class="w-tabview-tab" style="display: none">'
-        code += super().render(context=context)
-        code += '</div>'
-        return code
+        return self.render_template(
+            '<div class="w-tabview-tab" style="display: {% if visible %}block{% else %}none{% endif %}">{{content}}</div>',
+            visible=self.visible,
+            content=super().render(context=context)
+        )

@@ -1,7 +1,6 @@
 from .html import HTMLNode
 from .html_base import HTMLBaseNode
 import modules
-from django.utils import html
 
 
 class ModuleNode(HTMLBaseNode):
@@ -41,4 +40,4 @@ class ModuleNode(HTMLBaseNode):
         try:
             return modules.render_module(self.name, context, params, self.content)
         except modules.ModuleError as e:
-            return '<div class="error-block"><p>%s</p></div>' % html.escape(e.message)
+            return self.render_template('<div class="error-block"><p>{{error}}</p></div>', error=e.message)

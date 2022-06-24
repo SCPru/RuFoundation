@@ -86,7 +86,11 @@ class ArticleRename extends Component<Props, State> {
         }
     };
 
-    onCancel = () => {
+    onCancel = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         if (this.props.onClose)
             this.props.onClose()
     };
@@ -100,7 +104,7 @@ class ArticleRename extends Component<Props, State> {
         const { fatalError } = this.state;
         this.setState({error: null});
         if (fatalError) {
-            this.onCancel();
+            this.onCancel(null);
         }
     };
 

@@ -23,5 +23,7 @@ class FootnoteNode(HTMLBaseNode):
         return 0
 
     def render(self, context=None):
-        number = self.get_number()
-        return '<sup class="footnoteref"><a id="footnoteref-%d" class="footnoteref w-footnoteref" href="#footnote-%d">%d</a></sup>' % (number, number, number)
+        return self.render_template(
+            '<sup class="footnoteref"><a id="footnoteref={{number}}" class="footnoteref w-footnoteref" href="#footnote-{{number}}">{{number}}</a></sup>',
+            number=self.get_number()
+        )

@@ -1,6 +1,5 @@
 from .html import HTMLNode
 from .html_base import HTMLBaseNode
-from django.utils import html
 
 
 class HTMLPlainNode(HTMLBaseNode):
@@ -45,4 +44,4 @@ class HTMLPlainNode(HTMLBaseNode):
             attr_whitelist.append('colspan')
             attr_whitelist.append('rowspan')
         attr_string = HTMLNode.render_attributes(self.attributes, attr_whitelist)
-        return '<%s%s>%s</%s>' % (html.escape(self.name), attr_string, content, html.escape(self.name))
+        return self.render_template('<{{tag}}{{attrs}}>{{content}}</{{tag}}>', tag=self.name, attrs=attr_string, content=content)

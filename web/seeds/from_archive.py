@@ -1,6 +1,7 @@
 import py7zr
 import shutil
 import os, os.path
+import sys
 import json
 from web.controllers import articles
 import time
@@ -43,9 +44,13 @@ def run_in_threads(fn, pages):
     site = get_current_site()
     for thread_work in per_thread_pages:
         def fn_wrapper(thread_work):
-            with threadvars.context():
-                threadvars.put('current_site', site)
-                fn(thread_work)
+            try:
+                with threadvars.context():
+                    threadvars.put('current_site', site)
+                    fn(thread_work)
+            except:
+                logging.error('Thread failed:', exc_info=True)
+                sys.exit(1)
         t = threading.Thread(target=fn_wrapper, args=(thread_work,))
         t.daemon = True
         t.start()
@@ -93,6 +98,9 @@ def run(base_path):
             fn_7z = '.'.join(f.split('.')[:-1]) + '.7z'
             fn_7z = '%s/pages/%s' % (base_path, fn_7z)
             if not os.path.exists(fn_7z):
+                continue
+            article = articles.get_article(pagename)
+            if article:
                 continue
             with py7zr.SevenZipFile(fn_7z) as z:
                 [(_, bio)] = z.read(['%d.txt' % top_rev]).items()

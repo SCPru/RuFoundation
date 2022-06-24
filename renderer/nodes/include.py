@@ -4,7 +4,6 @@ from ..parser import Parser
 from ..tokenizer import StaticTokenizer
 from web.controllers import articles
 from web import threadvars
-from django.utils import html
 import re
 
 
@@ -51,11 +50,15 @@ class IncludeNode(HTMLBaseNode):
     def render(self, context=None):
         # Include is never rendered directly unless it's broken
         if not self.children:
-            c = '<div class="error-block"><p>'
-            c += 'Вставленная страница &quot;%s&quot; не существует (' % html.escape(self.name)
-            c += '<a href="/%s/edit/true" target="_blank">создать её сейчас</a>' % html.escape(self.name)
-            c += ')'
-            c += '</p></div>'
-            return c
+            return self.render_template(
+                """
+                <div class="error-block">
+                    <p>
+                        Вставленная страница &quot;{{name}}&quot; не существует (<a href="/{{name}}/edit/true" target="_blank">создать её сейчас</a>)
+                    </p>
+                </div>
+                """,
+                name=self.name
+            )
         else:
             return super().render(context=context)

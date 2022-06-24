@@ -26,4 +26,4 @@ class HorizontalRulerNode(Node):
         self.block_node = True
 
     def render(self, context=None):
-        return '<hr>'
+        return self.render_template('<hr>')

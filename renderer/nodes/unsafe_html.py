@@ -1,5 +1,4 @@
 from .html_base import HTMLBaseNode
-from django.utils import html
 import uuid
 
 
@@ -37,4 +36,9 @@ class UnsafeHTMLNode(HTMLBaseNode):
         </script>
         """ % frame_id
         code = resize_code + self.code
-        return '<iframe id="%s" srcdoc="%s" sandbox="allow-scripts allow-top-navigation allow-popups" style="width: 100%%; height: 0" class="w-iframe-autoresize" frameborder="0" allowtransparency="true"></iframe>' % (frame_id, html.escape(code))
+        return self.render_template(
+            '<iframe id="{{id}}" srcdoc="{{html}}" sandbox="allow-scripts allow-top-navigation allow-popups" style="width: 100%%; height: 0" class="w-iframe-autoresize" frameborder="0" allowtransparency="true"></iframe>',
+            id=frame_id,
+            html=code
+        )
+

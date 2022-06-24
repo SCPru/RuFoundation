@@ -1,5 +1,4 @@
 from . import Node
-from .html import HTMLNode
 
 
 class HTMLBaseNode(Node):

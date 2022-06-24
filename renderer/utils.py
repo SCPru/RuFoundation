@@ -1,10 +1,25 @@
 from django.contrib.auth.models import AnonymousUser
 from django.conf import settings
+from django.template import Context, Template
 from django.utils import html
 
 from system.models import User
 
+import threading
 import urllib.parse
+
+
+_templates = dict()
+_templates_lock = threading.RLock()
+
+
+def render_template_from_string(template: str, **context):
+    with _templates_lock:
+        if template in _templates:
+            tpl = _templates[template]
+        else:
+            tpl = _templates[template] = Template(template.strip())
+    return tpl.render(Context(context))
 
 
 def render_user_to_text(user: User):

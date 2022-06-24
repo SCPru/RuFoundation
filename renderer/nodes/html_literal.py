@@ -1,3 +1,5 @@
+from django.utils.safestring import SafeString
+
 from . import Node
 from ..tokenizer import TokenType
 
@@ -25,4 +27,4 @@ class HTMLLiteralNode(Node):
         self.force_render = True
 
     def render(self, context=None):
-        return self.text.strip()
+        return SafeString(self.text.strip())

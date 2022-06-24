@@ -1,6 +1,5 @@
 from .html import HTMLNode
 from .html_base import HTMLBaseNode
-from django.utils import html
 
 
 class FontSizeNode(HTMLBaseNode):
@@ -18,4 +17,5 @@ class FontSizeNode(HTMLBaseNode):
             self.append_child(child)
 
     def render(self, context=None):
-        return ('<span style="font-size: %s">' % html.escape(self.size)) + super().render(context=context) + '</span>'
+        return self.render_template('<span style="font-size: {{size}}">{{content}}</span>', size=self.size, content=super().render(context=context))
+

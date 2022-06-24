@@ -1,6 +1,5 @@
 from . import Node
 from .align_marker import AlignMarkerNode
-from django.utils import html
 
 
 class ParagraphNode(Node):
@@ -17,7 +16,15 @@ class ParagraphNode(Node):
             return content
         if len(self.children) == 1 and self.children[0].force_render:
             return content
-        alignattr = ''
+        align = ''
         if self.children and isinstance(self.children[0], AlignMarkerNode):
-            alignattr = ' style="text-align: %s"' % (html.escape(self.children[0].align))
-        return ('<p%s>' % alignattr) + content + '</p>'
+            align = self.children[0].align
+        return self.render_template(
+            """
+            <p{% if align %} style="text-align: {{align}}"{% endif %}>
+            {{content}}
+            </p>
+            """,
+            align=align,
+            content=content
+        )

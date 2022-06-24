@@ -15,4 +15,4 @@ class NewlineNode(Node):
         self.force_render = force_render
 
     def render(self, context=None):
-        return '<br>'
+        return self.render_template('<br>')

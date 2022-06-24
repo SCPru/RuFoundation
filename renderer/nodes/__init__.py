@@ -1,9 +1,12 @@
 import copy
+
+from .. import utils
 from ..tokenizer import WHITESPACE_CHARS
 import threading
 import pkgutil
 import sys
 import logging
+from web import threadvars
 
 
 from ..parser import Parser
@@ -153,11 +156,23 @@ class Node(object):
         find_node(root)
         return lst
 
+    @classmethod
+    def render_template(cls, template, **context):
+        return utils.render_template_from_string(template, **context)
+
     def render(self, context=None):
-        content = ''
-        for child in self.children:
-            content += child.render(context)
-        return content
+        return self.render_template(
+            """
+            {% for node in nodes %}
+            {{ node }}
+            {% endfor %}
+            """,
+            nodes=self.children
+        )
+
+    def __str__(self):
+        context = threadvars.get('render_context', None)
+        return self.render(context=context)
 
     def to_json(self):
         base = {'type': str(type(self)), 'children': [x.to_json() for x in self.children]}

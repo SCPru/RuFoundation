@@ -22,4 +22,5 @@ class TextAlignNode(HTMLBaseNode):
             dir = 'center'
         elif self.type == '==':
             dir = 'justify'
-        return ('<div style="text-align: %s">' % dir) + super().render(context=context) + '</div>'
+        return self.render_template('<div style="text-align: {{align}}">{{content}}</div>', align=dir, content=super().render(context=context))
+

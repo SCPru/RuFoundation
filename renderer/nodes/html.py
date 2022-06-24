@@ -1,3 +1,5 @@
+from django.utils.safestring import SafeString
+
 from renderer import nodes
 from . import Node
 from ..tokenizer import TokenType
@@ -194,4 +196,4 @@ class HTMLNode(Node):
                 elif attr[0] == 'href':
                     value = LinkNode.filter_url(value)
                 attr_string += '="%s"' % html.escape(value)
-        return attr_string
+        return SafeString(attr_string)

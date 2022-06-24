@@ -16,21 +16,28 @@ class CollapsibleNode(HTMLBaseNode):
             self.append_child(child)
 
     def render(self, context=None):
-        code = '<div class="w-collapsible collapsible-block">'
-        code += '  <div class="collapsible-block-folded" style="display: block">'
-        code += '    <a class="collapsible-block-link" href="javascript:;">'
-        code += HTMLNode.get_attribute(self.attributes, 'show', '+ открыть блок')
-        code += '    </a>'
-        code += '  </div>'
-        code += '  <div class="collapsible-block-unfolded" style="display: none">'
-        code += '    <div class="collapsible-block-unfolded-link">'
-        code += '      <a class="collapsible-block-link" href="javascript:;">'
-        code += HTMLNode.get_attribute(self.attributes, 'hide', '- закрыть блок')
-        code += '      </a>'
-        code += '    </div>'
-        code += '    <div class="collapsible-block-content">'
-        code += super().render(context=context)
-        code += '    </div>'
-        code += '  </div>'
-        code += '</div>'
-        return code
+        return self.render_template(
+            """
+            <div class="w-collapsible collapsible-block">
+                <div class="collapsible-block-folded" style="display: block">
+                    <a class="collapsible-block-link" href="javascript:;">
+                        {{show_text}}
+                    </a>
+                </div>
+                <div class="collapsible-block-unfolded" style="display: none">
+                    <div class="collapsible-block-unfolded-link">
+                        <a class="collapsible-block-link" href="javascript:;">
+                            {{hide_text}}
+                        </a>
+                    </div>
+                    <div class="collapsible-block-content">
+                        {{content}}
+                    </div>
+                </div>
+            </div>
+            """,
+            show_text=HTMLNode.get_attribute(self.attributes, 'show', '+ открыть блок'),
+            hide_text=HTMLNode.get_attribute(self.attributes, 'hide', '- закрыть блок'),
+            content=super().render(context=context)
+        )
+

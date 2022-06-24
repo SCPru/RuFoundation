@@ -20,4 +20,4 @@ class IframeNode(HTMLBaseNode):
         self.block_node = True
 
     def render(self, context=None):
-        return '<div><!--Iframe is not supported yet--></div>'
+        return self.render_template('<div><!--Iframe is not supproted yet--></div>')

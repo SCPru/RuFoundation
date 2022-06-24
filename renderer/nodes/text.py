@@ -1,5 +1,4 @@
 from . import Node
-from django.utils import html
 
 
 class TextNode(Node):
@@ -14,8 +13,7 @@ class TextNode(Node):
         return isinstance(node, TextNode) and node.literal
 
     def render(self, context=None):
-        # very special logic
-        text = html.escape(self.text).replace('--', '&mdash;').replace('&lt;&lt;', '&laquo;').replace('&gt;&gt;', '&raquo;')
+        text = self.text.replace('--', '—').replace('<<', '«').replace('>>', '»')
         if self.literal and self.force_render:
-            return '<span style="white-space: pre-wrap">' + text + '</span>'
+            return self.render_template('<span style="white-space: pre-wrap">{{text}}</span>', text=text)
         return text

@@ -1,6 +1,5 @@
 from .html_base import HTMLBaseNode
 from .tab_view_tab import TabViewTabNode
-from django.utils import html
 
 
 class TabViewNode(HTMLBaseNode):
@@ -17,24 +16,25 @@ class TabViewNode(HTMLBaseNode):
             self.append_child(child)
 
     def render(self, context=None):
-        code = '<div class="yui-navset yui-navset-top w-tabview">'
-        code += '  <ul class="yui-nav">'
+        tabs = []
         tab = 0
         for child in self.children:
             if not isinstance(child, TabViewTabNode):
                 continue
-            name = child.name
             child.visible = (tab == 0)
-            # sadly complete absence of spaces is needed for wikidot compatibility
-            code += '<li class="selected" title="active">' if child.visible else '<li>'
-            code += '<a href="javascript:;">'
-            code += '<em>' + html.escape(name) + '</em>'
-            code += '</a>'
-            code += '</li>'
             tab += 1
-        code += '  </ul>'
-        code += '  <div class="yui-content">'
-        code += super().render(context=context)
-        code += '  </div>'
-        code += '</div>'
-        return code
+            tabs.append(child)
+
+        # HTML one-liner is required for proper appearance
+        return self.render_template(
+            """
+            <div class="yui-navset yui-navset-top w-tabview">
+                <ul class="yui-nav">{% for tab in tabs %}<li{% if tab.visible %} class="selected" title="active"{% endif %}><a href="javascript:;"><em>{{tab.name}}</em></a></li>{% endfor %}</ul>
+                <div class="yui-content">
+                {{content}}
+                </div>
+            </div>
+            """,
+            tabs=tabs,
+            content=super().render(context=context)
+        )

@@ -1,5 +1,4 @@
 from . import Node
-from django.utils import html
 
 
 class LinkNode(Node):
@@ -18,6 +17,10 @@ class LinkNode(Node):
         return url
 
     def render(self, context=None):
-        blank = ' target="_blank"' if self.blank else ''
-        cls = ' class="newpage"' if not self.exists else ''
-        return '<a href="%s"%s%s>%s</a>' % (html.escape(self.url), blank, cls, html.escape(self.text))
+        return self.render_template(
+            '<a href="{{url}}"{% if blank %}target="_blank"{% endif %}{% if not exists %} class="newpage"{% endif %}>{{text}}</a>',
+            blank=self.blank,
+            exists=self.exists,
+            text=self.text,
+            url=self.url
+        )

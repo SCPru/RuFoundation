@@ -1,7 +1,6 @@
 from . import Node
 from ..tokenizer import TokenType
 import re
-from django.utils import html
 
 
 class ColorNode(Node):
@@ -42,4 +41,4 @@ class ColorNode(Node):
         color = self.color
         if not color.startswith('#') and re.match(r'^([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$', color):
             color = '#' + color
-        return '<span style="color: %s">%s</span>' % (html.escape(color), super().render(context=context))
+        return self.render_template('<span style="color: {{color}}">{{content}}</span>', color=color, content=super().render(context=context))
