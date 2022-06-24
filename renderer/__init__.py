@@ -9,9 +9,14 @@ def single_pass_render(source, context=None):
     p = Parser(StaticTokenizer(source))
     result = p.parse()
     debug = False
+    parsing_time = time.time()-t
+    t = time.time()
+    s = result.root.render(context)
+    rendering_time = time.time()-t
     if context is not None and context.source_article == context.article:
-        print('rendering took %.3fs (%s)' % (time.time()-t, context.source_article.full_name if hasattr(context.source_article, "full_name") else ""))
+        print('parsing took %.3fs, rendering took %.3fs (%s)' % (parsing_time, rendering_time, context.source_article.full_name if hasattr(context.source_article, "full_name") else ""))
         if debug:
             print('rendering tree')
             print(json.dumps(result.root.to_json()))
-    return result.root.render(context)
+
+    return s
