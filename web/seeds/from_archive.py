@@ -101,6 +101,7 @@ def run(base_path):
                 continue
             article = articles.get_article(pagename)
             if article:
+                logging.warning('Warn: article exists: %s', pagename)
                 continue
             with py7zr.SevenZipFile(fn_7z) as z:
                 [(_, bio)] = z.read(['%d.txt' % top_rev]).items()
