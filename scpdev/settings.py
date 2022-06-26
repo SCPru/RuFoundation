@@ -191,7 +191,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Default avatars
-ANNON_AVATAR = "/-/static/images/anon_avatar.png"
+ANON_AVATAR = "/-/static/images/anon_avatar.png"
 DEFAULT_AVATAR = "/-/static/images/default_avatar.png"
 
 

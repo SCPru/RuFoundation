@@ -160,13 +160,14 @@ class Node(object):
     def render_template(cls, template, **context):
         return utils.render_template_from_string(template, **context)
 
+    def pre_render(self, context=None):
+        pass
+
     def render(self, context=None):
+        for node in self.children:
+            node.pre_render(context=context)
         return self.render_template(
-            """
-            {% for node in nodes %}
-            {{ node }}
-            {% endfor %}
-            """,
+            '{% for node in nodes %}{{ node }}{% endfor %}',
             nodes=self.children
         )
 

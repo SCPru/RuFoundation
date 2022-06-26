@@ -1,6 +1,12 @@
+from django.db.models.functions import Concat
+from django.db.models import Q, Value as V, F, Count, Sum, TextField
+
+from web.models.articles import Article
+from . import Node
 from .link import LinkNode
 from ..tokenizer import TokenType
 from web.controllers import articles
+from web import threadvars
 
 
 class InternalLinkNode(LinkNode):
@@ -28,10 +34,6 @@ class InternalLinkNode(LinkNode):
                 return None
             text += tk.raw
 
-    @staticmethod
-    def article_exists(article):
-        return articles.get_article(article) is not None
-
     def __init__(self, article, text):
         external = False
         article_id = articles.normalize_article_name(article.lower().strip())
@@ -39,14 +41,41 @@ class InternalLinkNode(LinkNode):
         if '/' in article:
             external = True
             article_url = article
-            article_id = ''
-        article_obj = articles.get_article(article_id) if not external else None
+            article_id = None
+        self.article_id = article_id
+        self.external = external
+        self.original_text = text
+        super().__init__(article_url, text, exists=True)
+
+    def pre_render(self, context=None):
+        render_globals = threadvars.get('render_globals')
+        if 'link_internal_articles' not in render_globals:
+            items = Node.find_nodes_recursively(self.root, InternalLinkNode)
+            names = []
+            for item in items:
+                name = item.article_id
+                if not name:
+                    continue
+                if ':' not in name:
+                    name = '_default:%s' % name
+                if name not in names:
+                    names.append(name)
+            all_articles = Article.objects.annotate(f_full_name=Concat('category', V(':'), 'name', output_field=TextField())).filter(f_full_name__in=names)
+            articles_dict = dict()
+            for article in all_articles:
+                articles_dict[article.full_name] = article
+            render_globals['link_internal_articles'] = articles_dict
+        else:
+            articles_dict = render_globals['link_internal_articles']
+        article_obj = articles_dict.get(self.article_id) if not self.external else None
+        self.exists = self.external or (article_obj is not None)
+        text = self.original_text
         if not text:
-            if external:
-                text = article_url
+            if self.external:
+                text = self.url
             else:
                 if article_obj is not None:
                     text = article_obj.title
                 else:
-                    text = article_id
-        super().__init__(article_url, text, exists=article_obj is not None or external)
+                    text = self.article_id
+        self.text = text

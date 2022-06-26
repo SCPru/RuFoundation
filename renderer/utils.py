@@ -36,7 +36,7 @@ def render_user_to_html(user: User, avatar=True):
     if isinstance(user, AnonymousUser):
         ret = '<span class="printuser">'
         if avatar:
-            ret += '<a onclick="return false;"><img class="small" src="%s" alt="Anonymous User"></a>' % settings.ANNON_AVATAR
+            ret += '<a onclick="return false;"><img class="small" src="%s" alt="Anonymous User"></a>' % settings.ANON_AVATAR
         ret += '<a onclick="return false;">Anonymous User</a>'
         ret += '</span>'
         return ret
