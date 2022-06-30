@@ -10,7 +10,8 @@
   background: red;
   margin: 0 auto;
   margin-top: 16px;
-  width: min(100%, 1160px);
+  width: min(calc(100% - 16px), 1184px);
+  box-sizing: border-box;
   border: 2px solid white;
   box-shadow: 0 0 0 3px red;
   color: white;
