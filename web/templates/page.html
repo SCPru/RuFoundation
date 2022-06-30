@@ -22,20 +22,20 @@
                     <div id="header">
                         <h1><a href="/"><span>{{ site_name }}</span></a></h1>
                         <h2><span>{{ site_headline }}</span></h2>
-                        <div id="site-in-dev-warning">
-                            <img src="/-/static/images/in-dev.svg" alt="IN DEVELOPMENT">
-                            <div>
-                                <h4>Это — аварийная версия сайта.</h4>
-                                <p>Она доступна без VPN, но имеет урезанный функционал и в данный момент работает только для чтения.</p>
-                            </div>
-                        </div>
                         <div id="top-bar">
-                            {{ nav_top|safe }}
+                            {{ nav_top }}
+                        </div>
+                    </div>
+                    <div id="site-in-dev-warning">
+                        <img src="/-/static/images/in-dev.svg" alt="IN DEVELOPMENT">
+                        <div>
+                            <h4>Это — аварийная версия сайта.</h4>
+                            <p>Она доступна без VPN, но имеет урезанный функционал и в данный момент работает только для чтения.</p>
                         </div>
                     </div>
                     <div id="content-wrap">
                         <div id="side-bar">
-                            {{ nav_side|safe }}
+                            {{ nav_side }}
                         </div>
                         <div id="main-content">
                             <div id="action-area-top"></div>

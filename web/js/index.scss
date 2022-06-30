@@ -7,16 +7,15 @@
 }
 
 #site-in-dev-warning {
-  position: absolute;
-  right: 0;
-  bottom: 40px;
   background: red;
+  margin: 0 auto;
+  margin-top: 16px;
+  width: min(100%, 1160px);
   border: 2px solid white;
   box-shadow: 0 0 0 3px red;
   color: white;
   display: flex;
   align-items: center;
-  max-width: 400px;
   padding: 8px;
 
   img {
