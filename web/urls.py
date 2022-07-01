@@ -15,21 +15,22 @@ Including another URLconf
 """
 from django.urls import path, re_path, include
 
-from web.views.api.articles import CreateView, FetchOrUpdateView, FetchLogView
-from web.views.api.preview import PreviewView
-from web.views.api.module import ModuleView
+from web.views.api import articles, preview, module, files
 
 from web.views.article import ArticleView
 
 
 api_patterns = [
-    path('articles/new', CreateView.as_view()),
-    path('articles/<str:full_name>', FetchOrUpdateView.as_view()),
-    path('articles/<str:full_name>/log', FetchLogView.as_view()),
+    path('articles/new', articles.CreateView.as_view()),
+    path('articles/<str:full_name>', articles.FetchOrUpdateView.as_view()),
+    path('articles/<str:full_name>/log', articles.FetchLogView.as_view()),
 
-    path('preview', PreviewView.as_view()),
+    path('files/<str:article_name>/new', files.UploadView.as_view()),
+    path('files/<str:article_name>/<str:file_name>', files.RenameOrDeleteView.as_view()),
 
-    path('modules', ModuleView.as_view()),
+    path('preview', preview.PreviewView.as_view()),
+
+    path('modules', module.ModuleView.as_view()),
 ]
 
 

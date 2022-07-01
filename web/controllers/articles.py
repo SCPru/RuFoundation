@@ -303,10 +303,19 @@ def get_file_in_article(full_name_or_article: _FullNameOrArticle, file_name: str
     article = get_article(full_name_or_article)
     if article is None:
         return None
-    files = File.objects.filter(article=article, name__iexact=file_name)
+    files = File.objects.filter(article=article, name__iexact=file_name, deleted_at=None)
     if not files:
         return None
     return files[0]
+
+
+# Get file(s) in article
+def get_files_in_article(full_name_or_article: _FullNameOrArticle) -> Sequence[Article]:
+    article = get_article(full_name_or_article)
+    if article is None:
+        return []
+    files = File.objects.filter(article=article, deleted_at=None)
+    return files
 
 
 # Add file to article
