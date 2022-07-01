@@ -1,5 +1,4 @@
 from django.http import HttpRequest, HttpResponse
-from django.conf import settings
 
 from . import APIView, APIError, takes_json
 

@@ -107,6 +107,9 @@ class ArticleLogEntry(SiteLimitedModel):
         Tags = 'tags'
         New = 'new'
         Parent = 'parent'
+        FileAdded = 'file_added'
+        FileDeleted = 'file_deleted'
+        FileRenamed = 'file_renamed'
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Пользователь")

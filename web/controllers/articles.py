@@ -1,10 +1,12 @@
 from django.contrib.auth.models import AbstractUser as _UserType
 from django.db.models import QuerySet
 from web.models.articles import *
+from web.models.files import *
 
 from typing import Optional, Union, Sequence, Tuple
 import datetime
 import re
+import os.path
 
 
 _FullNameOrArticle = Optional[Union[str, Article]]
@@ -29,7 +31,7 @@ def get_article(full_name_or_article: _FullNameOrArticle) -> Optional[Article]:
     if type(full_name_or_article) == str:
         full_name_or_article = full_name_or_article.lower()
         category, name = get_name(full_name_or_article)
-        objects = Article.objects.filter(category=category, name=name)
+        objects = Article.objects.filter(category__iexact=category, name__iexact=name)
         if objects:
             return objects[0]
         else:
@@ -294,6 +296,77 @@ def set_lock(full_name_or_article: _FullNameOrArticle, locked: bool, user: Optio
     article = get_article(full_name_or_article)
     article.locked = locked
     article.save()
+
+
+# Get file in article
+def get_file_in_article(full_name_or_article: _FullNameOrArticle, file_name: str) -> Optional[File]:
+    article = get_article(full_name_or_article)
+    if article is None:
+        return None
+    files = File.objects.filter(article=article, name__iexact=file_name)
+    if not files:
+        return None
+    return files[0]
+
+
+# Add file to article
+def add_file_to_article(full_name_or_article: _FullNameOrArticle, file: File, user: Optional[_UserType] = None):
+    if file.article:
+        raise ValueError('File already belongs to an article')
+    article = get_article(full_name_or_article)
+    file.article = article
+    file.save()
+    log = ArticleLogEntry(
+        article=article,
+        user=user,
+        type=ArticleLogEntry.LogEntryType.FileAdded,
+        meta={'name': file.name}
+    )
+    add_log_entry(article, log)
+
+
+# Delete file from article.
+# Permanent deletion is irreversible and should not be used unless for technical cleanup purposes or from admin panel.
+# We also cannot track who performed a permanent deletion.
+def delete_file_from_article(full_name_or_article: _FullNameOrArticle, file: File, user: Optional[_UserType] = None, permanent = False):
+    article = get_article(full_name_or_article)
+    if file.article != article:
+        raise ValueError(f'File article "{get_full_name(article)}" is not the same as "{article.full_name}" for deletion')
+    if file.deleted_at and not permanent:
+        raise ValueError('File is already deleted')
+    if permanent:
+        if os.path.exists(file.local_media_path):
+            os.unlink(file.local_media_path)
+        file.delete()
+    else:
+        file.deleted_at = datetime.datetime.now()
+        file.deleted_by = user
+        file.save()
+        log = ArticleLogEntry(
+            article=article,
+            user=user,
+            type=ArticleLogEntry.LogEntryType.FileDeleted,
+            meta={'name': file.name}
+        )
+        add_log_entry(article, log)
+
+
+# Rename file in article
+def rename_file_in_article(full_name_or_article: _FullNameOrArticle, file: File, name: str, user: Optional[_UserType] = None):
+    article = get_article(full_name_or_article)
+    if file.article != article:
+        raise ValueError(f'File article "{get_full_name(article)}" is not the same as "{article.full_name}" for renaming')
+    old_name = file.name
+    file.name = name
+    file.save()
+    if file.name != old_name:
+        log = ArticleLogEntry(
+            article=article,
+            user=user,
+            type=ArticleLogEntry.LogEntryType.FileRenamed,
+            meta={'name': file.name, 'prev_name': old_name}
+        )
+        add_log_entry(article, log)
 
 
 # Has user permissions for do anything with article
