@@ -384,7 +384,7 @@ class ArticleFiles extends Component<Props, State> {
     };
 
     render() {
-        const { editable } = this.props;
+        const { editable, pageId } = this.props;
         const { error, loading, files, optionsIndex, renameIndex, renameName } = this.state;
         return (
             <Styles>
@@ -437,7 +437,7 @@ class ArticleFiles extends Component<Props, State> {
                                     return (
                                         <React.Fragment key={i}>
                                             <tr>
-                                                <td>{file.name}</td>
+                                                <td><a href={`/local--files/${pageId}/${encodeURIComponent(file.name)}`} target="_blank">{file.name}</a></td>
                                                 <td>{file.mimeType}</td>
                                                 <td>{this.formatSize(file.size)}</td>
                                                 <td><UserView data={file.author} /></td>
