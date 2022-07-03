@@ -251,7 +251,6 @@ class ArticleFiles extends Component<Props, State> {
     async doUpload(file: UploadFileRecord) {
         const { pageId } = this.props;
         try {
-            console.log('uploading', file);
             await uploadFile(pageId, file.file, file.name, (_, total, loaded) => {
                 this.updateFile(file, { progress: loaded/total });
             });
@@ -260,7 +259,7 @@ class ArticleFiles extends Component<Props, State> {
             this.setState({ uploadFiles });
             this.loadFiles();
         } catch (e) {
-            this.updateFile(file, {error: e.error || 'Ошибка загрузки файла'})
+            this.updateFile(file, {error: e.error || 'Ошибка загрузки файла', uploading: false})
         }
     }
 

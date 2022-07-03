@@ -109,7 +109,7 @@ async function doFetch(url: string, props?: WRequestInit): Promise<Response> {
         Object.getOwnPropertyNames(headers).forEach(k => {
             xhr.setRequestHeader(k, encodeURIComponent(headers[k]));
         });
-        xhr.addEventListener('progress', (e) => {
+        xhr.upload.addEventListener('progress', (e) => {
             if (props.uploadProgressHandler) {
                 props.uploadProgressHandler(e.lengthComputable, e.total, e.loaded);
             }
