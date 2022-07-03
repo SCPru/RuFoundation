@@ -49,6 +49,9 @@ window.addEventListener('DOMContentLoaded', () => {
         mutationList.forEach(record => {
             if (record.type === 'childList') {
                 record.addedNodes.forEach((node: HTMLElement) => {
+                    if (node.nodeType !== Node.ELEMENT_NODE) {
+                        return;
+                    }
                     processNode(node);
                     node.querySelectorAll('*').forEach((subnode: HTMLElement) => {
                         if (subnode.nodeType === Node.ELEMENT_NODE) {

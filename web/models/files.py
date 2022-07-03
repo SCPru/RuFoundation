@@ -27,7 +27,7 @@ class File(SiteLimitedModel):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
 
     deleted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name="Пользователь, удаливший файл", null=True, related_name='deleted_files')
-    deleted_at = models.DateTimeField()
+    deleted_at = models.DateTimeField(null=True)
 
     def __str__(self) -> str:
         return f"{self.name} ({self.media_name})"

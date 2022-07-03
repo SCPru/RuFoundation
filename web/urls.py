@@ -25,8 +25,8 @@ api_patterns = [
     path('articles/<str:full_name>', articles.FetchOrUpdateView.as_view()),
     path('articles/<str:full_name>/log', articles.FetchLogView.as_view()),
 
-    path('files/<str:article_name>/new', files.UploadView.as_view()),
-    path('files/<str:article_name>/<str:file_name>', files.RenameOrDeleteView.as_view()),
+    path('articles/<str:article_name>/files', files.GetOrUploadView.as_view()),
+    path('articles/<str:article_name>/files/<str:file_name>', files.RenameOrDeleteView.as_view()),
 
     path('preview', preview.PreviewView.as_view()),
 

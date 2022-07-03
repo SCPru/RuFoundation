@@ -9,6 +9,7 @@ import ArticleRating from "../articles/article-rating";
 import ArticleParent from "../articles/article-parent";
 import ArticleRename from "../articles/article-rename";
 import ArticleLock from "../articles/article-lock";
+import ArticleFiles from "../articles/article-files";
 
 
 interface Props {
@@ -23,7 +24,7 @@ interface Props {
 
 
 interface State {
-    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'lock' | 'rename' | null
+    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'lock' | 'rename' | 'files' | null
     extOptions: boolean
 }
 
@@ -69,6 +70,15 @@ class PageOptions extends Component<Props, State> {
         e.preventDefault();
         e.stopPropagation();
         this.setState({ subView: 'history' });
+        setTimeout(() => {
+            window.scrollTo(window.scrollX, document.body.scrollHeight);
+        });
+    };
+
+    onFiles = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ subView: 'files' });
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         });
@@ -131,6 +141,7 @@ class PageOptions extends Component<Props, State> {
                     <a id="pagerate-button" className="btn btn-default" href="#" onClick={this.onRate}>{canRate?'Оценить':'Оценки'} ({rating>=0?`+${rating}`:rating})</a>
                     { editable && <a id="tags-button" className="btn btn-default" href="#" onClick={this.onTags}>Теги</a> }
                     <a id="history-button" className="btn btn-default" href="#" onClick={this.onHistory}>История</a>
+                    <a id="files-button" className="btn btn-default" href="#" onClick={this.onFiles}>Файлы</a>
                     <a id="more-options-button" className="btn btn-default" href="#" onClick={this.toggleExtOptions}>{extOptions?'- Опции':'+ Опции'}</a>
                 </div>
                 { extOptions && <div id="page-options-bottom-2" className="page-options-bottom form-actions">
@@ -150,7 +161,7 @@ class PageOptions extends Component<Props, State> {
 
     pickSubView() {
         const { subView } = this.state;
-        const { pageId, rating, pathParams } = this.props;
+        const { pageId, rating, pathParams, editable } = this.props;
 
         switch (subView) {
             case 'edit':
@@ -176,6 +187,9 @@ class PageOptions extends Component<Props, State> {
 
             case 'rename':
                 return <ArticleRename pageId={pageId} onClose={this.onCancelSubView} />;
+
+            case 'files':
+                return <ArticleFiles pageId={pageId} onClose={this.onCancelSubView} editable={editable} />;
 
             default:
                 return null

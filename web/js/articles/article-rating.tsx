@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { Component } from 'react';
-import {fetchArticle} from "../api/articles";
 import WikidotModal from "../util/wikidot-modal";
 import styled from "styled-components";
 import Loader from "../util/loader";
-import {fetchPageRating, fetchPageVotes, ModuleRateVote} from "../api/rate";
+import {fetchPageVotes, ModuleRateVote} from "../api/rate";
 import UserView from "../util/user-view";
 
 

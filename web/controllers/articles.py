@@ -310,19 +310,19 @@ def get_file_in_article(full_name_or_article: _FullNameOrArticle, file_name: str
 
 
 # Get file(s) in article
-def get_files_in_article(full_name_or_article: _FullNameOrArticle) -> Sequence[Article]:
+def get_files_in_article(full_name_or_article: _FullNameOrArticle) -> Sequence[File]:
     article = get_article(full_name_or_article)
     if article is None:
         return []
-    files = File.objects.filter(article=article, deleted_at=None)
+    files = File.objects.filter(article=article, deleted_at__isnull=True)
     return files
 
 
 # Add file to article
 def add_file_to_article(full_name_or_article: _FullNameOrArticle, file: File, user: Optional[_UserType] = None):
-    if file.article:
-        raise ValueError('File already belongs to an article')
     article = get_article(full_name_or_article)
+    if file.article and file.article != article:
+        raise ValueError('File already belongs to an article')
     file.article = article
     file.save()
     log = ArticleLogEntry(

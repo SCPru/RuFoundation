@@ -3,6 +3,8 @@ from django.shortcuts import resolve_url
 from django.conf import settings
 from django.db import models
 
+from web.models.sites import get_current_site
+
 
 class User(AbstractUser):
     class Meta:
@@ -21,7 +23,7 @@ class User(AbstractUser):
 
     def get_avatar(self):
         if self.avatar:
-            return resolve_url("local_files", self.avatar)
+            return '%s%s' % (settings.MEDIA_URL, self.avatar)
         return settings.DEFAULT_AVATAR
 
     def __str__(self):

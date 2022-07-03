@@ -2,37 +2,48 @@ from django.http import HttpRequest
 import os.path
 from uuid import uuid4
 
+from renderer.utils import render_user_to_json
 from . import APIView, APIError, takes_json
 
 from web.controllers import articles
+import urllib.parse
 
 from ...models.files import File
 
 
 class FileView(APIView):
     @staticmethod
-    def _validate_request(request: HttpRequest, article_name):
+    def _validate_request(request: HttpRequest, article_name, edit=True):
         article = articles.get_article(article_name)
         if article is None:
             raise APIError('Страница не найдена', 404)
-        if not articles.has_perm(request.user, "web.change_article", article):
+        if edit and not articles.has_perm(request.user, "web.change_article", article):
             raise APIError('Недостаточно прав', 403)
         return article
 
 
-class UploadView(FileView):
+class GetOrUploadView(FileView):
+    def get(self, request: HttpRequest, article_name):
+        article = self._validate_request(request, article_name, edit=False)
+        files = articles.get_files_in_article(article)
+        output = []
+        for file in files:
+            output.append({'name': file.name, 'size': file.size, 'createdAt': file.created_at, 'author': render_user_to_json(file.author), 'mimeType': file.mime_type})
+        return self.render_json(200, {'pageId': article.full_name, 'files': output})
+
     def post(self, request: HttpRequest, article_name):
         article = self._validate_request(request, article_name)
         file_name = request.headers.get('x-file-name')
         if not file_name:
             raise APIError('Отсутствует название файла', 400)
+        file_name = urllib.parse.unquote(file_name)
         existing_file = articles.get_file_in_article(article, file_name)
         if existing_file:
             raise APIError('Файл с таким именем уже существует', 409)
         _, ext = os.path.splitext(file_name)
         media_name = str(uuid4()) + ext
-        new_file = File(name=file_name, media_name=media_name, author=request.user)
-        local_media_dir = os.path.basename(new_file.local_media_path)
+        new_file = File(name=file_name, media_name=media_name, author=request.user, article=article)
+        local_media_dir = os.path.dirname(new_file.local_media_path)
         if not os.path.exists(local_media_dir):
             os.makedirs(local_media_dir, exist_ok=True)
         # upload file to temporary storage
@@ -51,6 +62,7 @@ class UploadView(FileView):
         except:
             if os.path.exists(new_file.local_media_path):
                 os.unlink(new_file.local_media_path)
+            raise
         return self.render_json(200, {'status': 'ok'})
 
 
