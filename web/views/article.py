@@ -81,7 +81,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         context = super(ArticleView, self).get_context_data(**kwargs)
 
         options_config = {
-            'optionsEnabled': True,
+            'optionsEnabled': status != 404,
             'editable': articles.has_perm(self.request.user, "web.change_article", article),
             'lockable': articles.has_perm(self.request.user, "web.can_lock_article", article),
             'pageId': article_name,

@@ -33,6 +33,8 @@ interface State {
 
 
 const Styles = styled.div<{loading?: boolean}>`
+min-height: 600px;
+
 .w-files-area.loading {
   position: relative;
   min-height: calc(32px + 16px + 16px);
