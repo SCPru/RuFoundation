@@ -310,12 +310,12 @@ class ArticleFiles extends Component<Props, State> {
                                                 <div className="w-upload-progress">
                                                     <div style={{ width: `${file.progress*100}%` }}/>
                                                 </div>
-                                                {(file.error)?
-                                                    <div className="w-upload-progress-error">
-                                                        Файл не загружен: {file.error}
-                                                    </div>
-                                                    :null}
                                             </>
+                                            :null}
+                                        {(file.error)?
+                                            <div className="w-upload-progress-error">
+                                                Файл не загружен: {file.error}
+                                            </div>
                                             :null}
                                     </div>
                                 );
