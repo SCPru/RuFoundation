@@ -195,6 +195,11 @@ class ArticleHistory extends Component<Props, State> {
 
             case 'parent':
                 return <span className="spantip" title="изменилась родительская страница">M</span>;
+
+            case 'file_added':
+            case 'file_deleted':
+            case 'file_renamed':
+                return <span className="spantip" title="действия с файлом/вложением">F</span>
         }
     }
 
@@ -228,6 +233,7 @@ class ArticleHistory extends Component<Props, State> {
                 } else if (Array.isArray(entry.meta.removed_tags) && entry.meta.removed_tags.length) {
                     return <>Удалены теги: {entry.meta.removed_tags.join(', ')}.</>;
                 }
+                break;
 
             case 'parent':
                 if (entry.meta.prev_parent && entry.meta.parent) {
@@ -238,6 +244,16 @@ class ArticleHistory extends Component<Props, State> {
                 } else if (entry.meta.parent) {
                     return <>Установлена родительская страница "<em>{entry.meta.parent}</em>"</>;
                 }
+                break;
+
+            case 'file_added':
+                return <>Загружен файл: "<em>{entry.meta.name}</em>"</>;
+
+            case 'file_deleted':
+                return <>Удалён файл: "<em>{entry.meta.name}</em>"</>;
+
+            case 'file_renamed':
+                return <>Переименован файл: "<em>{entry.meta.prev_name}</em>" в "<em>{entry.meta.name}</em>"</>;
         }
     }
 
