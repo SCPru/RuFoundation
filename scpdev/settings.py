@@ -102,8 +102,7 @@ if database_engine == 'sqlite':
 
 elif database_engine == 'pg':
 
-    # wait until postgres becomes available
-
+    # wait until postgres becomes available?
 
     default_db = {
         'ENGINE': 'django.db.backends.postgresql',
@@ -111,7 +110,8 @@ elif database_engine == 'pg':
         'USER': os.environ.get('DB_PG_USERNAME', 'postgres'),
         'PASSWORD': os.environ.get('DB_PG_PASSWORD', 'zaq123'),
         'HOST': os.environ.get('DB_PG_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PG_PORT', '5432')
+        'PORT': os.environ.get('DB_PG_PORT', '5432'),
+        'ATOMIC_REQUESTS': True
     }
 
 else:
