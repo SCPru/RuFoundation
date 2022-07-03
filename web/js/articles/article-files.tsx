@@ -416,7 +416,7 @@ class ArticleFiles extends Component<Props, State> {
                 <h1>Файлы</h1>
                 <div className={`w-files-area ${loading?'loading':''}`}>
                     { loading && <Loader className="loader" /> }
-                    {(!loading&&files) ?
+                    {(!!files) ?
                         <>
                             <p>
                                 Всего файлов: {files.length}<br/>
