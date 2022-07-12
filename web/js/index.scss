@@ -53,7 +53,7 @@
   position: relative;
 }
 
-.printuser img.small {
+.printuser.avatarhover img.small {
   padding: 0;
   margin-right: 8px;
   border: 1px solid #777;
@@ -61,6 +61,6 @@
   pointer-events: none;
 }
 
-.printuser a:hover img.small, .printuser span:hover img.small {
+.printuser.avatarhover a:hover img.small, .printuser span:hover img.small {
   transform: scale(4);
 }
