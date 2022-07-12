@@ -52,5 +52,5 @@ def render_user_to_json(user: User, avatar=True):
     if user is None:
         return {'type': 'system'}
     if isinstance(user, AnonymousUser):
-        return {'type': 'anonymous', 'avatar': settings.ANNON_AVATAR, 'name': 'Anonymous User', 'username': None, 'showAvatar': avatar}
+        return {'type': 'anonymous', 'avatar': settings.ANON_AVATAR, 'name': 'Anonymous User', 'username': None, 'showAvatar': avatar}
     return {'type': 'user', 'id': user.id, 'avatar': user.get_avatar(), 'name': user.username, 'username': user.username, 'showAvatar': avatar}

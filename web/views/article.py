@@ -3,6 +3,7 @@ from django.template.loader import render_to_string
 from django.http import HttpResponseRedirect
 from django.conf import settings
 
+from renderer.utils import render_user_to_json
 from web.models.articles import Article
 from web.controllers import articles
 
@@ -80,6 +81,10 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
         context = super(ArticleView, self).get_context_data(**kwargs)
 
+        login_status_config = {
+            'user': render_user_to_json(self.request.user)
+        }
+
         options_config = {
             'optionsEnabled': status != 404,
             'editable': articles.has_perm(self.request.user, "web.change_article", article),
@@ -105,6 +110,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'tags': [x for x in articles.get_tags(article) if not x.startswith('_')],
             'breadcrumbs': breadcrumbs,
 
+            'login_status_config': json.dumps(login_status_config),
             'options_config': json.dumps(options_config),
 
             'status': status,

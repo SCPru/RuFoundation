@@ -23,7 +23,7 @@ def make_path(url: str, *args, **kwargs) -> List[_PathType]:
 
 urlpatterns = [
     path("login", LoginView.as_view(template_name="login/login.html"), name="login"),
-    path("logout", LogoutView.as_view(next_page="/-/login/"), name="logout"),
+    path("logout", LogoutView.as_view(next_page="/"), name="logout"),
     path("password_reset", PasswordResetView.as_view(template_name="login/password_reset.html",
                                                      email_template_name="mails/password_reset_email.txt"),
          name="password_reset"),

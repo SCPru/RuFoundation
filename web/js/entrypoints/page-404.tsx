@@ -45,7 +45,7 @@ class Page404 extends Component<Props, State> {
             )
         } else {
             return (
-                <ArticleEditor pageId={page_id} isNew onCancel={this.onCancel} />
+                <ArticleEditor pageId={page_id} isNew onClose={this.onCancel} />
             )
         }
     }
