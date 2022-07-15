@@ -40,9 +40,13 @@ def render_user_to_html(user: User, avatar=True, hover=True):
         ret += '<a onclick="return false;">Anonymous User</a>'
         ret += '</span>'
         return ret
+    if user.type == 'wikidot':
+        avatar = settings.WIKIDOT_AVATAR
+    else:
+        avatar = user.get_avatar(default=settings.DEFAULT_AVATAR)
     ret = '<span class="printuser w-user%s" data-user-name="%s">' % ((' avatarhover' if hover else ''), html.escape(user.username))
     if avatar:
-        ret += '<a href="/-/users/%d-%s"><img class="small" src="%s" alt="%s"></a>' % (user.id, urllib.parse.quote_plus(user.username), user.get_avatar(default=settings.DEFAULT_AVATAR), html.escape(user.username))
+        ret += '<a href="/-/users/%d-%s"><img class="small" src="%s" alt="%s"></a>' % (user.id, urllib.parse.quote_plus(user.username), avatar, html.escape(user.username))
     ret += '<a href="/-/users/%d-%s">%s</a>' % (user.id, urllib.parse.quote_plus(user.username), html.escape(user.username))
     ret += '</span>'
     return ret

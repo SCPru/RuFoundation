@@ -1,5 +1,5 @@
 export interface UserData {
-    type: 'system' | 'anonymous' | 'user'
+    type: 'system' | 'anonymous' | 'user' | 'wikidot'
     id?: number
     avatar?: string
     name: string

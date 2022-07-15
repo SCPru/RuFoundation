@@ -3,6 +3,11 @@ import { Component } from 'react';
 import {UserData} from "../api/user";
 
 
+const ANON_AVATAR = "/-/static/images/anon_avatar.png";
+const DEFAULT_AVATAR = "/-/static/images/default_avatar.png";
+const WIKIDOT_AVATAR = "/-/static/images/wikidot_avatar.png";
+
+
 interface Props {
     data: UserData
     avatarHover?: boolean
@@ -18,14 +23,17 @@ class UserView extends Component<Props> {
         if (data.type === 'anonymous') {
             return (
                 <span className={`printuser ${avatarHover!==false?'avatarhover':''}`}>
-                    {data.showAvatar&&<span><img className="small" src="/-/static/images/anon_avatar.png" alt="Anonymous User" /></span>}
+                    {data.showAvatar&&<span><img className="small" src={ANON_AVATAR} alt="Anonymous User" /></span>}
                     <span>Anonymous User</span>
                 </span>
             )
         }
+
+        let avatar = (data.type === 'wikidot') ? WIKIDOT_AVATAR : (data.avatar || DEFAULT_AVATAR);
+
         return (
             <span className={`printuser w-user ${avatarHover!==false?'avatarhover':''}`} data-user-name={data.username}>
-                {data.showAvatar&&<a href={`/-/users/${encodeURIComponent(data.username)}`}><img className="small" src={data.avatar} alt={data.name} /></a>}
+                {data.showAvatar&&<a href={`/-/users/${encodeURIComponent(data.username)}`}><img className="small" src={avatar} alt={data.name} /></a>}
                 <a href={`/-/users/${encodeURIComponent(data.username)}`}>{data.name}</a>
             </span>
         )
