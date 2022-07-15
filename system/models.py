@@ -21,10 +21,10 @@ class User(AbstractUser):
     avatar = models.ImageField(null=True, blank=True, upload_to='-/users', verbose_name="Аватар")
     bio = models.TextField(blank=True, verbose_name="Описание")
 
-    def get_avatar(self):
+    def get_avatar(self, default=None):
         if self.avatar:
             return '%s%s' % (settings.MEDIA_URL, self.avatar)
-        return settings.DEFAULT_AVATAR
+        return default
 
     def __str__(self):
         return self.username

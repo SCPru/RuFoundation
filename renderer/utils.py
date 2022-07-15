@@ -42,7 +42,7 @@ def render_user_to_html(user: User, avatar=True):
         return ret
     ret = '<span class="printuser w-user" data-user-name="%s">' % html.escape(user.username)
     if avatar:
-        ret += '<a href="/-/users/%d-%s"><img class="small" src="%s" alt="%s"></a>' % (user.id, urllib.parse.quote_plus(user.username), user.get_avatar(), html.escape(user.username))
+        ret += '<a href="/-/users/%d-%s"><img class="small" src="%s" alt="%s"></a>' % (user.id, urllib.parse.quote_plus(user.username), user.get_avatar(default=settings.DEFAULT_AVATAR), html.escape(user.username))
     ret += '<a href="/-/users/%d-%s">%s</a>' % (user.id, urllib.parse.quote_plus(user.username), html.escape(user.username))
     ret += '</span>'
     return ret
@@ -53,4 +53,4 @@ def render_user_to_json(user: User, avatar=True):
         return {'type': 'system'}
     if isinstance(user, AnonymousUser):
         return {'type': 'anonymous', 'avatar': None, 'name': 'Anonymous User', 'username': None, 'showAvatar': avatar}
-    return {'type': 'user', 'id': user.id, 'avatar': user.avatar, 'name': user.username, 'username': user.username, 'showAvatar': avatar}
+    return {'type': 'user', 'id': user.id, 'avatar': user.get_avatar(), 'name': user.username, 'username': user.username, 'showAvatar': avatar}

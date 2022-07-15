@@ -58,7 +58,7 @@ class PageLoginStatus extends Component<Props, State> {
         } else {
             return (
                 <>
-                    <span className="printuser avatarhover">
+                    <span className="printuser">
                         <a href={`/-/users/${user.username}`}>
                             <img className="small" src={user.avatar} alt={user.username} />
                         </a>
