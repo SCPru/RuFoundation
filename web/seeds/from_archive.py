@@ -68,12 +68,12 @@ def run_in_threads(fn, pages):
 
 def get_or_create_user(user_name_or_id):
     if type(user_name_or_id) == str:
-        user_name = user_name_or_id.lower()
+        user_name = user_name_or_id
     elif type(user_name_or_id) == int:
         user_name = 'deleted-%d' % user_name_or_id
     else:
         raise TypeError('Invalid parameter for Wikidot user: %s' % repr(user_name_or_id))
-    existing = list(User.objects.filter(type=User.UserType.Wikidot, username=user_name))
+    existing = list(User.objects.filter(type=User.UserType.Wikidot, username__iexact=user_name))
     if not existing:
         new_user = User(type=User.UserType.Wikidot, username=user_name, is_active=False)
         new_user.save()
