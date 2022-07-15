@@ -1,3 +1,6 @@
+# NOTE: This specific seed file requires py7zr to run.
+# This is not characteristic of the rest of the app, so just install it manually if needed
+
 import py7zr
 import shutil
 import os, os.path
@@ -12,12 +15,12 @@ from django.conf import settings
 import math
 import threading
 import logging
+from scpdev import urls
 from web import threadvars
-
-
-# NOTE: This specific seed file requires py7zr to run.
-# This is not characteristic of the rest of the app, so just install it manually if needed
+from web.models.files import File
 from web.models.sites import get_current_site
+from system.models import User
+from uuid import uuid4
 
 
 def maybe_load_pages_meta(base_path_or_list):
@@ -63,27 +66,92 @@ def run_in_threads(fn, pages):
             break
 
 
+def get_or_create_user(user_name_or_id):
+    if type(user_name_or_id) == str:
+        user_name = user_name_or_id.lower()
+    elif type(user_name_or_id) == int:
+        user_name = 'deleted-%d' % user_name_or_id
+    else:
+        raise TypeError('Invalid parameter for Wikidot user: %s' % repr(user_name_or_id))
+    existing = list(User.objects.filter(type=User.UserType.Wikidot, username=user_name))
+    if not existing:
+        new_user = User(type=User.UserType.Wikidot, username=user_name, is_active=False)
+        new_user.save()
+        return new_user
+    return existing[0]
+
+
 def run(base_path):
     # unpacks wikidot archive in DBotThePony's backup format
     # files are just copied
     base_path = base_path.rstrip('/')
-    from_files = '%s/files/' % base_path
+
     site = get_current_site()
-    to_files = str(Path(settings.MEDIA_ROOT) / site.slug)
-    if os.path.exists(to_files):
-        logging.info('Removing old files...')
-        shutil.rmtree(to_files, ignore_errors=False)
-    logging.info('Copying files...')
-    shutil.copytree(from_files, to_files, dirs_exist_ok=True)
-    logging.info('Adding articles...')
+
     t = time.time()
     t_lock = threading.RLock()
     pages = maybe_load_pages_meta(base_path)
 
-    total_pages = len(pages)
-    total_cnt = 0
+    total_files = 0
+    for meta in pages:
+        total_files += len(meta.get('files', []))
 
-    def worker_thread(pages):
+    total_pages = len(pages)
+
+    from_files = '%s/files' % base_path
+    to_files = str(Path(settings.MEDIA_ROOT) / site.slug)
+
+    if os.path.exists(to_files):
+        logging.info('Removing old files...')
+        shutil.rmtree(to_files, ignore_errors=False)
+
+    def file_worker_thread(pages):
+        nonlocal total_cnt
+        nonlocal t
+
+        users = {}
+        for meta in pages:
+            article = articles.get_article(meta['name'])
+            if article is None:
+                logging.warning('Missing article \'%s\' for file import', meta['name'])
+                continue
+            files = meta.get('files', [])
+            for file in files:
+                total_cnt += 1
+                if file['author'] in users:
+                    file_user = users[file['author']]
+                else:
+                    file_user = users[file['author']] = get_or_create_user(file['author'])
+                from_path = '%s/%s/%s' % (from_files, urls.partial_quote(meta['name']), urls.partial_quote(file['name']))
+                _, ext = os.path.splitext(file['name'])
+                media_name = str(uuid4()) + ext
+                if File.objects.filter(name=file['name'], article=article):
+                    logging.warning('Warn: file exists: %s/%s', meta['name'], file['name'])
+                    continue
+                new_file = File(
+                    name=file['name'],
+                    media_name=media_name,
+                    author=file_user,
+                    article=article,
+                    mime_type=file['mime'],
+                    size=file['size_bytes'],
+                    created_at=datetime.datetime.fromtimestamp(file['stamp'], tz=datetime.timezone.utc)
+                )
+                local_media_dir = os.path.dirname(new_file.local_media_path)
+                if not os.path.exists(local_media_dir):
+                    os.makedirs(local_media_dir, exist_ok=True)
+                to_path = new_file.local_media_path
+                if not os.path.exists(from_path):
+                    logging.warning('Warn: file not found: %s/%s', meta['name'], file['name'])
+                    continue
+                shutil.copyfile(from_path, to_path)
+                new_file.save()
+                with t_lock:
+                    if time.time() - t > 1:
+                        logging.info('Added: %d/%d' % (total_cnt, total_files))
+                        t = time.time()
+
+    def page_worker_thread(pages):
         nonlocal total_cnt
         nonlocal t
         for meta in pages:
@@ -122,7 +190,13 @@ def run(base_path):
                     logging.info('Added: %d/%d' % (total_cnt, total_pages))
                     t = time.time()
 
-    run_in_threads(worker_thread, pages)
+    total_cnt = 0
+    logging.info('Adding articles...')
+    run_in_threads(page_worker_thread, pages)
+    total_cnt = 0
+    logging.info('Adding files...')
+    run_in_threads(file_worker_thread, pages)
+    logging.info('Setting parents...')
     run_in_threads(set_parents, pages)
 
 

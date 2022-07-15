@@ -27,7 +27,7 @@ from web.models.sites import get_current_site
 
 
 def partial_quote(url):
-    return url.replace(':', '%3A')
+    return url.replace(':', '%3A').replace('/', '%2F').replace('?', '%3F')
 
 
 def serve_static(request, dir_path, document_root=None, show_indexes=False):
