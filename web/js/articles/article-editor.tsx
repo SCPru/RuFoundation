@@ -150,9 +150,9 @@ class ArticleEditor extends Component<Props, State> {
             source: this.state.source,
             pathParams: this.props.pathParams,
         };
-        showPreviewMessage();
         makePreview(data).then(function (resp) {
-            document.getElementById("page-title").innerText = resp.title
+            showPreviewMessage();
+            document.getElementById("page-title").innerText = resp.title;
             document.getElementById("page-content").innerHTML = resp.content;
         });
     };

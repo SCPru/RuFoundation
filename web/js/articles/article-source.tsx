@@ -9,6 +9,7 @@ import Loader from "../util/loader";
 interface Props {
     pageId: string
     onClose: () => void
+    source?: string
 }
 
 
@@ -54,7 +55,7 @@ class ArticleSource extends Component<Props, State> {
         super(props);
         this.state = {
             loading: false,
-            source: null
+            source: this.props.source
         };
     }
 
@@ -63,13 +64,15 @@ class ArticleSource extends Component<Props, State> {
     }
 
     async loadSource() {
-        const { pageId } = this.props;
-        this.setState({ loading: true, error: null });
-        try {
-            const article = await fetchArticle(pageId);
-            this.setState({ loading: false, error: null, source: article.source });
-        } catch (e) {
-            this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' });
+        const { pageId, source } = this.props;
+        if (!source) {
+            this.setState({ loading: true, error: null });
+            try {
+                const article = await fetchArticle(pageId);
+                this.setState({ loading: false, error: null, source: article.source });
+            } catch (e) {
+                this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' });
+            }
         }
     }
 

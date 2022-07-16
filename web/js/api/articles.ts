@@ -43,3 +43,12 @@ export interface ArticleLog {
 export async function fetchArticleLog(id: string, from: number = 0, to: number = from+25): Promise<ArticleLog> {
     return await wFetch<ArticleLog>(`/api/articles/${id}/log?from=${from}&to=${to}`)
 }
+
+export interface ArticleVersion {
+    source: string
+    rendered: string
+}
+
+export async function fetchArticleVersion(id: string, pathParams?: { [key: string]: string }): Promise<ArticleVersion> {
+    return await wFetch<ArticleVersion>(`/api/articles/version?id=${id}&pathParams=${JSON.stringify(pathParams)}`)
+}

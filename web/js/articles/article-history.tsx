@@ -1,16 +1,19 @@
 import * as React from 'react';
 import { Component } from 'react';
-import {ArticleLogEntry, fetchArticleLog} from "../api/articles";
+import {ArticleLogEntry, fetchArticleLog, fetchArticleVersion} from "../api/articles";
 import WikidotModal from "../util/wikidot-modal";
 import sleep from "../util/async-sleep";
 import styled from "styled-components";
 import Loader from "../util/loader";
 import formatDate from "../util/date-format";
 import UserView from "../util/user-view";
+import {showVersionMessage} from "../util/wikidot-message";
+import ArticleSource from "./article-source";
 
 
 interface Props {
     pageId: string
+    pathParams?: { [key: string]: string }
     onClose: () => void
 }
 
@@ -18,6 +21,7 @@ interface Props {
 interface State {
     loading: boolean
     entries?: Array<ArticleLogEntry>
+    subarea?: JSX.Element
     entryCount: number
     page: number
     nextPage?: number
@@ -66,6 +70,13 @@ const Styles = styled.div<{loading?: boolean}>`
     &:nth-child(7) {
       font-size: 90%;
     }
+    .action {
+      border: 1px solid #BBB;
+      padding: 0 3px;
+      text-decoration: none;
+      color: #824;
+      background: transparent;
+    }
   }
 }
 `;
@@ -78,6 +89,7 @@ class ArticleHistory extends Component<Props, State> {
         this.state = {
             loading: false,
             entries: null,
+            subarea: null,
             entryCount: 0,
             page: 1,
             perPage: 25
@@ -121,7 +133,7 @@ class ArticleHistory extends Component<Props, State> {
     };
 
     render() {
-        const { error, entries, loading } = this.state;
+        const { error, entries, subarea, loading } = this.state;
         return (
             <Styles>
                 { error && (
@@ -155,7 +167,9 @@ class ArticleHistory extends Component<Props, State> {
                                         <td>
                                             {this.renderFlags(entry)}
                                         </td>
-                                        <td>&nbsp;</td>
+                                        <td>
+                                            {this.renderActions(entry)}
+                                        </td>
                                         <td>
                                             {this.renderUser(entry)}
                                         </td>
@@ -171,6 +185,9 @@ class ArticleHistory extends Component<Props, State> {
                             </tbody>
                         </table>
                     ) }
+                </div>
+                <div id="history-subarea">
+                    {subarea}
                 </div>
             </Styles>
         )
@@ -201,6 +218,13 @@ class ArticleHistory extends Component<Props, State> {
             case 'file_renamed':
                 return <span className="spantip" title="действия с файлом/вложением">F</span>
         }
+    }
+
+    renderActions (entry: ArticleLogEntry) {
+        return <>
+            <button className={"action"} onClick={() => this.displayArticleVersion(entry)} title="Просмотр изменений страницы">V</button>
+            <button className={"action"} onClick={() => this.displayVersionSource(entry)} title="Просмотр источника изменений">S</button>
+        </>;
     }
 
     renderUser (entry: ArticleLogEntry) {
@@ -255,6 +279,55 @@ class ArticleHistory extends Component<Props, State> {
             case 'file_renamed':
                 return <>Переименован файл: "<em>{entry.meta.prev_name}</em>" в "<em>{entry.meta.name}</em>"</>;
         }
+    }
+
+    getVersionId (entry: ArticleLogEntry) {
+        const {entries} = this.state;
+        let version_id = null;
+        if (entry.meta.version_id) {
+            version_id = entry.meta.version_id
+        } else {
+            let oldEntries = entries.slice(entries.indexOf(entry)+1);
+            for (let i in oldEntries) {
+                if (oldEntries[i].meta.version_id) {
+                    version_id = oldEntries[i].meta.version_id;
+                    break
+                }
+            }
+        }
+        return version_id;
+    }
+
+    displayArticleVersion (entry: ArticleLogEntry) {
+        const { pageId, pathParams } = this.props;
+        let version_id = this.getVersionId(entry)
+        if (version_id !== null) {
+            fetchArticleVersion(version_id, pathParams).then(function (resp) {
+                showVersionMessage(entry.revNumber, new Date(entry.createdAt), entry.user, pageId);
+                document.getElementById("page-content").innerHTML = resp.rendered;
+            })
+        }
+    }
+
+    displayVersionSource (entry: ArticleLogEntry) {
+        const { pageId, pathParams } = this.props;
+        let version_id = this.getVersionId(entry)
+        let onClose = this.hideSubArea;
+        let show = this.showSubArea;
+        if (version_id !== null) {
+            fetchArticleVersion(version_id, pathParams).then(function (resp) {
+                onClose();
+                show(<ArticleSource pageId={pageId} onClose={onClose} source={resp.source} />);
+            })
+        }
+    }
+
+    showSubArea = (component: JSX.Element) => {
+        this.setState({subarea: component})
+    }
+
+    hideSubArea =  () => {
+        this.setState({subarea: null})
     }
 
 }

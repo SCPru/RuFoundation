@@ -5,6 +5,10 @@ from . import APIView, APIError, takes_json
 from web.controllers import articles
 
 from renderer.utils import render_user_to_json
+from renderer import single_pass_render
+from renderer.parser import RenderContext
+
+import json
 
 
 class ArticleView(APIView):
@@ -124,7 +128,7 @@ class FetchOrUpdateView(ArticleView):
         return self.render_json(200, {'status': 'ok'})
 
 
-class FetchLogView(APIView):
+class FetchOrRevertLogView(APIView):
     def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
         try:
             c_from = int(request.GET.get('from', '0'))
@@ -146,3 +150,18 @@ class FetchLogView(APIView):
             })
 
         return self.render_json(200, {'count': total_count, 'entries': output})
+
+
+class FetchVersionView(APIView):
+    def get(self, request: HttpRequest) -> HttpResponse:
+        version = articles.get_version(request.GET.get('id'))
+        if not version:
+            raise APIError('Версии с данным идентификатором не существует', 404)
+
+        if version.rendered:
+            rendered = version.rendered
+        else:
+            context = RenderContext(version.article, version.article, json.loads(request.GET.get('pathParams', "{}")), self.request.user)
+            rendered = single_pass_render(version.source, context)
+
+        return self.render_json(200, {'source': version.source, "rendered":  rendered})

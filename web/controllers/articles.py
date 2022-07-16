@@ -158,6 +158,14 @@ def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user:
 
 
 # Get latest version of article
+def get_version(version_id: int) -> Optional[ArticleVersion]:
+    try:
+        return ArticleVersion.objects.get(id=version_id)
+    except ArticleVersion.DoesNotExist:
+        pass
+
+
+# Get latest version of article
 def get_latest_version(full_name_or_article: _FullNameOrArticle) -> Optional[ArticleVersion]:
     article = get_article(full_name_or_article)
     if article is None:

@@ -185,7 +185,7 @@ class PageOptions extends Component<Props, State> {
                 return <ArticleTags pageId={pageId} onClose={this.onCancelSubView} />;
 
             case 'history':
-                return <ArticleHistory pageId={pageId} onClose={this.onCancelSubView} />;
+                return <ArticleHistory pageId={pageId} pathParams={pathParams} onClose={this.onCancelSubView} />;
 
             case 'source':
                 return <ArticleSource pageId={pageId} onClose={this.onCancelSubView} />;
