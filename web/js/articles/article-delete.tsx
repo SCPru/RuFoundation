@@ -87,7 +87,7 @@ class ArticleDelete extends Component<Props, State> {
             this.setState({ savingSuccess: false });
             window.scrollTo(window.scrollX, 0);
             if (!permanent) {
-                window.location.replace("/" + new_name);
+                window.location.href = `/${new_name}`;
             } else {
                 window.location.reload();
             }
