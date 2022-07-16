@@ -22,7 +22,7 @@ from web.views.article import ArticleView
 
 api_patterns = [
     path('articles/new', articles.CreateView.as_view()),
-    path('articles/version', articles.FetchVersionView.as_view()),
+    path('articles/<str:full_name>/version', articles.FetchVersionView.as_view()),
     path('articles/<str:full_name>', articles.FetchOrUpdateView.as_view()),
     path('articles/<str:full_name>/log', articles.FetchOrRevertLogView.as_view()),
 

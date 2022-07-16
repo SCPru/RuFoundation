@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser as _UserType
 from django.db.models import QuerySet
-from django.db import transaction
 from web.models.articles import *
 from web.models.files import *
 
@@ -96,7 +95,6 @@ def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int,
 
 
 # Revert all revisions to specific revision
-@transaction.atomic
 def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number: int, user: Optional[_UserType] = None):
     article = get_article(full_name_or_article)
     latest = get_latest_log_entry(article)
@@ -109,7 +107,8 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
             elif entry.type == ArticleLogEntry.LogEntryType.Title:
                 update_title(article, entry.meta["prev_title"], user)
             elif entry.type == ArticleLogEntry.LogEntryType.Name:
-                update_full_name(article, entry.meta["prev_name"], user)
+                if not get_article(entry.meta["prev_name"]):
+                    update_full_name(article, entry.meta["prev_name"], user)
             elif entry.type == ArticleLogEntry.LogEntryType.Tags:
                 tags = list(get_tags(article))
                 for tag in entry.meta["added_tags"]:
@@ -198,7 +197,16 @@ def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user:
     add_log_entry(article, log)
 
 
-# Get latest version of article
+# Get specific entry of article
+def get_log_entry(full_name_or_article: _FullNameOrArticle, rev_number: int) -> Optional[ArticleLogEntry]:
+    try:
+        article = get_article(full_name_or_article)
+        return ArticleLogEntry.objects.get(article=article, rev_number=rev_number)
+    except ArticleLogEntry.DoesNotExist:
+        pass
+
+
+# Get specific version of article
 def get_version(version_id: int) -> Optional[ArticleVersion]:
     try:
         return ArticleVersion.objects.get(id=version_id)

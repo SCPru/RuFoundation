@@ -286,45 +286,22 @@ class ArticleHistory extends Component<Props, State> {
         }
     }
 
-    getVersionId (entry: ArticleLogEntry) {
-        const {entries} = this.state;
-        let version_id = null;
-        if (entry.meta.version_id) {
-            version_id = entry.meta.version_id
-        } else {
-            let oldEntries = entries.slice(entries.indexOf(entry)+1);
-            for (let i in oldEntries) {
-                if (oldEntries[i].meta.version_id) {
-                    version_id = oldEntries[i].meta.version_id;
-                    break
-                }
-            }
-        }
-        return version_id;
-    }
-
     displayArticleVersion (entry: ArticleLogEntry) {
         const { pageId, pathParams } = this.props;
-        let version_id = this.getVersionId(entry)
-        if (version_id !== null) {
-            fetchArticleVersion(version_id, pathParams).then(function (resp) {
-                showVersionMessage(entry.revNumber, new Date(entry.createdAt), entry.user, pageId);
-                document.getElementById("page-content").innerHTML = resp.rendered;
-            })
-        }
+        fetchArticleVersion(pageId, entry.revNumber, pathParams).then(function (resp) {
+            showVersionMessage(entry.revNumber, new Date(entry.createdAt), entry.user, pageId);
+            document.getElementById("page-content").innerHTML = resp.rendered;
+        })
     }
 
     displayVersionSource (entry: ArticleLogEntry) {
         const { pageId, pathParams } = this.props;
-        let version_id = this.getVersionId(entry)
         let onClose = this.hideSubArea;
         let show = this.showSubArea;
-        if (version_id !== null) {
-            fetchArticleVersion(version_id, pathParams).then(function (resp) {
-                onClose();
-                show(<ArticleSource pageId={pageId} onClose={onClose} source={resp.source} />);
-            })
-        }
+        fetchArticleVersion(pageId, entry.revNumber, pathParams).then(function (resp) {
+            onClose();
+            show(<ArticleSource pageId={pageId} onClose={onClose} source={resp.source} />);
+        })
     }
 
     showSubArea = (component: JSX.Element) => {

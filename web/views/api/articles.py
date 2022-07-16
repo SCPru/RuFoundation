@@ -171,15 +171,26 @@ class FetchOrRevertLogView(APIView):
 
 
 class FetchVersionView(APIView):
-    def get(self, request: HttpRequest) -> HttpResponse:
-        version = articles.get_version(request.GET.get('id'))
-        if not version:
+    def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        entry = articles.get_log_entry(full_name, request.GET.get('revNum'))
+        if not entry:
             raise APIError('Версии с данным идентификатором не существует', 404)
 
-        if version.rendered:
-            rendered = version.rendered
+        version = None
+        if "version_id" in entry.meta:
+            version = articles.get_version(entry.meta["version_id"])
         else:
-            context = RenderContext(version.article, version.article, json.loads(request.GET.get('pathParams', "{}")), self.request.user)
-            rendered = single_pass_render(version.source, context)
+            log_entries = list(articles.get_log_entries(full_name))
+            for old_entry in log_entries[log_entries.index(entry):]:
+                if "version_id" in old_entry.meta:
+                    version = articles.get_version(old_entry.meta["version_id"])
 
-        return self.render_json(200, {'source': version.source, "rendered":  rendered})
+        if version:
+            if version.rendered:
+                rendered = version.rendered
+            else:
+                context = RenderContext(version.article, version.article, json.loads(request.GET.get('pathParams', "{}")), self.request.user)
+                rendered = single_pass_render(version.source, context)
+
+            return self.render_json(200, {'source': version.source, "rendered":  rendered})
+        raise APIError('Версии с данным идентификатором не существует', 404)
