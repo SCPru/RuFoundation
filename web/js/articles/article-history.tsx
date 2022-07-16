@@ -225,6 +225,9 @@ class ArticleHistory extends Component<Props, State> {
     }
 
     renderActions (entry: ArticleLogEntry) {
+        if (entry.type === 'wikidot') {
+            return null;
+        }
         return <>
             <button className={"action"} onClick={() => this.displayArticleVersion(entry)} title="Просмотр изменений страницы">V</button>
             <button className={"action"} onClick={() => this.displayVersionSource(entry)} title="Просмотр источника изменений">S</button>
