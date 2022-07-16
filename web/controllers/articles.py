@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser as _UserType
 from django.db.models import QuerySet
-from django.db import transaction
 from web.models.articles import *
 from web.models.files import *
 
@@ -96,7 +95,6 @@ def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int,
 
 
 # Revert all revisions to specific revision
-@transaction.atomic
 def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number: int, user: Optional[_UserType] = None):
     article = get_article(full_name_or_article)
     latest = get_latest_log_entry(article)
