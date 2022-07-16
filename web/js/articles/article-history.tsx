@@ -200,6 +200,9 @@ class ArticleHistory extends Component<Props, State> {
             case 'file_deleted':
             case 'file_renamed':
                 return <span className="spantip" title="действия с файлом/вложением">F</span>
+
+            case 'wikidot':
+                return <span className="spantip" title="правка, портированная с Wikidot">W</span>
         }
     }
 

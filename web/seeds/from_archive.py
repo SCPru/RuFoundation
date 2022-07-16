@@ -6,6 +6,9 @@ import shutil
 import os, os.path
 import sys
 import json
+
+from django.db import transaction
+
 from web.controllers import articles
 import time
 import codecs
@@ -17,6 +20,7 @@ import threading
 import logging
 from scpdev import urls
 from web import threadvars
+from web.models.articles import ArticleVersion, ArticleLogEntry
 from web.models.files import File
 from web.models.sites import get_current_site
 from system.models import User
@@ -66,19 +70,24 @@ def run_in_threads(fn, pages):
             break
 
 
+get_or_create_user_lock = threading.Lock()
+
+
+@transaction.atomic
 def get_or_create_user(user_name_or_id):
-    if type(user_name_or_id) == str:
-        user_name = user_name_or_id
-    elif type(user_name_or_id) == int:
-        user_name = 'deleted-%d' % user_name_or_id
-    else:
-        raise TypeError('Invalid parameter for Wikidot user: %s' % repr(user_name_or_id))
-    existing = list(User.objects.filter(type=User.UserType.Wikidot, username__iexact=user_name))
-    if not existing:
-        new_user = User(type=User.UserType.Wikidot, username=user_name, is_active=False)
-        new_user.save()
-        return new_user
-    return existing[0]
+    with get_or_create_user_lock:
+        if type(user_name_or_id) == str:
+            user_name = user_name_or_id
+        elif type(user_name_or_id) == int:
+            user_name = 'deleted-%d' % user_name_or_id
+        else:
+            raise TypeError('Invalid parameter for Wikidot user: %s' % repr(user_name_or_id))
+        existing = list(User.objects.filter(type=User.UserType.Wikidot, username__iexact=user_name))
+        if not existing:
+            new_user = User(type=User.UserType.Wikidot, username=user_name, is_active=False)
+            new_user.save()
+            return new_user
+        return existing[0]
 
 
 def run(base_path):
@@ -92,11 +101,12 @@ def run(base_path):
     t_lock = threading.RLock()
     pages = maybe_load_pages_meta(base_path)
 
+    total_pages = len(pages)
+    total_revisions = 0
     total_files = 0
     for meta in pages:
         total_files += len(meta.get('files', []))
-
-    total_pages = len(pages)
+        total_revisions += len(meta.get('revisions', []))
 
     from_files = '%s/files' % base_path
     to_files = str(Path(settings.MEDIA_ROOT) / site.slug)
@@ -134,8 +144,7 @@ def run(base_path):
                     author=file_user,
                     article=article,
                     mime_type=file['mime'],
-                    size=file['size_bytes'],
-                    created_at=datetime.datetime.fromtimestamp(file['stamp'], tz=datetime.timezone.utc)
+                    size=file['size_bytes']
                 )
                 local_media_dir = os.path.dirname(new_file.local_media_path)
                 if not os.path.exists(local_media_dir):
@@ -146,6 +155,8 @@ def run(base_path):
                     continue
                 shutil.copyfile(from_path, to_path)
                 new_file.save()
+                new_file.created_at = datetime.datetime.fromtimestamp(file['stamp'], tz=datetime.timezone.utc)
+                new_file.save()
                 with t_lock:
                     if time.time() - t > 1:
                         logging.info('Added: %d/%d' % (total_cnt, total_files))
@@ -153,13 +164,15 @@ def run(base_path):
 
     def page_worker_thread(pages):
         nonlocal total_cnt
+        nonlocal total_cnt_rev
         nonlocal t
+
+        users = {}
         for meta in pages:
             total_cnt += 1
             f = meta['filename']
             pagename = meta['name']
             title = meta['title'] if 'title' in meta else None
-            top_rev = meta['revisions'][0]['revision']
             tags = meta['tags'] if 'tags' in meta else []
             updated_at = datetime.datetime.fromtimestamp(meta['revisions'][0]['stamp'], tz=datetime.timezone.utc)
             created_at = datetime.datetime.fromtimestamp(meta['revisions'][-1]['stamp'], tz=datetime.timezone.utc)
@@ -167,30 +180,68 @@ def run(base_path):
             fn_7z = '%s/pages/%s' % (base_path, fn_7z)
             if not os.path.exists(fn_7z):
                 continue
+
+            # create article and set tags
             article = articles.get_article(pagename)
             if article:
                 logging.warning('Warn: article exists: %s', pagename)
+                total_cnt_rev += len(meta.get('revisions', []))
                 continue
+            article = articles.create_article(pagename)
+            article.created_at = created_at
+            article.updated_at = updated_at
+            if title is not None:
+                article.title = title
+            else:
+                article.title = ''
+            article.save()
+            if tags:
+                articles.set_tags(article, tags, log=False)
+
+            # add all revisions
+            revisions = list(reversed(meta['revisions']))
+
             with py7zr.SevenZipFile(fn_7z) as z:
-                [(_, bio)] = z.read(['%d.txt' % top_rev]).items()
-                content = bio.read().decode('utf-8')
-                article = articles.create_article(pagename)
-                article.created_at = created_at
-                article.updated_at = updated_at
-                if title is not None:
-                    article.title = title
-                else:
-                    article.title = ''
-                article.save()
-                articles.create_article_version(article, content)
-                if tags:
-                    articles.set_tags(article, tags)
+                all_file_names = ['%d.txt' % x['revision'] for x in revisions if 'S' in x['flags'] or 'N' in x['flags']]
+                text_revisions = z.read(all_file_names)
+                for revision in revisions:
+                    total_cnt_rev += 1
+                    # add revision content if it's source revision
+                    if revision['author'] in users:
+                        user = users[revision['author']]
+                    else:
+                        user = users[revision['author']] = get_or_create_user(revision['author'])
+                    log = ArticleLogEntry(
+                        rev_number=revision['revision'],
+                        article=article,
+                        user=user,
+                        type=ArticleLogEntry.LogEntryType.Wikidot,
+                        comment=revision['commentary']
+                    )
+                    if 'S' in revision['flags'] or 'N' in revision['flags']:
+                        content = text_revisions['%d.txt' % revision['revision']].read().decode('utf-8')
+                        version = ArticleVersion(
+                            article=article,
+                            source=content,
+                            rendered=None,
+                        )
+                        version.save()
+                        log.meta = {'version_id': version.id}
+                        if 'N' in revision['flags']:
+                            log.type = ArticleLogEntry.LogEntryType.New
+                            log.meta['title'] = article.title
+                        else:
+                            log.type = ArticleLogEntry.LogEntryType.Source
+                    log.save()
+                    log.created_at = datetime.datetime.fromtimestamp(revision['stamp'], tz=datetime.timezone.utc)
+                    log.save()
             with t_lock:
                 if time.time() - t > 1:
-                    logging.info('Added: %d/%d' % (total_cnt, total_pages))
+                    logging.info('Added: %d/%d (revisions: %d/%d)' % (total_cnt, total_pages, total_cnt_rev, total_revisions))
                     t = time.time()
 
     total_cnt = 0
+    total_cnt_rev = 0
     logging.info('Adding articles...')
     run_in_threads(page_worker_thread, pages)
     total_cnt = 0
@@ -232,4 +283,7 @@ def set_parents(base_path_or_list):
         if article:
             if parent:
                 logging.info('Parent: %s -> %s' % (pagename, parent))
-            articles.set_parent(article, parent or None)
+            parent_article = articles.get_article(parent)
+            if parent_article:
+                article.parent = parent_article
+                article.save()

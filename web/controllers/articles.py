@@ -236,7 +236,7 @@ def get_tags(full_name_or_article: _FullNameOrArticle) -> Sequence[str]:
 
 
 # Set tags for article
-def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user: Optional[_UserType] = None):
+def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user: Optional[_UserType] = None, log: bool = True):
     article = get_article(full_name_or_article)
     article_tags = article.tags.all()
     tags = [Tag.objects.get_or_create(name=x.lower())[0] for x in tags if is_tag_name_allowed(x)]
@@ -257,7 +257,7 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user
             article.tags.add(tag)
             added_tags.append(tag.name)
 
-    if removed_tags or added_tags:
+    if (removed_tags or added_tags) and log:
         log = ArticleLogEntry(
             article=article,
             user=user,
