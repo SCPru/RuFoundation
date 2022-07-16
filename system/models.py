@@ -14,12 +14,14 @@ class User(AbstractUser):
         Wikidot = 'wikidot'
         System = 'system'
 
-    username = CITextField(max_length=150, validators=[AbstractUser.username_validator],
-                           verbose_name="Имя пользователя",
-                           error_messages={
-                               "unique": "Пользователь с данным именем уже существует",
-                           },
-                           )
+    username = CITextField(
+        max_length=150,
+        validators=[AbstractUser.username_validator],
+        verbose_name="Имя пользователя",
+        error_messages={
+            "unique": "Пользователь с данным именем уже существует",
+        }
+    )
 
     type = models.TextField(choices=UserType.choices, default=UserType.Normal, verbose_name="Тип")
 
