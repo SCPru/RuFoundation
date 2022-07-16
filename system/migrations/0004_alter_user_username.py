@@ -12,6 +12,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL('CREATE EXTENSION IF NOT EXISTS citext'),
         migrations.AlterField(
             model_name='user',
             name='username',
