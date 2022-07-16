@@ -95,7 +95,7 @@ def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int,
 
 
 # Creates new article version for specified article
-def create_article_version(full_name_or_article: _FullNameOrArticle, source: str, user: Optional[_UserType] = None) -> ArticleVersion:
+def create_article_version(full_name_or_article: _FullNameOrArticle, source: str, user: Optional[_UserType] = None, comment: str = "") -> ArticleVersion:
     article = get_article(full_name_or_article)
     is_new = get_latest_version(article) is None
     version = ArticleVersion(
@@ -110,14 +110,16 @@ def create_article_version(full_name_or_article: _FullNameOrArticle, source: str
             article=article,
             user=user,
             type=ArticleLogEntry.LogEntryType.New,
-            meta={'version_id': version.id, 'title': article.title}
+            meta={'version_id': version.id, 'title': article.title},
+            comment=comment
         )
     else:
         log = ArticleLogEntry(
             article=article,
             user=user,
             type=ArticleLogEntry.LogEntryType.Source,
-            meta={'version_id': version.id}
+            meta={'version_id': version.id},
+            comment=comment
         )
     add_log_entry(article, log)
     return version

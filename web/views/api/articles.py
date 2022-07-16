@@ -90,7 +90,7 @@ class FetchOrUpdateView(ArticleView):
 
         # check if changing source
         if 'source' in data and data['source'] != articles.get_latest_source(article):
-            articles.create_article_version(article, data['source'], request.user)
+            articles.create_article_version(article, data['source'], request.user, data['comment'] if 'comment' in data else '')
 
         # check if changing tags
         if 'tags' in data:
