@@ -1,7 +1,6 @@
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 from django.template.loader import render_to_string
 from django.http import HttpResponseRedirect
-from django.conf import settings
 
 from renderer.utils import render_user_to_json
 from web.models.articles import Article
@@ -101,6 +100,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'site_name': site.title,
             'site_headline': site.headline,
             'site_title': title or site.title,
+            'site_icon': site.icon,
 
             'nav_top': nav_top,
             'nav_side': nav_side,

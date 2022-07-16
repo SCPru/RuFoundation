@@ -22,6 +22,10 @@ export async function updateArticle(id: string, data: ArticleData) {
     await wFetch(`/api/articles/${id}`, {method: 'PUT', sendJson: true, body: data});
 }
 
+export async function deleteArticle(id: string) {
+    await wFetch(`/api/articles/${id}`, {method: 'DELETE', sendJson: true});
+}
+
 export interface ArticleLogEntry {
     revNumber: number
     user: UserData
@@ -38,4 +42,17 @@ export interface ArticleLog {
 
 export async function fetchArticleLog(id: string, from: number = 0, to: number = from+25): Promise<ArticleLog> {
     return await wFetch<ArticleLog>(`/api/articles/${id}/log?from=${from}&to=${to}`)
+}
+
+export async function revertArticleRevision(id: string, revNumber: number): Promise<ArticleData> {
+    return await wFetch(`/api/articles/${id}/log`, {method: 'PUT', sendJson: true, body: {revNumber: revNumber}})
+}
+
+export interface ArticleVersion {
+    source: string
+    rendered: string
+}
+
+export async function fetchArticleVersion(id: string, pathParams?: { [key: string]: string }): Promise<ArticleVersion> {
+    return await wFetch<ArticleVersion>(`/api/articles/version?id=${id}&pathParams=${JSON.stringify(pathParams)}`)
 }

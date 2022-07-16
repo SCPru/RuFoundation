@@ -20,6 +20,7 @@ class Site(models.Model):
 
     title = models.TextField(verbose_name='Заголовок', null=False)
     headline = models.TextField(verbose_name='Подзаголовок', null=False)
+    icon = models.ImageField(null=True, blank=True, upload_to='-/sites', verbose_name="Иконка")
 
     domain = models.TextField(verbose_name='Домен для статей', null=False)
     media_domain = models.TextField(verbose_name='Домен для файлов', null=False)

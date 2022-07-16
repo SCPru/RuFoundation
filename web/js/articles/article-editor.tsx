@@ -19,6 +19,7 @@ interface Props {
 interface State {
     title: string
     source: string
+    comment: string
     loading: boolean
     saving: boolean
     savingSuccess?: boolean
@@ -88,6 +89,7 @@ class ArticleEditor extends Component<Props, State> {
         this.state = {
             title: props.isNew ? guessTitle(props.pageId) : '',
             source: '',
+            comment: '',
             loading: true,
             saving: false
         }
@@ -114,7 +116,8 @@ class ArticleEditor extends Component<Props, State> {
         const input = {
             pageId: this.props.pageId,
             title: this.state.title,
-            source: this.state.source
+            source: this.state.source,
+            comment: this.state.comment
         };
         if (isNew) {
             try {
@@ -147,9 +150,9 @@ class ArticleEditor extends Component<Props, State> {
             source: this.state.source,
             pathParams: this.props.pathParams,
         };
-        showPreviewMessage();
         makePreview(data).then(function (resp) {
-            document.getElementById("page-title").innerText = resp.title
+            showPreviewMessage();
+            document.getElementById("page-title").innerText = resp.title;
             document.getElementById("page-content").innerHTML = resp.content;
         });
     };
@@ -178,7 +181,7 @@ class ArticleEditor extends Component<Props, State> {
 
     render() {
         const { isNew } = this.props;
-        const { title, source, loading, saving, savingSuccess, error } = this.state;
+        const { title, source, comment, loading, saving, savingSuccess, error } = this.state;
         return (
             <Styles>
                 { saving && <WikidotModal isLoading>Сохранение...</WikidotModal> }
@@ -204,6 +207,8 @@ class ArticleEditor extends Component<Props, State> {
                     <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
                     <div className={`editor-area ${loading?'loading':''}`}>
                         <textarea id="edit-page-textarea" value={source} onChange={this.onChange} name="source" rows={20} cols={60} style={{ width: '95%' }} disabled={loading||saving} />
+                        <p>Краткое описание изменений:</p>
+                        <textarea id="edit-page-comments" value={comment} onChange={this.onChange} name="comment" rows={3} cols={20} style={{ width: '35%' }} disabled={loading||saving} />
                         { loading && <Loader className="loader" /> }
                     </div>
                     <div className="buttons alignleft">

@@ -3,6 +3,7 @@ from django.contrib import admin
 from django import forms
 
 from .models.articles import *
+from .models.files import File
 from .models.sites import Site
 
 
@@ -84,7 +85,7 @@ class ArticleAdmin(GuardedModelAdmin):
     form = SiteForm
 
 
-@admin.register(ArticleVersion, ArticleLogEntry)
+@admin.register(ArticleVersion, ArticleLogEntry, File)
 class BaseAdmin(admin.ModelAdmin):
     list_filter = ['site__domain']
 

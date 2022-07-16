@@ -1,9 +1,7 @@
+from django.contrib.postgres.fields import CITextField
 from django.contrib.auth.models import AbstractUser
-from django.shortcuts import resolve_url
 from django.conf import settings
 from django.db import models
-
-from web.models.sites import get_current_site
 
 
 class User(AbstractUser):
@@ -15,6 +13,13 @@ class User(AbstractUser):
         Normal = 'normal'
         Wikidot = 'wikidot'
         System = 'system'
+
+    username = CITextField(max_length=150, validators=[AbstractUser.username_validator],
+                           verbose_name="Имя пользователя",
+                           error_messages={
+                               "unique": "Пользователь с данным именем уже существует",
+                           },
+                           )
 
     type = models.TextField(choices=UserType.choices, default=UserType.Normal, verbose_name="Тип")
 

@@ -5,6 +5,10 @@ from . import APIView, APIError, takes_json
 from web.controllers import articles
 
 from renderer.utils import render_user_to_json
+from renderer import single_pass_render
+from renderer.parser import RenderContext
+
+import json
 
 
 class ArticleView(APIView):
@@ -90,7 +94,7 @@ class FetchOrUpdateView(ArticleView):
 
         # check if changing source
         if 'source' in data and data['source'] != articles.get_latest_source(article):
-            articles.create_article_version(article, data['source'], request.user)
+            articles.create_article_version(article, data['source'], request.user, data.get('comment', ''))
 
         # check if changing tags
         if 'tags' in data:
@@ -110,8 +114,21 @@ class FetchOrUpdateView(ArticleView):
 
         return self.render_json(200, {'status': 'ok'})
 
+    def delete(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        # find page
+        article = articles.get_article(full_name)
+        if article is None:
+            raise APIError('Страница не найдена', 404)
 
-class FetchLogView(APIView):
+        if not articles.has_perm(request.user, "web.delete_article", article):
+            raise APIError('Недостаточно прав', 403)
+
+        article.delete()
+
+        return self.render_json(200, {'status': 'ok'})
+
+
+class FetchOrRevertLogView(APIView):
     def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
         try:
             c_from = int(request.GET.get('from', '0'))
@@ -133,3 +150,36 @@ class FetchLogView(APIView):
             })
 
         return self.render_json(200, {'count': total_count, 'entries': output})
+
+    @takes_json
+    def put(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        article = articles.get_article(full_name)
+        if article is None:
+            raise APIError('Страница не найдена', 404)
+
+        if not articles.has_perm(request.user, "web.change_article", article):
+            raise APIError('Недостаточно прав', 403)
+
+        data = self.json_input
+
+        if not ("revNumber" in data and isinstance(data["revNumber"], int)):
+            raise APIError('Некорректный номер ревизии', 400)
+
+        articles.revert_article_version(article, data["revNumber"], request.user)
+
+        return self.render_json(200, {"pageId": article.full_name})
+
+
+class FetchVersionView(APIView):
+    def get(self, request: HttpRequest) -> HttpResponse:
+        version = articles.get_version(request.GET.get('id'))
+        if not version:
+            raise APIError('Версии с данным идентификатором не существует', 404)
+
+        if version.rendered:
+            rendered = version.rendered
+        else:
+            context = RenderContext(version.article, version.article, json.loads(request.GET.get('pathParams', "{}")), self.request.user)
+            rendered = single_pass_render(version.source, context)
+
+        return self.render_json(200, {'source': version.source, "rendered":  rendered})

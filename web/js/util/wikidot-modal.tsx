@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom';
 import {Component} from 'react';
 import styled from 'styled-components';
 import { v4 as uuid4 } from 'uuid';
+import {ArticleLogEntry, revertArticleRevision} from "../api/articles";
 
 
 interface Button {
@@ -170,6 +171,30 @@ export function showErrorModal(error) {
     const modal =
         <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]}>
             <strong>Ошибка:</strong> {error}
+        </WikidotModal>;
+
+    uuid = addUnmanagedModal(modal);
+}
+
+
+export function showRevertModal(pageId: string, entry: ArticleLogEntry) {
+    let uuid: string | null = null;
+
+    const onClose = () => {
+        removeUnmanagedModal(uuid);
+    };
+
+    const onRevert = () => {
+        onClose();
+        revertArticleRevision(pageId, entry.revNumber).then(function (pageData) {
+            window.location.href = `/${pageData.pageId}`;
+        }).catch(error => {showErrorModal(error.toString())});
+    }
+
+    const modal =
+        <WikidotModal buttons={[{title: 'Отменить', onClick: onClose}, {title: "Да, вернуть", onClick: onRevert}]}>
+            <h1>Вернуть версию страницы?</h1>
+            Вы уверены, что хотите откатить версию страницы к ревизии <strong>№{entry.revNumber}</strong>?
         </WikidotModal>;
 
     uuid = addUnmanagedModal(modal);
