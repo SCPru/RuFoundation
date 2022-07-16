@@ -10,6 +10,7 @@ import ArticleParent from "../articles/article-parent";
 import ArticleRename from "../articles/article-rename";
 import ArticleLock from "../articles/article-lock";
 import ArticleFiles from "../articles/article-files";
+import ArticleDelete from "../articles/article-delete";
 
 
 interface Props {
@@ -24,7 +25,7 @@ interface Props {
 
 
 interface State {
-    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'lock' | 'rename' | 'files' | null
+    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'lock' | 'rename' | 'files' | 'delete' | null
     extOptions: boolean
 }
 
@@ -120,6 +121,15 @@ class PageOptions extends Component<Props, State> {
         });
     };
 
+    onDelete = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ subView: 'delete' });
+        setTimeout(() => {
+            window.scrollTo(window.scrollX, document.body.scrollHeight);
+        });
+    };
+
     toggleExtOptions = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -149,6 +159,7 @@ class PageOptions extends Component<Props, State> {
                     { editable && <a id="parent-button" className="btn btn-default" href="#" onClick={this.onParent}>Родитель</a> }
                     { lockable && <a id="lock-button" className="btn btn-default" href="#" onClick={this.onLock}>Заблокировать страницу</a> }
                     { editable && <a id="rename-button" className="btn btn-default" href="#" onClick={this.onRename}>Переименовать</a> }
+                    { editable && <a id="delete-button" className="btn btn-default" href="#" onClick={this.onDelete}>Удалить</a> }
                 </div> }
                 { this.renderSubView() }
             </>
@@ -190,6 +201,9 @@ class PageOptions extends Component<Props, State> {
 
             case 'files':
                 return <ArticleFiles pageId={pageId} onClose={this.onCancelSubView} editable={editable} />;
+
+            case 'delete':
+                return <ArticleDelete pageId={pageId} onClose={this.onCancelSubView} />;
 
             default:
                 return null

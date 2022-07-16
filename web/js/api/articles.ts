@@ -22,6 +22,10 @@ export async function updateArticle(id: string, data: ArticleData) {
     await wFetch(`/api/articles/${id}`, {method: 'PUT', sendJson: true, body: data});
 }
 
+export async function deleteArticle(id: string) {
+    await wFetch(`/api/articles/${id}`, {method: 'DELETE', sendJson: true});
+}
+
 export interface ArticleLogEntry {
     revNumber: number
     user: UserData

@@ -110,6 +110,19 @@ class FetchOrUpdateView(ArticleView):
 
         return self.render_json(200, {'status': 'ok'})
 
+    def delete(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        # find page
+        article = articles.get_article(full_name)
+        if article is None:
+            raise APIError('Страница не найдена', 404)
+
+        if not articles.has_perm(request.user, "web.delete_article", article):
+            raise APIError('Недостаточно прав', 403)
+
+        article.delete()
+
+        return self.render_json(200, {'status': 'ok'})
+
 
 class FetchLogView(APIView):
     def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
