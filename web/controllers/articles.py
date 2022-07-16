@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser as _UserType
 from django.db.models import QuerySet
+from django.db import transaction
 from web.models.articles import *
 from web.models.files import *
 
@@ -92,6 +93,46 @@ def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int,
     log_entries = get_log_entries(full_name_or_article)
     total_count = len(log_entries)
     return log_entries[c_from:c_to], total_count
+
+
+# Revert all revisions to specific revision
+@transaction.atomic
+def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number: int, user: Optional[_UserType] = None):
+    article = get_article(full_name_or_article)
+    latest = get_latest_log_entry(article)
+
+    rev_number += 1
+    if latest.rev_number > rev_number:
+        for entry in get_log_entries(article):
+            if entry.type == ArticleLogEntry.LogEntryType.Source:
+                create_article_version(article, get_version(entry.meta['version_id']).source, user)
+            elif entry.type == ArticleLogEntry.LogEntryType.Title:
+                update_title(article, entry.meta["prev_title"], user)
+            elif entry.type == ArticleLogEntry.LogEntryType.Name:
+                update_full_name(article, entry.meta["prev_name"], user)
+            elif entry.type == ArticleLogEntry.LogEntryType.Tags:
+                tags = list(get_tags(article))
+                for tag in entry.meta["added_tags"]:
+                    if tag in tags:
+                        tags.remove(tag)
+                for tag in entry.meta["removed_tags"]:
+                    tags.append(tag)
+                set_tags(article, tags, user)
+            elif entry.type == ArticleLogEntry.LogEntryType.New:
+                update_title(article, entry.meta["title"], user)
+                create_article_version(article, get_version(entry.meta['version_id']).source, user)
+                break
+            elif entry.type == ArticleLogEntry.LogEntryType.Parent:
+                set_parent(article, entry.meta["prev_parent"], user)
+            elif entry.type == ArticleLogEntry.LogEntryType.FileAdded:
+                delete_file_from_article(article, get_file_in_article(article, entry.meta["name"]), user)
+            elif entry.type == ArticleLogEntry.LogEntryType.FileDeleted:
+                restore_file_from_article(article, get_file_in_article(article, entry.meta["name"], allow_deleted=True), user)
+            elif entry.type == ArticleLogEntry.LogEntryType.FileRenamed:
+                rename_file_in_article(article, get_file_in_article(article, entry.meta["name"]), entry.meta["prev_name"], user)
+
+            if entry.rev_number == rev_number:
+                break
 
 
 # Creates new article version for specified article
@@ -246,6 +287,7 @@ def get_tags(full_name_or_article: _FullNameOrArticle) -> Sequence[str]:
 
 
 # Set tags for article
+@transaction.atomic
 def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user: Optional[_UserType] = None):
     article = get_article(full_name_or_article)
     article_tags = article.tags.all()
@@ -309,11 +351,13 @@ def set_lock(full_name_or_article: _FullNameOrArticle, locked: bool, user: Optio
 
 
 # Get file in article
-def get_file_in_article(full_name_or_article: _FullNameOrArticle, file_name: str) -> Optional[File]:
+def get_file_in_article(full_name_or_article: _FullNameOrArticle, file_name: str, allow_deleted: bool = False) -> Optional[File]:
     article = get_article(full_name_or_article)
     if article is None:
         return None
-    files = File.objects.filter(article=article, name__iexact=file_name, deleted_at=None)
+    files = File.objects.filter(article=article, name__iexact=file_name)
+    if not allow_deleted:
+        files = files.filter(deleted_at__isnull=True)
     if not files:
         return None
     return files[0]
@@ -368,6 +412,25 @@ def delete_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fil
             meta={'name': file.name}
         )
         add_log_entry(article, log)
+
+
+# Restore deleted file to article
+def restore_file_from_article(full_name_or_article: _FullNameOrArticle, file: File, user: Optional[_UserType] = None):
+    article = get_article(full_name_or_article)
+    if file.article != article:
+        raise ValueError(f'File article "{get_full_name(article)}" is not the same as "{article.full_name}" for restoration')
+    if not file.deleted_at:
+        raise ValueError('File is not deleted')
+    file.deleted_at = None
+    file.deleted_by = None
+    file.save()
+    log = ArticleLogEntry(
+        article=article,
+        user=user,
+        type=ArticleLogEntry.LogEntryType.FileAdded,
+        meta={'name': file.name}
+    )
+    add_log_entry(article, log)
 
 
 # Rename file in article

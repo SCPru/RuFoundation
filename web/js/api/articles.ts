@@ -44,6 +44,10 @@ export async function fetchArticleLog(id: string, from: number = 0, to: number =
     return await wFetch<ArticleLog>(`/api/articles/${id}/log?from=${from}&to=${to}`)
 }
 
+export async function revertArticleRevision(id: string, revNumber: number): Promise<ArticleData> {
+    return await wFetch(`/api/articles/${id}/log`, {method: 'PUT', sendJson: true, body: {revNumber: revNumber}})
+}
+
 export interface ArticleVersion {
     source: string
     rendered: string

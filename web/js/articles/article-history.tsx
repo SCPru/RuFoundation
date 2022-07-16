@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Component } from 'react';
 import {ArticleLogEntry, fetchArticleLog, fetchArticleVersion} from "../api/articles";
-import WikidotModal from "../util/wikidot-modal";
+import WikidotModal, {showRevertModal} from "../util/wikidot-modal";
 import sleep from "../util/async-sleep";
 import styled from "styled-components";
 import Loader from "../util/loader";
@@ -76,6 +76,7 @@ const Styles = styled.div<{loading?: boolean}>`
       text-decoration: none;
       color: #824;
       background: transparent;
+      cursor: pointer;
     }
   }
 }
@@ -224,6 +225,7 @@ class ArticleHistory extends Component<Props, State> {
         return <>
             <button className={"action"} onClick={() => this.displayArticleVersion(entry)} title="Просмотр изменений страницы">V</button>
             <button className={"action"} onClick={() => this.displayVersionSource(entry)} title="Просмотр источника изменений">S</button>
+            {this.state.entries[0] !== entry && <button className={"action"} onClick={() => this.revertArticleVersion(entry)} title="Вернуться к правке">R</button>}
         </>;
     }
 
@@ -328,6 +330,11 @@ class ArticleHistory extends Component<Props, State> {
 
     hideSubArea =  () => {
         this.setState({subarea: null})
+    }
+
+    revertArticleVersion (entry: ArticleLogEntry) {
+        const {pageId} = this.props;
+        showRevertModal(pageId, entry);
     }
 
 }
