@@ -263,6 +263,9 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
             """
             <div class="pager">
                 <span class="pager-no">страница&nbsp;{{page}}&nbsp;из&nbsp;{{total_pages}}</span>
+                {% if show_prev_page %}
+                    <span class="target"><a href="{{base_path}}/p/{{prev_page}}" data-pagination-target="{{prev_page}}">&laquo;&nbsp;предыдущая</a></span>
+                {% endif %}
                 {% for p in left_pages %}
                     {% if page == p %}
                         <span class="target current">{{p}}</span>
@@ -290,6 +293,9 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
                         <span class="target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
                     {% endif %}
                 {% endfor %}
+                {% if show_next_page %}
+                    <span class="target"><a href="{{base_path}}/p/{{next_page}}" data-pagination-target="{{next_page}}">следующая&nbsp;&raquo;</a></span>
+                {% endif %}
             </div>
             """,
             left_pages=range(left_from, left_to+1),
@@ -297,6 +303,10 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
             right_pages=range(right_from, right_to+1),
             show_left_dots=(center_from > left_to + 1),
             show_right_dots=(center_to < right_from - 1),
+            show_prev_page=pagination_page > 1,
+            prev_page=pagination_page-1,
+            show_next_page=pagination_page < pagination_total_pages,
+            next_page=pagination_page+1,
             base_path=base_path,
             page=pagination_page,
             total_pages=pagination_total_pages

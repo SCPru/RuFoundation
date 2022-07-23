@@ -128,7 +128,7 @@ class ArticleRating extends Component<Props, State> {
                     </div>
                     <div className="w-stars-rate-cancel" />
                 </div>
-                <div className="w-stars-rate-votes">голосов:&nbsp;<span class="w-stars-rate-number">{votes.length}</span></div>
+                <div className="w-stars-rate-votes">голосов:&nbsp;<span className="w-stars-rate-number">{votes.length}</span></div>
             </div>
         )
     }

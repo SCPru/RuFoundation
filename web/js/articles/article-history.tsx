@@ -9,6 +9,7 @@ import formatDate from "../util/date-format";
 import UserView from "../util/user-view";
 import {showVersionMessage} from "../util/wikidot-message";
 import ArticleSource from "./article-source";
+import Pagination from '../util/pagination'
 
 
 interface Props {
@@ -24,7 +25,6 @@ interface State {
     subarea?: JSX.Element
     entryCount: number
     page: number
-    nextPage?: number
     perPage: number
     error?: string
     fatalError?: boolean
@@ -101,16 +101,16 @@ class ArticleHistory extends Component<Props, State> {
         this.loadHistory();
     }
 
-    async loadHistory() {
+    async loadHistory(nextPage?: number) {
         const { pageId } = this.props;
         const { page, perPage, entries } = this.state;
         this.setState({ loading: true, error: null });
         try {
-            const realPage = page;
+            const realPage = nextPage || page;
             const from = (realPage-1) * perPage;
             const to = (realPage) * perPage;
             const history = await fetchArticleLog(pageId, from, to);
-            this.setState({ loading: false, error: null, entries: history.entries, entryCount: history.count });
+            this.setState({ loading: false, error: null, entries: history.entries, entryCount: history.count, page: realPage });
         } catch (e) {
             this.setState({ loading: false, fatalError: entries === null, error: e.error || 'Ошибка связи с сервером' });
         }
@@ -133,8 +133,15 @@ class ArticleHistory extends Component<Props, State> {
         }
     };
 
+    onChangePage = (nextPage) => {
+        this.loadHistory(nextPage);
+    }
+
     render() {
-        const { error, entries, subarea, loading } = this.state;
+        const { error, entries, entryCount, page, perPage, subarea, loading } = this.state;
+
+        const totalPages = Math.ceil(entryCount / perPage);
+
         return (
             <Styles>
                 { error && (
@@ -146,6 +153,9 @@ class ArticleHistory extends Component<Props, State> {
                 <h1>История изменений</h1>
                 <div id="revision-list" className={`${loading?'loading':''}`}>
                     { loading && <Loader className="loader" /> }
+                    { entries && (
+                        <Pagination page={page} maxPages={totalPages} onChange={this.onChangePage} />
+                    ) }
                     { entries && (
                         <table className="page-history">
                             <tbody>
