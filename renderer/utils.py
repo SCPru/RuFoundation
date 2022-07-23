@@ -27,6 +27,8 @@ def render_user_to_text(user: User):
         return 'system'
     if isinstance(user, AnonymousUser):
         return 'Anonymous User'
+    if user.type == User.UserType.Wikidot:
+        return 'wd:'+user.wikidot_username
     return user.username
 
 
@@ -42,12 +44,14 @@ def render_user_to_html(user: User, avatar=True, hover=True):
         return ret
     if user.type == 'wikidot':
         avatar = settings.WIKIDOT_AVATAR
+        username = user.wikidot_username
     else:
         avatar = user.get_avatar(default=settings.DEFAULT_AVATAR)
-    ret = '<span class="printuser w-user%s" data-user-name="%s">' % ((' avatarhover' if hover else ''), html.escape(user.username))
+        username = user.username
+    ret = '<span class="printuser w-user%s" data-user-name="%s">' % ((' avatarhover' if hover else ''), html.escape(username))
     if avatar:
-        ret += '<a href="/-/users/%d-%s"><img class="small" src="%s" alt="%s"></a>' % (user.id, urllib.parse.quote_plus(user.username), avatar, html.escape(user.username))
-    ret += '<a href="/-/users/%d-%s">%s</a>' % (user.id, urllib.parse.quote_plus(user.username), html.escape(user.username))
+        ret += '<a href="/-/users/%d-%s"><img class="small" src="%s" alt="%s"></a>' % (user.id, urllib.parse.quote_plus(username), avatar, html.escape(username))
+    ret += '<a href="/-/users/%d-%s">%s</a>' % (user.id, urllib.parse.quote_plus(username), html.escape(username))
     ret += '</span>'
     return ret
 
@@ -60,4 +64,7 @@ def render_user_to_json(user: User, avatar=True):
     user_type = 'user'
     if user.type != User.UserType.Normal:
         user_type = user.type
-    return {'type': user_type, 'id': user.id, 'avatar': user.get_avatar(), 'name': user.username, 'username': user.username, 'showAvatar': avatar}
+    username = user.username
+    if user.type == User.UserType.Wikidot:
+        username = user.wikidot_username
+    return {'type': user_type, 'id': user.id, 'avatar': user.get_avatar(), 'name': username, 'username': username, 'showAvatar': avatar}
