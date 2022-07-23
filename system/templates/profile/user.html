@@ -14,11 +14,9 @@
 
 {% block content %}
     <div class="profile-form">
-        {% if not object.first_name and not object.last_name and not object.bio %}
-            Профиль пользователя пуст.
-        {% endif %}
         {% if object.first_name %}<p><b>Имя:</b> {{ object.first_name|escape }}</p>{% endif %}
         {% if object.last_name %}<p><b>Фамилия:</b> {{ object.last_name|escape }}</p>{% endif %}
         {% if object.bio %}<p><b>Описание:</b> {{ object.bio|escape }}</p>{% endif %}
+        <p><b>Участник сайта:</b> c {{ object.date_joined }}</p>
     </div>
 {% endblock %}
