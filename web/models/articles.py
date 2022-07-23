@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from .sites import SiteLimitedModel
+from .settings import Settings, DEFAULT_SETTINGS
 
 
 class Tag(SiteLimitedModel):
@@ -36,9 +37,17 @@ class Category(SiteLimitedModel):
                        ("can_lock_article_in_category", "Может заблокировать страницу для правок в категории")]
 
     name = models.TextField(verbose_name="Имя")
+    settings = models.OneToOneField(Settings, on_delete=models.DO_NOTHING, null=False)
 
     def __str__(self) -> str:
         return self.name
+
+    # this function returns site settings overridden by category settings.
+    # if neither is set, falls back to defaults defined in Settings class.
+    def get_settings(self):
+        category_settings = self.settings or Settings()
+        site_settings = self.site.settings or Settings()
+        return DEFAULT_SETTINGS.merge(site_settings).merge(category_settings)
 
 
 class Article(SiteLimitedModel):

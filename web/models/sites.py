@@ -3,6 +3,8 @@ from typing import Union, Sequence, Optional
 from django.db import models
 from web import threadvars
 
+from .settings import Settings
+
 
 class Site(models.Model):
     class Meta:
@@ -24,6 +26,8 @@ class Site(models.Model):
 
     domain = models.TextField(verbose_name='Домен для статей', null=False)
     media_domain = models.TextField(verbose_name='Домен для файлов', null=False)
+
+    settings = models.OneToOneField(Settings, on_delete=models.DO_NOTHING, null=False)
 
     def __str__(self) -> str:
         return f"{self.title} ({self.domain})"
