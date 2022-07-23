@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from web import seeds
+from web.models.settings import Settings
 from web.models.sites import Site
 
 
@@ -25,3 +25,6 @@ class Command(BaseCommand):
             media_domain=media_domain
         )
         site.save()
+
+        settings = Settings(site=site)
+        settings.save()

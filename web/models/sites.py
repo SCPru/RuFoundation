@@ -27,7 +27,8 @@ class Site(models.Model):
     domain = models.TextField(verbose_name='Домен для статей', null=False)
     media_domain = models.TextField(verbose_name='Домен для файлов', null=False)
 
-    settings = models.OneToOneField(Settings, on_delete=models.DO_NOTHING, null=False)
+    def get_settings(self):
+        return self.settings or Settings.get_default_settings()
 
     def __str__(self) -> str:
         return f"{self.title} ({self.domain})"
