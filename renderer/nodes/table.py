@@ -43,7 +43,7 @@ class TableNode(Node):
                         table_complete = True
                         p.tokenizer.position -= 1
                     else:
-                        p.tokenizer.position += 2
+                        p.tokenizer.position += 1
                     break
                 elif tk.type == TokenType.Tilde and not col_content:
                     col_type = 'th'
@@ -57,4 +57,6 @@ class TableNode(Node):
                         break
                     col_content += new_children
             rows.append(HTMLPlainNode('tr', [], row, True, True))
-        return HTMLPlainNode('table', [('class', 'wiki-content-table')], rows)
+        table_node = HTMLPlainNode('table', [('class', 'wiki-content-table')], rows)
+        table_node.allow_cache = False
+        return table_node

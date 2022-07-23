@@ -235,7 +235,10 @@ class Parser(object):
             node = self.parse_node()
             if node is None:
                 return []
-            self.node_cache[pos] = {'node': node, 'next_pos': self.tokenizer.position}
+            if node.allow_cache:
+                if len(self.tokenizer.tokens) < 400:
+                    print('caching node %s at %d -> %d' % (repr(node.to_json()), pos, self.tokenizer.position))
+                self.node_cache[pos] = {'node': node, 'next_pos': self.tokenizer.position}
             return [node]
 
     def read_simple_arg(self):

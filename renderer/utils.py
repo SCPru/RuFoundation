@@ -34,26 +34,45 @@ def render_user_to_text(user: User):
 
 def render_user_to_html(user: User, avatar=True, hover=True):
     if user is None:
-        return '<span class="printuser%s"><strong>system</strong></span>' % (' avatarhover' if hover else '')
+        return render_template_from_string(
+            '<span class="printuser{{class_add}}"><strong>system</strong></span>',
+             class_add=(' avatarhover' if hover else '')
+        )
     if isinstance(user, AnonymousUser):
-        ret = '<span class="printuser%s">' % (' avatarhover' if hover else '')
-        if avatar:
-            ret += '<a onclick="return false;"><img class="small" src="%s" alt="Anonymous User"></a>' % settings.ANON_AVATAR
-        ret += '<a onclick="return false;">Anonymous User</a>'
-        ret += '</span>'
-        return ret
+        return render_template_from_string(
+            """
+            <span class="printuser{{class_add}}">
+                {% if show_avatar %}
+                    <a onclick="return false;"><img class="small" src="{{avatar}}" alt="Anonymous User"></a>
+                {% endif %}
+                <a onclick="return false;">Anonymous User</a>
+            </span>
+            """,
+            class_add=(' avatarhover' if hover else ''),
+            show_avatar=avatar,
+            avatar=settings.ANON_AVATAR
+        )
     if user.type == 'wikidot':
-        avatar = settings.WIKIDOT_AVATAR
+        user_avatar = settings.WIKIDOT_AVATAR
         username = user.wikidot_username
     else:
-        avatar = user.get_avatar(default=settings.DEFAULT_AVATAR)
+        user_avatar = user.get_avatar(default=settings.DEFAULT_AVATAR)
         username = user.username
-    ret = '<span class="printuser w-user%s" data-user-name="%s">' % ((' avatarhover' if hover else ''), html.escape(username))
-    if avatar:
-        ret += '<a href="/-/users/%d-%s"><img class="small" src="%s" alt="%s"></a>' % (user.id, urllib.parse.quote_plus(username), avatar, html.escape(username))
-    ret += '<a href="/-/users/%d-%s">%s</a>' % (user.id, urllib.parse.quote_plus(username), html.escape(username))
-    ret += '</span>'
-    return ret
+    return render_template_from_string(
+        """
+        <span class="printuser w-user{{class_add}}" data-user-id="{{user_id}}" data-user-name="{{username}}">
+            {% if show_avatar %}
+                <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{username}}"></a>
+            {% endif %}
+            <a href="/-/users/{{user_id}}-{{username}}">{{username}}</a>
+        </span>
+        """,
+        class_add=(' avatarhover' if hover else ''),
+        show_avatar=avatar,
+        avatar=user_avatar,
+        user_id=user.id,
+        username=username
+    )
 
 
 def render_user_to_json(user: User, avatar=True):
