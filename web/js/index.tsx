@@ -4,7 +4,8 @@ import Page404 from './entrypoints/page-404';
 import PageOptions from "./entrypoints/page-options";
 import {makeCollapsible} from "./articles/collapsible";
 import {makeTabView} from "./articles/tabview";
-import {makeRateModule} from "./articles/rate";
+import {makeUpDownRateModule} from "./articles/rate-updown";
+import {makeStarsRateModule} from "./articles/rate-stars";
 import "./articles/auto-resize-iframe";
 import {makeListPages} from "./articles/list-pages";
 import {makePasswordToggle} from "./util/password";
@@ -33,7 +34,9 @@ window.addEventListener('DOMContentLoaded', () => {
         } else if (node.classList.contains('w-tabview')) {
             makeTabView(node);
         } else if (node.classList.contains('w-rate-module')) {
-            makeRateModule(node);
+            makeUpDownRateModule(node);
+        } else if (node.classList.contains('w-stars-rate-module')) {
+            makeStarsRateModule(node);
         } else if (node.classList.contains('w-list-pages')) {
             makeListPages(node);
         }

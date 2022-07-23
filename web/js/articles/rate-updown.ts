@@ -21,7 +21,7 @@ function updateRating(element: HTMLElement, votesData: ModuleRateResponse) {
     element.innerText = rating;
 }
 
-export function makeRateModule(node: HTMLElement) {
+export function makeUpDownRateModule(node: HTMLElement) {
     if ((node as any)._rate) {
         return
     }
@@ -40,5 +40,5 @@ export function makeRateModule(node: HTMLElement) {
 
     rateup.addEventListener('click', (e) => onClick(e, pageId, 1).then(callback));
     ratedown.addEventListener('click', (e) => onClick(e, pageId, -1).then(callback));
-    cancel.addEventListener('click', (e) => onClick(e, pageId, 0).then(callback));
+    cancel.addEventListener('click', (e) => onClick(e, pageId, null).then(callback));
 }

@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser as _UserType
-from django.db.models import QuerySet, Sum, Avg
+from django.db.models import QuerySet, Sum, Avg, Count
 from web.models.articles import *
 from web.models.files import *
 
@@ -327,17 +327,19 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user
 
 
 # Get article rating
-def get_rating(full_name_or_article: _FullNameOrArticle) -> int | float:
+def get_rating(full_name_or_article: _FullNameOrArticle) -> (int | float, int, Settings.RatingMode):
     article = get_article(full_name_or_article)
     if not article:
-        return 0
+        return 0, 0, Settings.RatingMode.Disabled
     obj_settings = article.get_settings()
     if obj_settings.rating_mode == Settings.RatingMode.UpDown:
-        return Vote.objects.filter(article=article).aggregate(sum=Sum('rate'))['sum'] or 0
+        data = Vote.objects.filter(article=article).aggregate(sum=Sum('rate'), count=Count('rate'))
+        return data['sum'] or 0, data['count'] or 0, obj_settings.rating_mode
     elif obj_settings.rating_mode == Settings.RatingMode.Stars:
-        return Vote.objects.filter(article=article).aggregate(avg=Avg('rate'))['avg'] or 0.0
+        data = Vote.objects.filter(article=article).aggregate(avg=Avg('rate'), count=Count('rate'))
+        return data['avg'] or 0.0, data['count'] or 0, obj_settings.rating_mode
     elif obj_settings.rating_mode == Settings.RatingMode.Disabled:
-        return 0
+        return 0, 0, obj_settings.rating_mode
     else:
         raise ValueError('Unsupported rate type "%s"' % obj_settings.rating_mode)
 
@@ -346,20 +348,16 @@ def get_formatted_rating(full_name_or_article: _FullNameOrArticle) -> str:
     article = get_article(full_name_or_article)
     if not article:
         return '0'
-    obj_settings = article.get_settings()
-    rating = get_rating(article)
-    if obj_settings.rating_mode == Settings.RatingMode.UpDown:
+    rating, _, mode = get_rating(article)
+    if mode == Settings.RatingMode.UpDown:
         return '%+d' % rating
-    elif obj_settings.rating_mode == Settings.RatingMode.Stars:
+    elif mode == Settings.RatingMode.Stars:
         return '%.1f' % rating
     else:
         return '%d' % rating
 
 
-def add_vote(full_name_or_article: _FullNameOrArticle, user: settings.AUTH_USER_MODEL, rate: int):
-    if rate not in [-1, 0, 1]:
-        raise ValueError(f"Rate {rate} is not valid")
-
+def add_vote(full_name_or_article: _FullNameOrArticle, user: settings.AUTH_USER_MODEL, rate: int | float | None):
     article = get_article(full_name_or_article)
 
     try:
@@ -370,7 +368,7 @@ def add_vote(full_name_or_article: _FullNameOrArticle, user: settings.AUTH_USER_
     except Vote.DoesNotExist:
         pass
     finally:
-        if rate:
+        if rate is not None:
             Vote(article=article, user=user, rate=rate).save()
 
 

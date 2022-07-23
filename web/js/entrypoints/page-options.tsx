@@ -11,6 +11,8 @@ import ArticleRename from "../articles/article-rename";
 import ArticleLock from "../articles/article-lock";
 import ArticleFiles from "../articles/article-files";
 import ArticleDelete from "../articles/article-delete";
+import {RatingMode} from '../api/rate'
+import {sprintf} from 'sprintf-js'
 
 
 interface Props {
@@ -19,6 +21,8 @@ interface Props {
     editable?: boolean
     lockable?: boolean
     rating?: number
+    ratingVotes?: number
+    ratingMode?: RatingMode
     pathParams?: { [key: string]: string }
     canRate?: boolean
 }
@@ -136,6 +140,18 @@ class PageOptions extends Component<Props, State> {
         this.setState({ extOptions: !this.state.extOptions });
     };
 
+    renderRating() {
+        const { rating, ratingMode } = this.props;
+
+        if (ratingMode === 'updown') {
+            return sprintf("%+d", rating)
+        } else if (ratingMode === 'stars') {
+            return sprintf("%.1f", rating)
+        } else {
+            return 'n/a'
+        }
+    }
+
     render() {
         const { optionsEnabled, editable, lockable, rating, canRate } = this.props;
         const { extOptions } = this.state;
@@ -148,7 +164,7 @@ class PageOptions extends Component<Props, State> {
             <>
                 <div id="page-options-bottom" className="page-options-bottom">
                     { editable && <a id="edit-button" className="btn btn-default" href="#" onClick={this.onEdit}>Редактировать</a> }
-                    <a id="pagerate-button" className="btn btn-default" href="#" onClick={this.onRate}>{canRate?'Оценить':'Оценки'} ({rating>=0?`+${rating}`:rating})</a>
+                    <a id="pagerate-button" className="btn btn-default" href="#" onClick={this.onRate}>{canRate?'Оценить':'Оценки'} ({this.renderRating()})</a>
                     { editable && <a id="tags-button" className="btn btn-default" href="#" onClick={this.onTags}>Теги</a> }
                     <a id="history-button" className="btn btn-default" href="#" onClick={this.onHistory}>История</a>
                     <a id="files-button" className="btn btn-default" href="#" onClick={this.onFiles}>Файлы</a>

@@ -3,8 +3,9 @@ import { Component } from 'react';
 import WikidotModal from "../util/wikidot-modal";
 import styled from "styled-components";
 import Loader from "../util/loader";
-import {fetchPageVotes, ModuleRateVote} from "../api/rate";
+import {fetchPageVotes, ModuleRateVote, RatingMode} from "../api/rate";
 import UserView from "../util/user-view";
+import {sprintf} from 'sprintf-js'
 
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
 interface State {
     loading: boolean
     rating: number
+    mode: RatingMode
     votes?: Array<ModuleRateVote>
     error?: string
 }
@@ -54,6 +56,7 @@ class ArticleRating extends Component<Props, State> {
         this.state = {
             loading: false,
             votes: [],
+            mode: 'disabled',
             rating: props.rating
         };
     }
@@ -67,7 +70,7 @@ class ArticleRating extends Component<Props, State> {
         this.setState({ loading: true, error: null });
         try {
             const rating = await fetchPageVotes(pageId);
-            this.setState({ loading: false, error: null, votes: rating.votes, rating: rating.rating });
+            this.setState({ loading: false, error: null, votes: rating.votes, rating: rating.rating, mode: rating.mode });
         } catch (e) {
             this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' });
         }
@@ -87,9 +90,63 @@ class ArticleRating extends Component<Props, State> {
         this.onClose(null);
     };
 
-    render() {
+    renderUserVote(vote) {
+        const { mode } = this.state;
+        if (mode === 'updown') {
+            return vote > 0 ? '+' : '-';
+        } else if (mode === 'stars') {
+            return sprintf('%.1f', vote);
+        } else {
+            return null;
+        }
+    }
+
+    renderUpDownRating() {
         const { pageId } = this.props;
-        const { error, loading, rating, votes } = this.state;
+        const { rating } = this.state;
+
+        return (
+            <div className="w-rate-module page-rate-widget-box" data-page-id={pageId}>
+                <span className="rate-points">рейтинг:&nbsp;<span className="number prw54353">{rating>=0?`+${rating}`:rating}</span></span>
+                <span className="rateup btn btn-default"><a title="Мне нравится" href="#">+</a></span>
+                <span className="ratedown btn btn-default"><a title="Мне не нравится" href="#">-</a></span>
+                <span className="cancel btn btn-default"><a title="Отменить голос" href="#">X</a></span>
+            </div>
+        )
+    }
+
+    renderStarsRating() {
+        const { pageId } = this.props;
+        const { rating, votes } = this.state;
+
+        return (
+            <div className="w-stars-rate-module" data-page-id={pageId}>
+                <div className="w-stars-rate-rating">рейтинг:&nbsp;<span className="w-stars-rate-number">{rating}</span></div>
+                <div className="w-stars-rate-control">
+                    <div className="w-stars-rate-stars-wrapper">
+                        <div className="w-stars-rate-stars-view" style={{width: `${Math.floor(rating*20)}%`}} />
+                    </div>
+                    <div className="w-stars-rate-cancel" />
+                </div>
+                <div className="w-stars-rate-votes">голосов:&nbsp;<span class="w-stars-rate-number">{votes.length}</span></div>
+            </div>
+        )
+    }
+
+    renderRating() {
+        const { mode } = this.state;
+
+        if (mode === 'updown') {
+            return this.renderUpDownRating();
+        } else if (mode === 'stars') {
+            return this.renderStarsRating();
+        } else {
+            return null;
+        }
+    }
+
+    render() {
+        const { error, loading, votes } = this.state;
         return (
             <Styles>
                 { error && (
@@ -100,22 +157,15 @@ class ArticleRating extends Component<Props, State> {
                 <a className="action-area-close btn btn-danger" href="#" onClick={this.onClose}>Закрыть</a>
                 <h1>Рейтинг страницы</h1>
                 <span>
-                    Оценить страницу:
-                    &nbsp;
-                    &nbsp;
-                    <div className="w-rate-module page-rate-widget-box" data-page-id={pageId}>
-                        <span className="rate-points">рейтинг:&nbsp;<span className="number prw54353">{rating>=0?`+${rating}`:rating}</span></span>
-                        <span className="rateup btn btn-default"><a title="Мне нравится" href="#">+</a></span>
-                        <span className="ratedown btn btn-default"><a title="Мне не нравится" href="#">-</a></span>
-                        <span className="cancel btn btn-default"><a title="Отменить голос" href="#">X</a></span>
-                    </div>
+                    Оценить страницу:<br/><br/>
+                    {this.renderRating()}
                 </span>
                 <div id="who-rated-page-area" className={`${loading?'loading':''}`}>
                     { loading && <Loader className="loader" /> }
                     { !!(votes && votes.length) && <h2>Список голосовавших за страницу</h2>}
                     { votes.map((vote, i) => (
                         <React.Fragment key={i}>
-                            <UserView data={vote.user} />&nbsp;{vote.value>0?'+':'-'}<br/>
+                            <UserView data={vote.user} />&nbsp;{this.renderUserVote(vote.value)}<br/>
                         </React.Fragment>
                     )) }
                 </div>

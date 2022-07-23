@@ -1,9 +1,13 @@
 import {callModule} from "./modules";
 import {UserData} from "./user";
 
+export type RatingMode = 'disabled' | 'updown' | 'stars'
+
 export interface ModuleRateResponse {
     pageId: string
     rating: number
+    voteCount: number
+    mode: RatingMode
 }
 
 export interface ModuleRateVote {
@@ -14,6 +18,7 @@ export interface ModuleRateVote {
 export interface ModuleRateVotesResponse {
     pageId: string
     rating: number
+    mode: RatingMode
     votes: Array<ModuleRateVote>
 }
 
