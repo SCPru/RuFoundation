@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser as _UserType
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Sum, Avg
 from web.models.articles import *
 from web.models.files import *
 
@@ -327,9 +327,33 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user
 
 
 # Get article rating
-def get_rating(full_name_or_article: _FullNameOrArticle) -> int:
+def get_rating(full_name_or_article: _FullNameOrArticle) -> int | float:
     article = get_article(full_name_or_article)
-    return sum([vote.rate for vote in Vote.objects.filter(article=article) if vote])
+    if not article:
+        return 0
+    obj_settings = article.get_settings()
+    if obj_settings.rating_mode == Settings.RatingMode.UpDown:
+        return Vote.objects.filter(article=article).aggregate(sum=Sum('rate'))['sum'] or 0
+    elif obj_settings.rating_mode == Settings.RatingMode.Stars:
+        return Vote.objects.filter(article=article).aggregate(avg=Avg('rate'))['avg'] or 0.0
+    elif obj_settings.rating_mode == Settings.RatingMode.Disabled:
+        return 0
+    else:
+        raise ValueError('Unsupported rate type "%s"' % obj_settings.rating_mode)
+
+
+def get_formatted_rating(full_name_or_article: _FullNameOrArticle) -> str:
+    article = get_article(full_name_or_article)
+    if not article:
+        return '0'
+    obj_settings = article.get_settings()
+    rating = get_rating(article)
+    if obj_settings.rating_mode == Settings.RatingMode.UpDown:
+        return '%+d' % rating
+    elif obj_settings.rating_mode == Settings.RatingMode.Stars:
+        return '%.1f' % rating
+    else:
+        return '%d' % rating
 
 
 def add_vote(full_name_or_article: _FullNameOrArticle, user: settings.AUTH_USER_MODEL, rate: int):

@@ -3,9 +3,9 @@ import { Component } from 'react';
 import {UserData} from "../api/user";
 
 
-const ANON_AVATAR = "/-/static/images/anon_avatar.png";
-const DEFAULT_AVATAR = "/-/static/images/default_avatar.png";
-const WIKIDOT_AVATAR = "/-/static/images/wikidot_avatar.png";
+export const ANON_AVATAR = "/-/static/images/anon_avatar.png";
+export const DEFAULT_AVATAR = "/-/static/images/default_avatar.png";
+export const WIKIDOT_AVATAR = "/-/static/images/wikidot_avatar.png";
 
 
 interface Props {

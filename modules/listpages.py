@@ -6,7 +6,8 @@ from renderer.parser import RenderContext
 from web.controllers import articles
 import re
 from web.models.articles import Article, Vote, ArticleVersion
-from django.db.models import Q, Value as V, F, Count, Sum
+from web.models.settings import Settings
+from django.db.models import Q, Value as V, F, Count, Sum, Avg
 from django.db.models.functions import Concat
 from web import threadvars
 import json
@@ -52,7 +53,7 @@ def page_to_listpages_vars(page: Article, template, index, total):
         'title_linked': '[[[%s|%s]]]' % (articles.get_full_name(page), page.title),
         'link': '/%s' % page.title,  # temporary, must be full page URL based on hostname
         'content': '[[include %s]]' % (articles.get_full_name(page)),
-        'rating': '%+d' % articles.get_rating(page),
+        'rating': articles.get_formatted_rating(page),
         'rating_votes': str(len(Vote.objects.filter(article=page))),
         'revisions': str(len(ArticleVersion.objects.filter(article=page))),
         'index': str(index),
@@ -196,7 +197,17 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
             f_sort = ['created_at', 'desc']
         direction = 'desc' if f_sort[1:] == ['desc'] else 'asc'
         if f_sort[0] == 'rating':
-            q = q.annotate(rating=Sum('votes__rate'))
+            # find first object and it's category.
+            # this is why in Wikidot docs it says to never combine categories with different rating types.
+            rating_func = 0
+            if q:
+                first_obj = q[0]
+                obj_settings = first_obj.get_settings()
+                if obj_settings.rating_mode == Settings.RatingMode.UpDown:
+                    rating_func = Sum('votes__rate')
+                elif obj_settings.rating_mode == Settings.RatingMode.Stars:
+                    rating_func = Avg('votes__rate')
+            q = q.annotate(rating=rating_func)
         q = q.order_by(getattr(allowed_sort_columns[f_sort[0]], direction)())  # asc/desc is a function call on DB val
         q = q.distinct()
         # end sorting

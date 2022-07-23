@@ -75,6 +75,14 @@ class Article(SiteLimitedModel):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
 
+    def get_settings(self):
+        try:
+            category_as_object = Category.objects.get(name__iexact=self.category)
+            return category_as_object.get_settings()
+        except Category.DoesNotExist:
+            print(repr(Settings.get_default_settings().merge(self.site.get_settings()).rating_mode))
+            return Settings.get_default_settings().merge(self.site.get_settings())
+
     @property
     def full_name(self) -> str:
         if self.category != '_default':

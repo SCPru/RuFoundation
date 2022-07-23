@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Component } from 'react';
 import {UserData} from "../api/user";
+import {DEFAULT_AVATAR} from '../util/user-view'
 
 
 interface Props {
@@ -60,7 +61,7 @@ class PageLoginStatus extends Component<Props, State> {
                 <>
                     <span className="printuser w-user">
                         <a href={`/-/users/${user.username}`}>
-                            <img className="small" src={user.avatar} alt={user.username} />
+                            <img className="small" src={user.avatar || DEFAULT_AVATAR} alt={user.username} />
                         </a>
                         {user.username}
                     </span> | <a id="my-account" href={`/-/profile`}>

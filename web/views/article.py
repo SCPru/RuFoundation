@@ -84,17 +84,19 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'user': render_user_to_json(self.request.user)
         }
 
+        site = get_current_site()
+        obj_settings = article.get_settings() if article else site.get_settings()
+
         options_config = {
             'optionsEnabled': status != 404,
             'editable': articles.has_perm(self.request.user, "web.change_article", article),
             'lockable': articles.has_perm(self.request.user, "web.can_lock_article", article),
             'pageId': article_name,
             'rating': articles.get_rating(article),
+            'ratingMode': obj_settings.rating_mode,
             'pathParams': path_params,
             'canRate': articles.has_perm(self.request.user, "web.can_vote_article", article)
         }
-
-        site = get_current_site()
 
         context.update({
             'site_name': site.title,
