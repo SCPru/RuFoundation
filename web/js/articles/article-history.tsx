@@ -241,7 +241,7 @@ class ArticleHistory extends Component<Props, State> {
         return <>
             <button className={"action"} onClick={() => this.displayArticleVersion(entry)} title="Просмотр изменений страницы">V</button>
             <button className={"action"} onClick={() => this.displayVersionSource(entry)} title="Просмотр источника изменений">S</button>
-            {this.state.entries[0] !== entry && <button className={"action"} onClick={() => this.revertArticleVersion(entry)} title="Вернуться к правке">R</button>}
+            {this.state.entryCount !== (entry.revNumber+1) && <button className={"action"} onClick={() => this.revertArticleVersion(entry)} title="Вернуться к правке">R</button>}
         </>;
     }
 
