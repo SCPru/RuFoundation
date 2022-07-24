@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser as _UserType
-from django.db.models import QuerySet, Sum, Avg, Count
+from django.db.models import QuerySet, Sum, Avg, Count, Max
 from web.models.articles import *
 from web.models.files import *
 
@@ -65,11 +65,14 @@ def create_article(full_name: str) -> Article:
 # Adds log entry to article
 def add_log_entry(full_name_or_article: _FullNameOrArticle, log_entry: ArticleLogEntry):
     article = get_article(full_name_or_article)
-    existing_entry = get_latest_log_entry(article)
-    if existing_entry is None:
-        log_entry.rev_number = 0
-    else:
-        log_entry.rev_number = existing_entry.rev_number + 1
+    # this black magic forces lock of ArticleLogEntry table on this article id,
+    # so that two concurrent log entries wait for each other and are not violating unique constraint on rev_number.
+    current_log = ArticleLogEntry.objects.select_related('article')\
+                                         .select_for_update()\
+                                         .filter(article=article)
+    len(current_log)
+    max_rev_number = (current_log.aggregate(Max('rev_number')).get('rev_number__max') or -1)
+    log_entry.rev_number = max_rev_number + 1
     log_entry.save()
 
 

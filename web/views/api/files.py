@@ -32,7 +32,6 @@ class GetOrUploadView(FileView):
             output.append({'name': file.name, 'size': file.size, 'createdAt': file.created_at, 'author': render_user_to_json(file.author), 'mimeType': file.mime_type})
         return self.render_json(200, {'pageId': article.full_name, 'files': output})
 
-    @transaction.atomic
     def post(self, request: HttpRequest, article_name):
         article = self._validate_request(request, article_name)
         file_name = request.headers.get('x-file-name')

@@ -162,6 +162,8 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
                 for category in f_category.split(' '):
                     if not category:
                         continue
+                    if category == '.':
+                        category = context.article.category
                     if category[0] == '-':
                         not_allowed.append(category[1:])
                     else:

@@ -181,6 +181,13 @@ def run(base_path):
             if not os.path.exists(fn_7z):
                 continue
 
+            # get user for created by, updated by
+            article_author = meta['revisions'][-1]['author']
+            if article_author in users:
+                user = users[article_author]
+            else:
+                user = users[article_author] = get_or_create_user(article_author)
+
             # create article and set tags
             article = articles.get_article(pagename)
             if article:
@@ -188,6 +195,7 @@ def run(base_path):
                 total_cnt_rev += len(meta.get('revisions', []))
                 continue
             article = articles.create_article(pagename)
+            article.author = user
             article.created_at = created_at
             article.updated_at = updated_at
             if title is not None:

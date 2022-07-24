@@ -65,6 +65,11 @@
   transform: scale(4);
 }
 
+// fixes printusers misbehaving in tables
+.printuser a {
+  margin-right: 0;
+}
+
 // stars rating stuff
 .w-stars-rate-module {
   width: 128px;

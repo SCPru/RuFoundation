@@ -29,7 +29,10 @@ class UserNode(HTMLBaseNode):
 
     def render(self, context=None):
         try:
-            user = User.objects.get(username=self.username)
+            if self.username.lower().startswith('wd:'):
+                user = User.objects.get(type=User.UserType.Wikidot, wikidot_username=self.username[3:])
+            else:
+                user = User.objects.get(username=self.username)
             return render_user_to_html(user, avatar=self.avatar)
         except User.DoesNotExist:
             return self.render_template(

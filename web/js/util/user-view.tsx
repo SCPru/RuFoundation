@@ -34,6 +34,7 @@ class UserView extends Component<Props> {
         return (
             <span className={`printuser w-user ${avatarHover!==false?'avatarhover':''}`} data-user-name={data.username}>
                 {data.showAvatar&&<a href={`/-/users/${data.id}-${encodeURIComponent(data.username)}`}><img className="small" src={avatar} alt={data.name} /></a>}
+                &nbsp;
                 <a href={`/-/users/${data.id}-${encodeURIComponent(data.username)}`}>{data.name}</a>
             </span>
         )

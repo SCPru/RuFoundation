@@ -54,24 +54,25 @@ def render_user_to_html(user: User, avatar=True, hover=True):
         )
     if user.type == 'wikidot':
         user_avatar = settings.WIKIDOT_AVATAR
-        username = user.wikidot_username
+        displayname = 'wd:'+user.wikidot_username
     else:
         user_avatar = user.get_avatar(default=settings.DEFAULT_AVATAR)
-        username = user.username
+        displayname = user.username
     return render_template_from_string(
         """
         <span class="printuser w-user{{class_add}}" data-user-id="{{user_id}}" data-user-name="{{username}}">
             {% if show_avatar %}
-                <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{username}}"></a>
+                <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
             {% endif %}
-            <a href="/-/users/{{user_id}}-{{username}}">{{username}}</a>
+            <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a>
         </span>
         """,
         class_add=(' avatarhover' if hover else ''),
         show_avatar=avatar,
         avatar=user_avatar,
         user_id=user.id,
-        username=username
+        username=user.username,
+        displayname=displayname
     )
 
 
@@ -83,7 +84,7 @@ def render_user_to_json(user: User, avatar=True):
     user_type = 'user'
     if user.type != User.UserType.Normal:
         user_type = user.type
-    username = user.username
+    displayname = user.username
     if user.type == User.UserType.Wikidot:
-        username = user.wikidot_username
-    return {'type': user_type, 'id': user.id, 'avatar': user.get_avatar(), 'name': username, 'username': username, 'showAvatar': avatar}
+        displayname = 'wd:'+user.wikidot_username
+    return {'type': user_type, 'id': user.id, 'avatar': user.get_avatar(), 'name': displayname, 'username': user.username, 'showAvatar': avatar}
