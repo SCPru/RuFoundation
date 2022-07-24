@@ -172,9 +172,9 @@ class PageOptions extends Component<Props, State> {
                 </div>
                 { extOptions && <div id="page-options-bottom-2" className="page-options-bottom form-actions">
                     <a id="view-source-button" className="btn btn-default" href="#" onClick={this.onSource}>Исходник страницы</a>
-                    { editable && <a id="parent-button" className="btn btn-default" href="#" onClick={this.onParent}>Родитель</a> }
-                    { lockable && <a id="lock-button" className="btn btn-default" href="#" onClick={this.onLock}>Заблокировать страницу</a> }
-                    { editable && <a id="rename-button" className="btn btn-default" href="#" onClick={this.onRename}>Переименовать</a> }
+                    { editable && <a id="parent-page-button" className="btn btn-default" href="#" onClick={this.onParent}>Родитель</a> }
+                    { lockable && <a id="page-block-button" className="btn btn-default" href="#" onClick={this.onLock}>Заблокировать страницу</a> }
+                    { editable && <a id="rename-move-button" className="btn btn-default" href="#" onClick={this.onRename}>Переименовать</a> }
                     { editable && <a id="delete-button" className="btn btn-default" href="#" onClick={this.onDelete}>Удалить</a> }
                 </div> }
                 { this.renderSubView() }
