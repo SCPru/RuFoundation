@@ -17,6 +17,10 @@ const Pagination: React.FC<Props> = ({page, maxPages, onChange}: Props) => {
         leftTo = aroundPages + 1;
     }
 
+    if (leftTo > maxPages) {
+        leftTo = maxPages;
+    }
+
     const rightTo = maxPages;
     let rightFrom = Math.max(leftTo + 1, rightTo - 1);
 

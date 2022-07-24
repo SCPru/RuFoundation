@@ -253,6 +253,8 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
         around_pages = 2
         left_from = 1
         left_to = left_from + 1
+        if left_to > pagination_total_pages:
+            left_to = pagination_total_pages
         if pagination_page < (around_pages * 2 + 1):
             left_to = around_pages + 1
         right_to = pagination_total_pages

@@ -153,7 +153,7 @@ class ArticleHistory extends Component<Props, State> {
                 <h1>История изменений</h1>
                 <div id="revision-list" className={`${loading?'loading':''}`}>
                     { loading && <Loader className="loader" /> }
-                    { entries && (
+                    { entries && (totalPages>1) && (
                         <Pagination page={page} maxPages={totalPages} onChange={this.onChangePage} />
                     ) }
                     { entries && (
