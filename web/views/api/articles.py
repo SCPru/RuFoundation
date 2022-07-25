@@ -46,7 +46,8 @@ class CreateView(ArticleView):
         article = articles.create_article(data['pageId'])
         article.title = data['title']
         article.save()
-        articles.create_article_version(article, data['source'], request.user)
+        version = articles.create_article_version(article, data['source'], request.user)
+        articles.refresh_article_links(version)
 
         return self.render_json(201, {'status': 'ok'})
 
