@@ -247,6 +247,10 @@ def run(base_path):
                     log.save()
                     log.created_at = datetime.datetime.fromtimestamp(revision['stamp'], tz=datetime.timezone.utc)
                     log.save()
+                    with t_lock:
+                        if time.time() - t > 1:
+                            logging.info('Added: %d/%d (revisions: %d/%d)' % (total_cnt, total_pages, total_cnt_rev, total_revisions))
+                            t = time.time()
 
             if last_source_version:
                 articles.refresh_article_links(last_source_version)
