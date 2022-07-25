@@ -10,7 +10,7 @@ RUN yarn install
 RUN yarn run build
 
 # Python stuff
-FROM python:3.9
+FROM python:3.10
 
 WORKDIR /app
 
