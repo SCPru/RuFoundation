@@ -55,7 +55,7 @@ class HTMLNode(Node):
                 tab_name = p.read_as_value_until([TokenType.CloseDoubleBracket])
                 if tab_name is None:
                     return None
-                attributes.append((tab_name.strip(), True))
+                attributes.append((tab_name.strip(), tab_name.strip()))
                 tk = p.tokenizer.read_token()
                 if tk.type != TokenType.CloseDoubleBracket:
                     return None
@@ -73,19 +73,19 @@ class HTMLNode(Node):
                 return None
             elif tk.type == TokenType.CloseDoubleBracket:
                 if attr_name:
-                    attributes.append((attr_name, True))
+                    attributes.append((attr_name, attr_name))
                 break
             elif tk.type == TokenType.Pipe:
                 # there can be random pipes
                 if attr_name:
-                    attributes.append((attr_name, True))
+                    attributes.append((attr_name, attr_name))
                 continue
             else:
                 # read attribute
                 if tk.type != TokenType.Equals:
                     p.tokenizer.position = pos
                     if attr_name:
-                        attributes.append((attr_name, True))
+                        attributes.append((attr_name, attr_name))
                     continue
                 # from here, different handling for include. this is a hack in original Wikidot syntax
                 if name == 'include':
