@@ -132,7 +132,7 @@ def run(base_path):
                     file_user = users[file['author']]
                 else:
                     file_user = users[file['author']] = get_or_create_user(file['author'])
-                from_path = '%s/%s/%s' % (from_files, urls.partial_quote(meta['name']), urls.partial_quote(file['name']))
+                from_path = '%s/%s/%d' % (from_files, urls.partial_quote(meta['name']), file['file_id'])
                 _, ext = os.path.splitext(file['name'])
                 media_name = str(uuid4()) + ext
                 if File.objects.filter(name=file['name'], article=article):
