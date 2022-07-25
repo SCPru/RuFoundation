@@ -87,24 +87,8 @@ WSGI_APPLICATION = 'scpdev.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-database_engine = os.environ.get('DB_ENGINE', 'sqlite')
-if database_engine == 'sqlite':
-
-    sqlite_dir = BASE_DIR
-    if 'DB_SQLITE_DIRECTORY' in os.environ:
-        sqlite_dir = Path(os.environ['DB_SQLITE_DIRECTORY']).resolve()
-
-    default_db = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': sqlite_dir / 'db.sqlite3',
-        'ATOMIC_REQUESTS': True
-    }
-
-elif database_engine == 'pg':
-
-    # wait until postgres becomes available?
-
-    default_db = {
+DATABASES = {
+    'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_PG_DATABASE', 'scpwiki'),
         'USER': os.environ.get('DB_PG_USERNAME', 'postgres'),
@@ -113,12 +97,6 @@ elif database_engine == 'pg':
         'PORT': os.environ.get('DB_PG_PORT', '5432'),
         'ATOMIC_REQUESTS': True
     }
-
-else:
-    raise ValueError('Unsupported database "%s"' % database_engine)
-
-DATABASES = {
-    'default': default_db
 }
 
 
