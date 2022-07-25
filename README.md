@@ -1,12 +1,9 @@
 <div align="center">
-  <h1>RuFoundation</h1>
+  <h2>RuFoundation</h2>
   <h3>Wiki engine compatible with Wikidot developed by Russian SCP Branch</h3>
   <h4><a href="https://boosty.to/scpfanpage">#StandWithSCPRU</a></h4>
   <img src="https://i.kym-cdn.com/photos/images/facebook/001/839/765/e80.png" width="300px" alt="scp-ru">
 </div>
-
-
-<hr>
 
 
 ## Requirements
