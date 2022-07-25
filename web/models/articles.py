@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.postgres.fields import CITextField
 from django.db import models
 from .sites import SiteLimitedModel
 from .settings import Settings
@@ -152,3 +153,19 @@ class Vote(SiteLimitedModel):
 
     def __str__(self) -> str:
         return f"{self.article}: {self.user} - {self.rate}"
+
+
+class ExternalLink(SiteLimitedModel):
+    class Meta:
+        verbose_name = "Связь"
+        verbose_name_plural = "Связи"
+
+        constraints = [models.UniqueConstraint(fields=['link_from', 'link_to', 'link_type'], name='%(app_label)s_%(class)s_unique')]
+
+    class Type(models.TextChoices):
+        Include = 'include'
+        Link = 'link'
+
+    link_from = CITextField(verbose_name="Ссылающаяся статья", null=False)
+    link_to = CITextField(verbose_name="Целевая статья", null=False)
+    link_type = models.TextField(choices=Type.choices, verbose_name="Тип ссылки", null=False)

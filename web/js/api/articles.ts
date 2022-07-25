@@ -56,3 +56,19 @@ export interface ArticleVersion {
 export async function fetchArticleVersion(pageId: string, rev_num: number, pathParams?: { [key: string]: string }): Promise<ArticleVersion> {
     return await wFetch<ArticleVersion>(`/api/articles/${pageId}/version?revNum=${rev_num}&pathParams=${JSON.stringify(pathParams)}`)
 }
+
+export interface ArticleBacklink {
+    id: string
+    title: string
+    exists: boolean
+}
+
+export interface ArticleBacklinks {
+    children: Array<ArticleBacklink>
+    includes: Array<ArticleBacklink>
+    links: Array<ArticleBacklink>
+}
+
+export async function fetchArticleBacklinks(pageId: string): Promise<ArticleBacklinks> {
+    return await wFetch<ArticleBacklinks>(`/api/articles/${pageId}/links`)
+}

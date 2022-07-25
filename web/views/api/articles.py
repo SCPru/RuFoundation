@@ -1,5 +1,6 @@
 from django.http import HttpRequest, HttpResponse
 
+from renderer.nodes.link_internal import InternalLinkNode
 from . import APIView, APIError, takes_json
 
 from web.controllers import articles
@@ -9,6 +10,8 @@ from renderer import single_pass_render
 from renderer.parser import RenderContext
 
 import json
+
+from ...models.articles import ExternalLink, Article
 
 
 class ArticleView(APIView):
@@ -94,7 +97,8 @@ class FetchOrUpdateView(ArticleView):
 
         # check if changing source
         if 'source' in data and data['source'] != articles.get_latest_source(article):
-            articles.create_article_version(article, data['source'], request.user, data.get('comment', ''))
+            version = articles.create_article_version(article, data['source'], request.user, data.get('comment', ''))
+            articles.refresh_article_links(version)
 
         # check if changing tags
         if 'tags' in data:
@@ -166,6 +170,8 @@ class FetchOrRevertLogView(APIView):
             raise APIError('Некорректный номер ревизии', 400)
 
         articles.revert_article_version(article, data["revNumber"], request.user)
+        version = articles.get_latest_version(article)
+        articles.refresh_article_links(version)
 
         return self.render_json(200, {"pageId": article.full_name})
 
@@ -194,3 +200,29 @@ class FetchVersionView(APIView):
 
             return self.render_json(200, {'source': version.source, "rendered":  rendered})
         raise APIError('Версии с данным идентификатором не существует', 404)
+
+
+class FetchExternalLinks(APIView):
+    def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        article = articles.get_article(full_name)
+        if not article:
+            raise APIError('Страница не найдена', 404)
+
+        links_children = [{'id': x.full_name, 'title': x.title, 'exists': True} for x in Article.objects.filter(parent=article)]
+
+        links_all = ExternalLink.objects.filter(link_to=full_name)
+
+        links_include = []
+        links_links = []
+
+        articles_dict = InternalLinkNode.fetch_articles_by_names([link.link_from.lower() for link in links_all])
+
+        for link in links_all:
+            article = articles_dict.get(link.link_from.lower())
+            article_record = {'id': article.full_name, 'title': article.title, 'exists': True} if article else {'id': link.link_from.lower(), 'title': link.link_from.lower(), 'exists': False}
+            if link.link_type == ExternalLink.Type.Include:
+                links_include.append(article_record)
+            elif link.link_type == ExternalLink.Type.Link:
+                links_links.append(article_record)
+
+        return self.render_json(200, {'children': links_children, 'includes': links_include, 'links': links_links})

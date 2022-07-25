@@ -32,7 +32,7 @@ class ParseContext(object):
 
 
 class Parser(object):
-    def __init__(self, tokenizer, context=None):
+    def __init__(self, tokenizer: StaticTokenizer, context=None):
         self.tokenizer = tokenizer
         self.node_cache = dict()
         self._context = context

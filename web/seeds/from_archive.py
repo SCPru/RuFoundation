@@ -20,7 +20,7 @@ import threading
 import logging
 from scpdev import urls
 from web import threadvars
-from web.models.articles import ArticleVersion, ArticleLogEntry
+from web.models.articles import ArticleVersion, ArticleLogEntry, Article
 from web.models.files import File
 from web.models.sites import get_current_site
 from system.models import User
@@ -197,17 +197,20 @@ def run(base_path):
             article = articles.create_article(pagename)
             article.author = user
             article.created_at = created_at
-            article.updated_at = updated_at
             if title is not None:
                 article.title = title
             else:
                 article.title = ''
             article.save()
+            # hack to force-set updated_at field to an old value
+            Article.objects.filter(pk=article.pk).update(updated_at=updated_at)
             if tags:
                 articles.set_tags(article, tags, log=False)
 
             # add all revisions
             revisions = list(reversed(meta['revisions']))
+
+            last_source_version = None
 
             with py7zr.SevenZipFile(fn_7z) as z:
                 all_file_names = ['%d.txt' % x['revision'] for x in revisions if 'S' in x['flags'] or 'N' in x['flags']]
@@ -234,6 +237,7 @@ def run(base_path):
                             rendered=None,
                         )
                         version.save()
+                        last_source_version = version
                         log.meta = {'version_id': version.id}
                         if 'N' in revision['flags']:
                             log.type = ArticleLogEntry.LogEntryType.New
@@ -243,6 +247,10 @@ def run(base_path):
                     log.save()
                     log.created_at = datetime.datetime.fromtimestamp(revision['stamp'], tz=datetime.timezone.utc)
                     log.save()
+
+            if last_source_version:
+                articles.refresh_article_links(last_source_version)
+
             with t_lock:
                 if time.time() - t > 1:
                     logging.info('Added: %d/%d (revisions: %d/%d)' % (total_cnt, total_pages, total_cnt_rev, total_revisions))
