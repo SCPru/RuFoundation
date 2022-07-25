@@ -210,6 +210,8 @@ def run(base_path):
             # add all revisions
             revisions = list(reversed(meta['revisions']))
 
+            logging.info('Article: %s', pagename)
+
             last_source_version = None
 
             with py7zr.SevenZipFile(fn_7z) as z:
