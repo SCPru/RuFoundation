@@ -31,7 +31,15 @@ account_activation_token = TokenGenerator()
 @method_decorator(staff_member_required, name='dispatch')
 class InviteView(FormView):
     form_class = InviteForm
+    template_name = "admin/system/user/invite.html"
     email_template_name = "mails/invite_email.txt"
+    user = None
+
+    def get_initial(self):
+        initial = super(InviteView, self).get_initial()
+        if self.user:
+            initial['_selected_user'] = self.user.id
+        return initial
 
     def get_context_data(self, **kwargs):
         context = super(InviteView, self).get_context_data(**kwargs)
@@ -43,12 +51,25 @@ class InviteView(FormView):
         return resolve_url("admin:index")
 
     def form_valid(self, form):
+        self.user = self.user if self.user else form.cleaned_data["_selected_user"]
+
         email = form.cleaned_data['email']
-        user, created = User.objects.get_or_create(email=email)
+        if self.user:
+            user = self.user
+            created = not user.email
+        else:
+            user, created = User.objects.get_or_create(email=email)
         site = get_current_site()
         if created:
             user.is_active = False
             user.username = 'user-%d' % user.id
+
+            if user.type == User.UserType.Wikidot:
+                user.type = User.UserType.Normal
+                user.username = user.wikidot_username
+                user.wikidot_username = None
+                user.email = email
+
             user.save()
             subject = f"Приглашение на {site.title}"
             c = {

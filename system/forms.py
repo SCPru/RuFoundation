@@ -2,6 +2,7 @@ from django import forms
 
 
 class InviteForm(forms.Form):
+    _selected_user = forms.IntegerField(widget=forms.MultipleHiddenInput, required=False)
     email = forms.EmailField()
 
 
