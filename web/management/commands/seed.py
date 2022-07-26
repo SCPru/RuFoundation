@@ -18,4 +18,5 @@ class Command(BaseCommand):
             if options["archive"]:
                 from web.seeds import from_archive
                 from_archive.run(options["archive"])
-            seeds.run()
+            else:
+                seeds.run()
