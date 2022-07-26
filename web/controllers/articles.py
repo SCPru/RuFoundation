@@ -77,7 +77,7 @@ def add_log_entry(full_name_or_article: _FullNameOrArticle, log_entry: ArticleLo
                                          .select_for_update()\
                                          .filter(article=article)
     len(current_log)
-    max_rev_number = (current_log.aggregate(Max('rev_number')).get('rev_number__max') or -1)
+    max_rev_number = current_log.aggregate(max=Max('rev_number')).get('max', -1)
     log_entry.rev_number = max_rev_number + 1
     log_entry.save()
 

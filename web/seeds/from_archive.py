@@ -102,6 +102,7 @@ def run(base_path):
     pages = maybe_load_pages_meta(base_path)
 
     total_pages = len(pages)
+
     total_revisions = 0
     total_files = 0
     for meta in pages:
@@ -255,7 +256,9 @@ def run(base_path):
                             t = time.time()
 
             if last_source_version:
-                articles.refresh_article_links(last_source_version)
+                # to-do reenable once this stops hanging up forever
+                #articles.refresh_article_links(last_source_version)
+                pass
 
             with t_lock:
                 if time.time() - t > 1:
