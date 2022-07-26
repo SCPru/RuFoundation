@@ -95,11 +95,13 @@ def get_or_create_user(user_name_or_id, user_data, user_data_by_un):
                 user_name = 'deleted-%d' % user_name_or_id
         else:
             raise TypeError('Invalid parameter for Wikidot user: %s' % repr(user_name_or_id))
+        # for w/e reason this causes issues in threading.
         existing = list(User.objects.filter(type=User.UserType.Wikidot, wikidot_username__iexact=user_name))
         try:
             if not existing:
-                new_user = User(type=User.UserType.Wikidot, username=uuid4(), wikidot_username=user_name, is_active=False)
-                new_user.save()
+                with transaction.atomic():
+                    new_user = User(type=User.UserType.Wikidot, username=uuid4(), wikidot_username=user_name, is_active=False)
+                    new_user.save()
                 return new_user
             return existing[0]
         except IntegrityError:
