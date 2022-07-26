@@ -13,6 +13,7 @@ import ArticleFiles from "../articles/article-files";
 import ArticleDelete from "../articles/article-delete";
 import {RatingMode} from '../api/rate'
 import {sprintf} from 'sprintf-js'
+import ArticleBacklinksView from '../articles/article-backlinks'
 
 
 interface Props {
@@ -29,7 +30,7 @@ interface Props {
 
 
 interface State {
-    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'lock' | 'rename' | 'files' | 'delete' | null
+    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'lock' | 'rename' | 'files' | 'delete' | 'backlinks' | null
     extOptions: boolean
 }
 
@@ -134,6 +135,15 @@ class PageOptions extends Component<Props, State> {
         });
     };
 
+    onBacklinks = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ subView: 'backlinks' });
+        setTimeout(() => {
+            window.scrollTo(window.scrollX, document.body.scrollHeight);
+        });
+    };
+
     toggleExtOptions = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -171,6 +181,7 @@ class PageOptions extends Component<Props, State> {
                     <a id="more-options-button" className="btn btn-default" href="#" onClick={this.toggleExtOptions}>{extOptions?'- Опции':'+ Опции'}</a>
                 </div>
                 { extOptions && <div id="page-options-bottom-2" className="page-options-bottom form-actions">
+                    <a id="backlinks-button" className="btn btn-default" href="#" onClick={this.onBacklinks}>Обратные ссылки</a>
                     <a id="view-source-button" className="btn btn-default" href="#" onClick={this.onSource}>Исходник страницы</a>
                     { editable && <a id="parent-page-button" className="btn btn-default" href="#" onClick={this.onParent}>Родитель</a> }
                     { lockable && <a id="page-block-button" className="btn btn-default" href="#" onClick={this.onLock}>Заблокировать страницу</a> }
@@ -220,6 +231,9 @@ class PageOptions extends Component<Props, State> {
 
             case 'delete':
                 return <ArticleDelete pageId={pageId} onClose={this.onCancelSubView} />;
+
+            case 'backlinks':
+                return <ArticleBacklinksView pageId={pageId} onClose={this.onCancelSubView} />;
 
             default:
                 return null

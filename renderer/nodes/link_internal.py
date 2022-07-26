@@ -47,6 +47,15 @@ class InternalLinkNode(LinkNode):
         self.original_text = text
         super().__init__(article_url, text, exists=True)
 
+    @staticmethod
+    def fetch_articles_by_names(names):
+        names = list(dict.fromkeys([('_default:%s'%x).lower() if ':' not in x else x.lower() for x in names]))
+        all_articles = Article.objects.annotate(f_full_name=Concat('category', V(':'), 'name', output_field=TextField())).filter(f_full_name__in=names)
+        articles_dict = dict()
+        for article in all_articles:
+            articles_dict[article.full_name] = article
+        return articles_dict
+
     def pre_render(self, context=None):
         render_globals = threadvars.get('render_globals')
         if 'link_internal_articles' not in render_globals:
@@ -56,14 +65,8 @@ class InternalLinkNode(LinkNode):
                 name = item.article_id
                 if not name:
                     continue
-                if ':' not in name:
-                    name = '_default:%s' % name
-                if name not in names:
-                    names.append(name)
-            all_articles = Article.objects.annotate(f_full_name=Concat('category', V(':'), 'name', output_field=TextField())).filter(f_full_name__in=names)
-            articles_dict = dict()
-            for article in all_articles:
-                articles_dict[article.full_name] = article
+                names.append(name)
+            articles_dict = InternalLinkNode.fetch_articles_by_names(names)
             render_globals['link_internal_articles'] = articles_dict
         else:
             articles_dict = render_globals['link_internal_articles']

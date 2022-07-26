@@ -35,7 +35,7 @@ class Node(object):
         # Internal
         self.paragraphs_set = False
         # Some things are bad to cache. For example tables, where trying to cache it from the middle can cause partial structure to be parsed.
-        self.allow_cache = False
+        self.allow_cache = True
 
     @classmethod
     def parse(cls, p: Parser):

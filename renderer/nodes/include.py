@@ -37,8 +37,6 @@ class IncludeNode(HTMLBaseNode):
                 if name not in map_values or (map_values[name].startswith('{$') and map_values[name].endswith('}')):
                     map_values[name] = value
             for name in map_values:
-                if type(map_values[name]) != str:
-                    continue
                 code = re.sub(r'{\$%s}' % re.escape(name), map_values[name], code, flags=re.IGNORECASE)
             parse_context = threadvars.get('parser_context')
             threadvars.put('include_tree', threadvars.get('include_tree', []) + [self.name])

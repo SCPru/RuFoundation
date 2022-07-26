@@ -6,8 +6,9 @@ import shutil
 import os, os.path
 import sys
 import json
+import re
 
-from django.db import transaction
+from django.db import transaction, IntegrityError
 
 from web.controllers import articles
 import time
@@ -20,7 +21,7 @@ import threading
 import logging
 from scpdev import urls
 from web import threadvars
-from web.models.articles import ArticleVersion, ArticleLogEntry
+from web.models.articles import ArticleVersion, ArticleLogEntry, Article
 from web.models.files import File
 from web.models.sites import get_current_site
 from system.models import User
@@ -73,21 +74,39 @@ def run_in_threads(fn, pages):
 get_or_create_user_lock = threading.Lock()
 
 
+def normalize_username(name: str) -> str:
+    return re.sub(r'[^A-Za-z0-9]+', '-', name).strip('-')
+
+
 @transaction.atomic
-def get_or_create_user(user_name_or_id):
+def get_or_create_user(user_name_or_id, user_data, user_data_by_un):
     with get_or_create_user_lock:
         if type(user_name_or_id) == str:
-            user_name = user_name_or_id
+            user_attrs = user_data_by_un.get(user_name_or_id, None)
+            if user_attrs:
+                user_name = normalize_username(user_attrs['full_name']) or user_name_or_id
+            else:
+                user_name = user_name_or_id
         elif type(user_name_or_id) == int:
-            user_name = 'deleted-%d' % user_name_or_id
+            user_attrs = user_data.get(str(user_name_or_id), None)
+            if user_attrs:
+                user_name = normalize_username(user_attrs['full_name']) or user_attrs['username']
+            else:
+                user_name = 'deleted-%d' % user_name_or_id
         else:
             raise TypeError('Invalid parameter for Wikidot user: %s' % repr(user_name_or_id))
+        # for w/e reason this causes issues in threading.
         existing = list(User.objects.filter(type=User.UserType.Wikidot, wikidot_username__iexact=user_name))
-        if not existing:
-            new_user = User(type=User.UserType.Wikidot, username=uuid4(), wikidot_username=user_name, is_active=False)
-            new_user.save()
-            return new_user
-        return existing[0]
+        try:
+            if not existing:
+                with transaction.atomic():
+                    new_user = User(type=User.UserType.Wikidot, username=uuid4(), wikidot_username=user_name, is_active=False)
+                    new_user.save()
+                return new_user
+            return existing[0]
+        except IntegrityError:
+            existing = list(User.objects.filter(type=User.UserType.Wikidot, wikidot_username__iexact=user_name))
+            return existing[0]
 
 
 def run(base_path):
@@ -101,7 +120,20 @@ def run(base_path):
     t_lock = threading.RLock()
     pages = maybe_load_pages_meta(base_path)
 
+    allfiles = os.listdir('%s/_users' % base_path)
+    g_users = {}
+    g_users_by_username = {}
+    for f in allfiles:
+        if f == 'pending.json':
+            continue
+        with codecs.open('%s/_users/%s' % (base_path, f), 'r', encoding='utf-8') as fp:
+            user_bucket = json.load(fp)
+            for k in user_bucket:
+                g_users[k] = user_bucket[k]
+                g_users_by_username[user_bucket[k]['username']] = user_bucket[k]
+
     total_pages = len(pages)
+
     total_revisions = 0
     total_files = 0
     for meta in pages:
@@ -131,8 +163,8 @@ def run(base_path):
                 if file['author'] in users:
                     file_user = users[file['author']]
                 else:
-                    file_user = users[file['author']] = get_or_create_user(file['author'])
-                from_path = '%s/%s/%s' % (from_files, urls.partial_quote(meta['name']), urls.partial_quote(file['name']))
+                    file_user = users[file['author']] = get_or_create_user(file['author'], g_users, g_users_by_username)
+                from_path = '%s/%s/%d' % (from_files, urls.partial_quote(meta['name']), file['file_id'])
                 _, ext = os.path.splitext(file['name'])
                 media_name = str(uuid4()) + ext
                 if File.objects.filter(name=file['name'], article=article):
@@ -186,7 +218,7 @@ def run(base_path):
             if article_author in users:
                 user = users[article_author]
             else:
-                user = users[article_author] = get_or_create_user(article_author)
+                user = users[article_author] = get_or_create_user(article_author, g_users, g_users_by_username)
 
             # create article and set tags
             article = articles.get_article(pagename)
@@ -197,17 +229,20 @@ def run(base_path):
             article = articles.create_article(pagename)
             article.author = user
             article.created_at = created_at
-            article.updated_at = updated_at
             if title is not None:
                 article.title = title
             else:
                 article.title = ''
             article.save()
+            # hack to force-set updated_at field to an old value
+            Article.objects.filter(pk=article.pk).update(updated_at=updated_at)
             if tags:
                 articles.set_tags(article, tags, log=False)
 
             # add all revisions
             revisions = list(reversed(meta['revisions']))
+
+            last_source_version = None
 
             with py7zr.SevenZipFile(fn_7z) as z:
                 all_file_names = ['%d.txt' % x['revision'] for x in revisions if 'S' in x['flags'] or 'N' in x['flags']]
@@ -218,7 +253,7 @@ def run(base_path):
                     if revision['author'] in users:
                         user = users[revision['author']]
                     else:
-                        user = users[revision['author']] = get_or_create_user(revision['author'])
+                        user = users[revision['author']] = get_or_create_user(revision['author'], g_users, g_users_by_username)
                     log = ArticleLogEntry(
                         rev_number=revision['revision'],
                         article=article,
@@ -234,6 +269,7 @@ def run(base_path):
                             rendered=None,
                         )
                         version.save()
+                        last_source_version = version
                         log.meta = {'version_id': version.id}
                         if 'N' in revision['flags']:
                             log.type = ArticleLogEntry.LogEntryType.New
@@ -243,6 +279,15 @@ def run(base_path):
                     log.save()
                     log.created_at = datetime.datetime.fromtimestamp(revision['stamp'], tz=datetime.timezone.utc)
                     log.save()
+                    with t_lock:
+                        if time.time() - t > 1:
+                            logging.info('Added: %d/%d (revisions: %d/%d)' % (total_cnt, total_pages, total_cnt_rev, total_revisions))
+                            t = time.time()
+
+            if last_source_version:
+                # to-do reenable once this stops hanging up forever
+                articles.refresh_article_links(last_source_version)
+
             with t_lock:
                 if time.time() - t > 1:
                     logging.info('Added: %d/%d (revisions: %d/%d)' % (total_cnt, total_pages, total_cnt_rev, total_revisions))

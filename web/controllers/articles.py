@@ -1,5 +1,11 @@
 from django.contrib.auth.models import AbstractUser as _UserType
 from django.db.models import QuerySet, Sum, Avg, Count, Max
+
+from renderer import Parser
+from renderer.nodes import Node
+from renderer.nodes.include import IncludeNode
+from renderer.nodes.link_internal import InternalLinkNode
+from renderer.tokenizer import StaticTokenizer
 from web.models.articles import *
 from web.models.files import *
 
@@ -71,7 +77,7 @@ def add_log_entry(full_name_or_article: _FullNameOrArticle, log_entry: ArticleLo
                                          .select_for_update()\
                                          .filter(article=article)
     len(current_log)
-    max_rev_number = (current_log.aggregate(Max('rev_number')).get('rev_number__max') or -1)
+    max_rev_number = current_log.aggregate(max=Max('rev_number')).get('max', -1)
     log_entry.rev_number = max_rev_number + 1
     log_entry.save()
 
@@ -166,6 +172,35 @@ def create_article_version(full_name_or_article: _FullNameOrArticle, source: str
         )
     add_log_entry(article, log)
     return version
+
+
+# Refreshes links based on article version.
+def refresh_article_links(article_version: ArticleVersion):
+    article = article_version.article
+    article_name = get_full_name(article)
+    # drop all links known before
+    ExternalLink.objects.filter(link_from=article_name).delete()
+    # parse current source
+    parsed = Parser(StaticTokenizer(article_version.source)).parse()
+    already_added = []
+    # find include nodes
+    for node in Node.find_nodes_recursively(parsed.root, IncludeNode):
+        kt = '%s:include:%s' % (article_name.lower(), node.name.lower())
+        if kt in already_added:
+            continue
+        already_added.append(kt)
+        new_link = ExternalLink(link_from=article_name, link_type=ExternalLink.Type.Include, link_to=node.name)
+        new_link.save()
+    # find links
+    for node in Node.find_nodes_recursively(parsed.root, InternalLinkNode):
+        if node.external:
+            continue
+        kt = '%s:link:%s' % (article_name.lower(), node.article_id.lower())
+        if kt in already_added:
+            continue
+        already_added.append(kt)
+        new_link = ExternalLink(link_from=article_name, link_type=ExternalLink.Type.Link, link_to=node.article_id)
+        new_link.save()
 
 
 # Updates name of article
