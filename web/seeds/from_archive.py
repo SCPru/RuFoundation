@@ -8,7 +8,7 @@ import sys
 import json
 import re
 
-from django.db import transaction
+from django.db import transaction, IntegrityError
 
 from web.controllers import articles
 import time
@@ -96,11 +96,15 @@ def get_or_create_user(user_name_or_id, user_data, user_data_by_un):
         else:
             raise TypeError('Invalid parameter for Wikidot user: %s' % repr(user_name_or_id))
         existing = list(User.objects.filter(type=User.UserType.Wikidot, wikidot_username__iexact=user_name))
-        if not existing:
-            new_user = User(type=User.UserType.Wikidot, username=uuid4(), wikidot_username=user_name, is_active=False)
-            new_user.save()
-            return new_user
-        return existing[0]
+        try:
+            if not existing:
+                new_user = User(type=User.UserType.Wikidot, username=uuid4(), wikidot_username=user_name, is_active=False)
+                new_user.save()
+                return new_user
+            return existing[0]
+        except IntegrityError:
+            existing = list(User.objects.filter(type=User.UserType.Wikidot, wikidot_username__iexact=user_name))
+            return existing[0]
 
 
 def run(base_path):
