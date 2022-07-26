@@ -30,6 +30,8 @@ class HTMLNode(Node):
         if name is None:
             return None
         name = name.lower()
+        if name and name[0] == '/':
+            return None
         trim_paragraphs = False
         if name.endswith('_'):
             trim_paragraphs = True

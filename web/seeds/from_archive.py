@@ -6,6 +6,7 @@ import shutil
 import os, os.path
 import sys
 import json
+import re
 
 from django.db import transaction
 
@@ -73,13 +74,25 @@ def run_in_threads(fn, pages):
 get_or_create_user_lock = threading.Lock()
 
 
+def normalize_username(name: str) -> str:
+    return re.sub(r'[^A-Za-z0-9]+', '-', name).strip('-')
+
+
 @transaction.atomic
-def get_or_create_user(user_name_or_id):
+def get_or_create_user(user_name_or_id, user_data, user_data_by_un):
     with get_or_create_user_lock:
         if type(user_name_or_id) == str:
-            user_name = user_name_or_id
+            user_attrs = user_data_by_un.get(user_name_or_id, None)
+            if user_attrs:
+                user_name = normalize_username(user_attrs['full_name']) or user_name_or_id
+            else:
+                user_name = user_name_or_id
         elif type(user_name_or_id) == int:
-            user_name = 'deleted-%d' % user_name_or_id
+            user_attrs = user_data.get(str(user_name_or_id), None)
+            if user_attrs:
+                user_name = normalize_username(user_attrs['full_name']) or user_attrs['username']
+            else:
+                user_name = 'deleted-%d' % user_name_or_id
         else:
             raise TypeError('Invalid parameter for Wikidot user: %s' % repr(user_name_or_id))
         existing = list(User.objects.filter(type=User.UserType.Wikidot, wikidot_username__iexact=user_name))
@@ -100,6 +113,18 @@ def run(base_path):
     t = time.time()
     t_lock = threading.RLock()
     pages = maybe_load_pages_meta(base_path)
+
+    allfiles = os.listdir('%s/_users' % base_path)
+    g_users = {}
+    g_users_by_username = {}
+    for f in allfiles:
+        if f == 'pending.json':
+            continue
+        with codecs.open('%s/_users/%s' % (base_path, f), 'r', encoding='utf-8') as fp:
+            user_bucket = json.load(fp)
+            for k in user_bucket:
+                g_users[k] = user_bucket[k]
+                g_users_by_username[user_bucket[k]['username']] = user_bucket[k]
 
     total_pages = len(pages)
 
@@ -132,7 +157,7 @@ def run(base_path):
                 if file['author'] in users:
                     file_user = users[file['author']]
                 else:
-                    file_user = users[file['author']] = get_or_create_user(file['author'])
+                    file_user = users[file['author']] = get_or_create_user(file['author'], g_users, g_users_by_username)
                 from_path = '%s/%s/%d' % (from_files, urls.partial_quote(meta['name']), file['file_id'])
                 _, ext = os.path.splitext(file['name'])
                 media_name = str(uuid4()) + ext
@@ -187,7 +212,7 @@ def run(base_path):
             if article_author in users:
                 user = users[article_author]
             else:
-                user = users[article_author] = get_or_create_user(article_author)
+                user = users[article_author] = get_or_create_user(article_author, g_users, g_users_by_username)
 
             # create article and set tags
             article = articles.get_article(pagename)
@@ -211,8 +236,6 @@ def run(base_path):
             # add all revisions
             revisions = list(reversed(meta['revisions']))
 
-            logging.info('Article: %s', pagename)
-
             last_source_version = None
 
             with py7zr.SevenZipFile(fn_7z) as z:
@@ -224,7 +247,7 @@ def run(base_path):
                     if revision['author'] in users:
                         user = users[revision['author']]
                     else:
-                        user = users[revision['author']] = get_or_create_user(revision['author'])
+                        user = users[revision['author']] = get_or_create_user(revision['author'], g_users, g_users_by_username)
                     log = ArticleLogEntry(
                         rev_number=revision['revision'],
                         article=article,
@@ -257,8 +280,7 @@ def run(base_path):
 
             if last_source_version:
                 # to-do reenable once this stops hanging up forever
-                #articles.refresh_article_links(last_source_version)
-                pass
+                articles.refresh_article_links(last_source_version)
 
             with t_lock:
                 if time.time() - t > 1:
