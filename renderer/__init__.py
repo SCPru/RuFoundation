@@ -4,10 +4,11 @@ from .tokenizer import StaticTokenizer
 from .nodes import Node
 import logging
 import time
+from django.conf import settings
 
 
 def get_cached_or_parse_article(version: ArticleVersion):
-    if version.ast:
+    if version.ast and not settings.DEBUG:
         try:
             root_node = Node.from_json(version.ast)
             logging.info('returning existing AST for %s', version.article.full_name)
