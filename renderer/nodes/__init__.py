@@ -12,6 +12,8 @@ from web import threadvars
 from ..parser import Parser
 
 
+AST_VERSION = 1
+
 NODE_CLASSES = None
 _NODE_CLASSES_LOCK = threading.RLock()
 
@@ -38,7 +40,7 @@ class Node(object):
         self.allow_cache = True
 
     @classmethod
-    def parse(cls, p: Parser):
+    def get_node_classes(cls):
         with _NODE_CLASSES_LOCK:
             global NODE_CLASSES
             if NODE_CLASSES is None:
@@ -61,9 +63,14 @@ class Node(object):
                         v = m.__dict__[k]
                         if isinstance(v, type) and issubclass(v, Node) and v not in NODE_CLASSES:
                             NODE_CLASSES.append(v)
+        return NODE_CLASSES
+
+    @classmethod
+    def parse(cls, p: Parser):
+        node_classes = cls.get_node_classes()
         pos = p.tokenizer.position
         t = p.tokenizer.read_token()
-        for f_cls in NODE_CLASSES:
+        for f_cls in node_classes:
             # I'm not sure if this does what I think it does
             if f_cls == cls or f_cls.parse == cls.parse:
                 continue
@@ -178,9 +185,39 @@ class Node(object):
         return self.render(context=context)
 
     def to_json(self):
-        base = {'type': str(type(self)), 'children': [x.to_json() for x in self.children]}
+        base = {'__ClassType': str(type(self)), '__ASTVersion': AST_VERSION, 'children': [x.to_json() for x in self.children]}
         for k in self.__dict__:
             if k in ['parent', 'children', 'root']:
                 continue
             base[k] = self.__dict__[k]
         return base
+
+    @classmethod
+    def _unpack_object(cls, obj, root=None):
+        if obj.get('__ASTVersion') != AST_VERSION:
+            raise TypeError('Invalid AST Version %d (current: %d)' % (obj['__ASTVersion'], AST_VERSION))
+        node_cls = None
+        node_classes = cls.get_node_classes()
+        for c in node_classes:
+            if str(c) == obj.get('__ClassType'):
+                node_cls = c
+                break
+        if node_cls is None:
+            raise TypeError('Unknown node type \'%s\' in AST' % obj.get('type'))
+        node = node_cls.__new__(node_cls)
+        for k in obj:
+            if k in ['__ClassType', 'children', '__ASTVersion']:
+                continue
+            node.__dict__[k] = obj[k]
+        node.__dict__['children'] = []
+        if root is None:
+            root = node
+        node.root = root
+        for child_obj in obj.get('children', []):
+            child_node = cls._unpack_object(child_obj, root=root)
+            node.append_child(child_node)
+        return node
+
+    @classmethod
+    def from_json(cls, root_object):
+        return cls._unpack_object(root_object)

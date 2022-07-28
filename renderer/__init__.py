@@ -1,22 +1,26 @@
-from .parser import Parser
+from web.models.articles import ArticleVersion
+from .parser import Parser, ParseResult, ParseContext
 from .tokenizer import StaticTokenizer
-import time
-import json
+from .nodes import Node
 import logging
 
 
+def get_cached_or_parse_article(version: ArticleVersion):
+    if version.ast:
+        try:
+            root_node = Node.from_json(version.ast)
+            return ParseResult(ParseContext(None, root_node), root_node)
+        except (TypeError, ValueError):
+            pass
+    p = Parser(StaticTokenizer(version.source))
+    result = p.parse()
+    version.ast = result.root.to_json()
+    version.save()
+    return result
+
+
 def single_pass_render(source, context=None):
-    t = time.time()
     p = Parser(StaticTokenizer(source))
     result = p.parse()
-    debug = False
-    parsing_time = time.time()-t
-    t = time.time()
     s = result.root.render(context)
-    rendering_time = time.time()-t
-    if context is not None and context.source_article == context.article:
-        logging.info('parsing took %.3fs, rendering took %.3fs (%s)' % (parsing_time, rendering_time, context.source_article.full_name if hasattr(context.source_article, "full_name") else ""))
-        if debug:
-            logging.info('rendering tree\n%s' % json.dumps(result.root.to_json()))
-
     return s

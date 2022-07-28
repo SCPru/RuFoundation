@@ -6,7 +6,7 @@ from renderer.utils import render_user_to_json
 from web.models.articles import Article
 from web.controllers import articles
 
-from renderer import single_pass_render
+from renderer import get_cached_or_parse_article
 from renderer.parser import RenderContext
 
 from typing import Optional
@@ -44,13 +44,13 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
     def _render_nav(self, name: str, article: Article, path_params: dict[str, str]) -> str:
         nav = articles.get_article(name)
         if nav:
-            return single_pass_render(articles.get_latest_source(nav), RenderContext(article, nav, path_params, self.request.user))
+            return get_cached_or_parse_article(articles.get_latest_version(nav)).root.render(RenderContext(article, nav, path_params, self.request.user))
         return ""
 
     def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str]]:
         if article is not None:
             context = RenderContext(article, article, path_params, self.request.user)
-            content = single_pass_render(articles.get_latest_source(article), context)
+            content = get_cached_or_parse_article(articles.get_latest_version(article)).root.render(context)
             redirect_to = context.redirect_to
             status = 200
         else:

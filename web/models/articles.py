@@ -102,6 +102,7 @@ class ArticleVersion(SiteLimitedModel):
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
     source = models.TextField(verbose_name="Исходник")
+    ast = models.JSONField(blank=True, null=True, verbose_name="AST-дерево статьи")
     rendered = models.TextField(blank=True, null=True, verbose_name="Рендер статьи")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
 
