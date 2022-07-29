@@ -1,4 +1,4 @@
-@import url('https://scp-wiki.wdfiles.com/local--files/component%3Atheme/font-bauhaus.css');
+@import url('./fonts/font-bauhaus.css');
 @import url('https://fonts.googleapis.com/earlyaccess/nanumgothic.css');
 @import url('https://fonts.googleapis.com/earlyaccess/nanumgothiccoding.css');
 @import url('https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css');
