@@ -22,6 +22,8 @@ COPY . .
 COPY --from=js_build /build/static/* ./static/
 
 RUN useradd -u 8877 scpwiki
+RUN chown scpwiki:scpwiki /app -R
+
 USER scpwiki
 
 RUN python manage.py collectstatic --no-post-process
