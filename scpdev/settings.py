@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 import os
 import mimetypes
+from whitenoise.storage import CompressedManifestStaticFilesStorage
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.staticfiles',
     'django.contrib.sessions',
     'django.contrib.messages',
 
@@ -46,6 +46,8 @@ INSTALLED_APPS = [
 
     'system',
     'web',
+
+    'django.contrib.staticfiles',
 ]
 
 MIDDLEWARE = [
@@ -149,7 +151,12 @@ STATIC_URL = "/-/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "static_dist"
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+class WhiteNoiseStaticFilesStorage(CompressedManifestStaticFilesStorage):
+    manifest_strict = False
+
+
+STATICFILES_STORAGE = 'scpdev.settings.WhiteNoiseStaticFilesStorage'
 
 MEDIA_HOST = os.environ.get('MEDIA_HOST', None)
 MEDIA_URL = "local--files/"
