@@ -4,30 +4,9 @@
 
 
 {% block content %}
-    <div class="login-form">
-        <form method="POST">
-            {% csrf_token %}
-            <div class="text-input">
-                <span class="icon begin">
-                    <i class="fa-solid fa-user"></i>
-                </span>
-                {% if not predef_username %}
-                <input type="text" placeholder="Новый логин" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username">
-                {% else %}
-                <input type="hidden" value="{{ predef_username }}" name="username">
-                <input type="text" placeholder="{{ predef_username }}" disabled autocapitalize="none" maxlength="150" required id="id_username">
-                {% endif %}
-            </div>
-            <div class="text-input">
-                <span class="icon begin">
-                    <i class="fa-solid fa-lock"></i>
-                </span>
-                <input type="password" placeholder="Новый пароль" name="password" autocomplete="new-password" required id="id_password">
-                <span class="icon end">
-                    <i class="fa-solid fa-eye-slash cursor-pointer" id="togglePassword"></i>
-                </span>
-            </div>
-            <button class="btn btn-primary" type="submit">Продолжить</button>
-        </form>
-    </div>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">Продолжить</button>
+    </form>
 {% endblock %}

@@ -1,4 +1,6 @@
 from django import forms
+from django.core.validators import RegexValidator
+
 from system.models import User
 
 
@@ -13,11 +15,11 @@ class UserProfileForm(forms.ModelForm):
 
 class InviteForm(forms.Form):
     _selected_user = forms.IntegerField(widget=forms.MultipleHiddenInput, required=False)
-    email = forms.EmailField()
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'vTextField'}))
 
 
 class CreateAccountForm(forms.Form):
-    username = forms.CharField(label="Имя пользователя", required=True)
+    username = forms.CharField(label="Имя пользователя", required=True, validators=[RegexValidator(r'^[A-Za-z0-9_-]+$', 'Некорректное имя пользователя')])
     password = forms.CharField(label="Пароль", widget=forms.PasswordInput(), required=True)
 
 

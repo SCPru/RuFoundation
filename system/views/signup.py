@@ -13,7 +13,7 @@ from django.contrib.auth import login
 from django.contrib.admin import site
 from django.contrib import messages
 
-
+import re
 from system.forms import InviteForm, CreateAccountForm
 from web.models.sites import get_current_site
 
@@ -117,6 +117,14 @@ class ActivateView(FormView):
             user = None
         return user
 
+    def get_form(self, **kwargs):
+        form = super().get_form(**kwargs)
+        user = self.get_user()
+        if user.type == User.UserType.Wikidot:
+            form.fields['username'].disabled = True
+            form.fields['username'].initial = user.wikidot_username
+        return form
+
     def get_success_url(self):
         return resolve_url("profile_edit")
 
@@ -132,7 +140,6 @@ class ActivateView(FormView):
             self.user.set_password(form.cleaned_data["password"])
             self.user.is_active = True
             self.user.save()
-            print('user saved')
             login(self.request, self.user, backend="django.contrib.auth.backends.ModelBackend")
             return super(ActivateView, self).form_valid(form)
         return HttpResponseBadRequest("Invalid user token")
