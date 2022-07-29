@@ -995,7 +995,7 @@ table.page-files .options{
 
 a.avatar-hover,  a.avatar-hover:hover {
 	background: none;
-	background-image: url(../images/background/opacity2.png);
+	background-image: url(./images/background/opacity2.png);
 	padding: 8px;
 	text-decoration: none;
 	font-size: 130%;
@@ -1050,7 +1050,7 @@ a.avatar-hover div span{
 .wait-block{
 	padding-left: 20px; 
 	background-repeat: no-repeat;
-	background-image: url(../images/progress/progresscircle.gif)
+	background-image: url(./images/progresscircle.gif)
 }
 
 .error-inline{
@@ -1099,7 +1099,7 @@ a.avatar-hover div span{
 	height: 20px;
 	background-repeat: no-repeat;
 	background-position: center center;
-	background-image: url(../images/progress/progressbar.gif);
+	background-image: url(./images/progressbar.gif);
 }
 
 /* FORMS */
@@ -1436,15 +1436,6 @@ iframe[id^=revmob-ad-] {
 
 
 
-.rss-icon{
-	/*width: 14px; height: 14px;*/
-	/*
-	background-image: url(../images/feed/feed-icon-14x14.png);
-	content: '&nbsp';
-*/
-	vertical-align: -10%;
-}
-
 /* FOLDABLE LISTS */
 /*
 div.foldable-list-container li.folded{
@@ -1609,7 +1600,7 @@ version: 2.3.1
 
 .yui-navset .yui-nav a,
 .yui-navset .yui-navset-top .yui-nav a {
-    background:#d8d8d8 url(../../../common--javascript/yahooui/assets/sprite.png) repeat-x; /* tab background */
+    background:#d8d8d8 url(./images/yui/sprite.png) repeat-x; /* tab background */
     border:solid #a3a3a3;
     border-width:0 1px;
     color:#000;
@@ -1631,13 +1622,13 @@ version: 2.3.1
 .yui-navset .yui-nav .selected a,
 .yui-navset .yui-nav .selected a:focus, /* no focus effect for selected */
 .yui-navset .yui-nav .selected a:hover { /* no hover effect for selected */
-    background:#2647a0 url(../../../common--javascript/yahooui/assets/sprite.png) repeat-x left -1400px; /* selected tab background */
+    background:#2647a0 url(./images/yui/sprite.png) repeat-x left -1400px; /* selected tab background */
     color:#fff;
 }
 
 .yui-navset .yui-nav a:hover,
 .yui-navset .yui-nav a:focus {
-    background:#bfdaff url(../../../common--javascript/yahooui/assets/sprite.png) repeat-x left -1300px; /* selected tab background */
+    background:#bfdaff url(./images/yui/sprite.png) repeat-x left -1300px; /* selected tab background */
     outline:0;
 }
 
@@ -2298,11 +2289,11 @@ div.new-post a{
 }
 
 .wd-editor-toolbar-panel a {
-	background-image: url(../images/editor/icons1.png);
+	background-image: url(./images/editor/icons1.png);
 }
 
 .wd-editor-toolbar-panel a:hover {
-	background-image: url(../images/editor/icons3.png);
+	background-image: url(./images/editor/icons3.png);
 }
 
 
@@ -2557,7 +2548,7 @@ table#odialog-box-container td div{
 	padding: 0 50px 20px 50px;
 	background-repeat: no-repeat;
 	background-position: bottom center;
-	background-image: url(../images/progress/progressbar.gif);
+	background-image: url(./images/progressbar.gif);
 }
 .owindow.osuccess {
 	width: auto;
@@ -2719,7 +2710,7 @@ table#odialog-box-container td div{
 	font-family: verdana, arial, helvetica;
 	height: 24px;
 	background-color: #CCC;
-	background-image: url(../../../common--theme/base/images/shade2_n.png);
+	background-image: url(./images/background/shade2_n.png);
 	background-position: bottom;
 	border-bottom: 1px solid #444;
 	color: #000;
@@ -2748,7 +2739,7 @@ table#odialog-box-container td div{
 	top: 2px;
 	width: 71px;
 	height: 20px;
-	background-image: url(../../../common--images/navibar/logo20.png);
+	background-image: url(./images/logo20.png);
 	filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(enabled='true', sizingMethod='scale', src='../../../common--images/navibar/logo20.png');
 	z-index: 999;
 }
@@ -2820,7 +2811,7 @@ table#odialog-box-container td div{
 	padding: 2px;
 	/*border: 1px solid #444;
 	background-color: #F5F5F5;
-	background-image: url(../../../common--theme/base/images/shade2_n.png);
+	background-image: url(./images/background/shade2_n.png);
 	background-position: center 50px;*/
 	color: #000;
 }
@@ -2983,11 +2974,6 @@ and have an super awesome onclick state
     -moz-box-shadow: 0 1px 2px rgba(0,0,0,0.5);
     -webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.5);
 
-    /* who needs images these days? IE :D */
-    background-image: url(../images/cool-button-gradient.png);
-    background-position: center center;
-    background-repeat: repeat-x;
-
     /* those guys don't need images: */
     background-image: linear-gradient(top, rgba(255,255,255,.2), rgba(150,150,150,.2), rgba(0,0,0,.0)) !important;
     background-image: -moz-linear-gradient(top, rgba(255,255,255,.2), rgba(150,150,150,.2), rgba(0,0,0,.0)) !important;
@@ -3097,7 +3083,7 @@ table.guest-commenting td label.hint {
 /* Wikidot Hybrid Modules */
 .wikidot-hybrid-module-loading {
     padding-top: 20px;
-    background: no-repeat center center url('../images/progress/progressbar.gif');
+    background: no-repeat center center url('./images/progressbar.gif');
 }
 
 /* TipTip CSS - Version 1.2 */

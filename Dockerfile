@@ -26,7 +26,7 @@ RUN chown scpwiki:scpwiki /app -R
 
 USER scpwiki
 
-RUN python manage.py collectstatic --no-post-process
+RUN python manage.py collectstatic
 
 EXPOSE 8000
 CMD ["gunicorn", "scpdev.wsgi", "-w", "8", "-b", "0.0.0.0:8000"]
