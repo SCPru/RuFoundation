@@ -1,7 +1,9 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import DetailView, UpdateView
 from django.shortcuts import resolve_url
+from django.conf import settings
 
+from system.forms import UserProfileForm
 from system.models import User
 
 
@@ -9,16 +11,22 @@ class ProfileView(DetailView):
     model = User
     slug_field = "username"
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        user = self.get_object(self.get_queryset())
+        if user.type == User.UserType.Wikidot:
+            ctx['avatar'] = settings.WIKIDOT_AVATAR
+            ctx['displayname'] = 'wd:'+user.wikidot_username
+        else:
+            ctx['avatar'] = user.avatar or settings.DEFAULT_AVATAR
+            ctx['displayname'] = user.username
+        return ctx
+
     def get(self, *args, **kwargs):
-        print(repr(args))
-        print(repr(kwargs))
         return super().get(*args, **kwargs)
 
     def get_object(self, queryset=None):
-        print('hi')
-        print(repr(self.args))
         q = super().get_object(queryset=queryset)
-        print(repr(q))
         return q
 
 
@@ -28,8 +36,7 @@ class MyProfileView(LoginRequiredMixin, ProfileView):
 
 
 class ChangeProfileView(LoginRequiredMixin, UpdateView):
-    model = User
-    fields = ['username', 'email', 'first_name', 'last_name', "bio", "avatar"]
+    form_class = UserProfileForm
 
     def get_success_url(self):
         return resolve_url("profile")

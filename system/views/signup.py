@@ -37,13 +37,20 @@ class InviteView(FormView):
 
     def get_initial(self):
         initial = super(InviteView, self).get_initial()
-        if self.user:
-            initial['_selected_user'] = self.user.id
         return initial
+
+    def get_user(self) -> User | None:
+        user_id = self.kwargs.get('id') or None
+        if user_id:
+            return User.objects.get(pk=user_id)
+        return None
 
     def get_context_data(self, **kwargs):
         context = super(InviteView, self).get_context_data(**kwargs)
-        context["title"] = "Инвайт пользователя"
+        context["title"] = "Пригласить пользователя"
+        user = self.get_user()
+        if user:
+            context["title"] = "Активировать пользователя wd:%s" % user.wikidot_username
         context.update(site._wrapped.each_context(self.request))
         return context
 
@@ -51,11 +58,9 @@ class InviteView(FormView):
         return resolve_url("admin:index")
 
     def form_valid(self, form):
-        self.user = self.user if self.user else form.cleaned_data["_selected_user"]
-
         email = form.cleaned_data['email']
-        if self.user:
-            user = self.user
+        user = self.get_user()
+        if user:
             created = not user.email
         else:
             user, created = User.objects.get_or_create(email=email)
@@ -63,13 +68,7 @@ class InviteView(FormView):
         if created:
             user.is_active = False
             user.username = 'user-%d' % user.id
-
-            if user.type == User.UserType.Wikidot:
-                user.type = User.UserType.Normal
-                user.username = user.wikidot_username
-                user.wikidot_username = None
-                user.email = email
-
+            user.email = email
             user.save()
             subject = f"Приглашение на {site.title}"
             c = {
@@ -100,6 +99,16 @@ class ActivateView(FormView):
         super(ActivateView, self).__init__(*args, **kwargs)
         self.user = None
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['title'] = 'Создание аккаунта'
+        ctx['predef_username'] = None
+        user = self.get_user()
+        if user.type == User.UserType.Wikidot:
+            ctx['title'] = 'Восстановление аккаунта'
+            ctx['predef_username'] = user.wikidot_username
+        return ctx
+
     def get_user(self):
         try:
             uid = force_str(urlsafe_base64_decode(self.kwargs["uidb64"]))
@@ -114,10 +123,16 @@ class ActivateView(FormView):
     def form_valid(self, form):
         self.user = self.get_user()
         if self.user is not None and account_activation_token.check_token(self.user, self.kwargs["token"]):
-            self.user.username = form.cleaned_data["username"]
+            if self.user.type != User.UserType.Wikidot:
+                self.user.username = form.cleaned_data["username"]
+            else:
+                self.user.username = self.user.wikidot_username
+                self.user.wikidot_username = None
+                self.user.type = User.UserType.Normal
             self.user.set_password(form.cleaned_data["password"])
             self.user.is_active = True
             self.user.save()
+            print('user saved')
             login(self.request, self.user, backend="django.contrib.auth.backends.ModelBackend")
             return super(ActivateView, self).form_valid(form)
         return HttpResponseBadRequest("Invalid user token")
