@@ -3,6 +3,7 @@ db.sqlite3
 *.pyc
 files/*
 !files/.gitkeep
+static_dist
 node_modules
 *.log
 .env

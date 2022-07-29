@@ -24,5 +24,7 @@ COPY --from=js_build /build/static/* ./static/
 RUN useradd -u 8877 scpwiki
 USER scpwiki
 
+RUN python manage.py collectstatic --no-post-process
+
 EXPOSE 8000
 CMD ["gunicorn", "scpdev.wsgi", "-w", "8", "-b", "0.0.0.0:8000"]
