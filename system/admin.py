@@ -44,6 +44,4 @@ class AdvancedUserAdmin(UserAdmin):
         form = super().get_form(request, *args, **kwargs)
         if 'wikidot_username' in form.base_fields:
             form.base_fields['wikidot_username'].required = False
-        if 'wikidot_username' in form.fields:
-            form.fields['wikidot_username'].required = False
         return form
