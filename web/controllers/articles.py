@@ -283,13 +283,15 @@ def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _F
     prev_parent = get_full_name(article.parent) if article.parent else None
     if article.parent == parent:
         return
+    parent_id = parent.id if parent else None
+    prev_parent_id = article.parent.id if article.parent else None
     article.parent = parent
     article.save()
     log = ArticleLogEntry(
         article=article,
         user=user,
         type=ArticleLogEntry.LogEntryType.Parent,
-        meta={'parent': full_name_of_parent, 'prev_parent': prev_parent}
+        meta={'parent': full_name_of_parent, 'prev_parent': prev_parent, 'parent_id': parent_id, 'prev_parent_id': prev_parent_id}
     )
     add_log_entry(article, log)
 
