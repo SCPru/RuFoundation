@@ -87,4 +87,6 @@ def render_user_to_json(user: User, avatar=True):
     displayname = user.username
     if user.type == User.UserType.Wikidot:
         displayname = 'wd:'+user.wikidot_username
-    return {'type': user_type, 'id': user.id, 'avatar': user.get_avatar(), 'name': displayname, 'username': user.username, 'showAvatar': avatar}
+    staff = user.is_staff
+    admin = user.is_superuser
+    return {'type': user_type, 'id': user.id, 'avatar': user.get_avatar(), 'name': displayname, 'username': user.username, 'showAvatar': avatar, 'staff': staff, 'admin': admin}

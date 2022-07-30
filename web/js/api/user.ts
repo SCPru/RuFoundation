@@ -5,4 +5,6 @@ export interface UserData {
     name: string
     username: string
     showAvatar: boolean
+    staff?: boolean
+    admin?: boolean
 }

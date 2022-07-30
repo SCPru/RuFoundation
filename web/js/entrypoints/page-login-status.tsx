@@ -64,7 +64,14 @@ class PageLoginStatus extends Component<Props, State> {
                             <img className="small" src={user.avatar || DEFAULT_AVATAR} alt={user.username} />
                         </a>
                         {user.username}
-                    </span> | <a id="my-account" href={`/-/profile`}>
+                    </span>{
+                    (user.admin || user.staff) && (
+                        <>
+                            {' '}| <a id="w-admin-link" href={`/-/admin`}>
+                            Админ-панель
+                        </a>
+                        </>
+                    )} | <a id="my-account" href={`/-/profile`}>
                         Мой профиль
                     </a>
                     <a id="account-topbutton" href="#" onClick={this.toggleMenu}>▼</a>
