@@ -170,11 +170,13 @@ class FetchOrRevertLogView(APIView):
         if not ("revNumber" in data and isinstance(data["revNumber"], int)):
             raise APIError('Некорректный номер ревизии', 400)
 
-        articles.revert_article_version(article, data["revNumber"], request.user)
-        version = articles.get_latest_version(article)
-        articles.refresh_article_links(version)
+        raise APIError('Откат правок в данный момент отключен', 409)
 
-        return self.render_json(200, {"pageId": article.full_name})
+        # articles.revert_article_version(article, data["revNumber"], request.user)
+        # version = articles.get_latest_version(article)
+        # articles.refresh_article_links(version)
+
+        # return self.render_json(200, {"pageId": article.full_name})
 
 
 class FetchVersionView(APIView):
