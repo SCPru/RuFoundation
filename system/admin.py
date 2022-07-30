@@ -39,3 +39,8 @@ class AdvancedUserAdmin(UserAdmin):
         if obj.type == User.UserType.Wikidot:
             return 'wd:%s' % obj.wikidot_username
         return obj.username
+
+    def get_form(self, request, *args, **kwargs):
+        form = super().get_form(request, *args, **kwargs)
+        form.base_fields['wikidot_username'].required = False
+        return form

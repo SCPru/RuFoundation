@@ -22,7 +22,7 @@ class User(AbstractUser):
         },
     )
 
-    wikidot_username = CITextField(unique=True, verbose_name="Имя пользователя на Wikidot", null=True)
+    wikidot_username = CITextField(unique=True, verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
 
     type = models.TextField(choices=UserType.choices, default=UserType.Normal, verbose_name="Тип")
 
