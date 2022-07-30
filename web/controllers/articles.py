@@ -450,7 +450,7 @@ def add_file_to_article(full_name_or_article: _FullNameOrArticle, file: File, us
         article=article,
         user=user,
         type=ArticleLogEntry.LogEntryType.FileAdded,
-        meta={'name': file.name}
+        meta={'name': file.name, 'id': file.id}
     )
     add_log_entry(article, log)
 
@@ -476,7 +476,7 @@ def delete_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fil
             article=article,
             user=user,
             type=ArticleLogEntry.LogEntryType.FileDeleted,
-            meta={'name': file.name}
+            meta={'name': file.name, 'id': file.id}
         )
         add_log_entry(article, log)
 
@@ -495,7 +495,7 @@ def restore_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fi
         article=article,
         user=user,
         type=ArticleLogEntry.LogEntryType.FileAdded,
-        meta={'name': file.name}
+        meta={'name': file.name, 'id': file.id}
     )
     add_log_entry(article, log)
 
@@ -513,7 +513,7 @@ def rename_file_in_article(full_name_or_article: _FullNameOrArticle, file: File,
             article=article,
             user=user,
             type=ArticleLogEntry.LogEntryType.FileRenamed,
-            meta={'name': file.name, 'prev_name': old_name}
+            meta={'name': file.name, 'prev_name': old_name, 'id': file.id}
         )
         add_log_entry(article, log)
 
