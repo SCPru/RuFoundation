@@ -18,7 +18,7 @@ class ProfileView(DetailView):
             ctx['avatar'] = settings.WIKIDOT_AVATAR
             ctx['displayname'] = 'wd:'+user.wikidot_username
         else:
-            ctx['avatar'] = user.avatar or settings.DEFAULT_AVATAR
+            ctx['avatar'] = user.get_avatar(default=settings.DEFAULT_AVATAR)
             ctx['displayname'] = user.username
         return ctx
 
