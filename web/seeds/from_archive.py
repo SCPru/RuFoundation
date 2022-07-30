@@ -263,6 +263,10 @@ def run(base_path):
                     )
                     if 'S' in revision['flags'] or 'N' in revision['flags']:
                         content = text_revisions['%d.txt' % revision['revision']].read().decode('utf-8')
+
+                        for k, v in settings.ARTICLE_IMPORT_REPLACE_CONFIG.items():
+                            content = content.replace(k, v)
+
                         version = ArticleVersion(
                             article=article,
                             source=content,

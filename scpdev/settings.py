@@ -200,12 +200,20 @@ mimetypes.add_type("text/css", ".css", True)
 mimetypes.add_type("text/javascript", ".js", True)
 
 
+ARTICLE_IMPORT_REPLACE_CONFIG = {}
 ARTICLE_REPLACE_CONFIG = {}
+
 for v in os.environ.get('ARTICLE_REPLACE_CONFIG', '').split(','):
     if not v.strip():
         continue
     [k, v] = v.split('::')
     ARTICLE_REPLACE_CONFIG[k] = v
+
+for v in os.environ.get('ARTICLE_IMPORT_REPLACE_CONFIG', '').split(','):
+    if not v.strip():
+        continue
+    [k, v] = v.split('::')
+    ARTICLE_IMPORT_REPLACE_CONFIG[k] = v
 
 
 mail_backend = os.environ.get('EMAIL_ENGINE', 'console')
