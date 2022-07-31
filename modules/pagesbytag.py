@@ -20,7 +20,9 @@ def render(context, params):
     except Tag.DoesNotExist:
         return ''
 
-    render_template_from_string(
+    articles = [{'full_name': x.full_name, 'title': x.title or x.full_name} for x in articles]
+
+    return render_template_from_string(
         """
         <a name="pages"></a>
         <h2>Список страниц, помеченных тегом <em>{{ tag }}</em>:</h2>
@@ -28,11 +30,12 @@ def render(context, params):
             {% for article in articles %}
                 <div class="pages-list-item">
                     <div class="title">
-                        <a href="/{{ article.full_name }}">{{ article.title or article.full_name }}</a>
+                        <a href="/{{ article.full_name }}">{{ article.title }}</a>
                     </div>
                 </div>
             {% endfor %}
         </div>
         """,
+        tag=params['tag'],
         articles=articles
     )
