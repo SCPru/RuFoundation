@@ -77,7 +77,9 @@ def add_log_entry(full_name_or_article: _FullNameOrArticle, log_entry: ArticleLo
                                          .select_for_update()\
                                          .filter(article=article)
     len(current_log)
-    max_rev_number = current_log.aggregate(max=Max('rev_number')).get('max', -1)
+    max_rev_number = current_log.aggregate(max=Max('rev_number')).get('max')
+    if max_rev_number is None:
+        max_rev_number = -1
     log_entry.rev_number = max_rev_number + 1
     log_entry.save()
 
@@ -518,23 +520,6 @@ def rename_file_in_article(full_name_or_article: _FullNameOrArticle, file: File,
             meta={'name': file.name, 'prev_name': old_name, 'id': file.id}
         )
         add_log_entry(article, log)
-
-
-# Has user permissions for do anything with article
-def has_perm(user: _UserType, perm: str, full_name_or_article: _FullNameOrArticle = None) -> bool:
-    if full_name_or_article:
-        article = get_article(full_name_or_article)
-        category = get_article_category(article)
-        if not (article.locked and perm in ("web.add_article", "web.change_article", "web.delete_article")) \
-                or has_perm(user, "web.can_lock_article", article):
-            return user.has_perm(f"{perm}_in_category", category) or user.has_perm(perm, article)
-        return False
-    return user.has_perm(perm)
-
-
-def has_category_perm(user: _UserType, perm: str, full_name_or_category: _FullNameOrCategory) -> bool:
-    category = get_category(full_name_or_category)
-    return has_perm(user, f"{perm}_in_category") or user.has_perm(f"{perm}_in_category", category)
 
 
 # Check if name is allowed for creation

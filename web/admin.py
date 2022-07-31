@@ -82,6 +82,10 @@ class CategoryForm(forms.ModelForm):
 class CategoryAdmin(GuardedModelAdmin):
     form = CategoryForm
     list_filter = ['site__domain']
+    fieldsets = (
+        (None, {"fields": ('name', 'site')}),
+        ('Права пользователей', {"fields": ('users_can_view', 'users_can_create', 'users_can_edit', 'users_can_rate', 'users_can_delete')})
+    )
     inlines = [SettingsAdmin]
 
 

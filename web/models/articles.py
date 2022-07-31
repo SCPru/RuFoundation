@@ -25,19 +25,19 @@ class Tag(SiteLimitedModel):
 
 class Category(SiteLimitedModel):
     class Meta:
-        verbose_name = "Категория"
-        verbose_name_plural = "Категории"
+        verbose_name = "Настройки категории"
+        verbose_name_plural = "Настройки категории"
 
         constraints = [models.UniqueConstraint(fields=['name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['name'])]
 
-        permissions = [("add_article_in_category", "Может добавлять новые статьи в категорию"),
-                       ("change_article_in_category", "Может изменять статьи в категории"),
-                       ("delete_article_in_category", "Может удалять статьи в категории"),
-                       ("can_vote_article_in_category", "Может голосовать за статьи в категории"),
-                       ("can_lock_article_in_category", "Может заблокировать страницу для правок в категории")]
-
     name = models.TextField(verbose_name="Имя")
+
+    users_can_view = models.BooleanField(verbose_name='Пользователи могут просматривать статьи', null=False, default=True)
+    users_can_create = models.BooleanField(verbose_name='Пользователи могут создавать статьи', null=False, default=True)
+    users_can_edit = models.BooleanField(verbose_name='Пользователи могут редактировать статьи', null=False, default=True)
+    users_can_rate = models.BooleanField(verbose_name='Пользователи могут голосовать за статьи', null=False, default=True)
+    users_can_delete = models.BooleanField(verbose_name='Пользователи могут удалять статьи', null=False, default=True)
 
     def __str__(self) -> str:
         return self.name
@@ -45,8 +45,8 @@ class Category(SiteLimitedModel):
     # this function returns site settings overridden by category settings.
     # if neither is set, falls back to defaults defined in Settings class.
     def get_settings(self):
-        category_settings = self.settings or Settings.get_default_settings()
-        site_settings = self.site.settings or Settings.get_default_settings()
+        category_settings = Settings.objects.filter(category=self).first() or Settings.get_default_settings()
+        site_settings = Settings.objects.filter(site=self.site).first() or Settings.get_default_settings()
         return Settings.get_default_settings().merge(site_settings).merge(category_settings)
 
 
@@ -57,11 +57,6 @@ class Article(SiteLimitedModel):
 
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['category', 'name'])]
-
-        permissions = [
-            ("can_vote_article", "Может голосовать за статью"),
-            ("can_lock_article", "Может заблокировать страницу для правок")
-        ]
 
     category = models.TextField(default="_default", verbose_name="Категория")
     name = models.TextField(verbose_name="Имя")

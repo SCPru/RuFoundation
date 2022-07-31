@@ -16,8 +16,6 @@ class Site(models.Model):
             models.UniqueConstraint(fields=['slug'], name='%(app_label)s_%(class)s_slug_unique'),
         ]
 
-        permissions = [("can_vote_article", "Может голосовать за статью")]
-
     slug = models.TextField(verbose_name='Сокращение', null=False)
 
     title = models.TextField(verbose_name='Заголовок', null=False)
@@ -28,7 +26,7 @@ class Site(models.Model):
     media_domain = models.TextField(verbose_name='Домен для файлов', null=False)
 
     def get_settings(self):
-        return self.settings or Settings.get_default_settings()
+        return Settings.objects.filter(site=self).first() or Settings.get_default_settings()
 
     def __str__(self) -> str:
         return f"{self.title} ({self.domain})"
