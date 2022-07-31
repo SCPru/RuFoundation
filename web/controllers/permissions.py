@@ -12,6 +12,9 @@ def check(user, action, obj):
         case (AnonymousUser(), perm, _) if perm != 'view':
             return False
 
+        case (_, perm, Article(locked=True)) if perm != 'view':
+            return False
+
         case (_, 'view', Article(category=category)):
             return _get_or_default_category(category).users_can_view
 
