@@ -54,13 +54,24 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    background: white;
+    height: 24px;
     .w-stars-rate-stars-wrapper {
       position: relative;
       font-size: 150%;
       cursor: pointer;
-      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       &:before {
-        content: '🟊🟊🟊🟊🟊';
+        font-family: 'Font Awesome 5 Free';
+        position: relative;
+        left: 1px;
+        font-weight: 900;
+        font-size: 13px;
+        line-height: 13px;
+        content: '\f005\f005\f005\f005\f005';
+        letter-spacing: 2px;
         color: #eee;
         white-space: nowrap;
       }
@@ -69,8 +80,18 @@
         position: absolute;
         top: 0;
         left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
         &:before {
-          content: '🟊🟊🟊🟊🟊';
+          font-family: 'Font Awesome 5 Free';
+          position: relative;
+          left: 1px;
+          font-weight: 900;
+          font-size: 13px;
+          line-height: 13px;
+          content: '\f005\f005\f005\f005\f005';
+          letter-spacing: 2px;
           white-space: nowrap;
           color: #4e6b6b;
         }

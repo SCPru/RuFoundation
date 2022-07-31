@@ -6,7 +6,7 @@ from uuid import uuid4
 from renderer.utils import render_user_to_json
 from . import APIView, APIError, takes_json
 
-from web.controllers import articles
+from web.controllers import articles, permissions
 import urllib.parse
 
 from ...models.files import File
@@ -18,7 +18,7 @@ class FileView(APIView):
         article = articles.get_article(article_name)
         if article is None:
             raise APIError('Страница не найдена', 404)
-        if edit and not articles.has_perm(request.user, "web.change_article", article):
+        if edit and not permissions.check(request.user, "edit", article):
             raise APIError('Недостаточно прав', 403)
         return article
 

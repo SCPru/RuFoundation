@@ -15,17 +15,17 @@
             {% csrf_token %}
             <div class="text-input">
                 <span class="icon begin">
-                    <i class="fa-solid fa-user"></i>
+                    <i class="fas fa-user"></i>
                 </span>
                 <input type="text" placeholder="Ваш логин" name="username" autofocus="" autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username">
             </div>
             <div class="text-input">
                 <span class="icon begin">
-                    <i class="fa-solid fa-lock"></i>
+                    <i class="fas fa-lock"></i>
                 </span>
                 <input type="password" placeholder="Ваш пароль" name="password" autocomplete="current-password" required id="id_password">
                 <span class="icon end">
-                    <i class="fa-solid fa-eye-slash cursor-pointer" id="togglePassword"></i>
+                    <i class="fas fa-eye-slash cursor-pointer" id="togglePassword"></i>
                 </span>
             </div>
             <button class="btn btn-primary" type="submit">Войти</button>

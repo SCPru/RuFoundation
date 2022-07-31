@@ -4,7 +4,7 @@ from django.http import HttpResponseRedirect
 
 from renderer.utils import render_user_to_json
 from web.models.articles import Article
-from web.controllers import articles
+from web.controllers import articles, permissions
 
 from renderer import get_cached_or_parse_article
 from renderer.parser import RenderContext
@@ -18,6 +18,7 @@ from web.models.sites import get_current_site
 class ArticleView(TemplateResponseMixin, ContextMixin, View):
     template_name = "page.html"
     template_404 = "page_404.html"
+    template_403 = "page_403.html"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,14 +50,19 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
     def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str]]:
         if article is not None:
-            context = RenderContext(article, article, path_params, self.request.user)
-            content = get_cached_or_parse_article(articles.get_latest_version(article)).root.render(context)
-            redirect_to = context.redirect_to
-            status = 200
+            if not permissions.check(self.request.user, 'view', article):
+                context = {'page_id': fullname}
+                content = render_to_string(self.template_403, context)
+                redirect_to = None
+                status = 403
+            else:
+                context = RenderContext(article, article, path_params, self.request.user)
+                content = get_cached_or_parse_article(articles.get_latest_version(article)).root.render(context)
+                redirect_to = context.redirect_to
+                status = 200
         else:
-            context = {'page_id': fullname, 'allow_create': articles.is_full_name_allowed(
-                fullname) and articles.has_category_perm(self.request.user, "web.add_article",
-                                                         articles.get_article_category(fullname))}
+            name, category = articles.get_name(fullname)
+            context = {'page_id': fullname, 'allow_create': articles.is_full_name_allowed(fullname) and permissions.check(self.request.user, "create", Article(name=name, category=category))}
             content = render_to_string(self.template_404, context)
             redirect_to = None
             status = 404
@@ -88,15 +94,15 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         article_rating, article_votes, article_rating_mode = articles.get_rating(article)
 
         options_config = {
-            'optionsEnabled': status != 404,
-            'editable': articles.has_perm(self.request.user, "web.change_article", article),
-            'lockable': articles.has_perm(self.request.user, "web.can_lock_article", article),
+            'optionsEnabled': status == 200,
+            'editable': permissions.check(self.request.user, "edit", article),
+            'lockable': permissions.check(self.request.user, "lock", article),
             'pageId': article_name,
             'rating': article_rating,
             'ratingMode': article_rating_mode,
             'ratingVotes': article_votes,
             'pathParams': path_params,
-            'canRate': articles.has_perm(self.request.user, "web.can_vote_article", article)
+            'canRate': permissions.check(self.request.user, "rate", article)
         }
 
         context.update({
