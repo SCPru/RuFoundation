@@ -161,14 +161,14 @@ def parse_size(size):
     import re
     match = re.fullmatch(r'(\d+)(.*)', size)
     if not match:
-        raise 'Invalid size specification: %s' % size
+        raise ValueError('Invalid size specification: %s' % size)
     units = {"B": 1, "KB": 2 ** 10, "MB": 2 ** 20, "GB": 2 ** 30, "TB": 2 ** 40}
     number = match[1]
     unit = match[2].strip().upper()
     if not unit:
         unit = 'B'
     if unit not in units:
-        raise 'Invalid size specification: %s, allowed units: %s' % (size, ', '.join(units.keys()))
+        raise ValueError('Invalid size specification: %s, allowed units: %s' % (size, ', '.join(units.keys())))
     return int(float(number)*units[unit])
 
 
