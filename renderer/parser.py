@@ -297,6 +297,7 @@ class Parser(object):
         while True:
             pos = self.tokenizer.position
             tk = self.tokenizer.read_token()
+            print(repr(tk))
             if tk.type in t:
                 self.tokenizer.position = pos
                 return text

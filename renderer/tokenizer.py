@@ -194,7 +194,19 @@ class Tokenizer(object):
 class StaticTokenizer(object):
     def __init__(self, source):
         t = Tokenizer(source)
-        self.tokens = t.read_all_tokens()
+        raw_tokens = t.read_all_tokens()
+        # hack: convert >@@ from ">@", "@" into ">" and "@@"
+        new_tokens = []
+        for i in range(len(raw_tokens)):
+            if raw_tokens[i].type == TokenType.CloseHTMLLiteral\
+                    and i+1 < len(raw_tokens) and raw_tokens[i+1].raw\
+                    and raw_tokens[i+1].type != TokenType.OpenHTMLLiteral and raw_tokens[i+1].raw[0] == '@':
+                new_tokens.append(Token('>', TokenType.String, '>'))
+                new_tokens.append(Token('@@', TokenType.DoubleAt, '@@'))
+                raw_tokens[i+1].raw = raw_tokens[i+1].raw[1:]
+            else:
+                new_tokens.append(raw_tokens[i])
+        self.tokens = new_tokens
         self.position = 0
 
     def read_token(self):
