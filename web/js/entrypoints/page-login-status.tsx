@@ -60,7 +60,7 @@ class PageLoginStatus extends Component<Props, State> {
             return (
                 <>
                     <span className="printuser w-user">
-                        <a href={`/-/users/${user.username}`}>
+                        <a href={`/-/profile`}>
                             <img className="small" src={user.avatar || DEFAULT_AVATAR} alt={user.username} />
                         </a>
                         {user.username}
