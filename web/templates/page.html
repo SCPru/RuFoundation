@@ -1,3 +1,4 @@
+{% load md5url %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -9,11 +10,11 @@
 
     <link rel="icon" type="image/x-icon" href="/local--files/{{ site_icon }}">
 
-    <link rel="stylesheet" type="text/css" href="/-/static/wikidot-base.css">
-    <link rel="stylesheet" type="text/css" href="/-/static/scp-base.css">
+    <link rel="stylesheet" type="text/css" href="{% md5url "wikidot-base.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% md5url "scp-base.css" %}">
 
-    <script src="/-/static/app.js" type="text/javascript"></script>
-    <link rel="stylesheet" type="text/css" href="/-/static/app.css">
+    <script src="{% md5url "app.js" %}" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="{% md5url "app.css" %}">
 </head>
 <body id="html-body">
     <div id="skrollr-body">
