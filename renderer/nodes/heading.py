@@ -42,6 +42,7 @@ class HeadingNode(Node):
         self.level = level
         self.block_node = True
         self.toc_id = None
+        self.trim_paragraphs = True
         for child in children:
             self.append_child(child)
 
