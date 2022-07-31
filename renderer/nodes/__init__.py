@@ -12,7 +12,7 @@ from web import threadvars
 from ..parser import Parser
 
 
-AST_VERSION = 2
+AST_VERSION = 3
 
 NODE_CLASSES = None
 _NODE_CLASSES_LOCK = threading.RLock()
@@ -179,6 +179,14 @@ class Node(object):
             '{% for node in nodes %}{{ node }}{% endfor %}',
             nodes=self.children
         )
+
+    def plain_text(self, context=None):
+        for node in self.children:
+            node.pre_render(context=context)
+        text = ''
+        for node in self.children:
+            text += node.plain_text(context=context)
+        return text
 
     def __str__(self):
         context = threadvars.get('render_context', None)

@@ -31,9 +31,31 @@ class HeadingNode(Node):
             if tk.type == TokenType.Null:
                 break
             elif tk.type == TokenType.Newline:
-                content = HTMLPlainNode('span', [], children)
-                return HTMLPlainNode('h%d' % h_count, [], [content])
+                return HeadingNode(h_count, children)
             new_children = p.parse_nodes()
             if not new_children:
                 return None
             children += new_children
+
+    def __init__(self, level, children):
+        super().__init__()
+        self.level = level
+        self.block_node = True
+        self.toc_id = None
+        for child in children:
+            self.append_child(child)
+
+    def render(self, context=None):
+        if self.toc_id is not None:
+            return self.render_template(
+                '<h{{ level }} id="toc{{ toc_id }}"><span>{{ content }}</span></h{{ level }}>',
+                level=self.level,
+                content=super().render(context=context),
+                toc_id=self.toc_id
+            )
+        else:
+            return self.render_template(
+                '<h{{ level }}><span>{{ content }}</span></h{{ level }}>',
+                level=self.level,
+                content=super().render(context=context)
+            )

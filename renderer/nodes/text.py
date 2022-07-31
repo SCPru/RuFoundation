@@ -17,3 +17,7 @@ class TextNode(Node):
         if self.literal and self.force_render:
             return self.render_template('<span style="white-space: pre-wrap">{{text}}</span>', text=text)
         return text
+
+    def plain_text(self, context=None):
+        text = self.text.replace('--', '—').replace('<<', '«').replace('>>', '»')
+        return text
