@@ -423,14 +423,14 @@ class ArticleFiles extends Component<Props, State> {
                     {(!!files) ?
                         <>
                             <p>
-                                Всего файлов: {files.length}<br/>
-                                Общий размер: {this.formatSize(files.reduce((v, f) => v + f.size, 0))}
+                                Файлов в статье: {files.length}<br/>
+                                Общий размер файлов в статье: {this.formatSize(files.reduce((v, f) => v + f.size, 0))}
                                 {(softLimit > 0 || hardLimit > 0) && (
                                     <>
                                         <br/>
-                                        Всего доступно:
-                                        {softLimit > 0 && <>{' '}{this.formatSize(softLimit-softUsed)} из {this.formatSize(softLimit)}</>}
-                                        {hardLimit > 0 && <>{` ${softLimit > 0 ? '(' : ''}`}{this.formatSize(hardLimit-hardUsed)} из {this.formatSize(hardLimit)}{`${softLimit > 0 ? ')' : ''}`}</>}
+                                        Использовано места на сайте:
+                                        {softLimit > 0 && <>{' '}{this.formatSize(softUsed)} из {this.formatSize(softLimit)}</>}
+                                        {hardLimit > 0 && <>{` ${softLimit > 0 ? '(' : ''}`}{this.formatSize(hardUsed)} из {this.formatSize(hardLimit)}{`${softLimit > 0 ? ')' : ''}`}</>}
                                     </>
                                 )}
                             </p>
