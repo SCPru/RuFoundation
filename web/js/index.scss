@@ -54,13 +54,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    background: white;
     .w-stars-rate-stars-wrapper {
       position: relative;
       font-size: 150%;
       cursor: pointer;
-      background: white;
       &:before {
-        content: '🟊🟊🟊🟊🟊';
+        font-family: FontAwesome;
+        content: '\f005\f005\f005\f005\f005';
         color: #eee;
         white-space: nowrap;
       }
@@ -70,7 +71,8 @@
         top: 0;
         left: 0;
         &:before {
-          content: '🟊🟊🟊🟊🟊';
+          font-family: FontAwesome;
+          content: '\f005\f005\f005\f005\f005';
           white-space: nowrap;
           color: #4e6b6b;
         }
