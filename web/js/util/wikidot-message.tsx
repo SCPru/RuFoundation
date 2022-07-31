@@ -26,7 +26,7 @@ const Styles = styled.div`
     padding: 0.5em 1em;
     max-width: 20em;
     opacity: 0.9;
-    z-index: 1;
+    z-index: 999999;
 }
 `;
 
