@@ -1,4 +1,5 @@
-from django.db import transaction
+from django.conf import settings
+from django.db.models import Sum
 from django.http import HttpRequest
 import os.path
 from uuid import uuid4
@@ -48,12 +49,18 @@ class GetOrUploadView(FileView):
         if not os.path.exists(local_media_dir):
             os.makedirs(local_media_dir, exist_ok=True)
         # upload file to temporary storage
+        current_files_size = File.objects.filter(deleted_at=None).aggregate(size=Sum('size')).get('size') or 0
+        absolute_files_size = File.objects.aggregate(size=Sum('size')).get('size') or 0
         try:
             size = 0
             with open(new_file.local_media_path, 'wb') as f:
                 while True:
                     chunk = request.read(102400)
                     size += len(chunk)
+                    # handle file size limit.
+                    if current_files_size + size > settings.MEDIA_UPLOAD_LIMIT or\
+                            absolute_files_size + size > settings.ABSOLUTE_MEDIA_UPLOAD_LIMIT:
+                        raise APIError(413, 'Превышен лимит загрузки файлов')
                     if not chunk:
                         break
                     f.write(chunk)

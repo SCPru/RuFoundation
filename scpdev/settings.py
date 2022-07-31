@@ -172,6 +172,9 @@ def parse_size(size):
     return int(float(number)*units[unit])
 
 
+ARTICLE_SOURCE_LIMIT = int(os.environ.get('ARTICLE_SOURCE_LIMIT', '200000'))
+
+ABSOLUTE_MEDIA_UPLOAD_LIMIT = parse_size(os.environ.get('ABSOLUTE_MEDIA_UPLOAD_LIMIT', '0'))
 MEDIA_UPLOAD_LIMIT = parse_size(os.environ.get('MEDIA_UPLOAD_LIMIT', '0'))
 
 
