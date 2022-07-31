@@ -29,9 +29,18 @@ class GetOrUploadView(FileView):
         article = self._validate_request(request, article_name, edit=False)
         files = articles.get_files_in_article(article)
         output = []
+        current_files_size, absolute_files_size = articles.get_file_space_usage()
         for file in files:
             output.append({'name': file.name, 'size': file.size, 'createdAt': file.created_at, 'author': render_user_to_json(file.author), 'mimeType': file.mime_type})
-        return self.render_json(200, {'pageId': article.full_name, 'files': output})
+        data = {
+            'pageId': article.full_name,
+            'files': output,
+            'softLimit': settings.MEDIA_UPLOAD_LIMIT,
+            'hardLimit': settings.ABSOLUTE_MEDIA_UPLOAD_LIMIT,
+            'softUsed': current_files_size,
+            'hardUsed': absolute_files_size
+        }
+        return self.render_json(200, data)
 
     def post(self, request: HttpRequest, article_name):
         article = self._validate_request(request, article_name)
@@ -49,8 +58,7 @@ class GetOrUploadView(FileView):
         if not os.path.exists(local_media_dir):
             os.makedirs(local_media_dir, exist_ok=True)
         # upload file to temporary storage
-        current_files_size = File.objects.filter(deleted_at=None).aggregate(size=Sum('size')).get('size') or 0
-        absolute_files_size = File.objects.aggregate(size=Sum('size')).get('size') or 0
+        current_files_size, absolute_files_size = articles.get_file_space_usage()
         try:
             size = 0
             with open(new_file.local_media_path, 'wb') as f:
@@ -58,9 +66,9 @@ class GetOrUploadView(FileView):
                     chunk = request.read(102400)
                     size += len(chunk)
                     # handle file size limit.
-                    if current_files_size + size > settings.MEDIA_UPLOAD_LIMIT or\
-                            absolute_files_size + size > settings.ABSOLUTE_MEDIA_UPLOAD_LIMIT:
-                        raise APIError(413, 'Превышен лимит загрузки файлов')
+                    if (settings.MEDIA_UPLOAD_LIMIT > 0 and current_files_size + size > settings.MEDIA_UPLOAD_LIMIT) or \
+                            (settings.ABSOLUTE_MEDIA_UPLOAD_LIMIT > 0 and absolute_files_size + size > settings.ABSOLUTE_MEDIA_UPLOAD_LIMIT):
+                        raise APIError('Превышен лимит загрузки файлов', 413)
                     if not chunk:
                         break
                     f.write(chunk)

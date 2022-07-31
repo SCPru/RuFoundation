@@ -459,6 +459,12 @@ def add_file_to_article(full_name_or_article: _FullNameOrArticle, file: File, us
     add_log_entry(article, log)
 
 
+def get_file_space_usage() -> (int, int):
+    current_files_size = File.objects.filter(deleted_at=None).aggregate(size=Sum('size')).get('size') or 0
+    absolute_files_size = File.objects.aggregate(size=Sum('size')).get('size') or 0
+    return current_files_size, absolute_files_size
+
+
 # Delete file from article.
 # Permanent deletion is irreversible and should not be used unless for technical cleanup purposes or from admin panel.
 # We also cannot track who performed a permanent deletion.

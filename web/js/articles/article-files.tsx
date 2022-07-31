@@ -24,6 +24,10 @@ interface UploadFileRecord {
 interface State {
     loading: boolean
     files?: Array<ArticleFile>
+    softLimit?: number
+    hardLimit?: number
+    softUsed?: number
+    hardUsed?: number
     error?: string
     uploadFiles: Array<UploadFileRecord>
     optionsIndex: number | null
@@ -186,8 +190,8 @@ class ArticleFiles extends Component<Props, State> {
         const { pageId } = this.props;
         this.setState({ loading: true, error: null });
         try {
-            const rating = await fetchArticleFiles(pageId);
-            this.setState({ loading: false, error: null, files: rating.files, optionsIndex: null, renameIndex: null });
+            const { files, softLimit, hardLimit, softUsed, hardUsed } = await fetchArticleFiles(pageId);
+            this.setState({ loading: false, error: null, files, softLimit, hardLimit, softUsed, hardUsed, optionsIndex: null, renameIndex: null });
         } catch (e) {
             this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' });
         }
@@ -385,7 +389,7 @@ class ArticleFiles extends Component<Props, State> {
 
     render() {
         const { editable, pageId } = this.props;
-        const { error, loading, files, optionsIndex, renameIndex, renameName } = this.state;
+        const { error, loading, files, optionsIndex, hardLimit, hardUsed, softLimit, softUsed, renameIndex, renameName } = this.state;
         return (
             <Styles>
                 { error && (
@@ -421,6 +425,14 @@ class ArticleFiles extends Component<Props, State> {
                             <p>
                                 Всего файлов: {files.length}<br/>
                                 Общий размер: {this.formatSize(files.reduce((v, f) => v + f.size, 0))}
+                                {(softLimit > 0 || hardLimit > 0) && (
+                                    <>
+                                        <br/>
+                                        Всего доступно:
+                                        {softLimit > 0 && <>{' '}{this.formatSize(softLimit-softUsed)} из {this.formatSize(softLimit)}</>}
+                                        {hardLimit > 0 && <>{` ${softLimit > 0 ? '(' : ''}`}{this.formatSize(hardLimit-hardUsed)} из {this.formatSize(hardLimit)}{`${softLimit > 0 ? ')' : ''}`}</>}
+                                    </>
+                                )}
                             </p>
                             <table className="table table-striped table-hover page-files">
                                 <thead>

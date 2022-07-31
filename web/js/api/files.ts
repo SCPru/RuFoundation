@@ -12,6 +12,10 @@ export interface ArticleFile {
 export interface ArticleFiles {
     pageId: string
     files: Array<ArticleFile>
+    softLimit: number
+    hardLimit: number
+    softUsed: number
+    hardUsed: number
 }
 
 export async function fetchArticleFiles(pageId: string): Promise<ArticleFiles> {
