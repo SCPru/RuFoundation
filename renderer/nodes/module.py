@@ -36,7 +36,7 @@ class ModuleNode(HTMLBaseNode):
         # render only module CSS for now
         params = {}
         for attr in self.attributes:
-            params[attr[0]] = attr[1]
+            params[attr[0].lower()] = attr[1]
         try:
             return modules.render_module(self.name, context, params, self.content)
         except modules.ModuleError as e:

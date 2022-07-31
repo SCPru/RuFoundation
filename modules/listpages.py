@@ -331,8 +331,8 @@ def render(context: RenderContext, params, content=None):
                 else:
                     params[k] = default
 
-        prepend = params.get('prependLine', '')
-        append = params.get('appendLine', '')
+        prepend = params.get('prependline', '')
+        append = params.get('appendline', '')
         separate = params.get('separate', 'yes') == 'yes'
         wrapper = params.get('wrapper', 'yes') == 'yes'
 
