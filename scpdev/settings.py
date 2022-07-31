@@ -159,7 +159,7 @@ MEDIA_ROOT = BASE_DIR / "files"
 
 def parse_size(size):
     import re
-    match = re.fullmatch(r'(\d+)(.*)', '10MB')
+    match = re.fullmatch(r'(\d+)(.*)', size)
     if not match:
         raise 'Invalid size specification: %s' % size
     units = {"B": 1, "KB": 2 ** 10, "MB": 2 ** 20, "GB": 2 ** 30, "TB": 2 ** 40}
