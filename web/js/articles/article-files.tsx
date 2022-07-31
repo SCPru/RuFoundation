@@ -423,8 +423,8 @@ class ArticleFiles extends Component<Props, State> {
                     {(!!files) ?
                         <>
                             <p>
-                                Файлов в статье: {files.length}<br/>
-                                Общий размер файлов в статье: {this.formatSize(files.reduce((v, f) => v + f.size, 0))}
+                                Количество файлов: {files.length}<br/>
+                                Общий размер: {this.formatSize(files.reduce((v, f) => v + f.size, 0))}
                                 {(softLimit > 0 || hardLimit > 0) && (
                                     <>
                                         <br/>
