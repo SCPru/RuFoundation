@@ -12,7 +12,7 @@ from web import threadvars
 from ..parser import Parser
 
 
-AST_VERSION = 4
+AST_VERSION = 5
 
 NODE_CLASSES = None
 _NODE_CLASSES_LOCK = threading.RLock()

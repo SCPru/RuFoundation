@@ -43,11 +43,11 @@ class ModuleNode(HTMLBaseNode):
                     <td style="margin: 0; padding: 0">
                         <div id="toc" class="w-toc">
                             <div id="toc-action-bar">
-                                <a href="#" style="display: none" class="w-toc-hide">Свернуть</a>
-                                <a href="#" class="w-toc-show">Раскрыть</a>
+                                <a href="#" class="w-toc-hide">Свернуть</a>
+                                <a href="#" style="display: none" class="w-toc-show">Раскрыть</a>
                             </div>
                             <div class="title">Содержание</div>
-                            <div id="toc-list" class="w-toc-content" style="display: none">
+                            <div id="toc-list" class="w-toc-content">
                                 {% for item in toc %}
                                     <div style="margin-left: {{ item.level }}">
                                         <a href="#toc{{ item.toc_id }}">{{ item.title }}</a>
