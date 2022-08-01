@@ -25,9 +25,12 @@ class ImageNode(HTMLBaseNode):
         if context is None or context.source_article is None:
             return None
         src_lower = self.source.lower()
-        if '/' in src_lower:
-            return self.source
-        path = '%s%s/%s' % (settings.MEDIA_URL, articles.get_full_name(context.source_article), self.source)
+        if src_lower.startswith('/'):
+            path = '%s%s' % (settings.MEDIA_URL, src_lower.lstrip('/'))
+        else:
+            if '/' in src_lower:
+                return self.source
+            path = '%s%s/%s' % (settings.MEDIA_URL, articles.get_full_name(context.source_article), self.source)
         if settings.MEDIA_HOST is not None:
             path = '//' + settings.MEDIA_HOST + path
         return path
