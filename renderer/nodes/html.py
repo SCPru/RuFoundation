@@ -1,4 +1,5 @@
 from django.utils.safestring import SafeString
+import re
 
 from renderer import nodes
 from . import Node
@@ -187,10 +188,11 @@ class HTMLNode(Node):
     def render_attributes(attributes, attr_whitelist):
         attr_string = ''
         for attr in attributes:
-            if attr[0] not in attr_whitelist and not attr[0].startswith('data-'):
+            attr_name = attr[0].lower()
+            if attr_name not in attr_whitelist and not re.match(r'data-([a-z0-9\-_]+)', attr_name):
                 continue
             attr_string += ' '
-            attr_string += html.escape(attr[0])
+            attr_string += html.escape(attr_name)
             if attr[1] is not None:
                 value = attr[1]
                 if attr[0] == 'id' and not value.startswith('u-'):
