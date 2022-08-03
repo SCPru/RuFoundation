@@ -119,8 +119,11 @@ class Tokenizer(object):
         self.source = self.prepare_source(source)
         self.position = 0
         self.special_tokens = get_sorted_special_types()
-        self.not_string_regex =\
-            re.compile('^(.*?)(' + '|'.join([re.escape(x[0]) for x in self.special_tokens]) + '|' + '|'.join([re.escape(x) for x in ALL_WHITESPACE_CHARS]) + '|$)')
+        special_tokens = '|'.join([re.escape(x[0]) for x in self.special_tokens])
+        all_whitespace_tokens = '|'.join([re.escape(x) for x in ALL_WHITESPACE_CHARS])
+        non_string_tokens = special_tokens + '|' + all_whitespace_tokens
+        self.special_regex = re.compile('^(' + special_tokens + ')')
+        self.not_string_regex = re.compile('^(.*?)(' + non_string_tokens + '|$)')
 
     def peek_chars(self, num_chars=1):
         return self.source[self.position:self.position+num_chars]
@@ -138,12 +141,12 @@ class Tokenizer(object):
 
     def read_token(self):
         # check if special token type. if so, add and exit
-        first_chars = self.peek_chars(len(self.special_tokens[0][0]))
-        for value, token_type in self.special_tokens:
-            if first_chars.startswith(value):
-                t = Token(value, token_type, value)
-                self.position += len(value)
-                return t
+        match = self.special_regex.match(self.source[self.position:])
+        if match:
+            value = match[1]
+            t = Token(value, TokenType(value), value)
+            self.position += len(value)
+            return t
         # check if whitespace. this is basically only spaces
         token = self.try_read_whitespace()
         if token.type != TokenType.Null:
