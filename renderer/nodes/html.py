@@ -189,7 +189,7 @@ class HTMLNode(Node):
         attr_string = ''
         for attr in attributes:
             attr_name = attr[0].lower()
-            if attr_name not in attr_whitelist and not re.match(r'data-([a-z0-9\-_]+)', attr_name):
+            if attr_name not in attr_whitelist and not re.match(r'^data-([a-z0-9\-_]+)$', attr_name):
                 continue
             attr_string += ' '
             attr_string += html.escape(attr_name)
