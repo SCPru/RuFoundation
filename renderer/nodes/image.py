@@ -42,31 +42,31 @@ class ImageNode(HTMLBaseNode):
         # image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
 
         return self.render_template(
-            """
-            {% if type == 'image' %}
-            <img src="{{src}}" alt="{{alt}}" {{attrs}}>
-            {% elif type == 'f<image' %}
-            <div class="image-container floatleft">
-                <img src="{{src}}" alt="{{alt}}" {{attrs}}>
-            </div>
-            {% elif type == 'f>image' %}
-            <div class="image-container floatright">
-                <img src="{{src}}" alt="{{alt}}" {{attrs}}>
-            </div>
-            {% elif type == '=image' %}
-            <div style="display: flex; justify-content: center">
-                <img src="{{src}}" alt="{{alt}}" {{attrs}}>
-            </div>
-            {% elif type == '<image' %}
-            <div style="display: flex; justify-content: flex-start">
-                <img src="{{src}}" alt="{{alt}}" {{attrs}}>
-            </div>
-            {% elif type == '>image' %}
-            <div style="display: flex; justify-content: flex-end">
-                <img src="{{src}}" alt="{{alt}}" {{attrs}}>
-            </div>
-            {% endif %}
-            """,
+            ''.join([
+                "{% if type == 'image' %}",
+                '<img src="{{src}}" alt="{{alt}}" {{attrs}}>',
+                "{% elif type == 'f<image' %}",
+                '<div class="image-container floatleft">',
+                    '<img src="{{src}}" alt="{{alt}}" {{attrs}}>',
+                '</div>',
+                "{% elif type == 'f>image' %}",
+                '<div class="image-container floatright">',
+                    '<img src="{{src}}" alt="{{alt}}" {{attrs}}>',
+                '</div>',
+                "{% elif type == '=image' %}",
+                '<div style="display: flex; justify-content: center">',
+                    '<img src="{{src}}" alt="{{alt}}" {{attrs}}>',
+                '</div>',
+                "{% elif type == '<image' %}",
+                '<div style="display: flex; justify-content: flex-start">',
+                    '<img src="{{src}}" alt="{{alt}}" {{attrs}}>',
+                '</div>',
+                "{% elif type == '>image' %}",
+                '<div style="display: flex; justify-content: flex-end">',
+                    '<img src="{{src}}" alt="{{alt}}" {{attrs}}>',
+                '</div>',
+                '{% endif %}'
+            ]),
             type=self.img_type,
             src=url,
             alt=self.source.replace('\\', '/').split('/')[-1],
