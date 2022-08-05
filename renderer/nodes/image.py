@@ -69,6 +69,6 @@ class ImageNode(HTMLBaseNode):
             """,
             type=self.img_type,
             src=url,
-            alt=self.source,
+            alt=self.source.replace('\\', '/').split('/')[-1],
             attrs=attr_string
         )

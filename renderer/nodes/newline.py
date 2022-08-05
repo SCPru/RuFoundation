@@ -16,3 +16,6 @@ class NewlineNode(Node):
 
     def render(self, context=None):
         return self.render_template('<br>')
+
+    def plain_text(self, context=None):
+        return '\n'

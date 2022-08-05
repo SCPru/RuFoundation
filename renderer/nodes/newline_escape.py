@@ -3,7 +3,7 @@ from ..tokenizer import TokenType
 
 
 class NewlineEscapeNode(Node):
-    starting_token_type = TokenType.Backslash
+    starting_token_type = TokenType.Underline
 
     @classmethod
     def parse(cls, p):

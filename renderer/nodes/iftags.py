@@ -39,3 +39,8 @@ class IfTagsNode(HTMLBaseNode):
         if context is None or not self.evaluate_condition(context):
             return ''
         return super().render(context=context)
+
+    def plain_text(self, context=None):
+        if context is None or not self.evaluate_condition(context):
+            return ''
+        return super().plain_text(context=context)

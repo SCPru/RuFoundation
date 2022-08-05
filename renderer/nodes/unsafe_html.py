@@ -42,3 +42,5 @@ class UnsafeHTMLNode(HTMLBaseNode):
             html=code
         )
 
+    def plain_text(self, context=None):
+        return ''

@@ -40,4 +40,3 @@ class CollapsibleNode(HTMLBaseNode):
             hide_text=HTMLNode.get_attribute(self.attributes, 'hide', '- закрыть блок'),
             content=super().render(context=context)
         )
-

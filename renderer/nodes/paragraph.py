@@ -28,3 +28,6 @@ class ParagraphNode(Node):
             align=align,
             content=content
         )
+
+    def plain_text(self, context=None):
+        return '%s\n\n' % super().plain_text(context=context)

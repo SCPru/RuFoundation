@@ -27,3 +27,6 @@ class FootnoteNode(HTMLBaseNode):
             '<sup class="footnoteref"><a id="footnoteref={{number}}" class="footnoteref w-footnoteref" href="#footnote-{{number}}">{{number}}</a></sup>',
             number=self.get_number()
         )
+
+    def plain_text(self, context=None):
+        return '(%s)' % super().plain_text(context=context)

@@ -12,6 +12,7 @@ class FontSizeNode(HTMLBaseNode):
     def __init__(self, _tag, attributes, children):
         super().__init__()
         sz, _ = HTMLNode.extract_name_from_attributes(attributes)
+        self.trim_paragraphs = True
         self.size = sz
         for child in children:
             self.append_child(child)

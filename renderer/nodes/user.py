@@ -40,3 +40,5 @@ class UserNode(HTMLBaseNode):
                 username=self.username
             )
 
+    def plain_text(self, context=None):
+        return self.username

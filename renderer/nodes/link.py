@@ -24,3 +24,6 @@ class LinkNode(Node):
             text=self.text,
             url=self.url
         )
+
+    def plain_text(self, context=None):
+        return self.text

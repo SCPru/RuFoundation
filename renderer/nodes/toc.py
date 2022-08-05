@@ -34,7 +34,6 @@ class ModuleNode(HTMLBaseNode):
         self.headings = headings
 
     def render(self, context=None):
-        print(repr(self.headings))
         return self.render_template(
             """
             <table style="margin: 0; padding: 0">
