@@ -26,8 +26,6 @@ class IncludeNode(HTMLBaseNode):
         self.attributes = attributes
         self.complex_node = True
         self.code = None
-
-    def pre_render(self, context=None):
         # if this article was already included, fail
         self.children = []
         if self.name in threadvars.get('include_tree', []):
