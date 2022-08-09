@@ -121,7 +121,7 @@ class ArticleRating extends Component<Props, State> {
 
         return (
             <div className="w-stars-rate-module" data-page-id={pageId}>
-                <div className="w-stars-rate-rating">рейтинг:&nbsp;<span className="w-stars-rate-number">{rating}</span></div>
+                <div className="w-stars-rate-rating">рейтинг:&nbsp;<span className="w-stars-rate-number">{sprintf('%.1f', rating)}</span></div>
                 <div className="w-stars-rate-control">
                     <div className="w-stars-rate-stars-wrapper">
                         <div className="w-stars-rate-stars-view" style={{width: `${Math.floor(rating*20)}%`}} />
