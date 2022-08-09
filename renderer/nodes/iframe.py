@@ -1,8 +1,11 @@
 from .html import HTMLNode
 from .html_base import HTMLBaseNode
+from .link import LinkNode
 
 
 class IframeNode(HTMLBaseNode):
+    is_first_single_argument = True
+
     @classmethod
     def is_allowed(cls, tag, _parser):
         return tag == 'iframe'
@@ -20,4 +23,10 @@ class IframeNode(HTMLBaseNode):
         self.block_node = True
 
     def render(self, context=None):
-        return self.render_template('<div><!--Iframe is not supproted yet--></div>')
+        attrs = HTMLNode.render_attributes(self.attributes, ['class', 'id', 'style', 'align', 'frameborder', 'width', 'height', 'scrolling'])
+        print(repr(self.attributes))
+        return self.render_template(
+            '<iframe src="{{src}}" sandbox="allow-scripts allow-top-navigation allow-popups" {{attrs}}></iframe>',
+            src=LinkNode.filter_url(self.url),
+            attrs=attrs
+        )

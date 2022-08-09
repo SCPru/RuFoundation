@@ -63,6 +63,15 @@ class HTMLNode(Node):
                 if tk.type != TokenType.CloseDoubleBracket:
                     return None
                 break
+            elif f_cls.is_first_single_argument and not attributes:
+                arg = p.read_as_value_until([TokenType.Whitespace, TokenType.CloseDoubleBracket])
+                if arg is None:
+                    return None
+                attributes.append((arg.strip(), arg.strip()))
+                tk = p.tokenizer.read_token()
+                if tk.type == TokenType.CloseDoubleBracket:
+                    break
+                continue
             maybe_pipe = [TokenType.Pipe] if f_cls.pipe_separated_attributes else []
             attr_name = p.read_as_value_until(
                 [TokenType.CloseDoubleBracket, TokenType.Whitespace, TokenType.Newline, TokenType.Equals] + maybe_pipe)

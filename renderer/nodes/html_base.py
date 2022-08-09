@@ -6,6 +6,8 @@ class HTMLBaseNode(Node):
     is_raw_text = False
     # this is used for user and tab tag, where basically everything after name is single line of text until the end
     is_single_argument = False
+    # this is used for iframe only
+    is_first_single_argument = False
     # this is used for include only
     pipe_separated_attributes = False
 
