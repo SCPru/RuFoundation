@@ -22,7 +22,7 @@ class User(AbstractUser):
         },
     )
 
-    wikidot_username = CITextField(unique=True, verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
+    wikidot_username = CITextField(unique=True, max_length=150, validators=[AbstractUser.username_validator], verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
 
     type = models.TextField(choices=UserType.choices, default=UserType.Normal, verbose_name="Тип")
 
@@ -36,3 +36,8 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    def save(self, *args, **kwargs):
+        if not self.wikidot_username:
+            self.wikidot_username = None
+        return super().save(*args, **kwargs)
