@@ -20,6 +20,11 @@ class ProfileView(DetailView):
         else:
             ctx['avatar'] = user.get_avatar(default=settings.DEFAULT_AVATAR)
             ctx['displayname'] = user.username
+        ctx['subtitle'] = ''
+        if user.is_superuser:
+            ctx['subtitle'] = 'Администратор сайта'
+        elif user.is_staff:
+            ctx['subtitle'] = 'Модератор сайта'
         return ctx
 
     def get(self, *args, **kwargs):

@@ -4,6 +4,11 @@
     <img class="system-heading-avatar" src="{{ avatar }}" alt="{{ displayname }}">
     {% block title %}
         {{ displayname }}
+        {% if subtitle %}
+            <div class="user-heading-subtitle">
+                {{ subtitle }}
+            </div>
+        {% endif %}
     {% endblock %}
     {% if request.user == object %}
         <div class="edit-button">
