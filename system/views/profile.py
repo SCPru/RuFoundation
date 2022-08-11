@@ -3,6 +3,8 @@ from django.views.generic import DetailView, UpdateView
 from django.shortcuts import resolve_url
 from django.conf import settings
 
+from renderer import single_pass_render
+from renderer.parser import RenderContext
 from system.forms import UserProfileForm
 from system.models import User
 
@@ -25,6 +27,7 @@ class ProfileView(DetailView):
             ctx['subtitle'] = 'Администратор сайта'
         elif user.is_staff:
             ctx['subtitle'] = 'Модератор сайта'
+        ctx['bio_rendered'] = single_pass_render(user.bio, RenderContext(article=None, source_article=None, path_params=None, user=self.request.user))
         return ctx
 
     def get(self, *args, **kwargs):
@@ -48,3 +51,8 @@ class ChangeProfileView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return self.request.user
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class=form_class)
+        form.fields['bio'].label += ' (поддерживается разметка)'
+        return form
