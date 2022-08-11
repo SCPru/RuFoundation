@@ -8,7 +8,7 @@ import re
 from web.models.articles import Article, Vote, ArticleVersion
 from web.models.settings import Settings
 from django.db.models import Q, Value as V, F, Count, Sum, Avg
-from django.db.models.functions import Concat
+from django.db.models.functions import Concat, Random
 from web import threadvars
 import json
 import urllib.parse
@@ -193,7 +193,8 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
             'title': F('title'),
             'updated_at': F('updated_at'),
             'fullname': Concat('category', V(':'), 'name'),
-            'rating': F('rating')
+            'rating': F('rating'),
+            'random': Random(),
         }
         if f_sort[0] not in allowed_sort_columns:
             f_sort = ['created_at', 'desc']
