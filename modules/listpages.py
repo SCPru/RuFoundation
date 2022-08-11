@@ -351,7 +351,10 @@ def render(context: RenderContext, params, content=None):
             for page in pages:
                 page_index += 1
                 page_content = page_to_listpages_vars(page, content, page_index, total_pages)
-                output += renderer.single_pass_render(page_content+'\n', RenderContext(page, page, context.path_params, context.user))
+                cc = RenderContext(page, page, context.path_params, context.user)
+                output += renderer.single_pass_render(page_content+'\n', cc)
+                if cc.redirect_to:
+                    common_context.redirect_to = cc.redirect_to
             if append:
                 output += renderer.single_pass_render(append, common_context)
         else:
@@ -364,6 +367,9 @@ def render(context: RenderContext, params, content=None):
                 source += page_content+'\n'
             source += append
             output += renderer.single_pass_render(source, common_context)
+
+        if common_context.redirect_to:
+            context.redirect_to = common_context.redirect_to
 
         if wrapper:
             if context.article:
