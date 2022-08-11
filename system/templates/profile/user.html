@@ -1,15 +1,17 @@
 {% extends "base.html" %}
 
+{% block title %}
+    {{ displayname }}
+{% endblock %}
+
 {% block h1 %}
     <img class="system-heading-avatar" src="{{ avatar }}" alt="{{ displayname }}">
-    {% block title %}
-        {{ displayname }}
-        {% if subtitle %}
-            <div class="user-heading-subtitle">
-                {{ subtitle }}
-            </div>
-        {% endif %}
-    {% endblock %}
+    {{ displayname }}
+    {% if subtitle %}
+        <div class="user-heading-subtitle">
+            {{ subtitle }}
+        </div>
+    {% endif %}
     {% if request.user == object %}
         <div class="edit-button">
             <a href="{% url "profile_edit" %}" title="Редактирование" class="icon"><span>Edit</span> <i class="fas fa-pen"></i></a>
