@@ -1,3 +1,4 @@
+from web.models.sites import get_current_site
 from .html import HTMLNode
 from .html_base import HTMLBaseNode
 from web.controllers import articles
@@ -31,8 +32,8 @@ class ImageNode(HTMLBaseNode):
             if '/' in src_lower:
                 return self.source
             path = '%s%s/%s' % (settings.MEDIA_URL, articles.get_full_name(context.source_article), self.source)
-        if settings.MEDIA_HOST is not None:
-            path = '//' + settings.MEDIA_HOST + path
+        media_host = get_current_site().media_domain
+        path = '//' + media_host + path
         return path
 
     def render(self, context=None):
