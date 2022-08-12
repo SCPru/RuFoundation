@@ -135,7 +135,6 @@ class ActivateView(FormView):
                 self.user.username = form.cleaned_data["username"]
             else:
                 self.user.username = self.user.wikidot_username
-                self.user.wikidot_username = None
                 self.user.type = User.UserType.Normal
             self.user.set_password(form.cleaned_data["password"])
             self.user.is_active = True
