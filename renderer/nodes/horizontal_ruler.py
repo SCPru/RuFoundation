@@ -3,7 +3,7 @@ from ..tokenizer import TokenType
 
 
 class HorizontalRulerNode(Node):
-    starting_token_type = TokenType.Tilde
+    starting_token_type = TokenType.HrBeginning
 
     @classmethod
     def parse(cls, p):

@@ -79,7 +79,7 @@ class Node(object):
             node = f_cls.parse(p)
             if node:
                 return node
-            break
+            p.tokenizer.position = pos + 1
         p.tokenizer.position = pos
         return None
 

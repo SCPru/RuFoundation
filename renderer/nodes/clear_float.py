@@ -7,9 +7,9 @@ class ClearFloatNode(Node):
 
     @classmethod
     def parse(cls, p):
-        # ---- has already been parsed.
+        # ~~~~ has already been parsed.
         # we require that there is either strictly no text or a newline.
-        # after this token we should have either more hyphens or a newline
+        # after this token we should have either more hyphens, >, <, or a newline
         # if anything else, fail
         if not p.check_newline():
             return None
