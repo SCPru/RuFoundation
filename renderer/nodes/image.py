@@ -20,7 +20,6 @@ class ImageNode(HTMLBaseNode):
         self.img_type = img_type
         self.source = source
         self.attributes = attributes
-        self.complex_node = True
 
     def _get_image_url(self, context=None):
         if context is None or context.source_article is None:

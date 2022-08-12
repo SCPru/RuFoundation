@@ -7,7 +7,7 @@ class HTMLPlainNode(HTMLBaseNode):
     def is_allowed(cls, tag, _parser):
         return HTMLNode.node_allowed(tag)
 
-    def __init__(self, name, attributes, children, complex_node=True, trim_paragraphs=False):
+    def __init__(self, name, attributes, children, trim_paragraphs=False):
         super().__init__()
 
         name_remap = {
@@ -24,7 +24,6 @@ class HTMLPlainNode(HTMLBaseNode):
         self.trim_paragraphs = trim_paragraphs or self.name in ['th', 'td']
         self.block_node = self.name in ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'th', 'td']
         self.paragraphs_set = self.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'th', 'td']
-        self.complex_node = complex_node
         for child in children:
             # if this is a table, we should not allow _anything_ that is not table structure
             # otherwise invalid <br>'s are produced (and more)

@@ -27,9 +27,6 @@ class Node(object):
         self.root = None
         # Block node is a node that will always close current paragraph
         self.block_node = False
-        # Complex node is a node that prevents treating the line as plain text paragraph
-        # (based on Wikidot's weird treating of lines that start with [[, [, or something similar)
-        self.complex_node = False
         # This enforces newlines for literals
         self.force_render = False
         # This handles [[div_]] hack (and [[span_]], and god knows what else)

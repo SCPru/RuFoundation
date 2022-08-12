@@ -14,7 +14,6 @@ class IfTagsNode(HTMLBaseNode):
         super().__init__()
         condition_raw, _ = HTMLNode.extract_name_from_attributes(attributes)
         self.condition = condition_raw.split(' ')
-        self.complex_node = True
         self.block_node = True
         self.paragraphs_set = True
         for child in children:

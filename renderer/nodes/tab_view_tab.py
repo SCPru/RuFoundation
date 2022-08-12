@@ -14,7 +14,6 @@ class TabViewTabNode(HTMLBaseNode):
         name, _ = HTMLNode.extract_name_from_attributes(attributes)
         self.name = name
         self.block_node = True
-        self.complex_node = True
         self.visible = False
         for child in children:
             self.append_child(child)

@@ -23,7 +23,6 @@ class ModuleNode(HTMLBaseNode):
         self.attributes = attributes
         self.content = content
         self.block_node = True
-        self.complex_node = True
 
     @staticmethod
     def module_has_content(name):

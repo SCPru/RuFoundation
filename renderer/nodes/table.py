@@ -29,7 +29,7 @@ class TableNode(Node):
                         col_attrs = \
                             ([('colspan', col_span)] if col_span > 1 else []) +\
                             ([('style', 'text-align: %s' % col_align)] if col_align != 'left' else [])
-                        row.append(HTMLPlainNode(col_type, col_attrs, col_content, True, True))
+                        row.append(HTMLPlainNode(col_type, col_attrs, col_content, True))
                         col_content = []
                         col_type = 'td'
                     else:

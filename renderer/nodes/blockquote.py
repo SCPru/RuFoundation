@@ -41,7 +41,6 @@ class BlockquoteNode(Node):
     def __init__(self, children):
         super().__init__()
         self.block_node = True
-        self.complex_node = True
         for child in children:
             self.append_child(child)
 

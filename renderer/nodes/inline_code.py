@@ -16,7 +16,7 @@ class InlineCodeNode(Node):
             if tk.type == TokenType.Null:
                 return None
             elif tk.type == TokenType.CloseInlineCode:
-                return HTMLPlainNode('tt', [], children, complex_node=False)
+                return HTMLPlainNode('tt', [], children)
             p.tokenizer.position = pos
             new_children = p.parse_nodes()
             if not new_children:

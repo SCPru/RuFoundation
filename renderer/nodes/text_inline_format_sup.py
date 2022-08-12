@@ -8,4 +8,4 @@ class TextInlineFormatSupNode(TextInlineFormatNode):
 
     @classmethod
     def wrap_children(cls, children):
-        return HTMLPlainNode('sup', [], children, complex_node=False)
+        return HTMLPlainNode('sup', [], children)

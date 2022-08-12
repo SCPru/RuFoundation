@@ -10,7 +10,6 @@ class TextAlignNode(HTMLBaseNode):
         super().__init__()
         self.type = t
         self.block_node = True
-        self.complex_node = True
         for child in children:
             self.append_child(child)
 

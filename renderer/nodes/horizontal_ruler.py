@@ -22,7 +22,6 @@ class HorizontalRulerNode(Node):
 
     def __init__(self):
         super().__init__()
-        self.complex_node = True
         self.block_node = True
 
     def render(self, context=None):

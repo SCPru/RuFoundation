@@ -20,7 +20,6 @@ class ModuleNode(HTMLBaseNode):
     def __init__(self, _tag, _attributes, _content):
         super().__init__()
         self.block_node = True
-        self.complex_node = True
         self.headings = []
 
     def pre_render(self, context=None):

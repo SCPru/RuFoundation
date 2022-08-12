@@ -24,7 +24,6 @@ class IncludeNode(HTMLBaseNode):
         name, _ = HTMLNode.extract_name_from_attributes(attributes)
         self.name = name
         self.attributes = attributes
-        self.complex_node = True
         self.code = None
         # if this article was already included, fail
         self.children = []

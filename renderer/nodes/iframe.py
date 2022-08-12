@@ -19,7 +19,6 @@ class IframeNode(HTMLBaseNode):
         url, attributes = HTMLNode.extract_name_from_attributes(attributes)
         self.url = url
         self.attributes = attributes
-        self.complex_node = True
         self.block_node = True
 
     def render(self, context=None):

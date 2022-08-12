@@ -11,7 +11,6 @@ class TabViewNode(HTMLBaseNode):
         super().__init__()
         self.attributes = attributes
         self.block_node = True
-        self.complex_node = True
         for child in children:
             self.append_child(child)
 

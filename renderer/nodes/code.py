@@ -14,7 +14,6 @@ class CodeNode(HTMLBaseNode):
         super().__init__()
         self.attributes = attributes
         self.block_node = True
-        self.complex_node = True
         self.content = content
 
     def render(self, context=None):

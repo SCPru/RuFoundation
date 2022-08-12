@@ -29,7 +29,6 @@ class ClearFloatNode(Node):
     def __init__(self, side):
         super().__init__()
         self.side = side
-        self.complex_node = True
         self.block_node = True
 
     def render(self, context=None):

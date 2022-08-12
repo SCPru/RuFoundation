@@ -12,7 +12,7 @@ class ParagraphNode(Node):
 
     def render(self, context=None):
         content = super().render(context=context)
-        if (self.children and self.children[0].complex_node) or self.collapsed:
+        if self.collapsed:
             return content
         if len(self.children) == 1 and self.children[0].force_render:
             return content

@@ -110,7 +110,6 @@ class ExpressionNode(Node):
     def __init__(self, expr_type, expression, true_case, false_case):
         super().__init__()
         self.expr_type = expr_type
-        self.complex_node = False
         self.block_node = False
         # since all expressions here are static, we can evaluate it right away. this saves on renderer hacks.
         if self.expr_type == 'if':
