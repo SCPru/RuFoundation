@@ -36,11 +36,16 @@ class InternalLinkNode(LinkNode):
 
     def __init__(self, article, text):
         external = False
+        if '#' in article:
+            article, hashtag = article.split('#', 1)
+            hashtag = '#' + hashtag
+        else:
+            hashtag = ''
         article_id = articles.normalize_article_name(article.lower().strip())
-        article_url = '/' + article_id
+        article_url = '/' + article_id + hashtag
         if '/' in article:
             external = True
-            article_url = article
+            article_url = article + hashtag
             article_id = None
         self.article_id = article_id
         self.external = external

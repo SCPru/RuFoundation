@@ -102,7 +102,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'ratingMode': article_rating_mode,
             'ratingVotes': article_votes,
             'pathParams': path_params,
-            'canRate': permissions.check(self.request.user, "rate", article)
+            'canRate': permissions.check(self.request.user, "rate", article),
+            'canDelete': permissions.check(self.request.user, "delete", article),
         }
 
         context.update({

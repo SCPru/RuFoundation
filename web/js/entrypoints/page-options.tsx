@@ -26,6 +26,7 @@ interface Props {
     ratingMode?: RatingMode
     pathParams?: { [key: string]: string }
     canRate?: boolean
+    canDelete?: boolean
 }
 
 
@@ -199,7 +200,7 @@ class PageOptions extends Component<Props, State> {
 
     pickSubView() {
         const { subView } = this.state;
-        const { pageId, rating, pathParams, editable } = this.props;
+        const { pageId, rating, pathParams, editable, canDelete } = this.props;
 
         switch (subView) {
             case 'edit':
@@ -230,7 +231,7 @@ class PageOptions extends Component<Props, State> {
                 return <ArticleFiles pageId={pageId} onClose={this.onCancelSubView} editable={editable} />;
 
             case 'delete':
-                return <ArticleDelete pageId={pageId} onClose={this.onCancelSubView} />;
+                return <ArticleDelete pageId={pageId} canDelete={canDelete} onClose={this.onCancelSubView} />;
 
             case 'backlinks':
                 return <ArticleBacklinksView pageId={pageId} onClose={this.onCancelSubView} />;

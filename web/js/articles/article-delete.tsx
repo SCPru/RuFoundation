@@ -10,6 +10,7 @@ interface Props {
     pageId: string
     isNew?: boolean
     onClose?: () => void
+    canDelete?: boolean
 }
 
 interface State {
@@ -125,7 +126,7 @@ class ArticleDelete extends Component<Props, State> {
     };
 
     render() {
-        const { pageId } = this.props;
+        const { pageId, canDelete } = this.props;
         const { permanent, new_name, loading, saving, savingSuccess, error } = this.state;
         return (
             <Styles>
@@ -148,18 +149,18 @@ class ArticleDelete extends Component<Props, State> {
                             Что делать?
                         </td>
                         <td>
-                            <input type="checkbox" name="permanent" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-rename-input" checked={!permanent} disabled={loading||saving}/>
+                            <input type="checkbox" name="permanent" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-rename-input" checked={!permanent||!canDelete} disabled={loading||saving||!canDelete}/>
                             <label htmlFor="page-rename-input">Переименовать</label>
                         </td>
                     </tr>
-                    <tr>
+                    {canDelete&&<tr>
                         <td>
                         </td>
                         <td>
                             <input type="checkbox" name="permanent" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-permanent-input" checked={permanent} disabled={loading||saving}/>
                             <label htmlFor="page-permanent-input">Удалить навсегда</label>
                         </td>
-                    </tr>
+                    </tr>}
                     </tbody>
                 </table>
 
