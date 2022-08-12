@@ -29,7 +29,7 @@ class TableNode(Node):
                         col_attrs = \
                             ([('colspan', col_span)] if col_span > 1 else []) +\
                             ([('style', 'text-align: %s' % col_align)] if col_align != 'left' else [])
-                        row.append(HTMLPlainNode(col_type, col_attrs, col_content, True))
+                        row.append(HTMLPlainNode(col_type, col_attrs, col_content))
                         col_content = []
                         col_type = 'td'
                     else:
@@ -56,7 +56,7 @@ class TableNode(Node):
                         table_complete = True
                         break
                     col_content += new_children
-            rows.append(HTMLPlainNode('tr', [], row, True, True))
+            rows.append(HTMLPlainNode('tr', [], row, True))
         table_node = HTMLPlainNode('table', [('class', 'wiki-content-table')], rows)
         table_node.allow_cache = False
         return table_node
