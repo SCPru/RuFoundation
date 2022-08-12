@@ -64,10 +64,8 @@ class ExpressionNode(Node):
                      ast.USub: op.neg, ast.Eq: op.eq, ast.Lt: op.lt, ast.Gt: op.gt,
                      ast.LtE: op.le, ast.GtE: op.ge, ast.NotEq: op.ne}
 
-        if isinstance(node, ast.Num):  # <number>
-            return node.n
-        elif isinstance(node, ast.Str):  # 'abcd'
-            return node.s
+        if isinstance(node, ast.Constant):  # number or string or w/e
+            return node.value
         elif isinstance(node, ast.Compare):  # x == y
             items = [node.left] + node.comparators
             for i in range(len(node.ops)):
@@ -84,6 +82,21 @@ class ExpressionNode(Node):
             return cls._eval_ast(node.body[0])
         elif isinstance(node, ast.Expr):  # expr
             return cls._eval_ast(node.value)
+        elif isinstance(node, ast.Call):  # function. allowed functions: min, max, abs
+            if len(node.keywords):
+                raise ValueError(node.keywords)
+            id = node.func.id.lower()
+            args = [cls._eval_ast(x) for x in node.args]
+            if id == 'min':
+                return min(*args)
+            elif id == 'max':
+                return max(*args)
+            elif id == 'abs':
+                if len(args) != 1:
+                    raise ValueError(args)
+                return abs(args[0])
+            else:
+                raise ValueError(id)
         else:
             raise TypeError(node)
 
@@ -108,7 +121,11 @@ class ExpressionNode(Node):
                 for child in false_case:
                     self.append_child(child)
         elif self.expr_type == 'expr':
-            result = str(self.evaluate_expression(expression))
+            result = self.evaluate_expression(expression)
+            if result is None:
+                result = ''
+            else:
+                result = str(result)
             self.append_child(TextNode(result, literal=True))
         elif self.expr_type == 'ifexpr':
             result = self.evaluate_expression(expression)
