@@ -28,6 +28,8 @@ class ModuleNode(HTMLBaseNode):
         headings = []
         i = 0
         for node in nodes:
+            if node.no_toc:
+                continue
             headings.append({'level': '%dem' % ((node.level - 1) * 2), 'title': node.plain_text(context=context), 'toc_id': i})
             node.toc_id = i
             i += 1

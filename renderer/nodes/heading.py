@@ -14,10 +14,14 @@ class HeadingNode(Node):
         if not p.check_newline():
             return None
         h_count = 1
+        no_toc = False
         while True:
             tk = p.tokenizer.read_token()
             if tk.type == TokenType.Plus:
                 h_count += 1
+            elif tk.type == TokenType.Asterisk:
+                no_toc = True
+                break
             elif tk.type == TokenType.Whitespace:
                 break
             else:
@@ -31,17 +35,19 @@ class HeadingNode(Node):
             if tk.type == TokenType.Null:
                 break
             elif tk.type == TokenType.Newline:
-                return HeadingNode(h_count, children)
+                break
             new_children = p.parse_nodes()
             if not new_children:
-                return None
+                break
             children += new_children
+        return HeadingNode(h_count, children, no_toc=no_toc)
 
-    def __init__(self, level, children):
+    def __init__(self, level, children, no_toc=False):
         super().__init__()
         self.level = level
         self.block_node = True
         self.toc_id = None
+        self.no_toc = no_toc
         self.trim_paragraphs = True
         for child in children:
             self.append_child(child)
