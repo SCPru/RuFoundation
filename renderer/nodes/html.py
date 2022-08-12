@@ -172,7 +172,7 @@ class HTMLNode(Node):
                 p.tokenizer.position = first_pos
                 module_content += first_tk.raw
 
-    allowed_tags = ['a', 'span', 'div', 'div_', 'table', 'row', 'hcell', 'cell']
+    allowed_tags = ['a', 'span', 'div', 'div_', 'table', 'row', 'hcell', 'cell', 'li', 'ul', 'ol']
 
     @staticmethod
     def node_allowed(name):
