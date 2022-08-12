@@ -21,9 +21,6 @@ class ExternalLinkNode(LinkNode):
                 # wikidot does not do links if they do not have a slash
                 if '/' not in url and '#' not in url:
                     return None
-                if not re.match(r'^[A-Za-z%0-9\\/?=&~_\-:.#@]+$', url):
-                    print(repr(url))
-                    return None
                 if url[0:1] == '*':
                     blank = True
                     url = url[1:]

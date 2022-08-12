@@ -121,7 +121,7 @@ class Parser(object):
             if not child.block_node:
                 children_so_far.append(child)
             elif not node.trim_paragraphs and isinstance(child, NewlineNode) and\
-                    (i+1 < len(node.children) and not isinstance(node.children[i+1], NewlineNode)) and\
+                    (i+1 >= len(node.children) or not isinstance(node.children[i+1], NewlineNode)) and\
                     (i-1 < 0 or not isinstance(node.children[i-1], NewlineNode)):
                 children_so_far.append(child)
             else:
