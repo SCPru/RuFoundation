@@ -46,7 +46,7 @@ class CreateView(ArticleView):
             raise APIError('Страница с таким ID уже существует', 409)
 
         # create page
-        article = articles.create_article(data['pageId'])
+        article = articles.create_article(data['pageId'], request.user)
         article.title = data['title']
         article.save()
         version = articles.create_article_version(article, data['source'], request.user)

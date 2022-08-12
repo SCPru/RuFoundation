@@ -226,8 +226,7 @@ def run(base_path):
                 logging.warning('Warn: article exists: %s', pagename)
                 total_cnt_rev += len(meta.get('revisions', []))
                 continue
-            article = articles.create_article(pagename)
-            article.author = user
+            article = articles.create_article(pagename, user=user)
             article.created_at = created_at
             if title is not None:
                 article.title = title

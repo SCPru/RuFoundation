@@ -56,13 +56,14 @@ def get_full_name(full_name_or_article: _FullNameOrArticle) -> str:
 
 
 # Creates article with specified id. Does not add versions
-def create_article(full_name: str) -> Article:
+def create_article(full_name: str, user: Optional[_UserType] = None) -> Article:
     category, name = get_name(full_name)
     article = Article(
         category=category,
         name=name,
         created_at=datetime.datetime.now(),
-        title=name
+        title=name,
+        author=user
     )
     article.save()
     return article
