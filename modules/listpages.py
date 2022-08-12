@@ -50,7 +50,7 @@ def page_to_listpages_vars(page: Article, template, index, total):
         'category': page.category,
         'fullname': articles.get_full_name(page),
         'title': page.title,
-        'title_linked': '[[[%s|%s]]]' % (articles.get_full_name(page), page.title),
+        'title_linked': '[[[%s|]]]' % (articles.get_full_name(page)),
         'link': '/%s' % page.title,  # temporary, must be full page URL based on hostname
         'content': '[[include %s]]' % (articles.get_full_name(page)),
         'rating': articles.get_formatted_rating(page),
