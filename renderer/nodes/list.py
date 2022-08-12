@@ -69,5 +69,5 @@ class ListNode(Node):
             </{{tag}}>
             """,
             tag=self.type,
-            children=self.children
+            children=[x for x in self.children if x.children]
         )

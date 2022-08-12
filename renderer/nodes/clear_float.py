@@ -2,8 +2,8 @@ from . import Node
 from ..tokenizer import TokenType
 
 
-class HorizontalRulerNode(Node):
-    starting_token_type = TokenType.Tilde
+class ClearFloatNode(Node):
+    starting_token_type = TokenType.ClearFloatBeginning
 
     @classmethod
     def parse(cls, p):
@@ -14,16 +14,23 @@ class HorizontalRulerNode(Node):
         if not p.check_newline():
             return None
         content = p.read_as_value_until([TokenType.Newline, TokenType.Null])
-        if content is None or content.rstrip().replace('-', '') != '':
+        content = content.lstrip('~').strip()
+        side = 'both'
+        if content == '<':
+            side = 'left'
+        elif content == '>':
+            side = 'right'
+        elif content:
             return None
         # include newline
         p.tokenizer.skip_whitespace()
-        return HorizontalRulerNode()
+        return ClearFloatNode(side)
 
-    def __init__(self):
+    def __init__(self, side):
         super().__init__()
+        self.side = side
         self.complex_node = True
         self.block_node = True
 
     def render(self, context=None):
-        return self.render_template('<hr>')
+        return self.render_template('<div style="clear: {{side}}"; height: 0; font-size: 1px;"></div>\n', side=self.side)

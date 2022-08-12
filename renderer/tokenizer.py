@@ -60,6 +60,7 @@ class TokenType(Enum):
     DoubleUnderline = '__'
 
     HrBeginning = '----'
+    ClearFloatBeginning = '~~~~'
 
 
 def get_sorted_special_types():
