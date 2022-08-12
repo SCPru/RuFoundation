@@ -26,10 +26,14 @@ class IfTagsNode(HTMLBaseNode):
         match = False
         article_tags = articles.get_tags(context.article)
         for tag in self.condition:
-            if tag.startswith("+") and tag[1:] not in article_tags:
-                return False
-            elif tag.startswith("-") and tag[1:] in article_tags:
-                return False
+            if tag.startswith("+"):
+                if tag[1:] not in article_tags:
+                    return False
+                match = True
+            elif tag.startswith("-"):
+                if tag[1:] in article_tags:
+                    return False
+                match = True
             else:
                 if tag in article_tags:
                     match = True

@@ -91,7 +91,8 @@ class Node(object):
     def append_child(self, child):
         from .text import TextNode
 
-        if isinstance(child, TextNode) and self.children and isinstance(self.children[-1], TextNode):
+        if isinstance(child, TextNode) and self.children and isinstance(self.children[-1], TextNode)\
+                and child.literal == self.children[-1].literal:
             self.children[-1].text += child.text
             return
         child.parent = self

@@ -24,7 +24,6 @@ class IframeNode(HTMLBaseNode):
 
     def render(self, context=None):
         attrs = HTMLNode.render_attributes(self.attributes, ['class', 'id', 'style', 'align', 'frameborder', 'width', 'height', 'scrolling'])
-        print(repr(self.attributes))
         return self.render_template(
             '<iframe src="{{src}}" sandbox="allow-scripts allow-top-navigation allow-popups" {{attrs}}></iframe>',
             src=LinkNode.filter_url(self.url),

@@ -16,5 +16,5 @@ class LiteralNode(TextNode):
             return None
         return LiteralNode(content)
 
-    def __init__(self, text, literal=True):
+    def __init__(self, text):
         super().__init__(text, literal=True)

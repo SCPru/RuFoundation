@@ -13,11 +13,15 @@ class TextNode(Node):
         return isinstance(node, TextNode) and node.literal
 
     def render(self, context=None):
-        text = self.text.replace('--', '—').replace('<<', '«').replace('>>', '»')
+        text = self.text
+        if not self.literal:
+            text = text.replace('--', '—').replace('<<', '«').replace('>>', '»')
         if self.literal and self.force_render:
             return self.render_template('<span style="white-space: pre-wrap">{{text}}</span>', text=text)
         return text
 
     def plain_text(self, context=None):
-        text = self.text.replace('--', '—').replace('<<', '«').replace('>>', '»')
+        text = self.text
+        if not self.literal:
+            text = self.text.replace('--', '—').replace('<<', '«').replace('>>', '»')
         return text
