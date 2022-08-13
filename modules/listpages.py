@@ -227,7 +227,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
         total_pages = len(q)
         if allow_pagination:
             try:
-                f_per_page = int(params.get('perPage', '20'))
+                f_per_page = int(params.get('perpage', '20'))
             except:
                 f_per_page = 20
             try:
