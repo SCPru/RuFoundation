@@ -118,7 +118,9 @@ class HTMLNode(Node):
                     attributes.append((attr_name, tk.value))
         if f_cls.is_single_tag(name, attributes):
             default_content = '' if f_cls.is_raw_text else []
-            return f_cls(name, attributes, default_content)
+            c = f_cls(name, attributes, default_content)
+            c.trim_paragraphs = trim_paragraphs
+            return c
         # tag beginning found. now iterate and check for tag ending
         while True:
             pos = p.tokenizer.position
@@ -155,9 +157,13 @@ class HTMLNode(Node):
                                     p.tokenizer.position = pos
                                     break
                             if f_cls.is_raw_text:
-                                return f_cls(name, attributes, module_content)
+                                c = f_cls(name, attributes, module_content)
+                                c.trim_paragraphs = trim_paragraphs
+                                return c
                             else:
-                                return f_cls(name, attributes, children)
+                                c = f_cls(name, attributes, children)
+                                c.trim_paragraphs = trim_paragraphs
+                                return c
 
             if not f_cls.is_raw_text:
                 p.tokenizer.position = pos
