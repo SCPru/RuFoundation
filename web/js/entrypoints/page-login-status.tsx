@@ -71,7 +71,7 @@ class PageLoginStatus extends Component<Props, State> {
                             Админ-панель
                         </a>
                         </>
-                    )} | <a id="my-account" href={`/-/profile`}>
+                    )} | <a id="my-account" href={`/-/users/${user.id}-${user.username}`}>
                         Мой профиль
                     </a>
                     <a id="account-topbutton" href="#" onClick={this.toggleMenu}>▼</a>

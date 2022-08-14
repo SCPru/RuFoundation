@@ -1,6 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import DetailView, UpdateView
-from django.shortcuts import resolve_url
+from django.shortcuts import resolve_url, redirect
 from django.conf import settings
 
 from renderer import single_pass_render
@@ -39,6 +39,13 @@ class ProfileView(DetailView):
 
 
 class MyProfileView(LoginRequiredMixin, ProfileView):
+    def get(self, *args, **kwargs):
+        obj = self.get_object()
+        if not obj:
+            return redirect('/')
+        else:
+            return redirect('/-/users/%d-%s' % (obj.id, obj.username))
+
     def get_object(self, queryset=None):
         return self.request.user
 
