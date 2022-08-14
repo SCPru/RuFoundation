@@ -58,10 +58,11 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 status = 403
             else:
                 source = articles.get_latest_source(article)
-                template = articles.get_article('%s:_template' % article.category)
-                if template:
-                    template_source = articles.get_latest_source(template)
-                    source = apply_template(template_source, {'content': source})
+                if article.name != '_template':
+                    template = articles.get_article('%s:_template' % article.category)
+                    if template:
+                        template_source = articles.get_latest_source(template)
+                        source = apply_template(template_source, {'content': source})
                 context = RenderContext(article, article, path_params, self.request.user)
                 content = single_pass_render(source, context)
                 redirect_to = context.redirect_to
