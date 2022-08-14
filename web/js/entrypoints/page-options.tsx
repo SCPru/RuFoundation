@@ -177,6 +177,7 @@ class PageOptions extends Component<Props, State> {
                     { editable && <a id="edit-button" className="btn btn-default" href="#" onClick={this.onEdit}>Редактировать</a> }
                     <a id="pagerate-button" className="btn btn-default" href="#" onClick={this.onRate}>{canRate?'Оценить':'Оценки'} ({this.renderRating()})</a>
                     { editable && <a id="tags-button" className="btn btn-default" href="#" onClick={this.onTags}>Теги</a> }
+                    <a id="discuss-button" href="/forum:start">Обсудить</a>
                     <a id="history-button" className="btn btn-default" href="#" onClick={this.onHistory}>История</a>
                     <a id="files-button" className="btn btn-default" href="#" onClick={this.onFiles}>Файлы</a>
                     <a id="more-options-button" className="btn btn-default" href="#" onClick={this.toggleExtOptions}>{extOptions?'- Опции':'+ Опции'}</a>
