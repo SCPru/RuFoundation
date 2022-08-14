@@ -407,16 +407,9 @@ def get_formatted_rating(full_name_or_article: _FullNameOrArticle) -> str:
 def add_vote(full_name_or_article: _FullNameOrArticle, user: settings.AUTH_USER_MODEL, rate: int | float | None):
     article = get_article(full_name_or_article)
 
-    try:
-        user_vote = Vote.objects.get(article=article, user=user)
-        if user_vote.rate == rate:
-            return
-        user_vote.delete()
-    except Vote.DoesNotExist:
-        pass
-    finally:
-        if rate is not None:
-            Vote(article=article, user=user, rate=rate).save()
+    Vote.objects.filter(article=article, user=user).delete()
+    if rate is not None:
+        Vote(article=article, user=user, rate=rate).save()
 
 
 # Set article lock status

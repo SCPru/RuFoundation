@@ -89,6 +89,7 @@ def render_module(name, context, params, content=None):
         raise ModuleError('Ошибка обработки модуля \'%s\'' % name)
 
 
+@transaction.atomic
 def handle_api(name, method, context, params):
     m = get_module(name)
     if m is None:
