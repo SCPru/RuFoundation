@@ -3,6 +3,7 @@ import sys
 import logging
 from types import ModuleType
 
+from django.db import transaction
 
 _all_modules = {}
 _initialized = False
@@ -70,6 +71,7 @@ def module_allows_api(name_or_module):
     return m.__dict__['allow_api']()
 
 
+@transaction.atomic
 def render_module(name, context, params, content=None):
     m = get_module(name)
     if m is None:

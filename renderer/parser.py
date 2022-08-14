@@ -265,14 +265,14 @@ class Parser(object):
                 pos2 = t.position
                 t.position += 1
                 t.skip_whitespace()
-                t2 = t.read_token()
+                t2 = self.read_as_value_until([TokenType.Whitespace, TokenType.Equals, TokenType.Quote, TokenType.Pipe, TokenType.CloseDoubleBracket])
                 t.skip_whitespace()
                 t3 = t.read_token()
                 t.position = pos2
 
-                if t2.type == TokenType.Null or t2.type == TokenType.CloseDoubleBracket or\
-                        (t2.type == TokenType.String and t3.type == TokenType.Equals) or\
-                        t2.type == TokenType.Pipe:
+                if t2 is None or t3.type == TokenType.CloseDoubleBracket or\
+                        (t2 and t3.type == TokenType.Equals) or\
+                        t3.type == TokenType.Pipe:
                     raw += '"'
                     t.position += 1
                     break

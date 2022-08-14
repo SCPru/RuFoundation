@@ -100,7 +100,7 @@ class HTMLNode(Node):
                         attributes.append((attr_name, attr_name))
                     continue
                 # from here, different handling for include. this is a hack in original Wikidot syntax
-                if name == 'include':
+                if name == f_cls.pipe_separated_attributes:
                     value = p.read_as_value_until([TokenType.Pipe, TokenType.CloseDoubleBracket])
                     if value is None:
                         return None

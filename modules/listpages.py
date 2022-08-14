@@ -201,7 +201,11 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
             if f_created_by == '.':
                 user = context.user
             else:
-                user = User.objects.filter(username__iexact=f_created_by.strip())
+                f_created_by = f_created_by.strip()
+                if f_created_by.startswith('wd:'):
+                    user = User.objects.filter(type=User.UserType.Wikidot, wikidot_username__iexact=f_created_by[3:])
+                else:
+                    user = User.objects.filter(username__iexact=f_created_by.strip())
                 user = user[0] if user else None
             if user is None:
                 q = q.filter(id=-1)  # invalid
@@ -256,17 +260,6 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
                         raise ValueError(op)
                 except:
                     q = q.filter(id=-1)  # invalid
-        # annotate each article with rating
-        rating_func = 0
-        if q:
-            first_obj = q[0]
-            obj_settings = first_obj.get_settings()
-            if obj_settings.rating_mode == Settings.RatingMode.UpDown:
-                rating_func = Coalesce(Sum('votes__rate'), 0)
-            elif obj_settings.rating_mode == Settings.RatingMode.Stars:
-                rating_func = Coalesce(Avg('votes__rate'), 0.0)
-        q = q.annotate(rating=rating_func)
-        # end annotate
         f_rating = params.get('rating')
         if f_rating:
             if f_rating.strip() == '=':
@@ -299,6 +292,17 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
                         raise ValueError(op)
                 except:
                     q = q.filter(id=-1)
+        # annotate each article with rating
+        rating_func = F('id')
+        if q:
+            first_obj = q[0]
+            obj_settings = first_obj.get_settings()
+            if obj_settings.rating_mode == Settings.RatingMode.UpDown:
+                rating_func = Coalesce(Sum('votes__rate'), 0)
+            elif obj_settings.rating_mode == Settings.RatingMode.Stars:
+                rating_func = Coalesce(Avg('votes__rate'), 0.0)
+        q = q.annotate(rating=rating_func)
+        # end annotate
         # sorting
         f_sort = params.get('order', 'created_at desc').split(' ')
         allowed_sort_columns = {
