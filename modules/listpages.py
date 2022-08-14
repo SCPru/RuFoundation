@@ -1,15 +1,19 @@
+import calendar
+from datetime import datetime
+
 from django.utils.safestring import SafeString
 
 import renderer
 from renderer.templates import apply_template
 from renderer.utils import render_user_to_text, render_template_from_string
 from renderer.parser import RenderContext
+from system.models import User
 from web.controllers import articles
 import re
 from web.models.articles import Article, Vote, ArticleVersion
 from web.models.settings import Settings
 from django.db.models import Q, Value as V, F, Count, Sum, Avg
-from django.db.models.functions import Concat, Random
+from django.db.models.functions import Concat, Random, Coalesce
 from web import threadvars
 import json
 import urllib.parse
@@ -80,6 +84,13 @@ def page_to_listpages_vars(page: Article, template, index, total):
         page_vars['parent_title_linked'] = '[[[%s|%s]]]' % (articles.get_full_name(page.parent), page.parent.title)
     template = apply_template(template, lambda name: render_var(name, page_vars, page))
     return template
+
+
+def split_arg_operator(arg, allowed, default):
+    for op in allowed:
+        if arg.startswith(op):
+            return op, arg[len(op):]
+    return default, arg
 
 
 def query_pages(context: RenderContext, params, allow_pagination=True):
@@ -185,6 +196,109 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
             else:
                 article = articles.get_article(f_parent)
                 q = q.filter(parent=article)
+        f_created_by = params.get('created_by')
+        if f_created_by:
+            if f_created_by == '.':
+                user = context.user
+            else:
+                user = User.objects.filter(username__iexact=f_created_by.strip())
+                user = user[0] if user else None
+            if user is None:
+                q = q.filter(id=-1)  # invalid
+            else:
+                q = q.filter(author=user)
+        f_created_at = params.get('created_at')
+        if f_created_at:
+            if f_created_at.strip() == '=':
+                if context.article:
+                    day_start = context.article.created_at.replace(hour=0, minute=0, second=0, microsecond=0)
+                    day_end = day_start.replace(hour=23, minute=59, second=59, microsecond=0)
+                    q = q.filter(created_at__gte=day_start, created_at__lte=day_end)
+                else:
+                    q = q.filter(id=-1)  # invalid
+            else:
+                op, f_created_at = split_arg_operator(f_created_at, ['>', '<', '=', '>=', '<=', '<>'], '=')
+                f_created_at = f_created_at.strip()
+                try:
+                    dd = f_created_at.split('-')
+                    year = int(dd[0])
+                    first_date = datetime(year=year, month=0, day=0)
+                    last_date = datetime(year=year, month=12, day=31)
+                    if len(dd) >= 2:
+                        month = int(dd[1])
+                        month = max(1, min(12, month))
+                        first_date = first_date.replace(month=month)
+                        max_days = calendar.monthrange(year, month)[1]
+                        last_date = last_date.replace(month=month, day=max_days)
+                    else:
+                        month = None
+                    if len(dd) >= 3:
+                        day = int(dd[2])
+                        max_days = calendar.monthrange(year, month)[1]
+                        day = max(1, min(max_days, day))
+                        first_date = first_date.replace(day=day)
+                        last_date = last_date.replace(day=day)
+                    else:
+                        day = None
+                    if op == '=':
+                        q = q.filter(created_at__gte=first_date, created_at__lte=last_date)
+                    elif op == '<>':
+                        q = q.filter(Q(created_at__lt=first_date) | Q(created_at__gt=last_date))
+                    elif op == '<':
+                        q = q.filter(created_at__lt=first_date)
+                    elif op == '>':
+                        q = q.filter(created_at__gt=last_date)
+                    elif op == '<=':
+                        q = q.filter(created_at__lte=last_date)
+                    elif op == '>=':
+                        q = q.filter(created_at__gte=first_date)
+                    else:
+                        raise ValueError(op)
+                except:
+                    q = q.filter(id=-1)  # invalid
+        # annotate each article with rating
+        rating_func = 0
+        if q:
+            first_obj = q[0]
+            obj_settings = first_obj.get_settings()
+            if obj_settings.rating_mode == Settings.RatingMode.UpDown:
+                rating_func = Coalesce(Sum('votes__rate'), 0)
+            elif obj_settings.rating_mode == Settings.RatingMode.Stars:
+                rating_func = Coalesce(Avg('votes__rate'), 0.0)
+        q = q.annotate(rating=rating_func)
+        # end annotate
+        f_rating = params.get('rating')
+        if f_rating:
+            if f_rating.strip() == '=':
+                if context.article is None:
+                    q = q.filter(id=-1)
+                else:
+                    current_rating, votes, mode = articles.get_rating(context.article)
+                    q = q.filter(rating=current_rating)
+            else:
+                op, f_rating = split_arg_operator(f_rating, ['>', '<', '=', '>=', '<=', '<>'], '=')
+                f_rating = f_rating.strip()
+                try:
+                    try:
+                        i_rating = int(f_rating)
+                    except ValueError:
+                        i_rating = float(f_rating)
+                    if op == '=':
+                        q = q.filter(rating=i_rating)
+                    elif op == '<>':
+                        q = q.filter(~Q(rating=i_rating))
+                    elif op == '<':
+                        q = q.filter(rating__lt=i_rating)
+                    elif op == '>':
+                        q = q.filter(rating__gt=i_rating)
+                    elif op == '<=':
+                        q = q.filter(rating__lte=i_rating)
+                    elif op == '>=':
+                        q = q.filter(rating__gte=i_rating)
+                    else:
+                        raise ValueError(op)
+                except:
+                    q = q.filter(id=-1)
         # sorting
         f_sort = params.get('order', 'created_at desc').split(' ')
         allowed_sort_columns = {
@@ -199,18 +313,6 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
         if f_sort[0] not in allowed_sort_columns:
             f_sort = ['created_at', 'desc']
         direction = 'desc' if f_sort[1:] == ['desc'] else 'asc'
-        if f_sort[0] == 'rating':
-            # find first object and it's category.
-            # this is why in Wikidot docs it says to never combine categories with different rating types.
-            rating_func = 0
-            if q:
-                first_obj = q[0]
-                obj_settings = first_obj.get_settings()
-                if obj_settings.rating_mode == Settings.RatingMode.UpDown:
-                    rating_func = Sum('votes__rate')
-                elif obj_settings.rating_mode == Settings.RatingMode.Stars:
-                    rating_func = Avg('votes__rate')
-            q = q.annotate(rating=rating_func)
         q = q.order_by(getattr(allowed_sort_columns[f_sort[0]], direction)())  # asc/desc is a function call on DB val
         q = q.distinct()
         # end sorting

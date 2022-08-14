@@ -15,7 +15,7 @@ async function onClick(e: MouseEvent, pageId: string, vote: number): Promise<Mod
 }
 
 function updateRating(number: HTMLElement, votes: HTMLElement, control: HTMLElement, votesData: ModuleRateResponse) {
-    number.textContent = sprintf('%.1f', votesData.rating);
+    number.textContent = votesData.voteCount ? sprintf('%.1f', votesData.rating) : '—';
     votes.textContent = sprintf('%d', votesData.voteCount);
     control.style.width = `${Math.floor(votesData.rating * 20)}%`;
 }

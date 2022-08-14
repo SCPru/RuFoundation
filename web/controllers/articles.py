@@ -392,10 +392,12 @@ def get_formatted_rating(full_name_or_article: _FullNameOrArticle) -> str:
     article = get_article(full_name_or_article)
     if not article:
         return '0'
-    rating, _, mode = get_rating(article)
+    rating, votes, mode = get_rating(article)
     if mode == Settings.RatingMode.UpDown:
         return '%+d' % rating
     elif mode == Settings.RatingMode.Stars:
+        if not votes:
+            return '—'
         return '%.1f' % rating
     else:
         return '%d' % rating
