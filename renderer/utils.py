@@ -1,12 +1,10 @@
 from django.contrib.auth.models import AnonymousUser
 from django.conf import settings
 from django.template import Context, Template
-from django.utils import html
 
 from system.models import User
 
 import threading
-import urllib.parse
 
 
 _templates = dict()

@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser as _UserType
 from django.db.models import QuerySet, Sum, Avg, Count, Max
+from django.db.models.functions import Coalesce
 
 from renderer import Parser
 from renderer.nodes import Node
@@ -377,11 +378,11 @@ def get_rating(full_name_or_article: _FullNameOrArticle) -> (int | float, int, S
         return 0, 0, Settings.RatingMode.Disabled
     obj_settings = article.get_settings()
     if obj_settings.rating_mode == Settings.RatingMode.UpDown:
-        data = Vote.objects.filter(article=article).aggregate(sum=Sum('rate'), count=Count('rate'))
+        data = Vote.objects.filter(article=article).aggregate(sum=Coalesce(Sum('rate'), 0), count=Count('rate'))
         return data['sum'] or 0, data['count'] or 0, obj_settings.rating_mode
     elif obj_settings.rating_mode == Settings.RatingMode.Stars:
-        data = Vote.objects.filter(article=article).aggregate(avg=Avg('rate'), count=Count('rate'))
-        return data['avg'] or 0.0, data['count'] or 0, obj_settings.rating_mode
+        data = Vote.objects.filter(article=article).aggregate(avg=Coalesce(Avg('rate'), 0.0), count=Count('rate'))
+        return round(data['avg'], 1) or 0.0, data['count'] or 0, obj_settings.rating_mode
     elif obj_settings.rating_mode == Settings.RatingMode.Disabled:
         return 0, 0, obj_settings.rating_mode
     else:
