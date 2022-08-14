@@ -94,6 +94,10 @@ def split_arg_operator(arg, allowed, default):
 
 
 def query_pages(context: RenderContext, params, allow_pagination=True):
+    # legacy param aliases
+    if 'created_at' not in params:
+        params['created_at'] = params.get('date')
+
     pagination_page = 1
     page_index = 0
     total_pages = 0
@@ -226,7 +230,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
                 try:
                     dd = f_created_at.split('-')
                     year = int(dd[0])
-                    first_date = datetime(year=year, month=0, day=0)
+                    first_date = datetime(year=year, month=1, day=1)
                     last_date = datetime(year=year, month=12, day=31)
                     if len(dd) >= 2:
                         month = int(dd[1])
@@ -235,15 +239,13 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
                         max_days = calendar.monthrange(year, month)[1]
                         last_date = last_date.replace(month=month, day=max_days)
                     else:
-                        month = None
+                        month = None  # this is just to silence pycharm
                     if len(dd) >= 3:
                         day = int(dd[2])
                         max_days = calendar.monthrange(year, month)[1]
                         day = max(1, min(max_days, day))
                         first_date = first_date.replace(day=day)
                         last_date = last_date.replace(day=day)
-                    else:
-                        day = None
                     if op == '=':
                         q = q.filter(created_at__gte=first_date, created_at__lte=last_date)
                     elif op == '<>':
