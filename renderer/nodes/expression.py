@@ -112,7 +112,8 @@ class ExpressionNode(Node):
         self.block_node = False
         # since all expressions here are static, we can evaluate it right away. this saves on renderer hacks.
         if self.expr_type == 'if':
-            if expression != 'false' and expression != 'null' and expression:
+            if expression and expression != 'false' and expression != 'null' and\
+                    not expression.startswith('{$') and expression[-1] != '}':
                 for child in true_case:
                     self.append_child(child)
             else:
