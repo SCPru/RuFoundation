@@ -2,6 +2,7 @@ from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 from django.template.loader import render_to_string
 from django.http import HttpResponseRedirect
 
+from renderer.templates import apply_template
 from renderer.utils import render_user_to_json
 from web.models.articles import Article
 from web.controllers import articles, permissions
@@ -56,8 +57,13 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 redirect_to = None
                 status = 403
             else:
+                source = articles.get_latest_source(article)
+                template = articles.get_article('%s:_template' % article.category)
+                if template:
+                    template_source = articles.get_latest_source(template)
+                    source = apply_template(template_source, {'content': source})
                 context = RenderContext(article, article, path_params, self.request.user)
-                content = single_pass_render(articles.get_latest_source(article), context)
+                content = single_pass_render(source, context)
                 redirect_to = context.redirect_to
                 status = 200
         else:

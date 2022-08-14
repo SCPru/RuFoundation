@@ -1,6 +1,7 @@
 from django.utils.safestring import SafeString
 
 import renderer
+from renderer.templates import apply_template
 from renderer.utils import render_user_to_text, render_template_from_string
 from renderer.parser import RenderContext
 from web.controllers import articles
@@ -26,7 +27,6 @@ def render_date(date):
 
 
 def render_var(var, page_vars, page):
-    var = var[2]
     if var in page_vars:
         return page_vars[var]
     if var.startswith('created_at|'):
@@ -41,7 +41,7 @@ def render_var(var, page_vars, page):
             return page.updated_at.strftime(format)
         except:
             return page_vars['updated_at']
-    return '%%' + var + '%%'
+    return None
 
 
 def page_to_listpages_vars(page: Article, template, index, total):
@@ -78,7 +78,7 @@ def page_to_listpages_vars(page: Article, template, index, total):
         page_vars['parent_fullname'] = articles.get_full_name(page.parent)
         page_vars['parent_title'] = page.parent.title
         page_vars['parent_title_linked'] = '[[[%s|%s]]]' % (articles.get_full_name(page.parent), page.parent.title)
-    template = re.sub(r'(%%(.*?)%%)', lambda var: render_var(var, page_vars, page), template)
+    template = apply_template(template, lambda name: render_var(name, page_vars, page))
     return template
 
 

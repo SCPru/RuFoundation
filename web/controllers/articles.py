@@ -270,6 +270,7 @@ def get_latest_source(full_name_or_article: _FullNameOrArticle) -> Optional[str]
     ver = get_latest_version(full_name_or_article)
     if ver is not None:
         return ver.source
+    return None
 
 
 # Get parent of article

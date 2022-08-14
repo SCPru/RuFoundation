@@ -1,6 +1,8 @@
 import renderer
 import re
 
+from renderer.templates import apply_template
+
 
 def has_content():
     return True
@@ -17,8 +19,7 @@ def render(context, params, content=None):
         'name': context.user.username
     }
 
-    template = (content or '').strip()
-    template = re.sub(r'(%%(.*?)%%)', lambda var: tpl_vars[var[2]] if var[2] in tpl_vars else '%%'+var[2]+'%%', template)
+    template = apply_template((content or '').strip(), tpl_vars)
 
     return renderer.single_pass_render(template, context)
 
