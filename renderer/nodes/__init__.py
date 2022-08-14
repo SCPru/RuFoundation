@@ -1,7 +1,7 @@
 import copy
 
 from .. import utils
-from ..tokenizer import WHITESPACE_CHARS
+from ..tokenizer import WHITESPACE_CHARS, ALL_WHITESPACE_CHARS
 import threading
 import pkgutil
 import sys
@@ -97,14 +97,16 @@ class Node(object):
         self.children.append(child)
 
     @staticmethod
-    def whitespace_node(child):
+    def whitespace_node(child, all=False):
         from .text import TextNode
         from .newline import NewlineNode
         from .comment import CommentNode
 
+        ws_chars = WHITESPACE_CHARS if not all else ALL_WHITESPACE_CHARS
+
         if child.force_render:
             return False
-        return isinstance(child, NewlineNode) or (isinstance(child, TextNode) and not child.text.strip(WHITESPACE_CHARS)) or isinstance(child, CommentNode)
+        return isinstance(child, NewlineNode) or (isinstance(child, TextNode) and not child.text.strip(ws_chars)) or isinstance(child, CommentNode)
 
     @staticmethod
     def is_only_whitespace(children):
@@ -114,7 +116,7 @@ class Node(object):
         return True
 
     @staticmethod
-    def strip(children):
+    def strip(children, all=False):
         if not children:
             return []
         # this deletes leading and trailing newline (not whitespace though)
@@ -123,13 +125,13 @@ class Node(object):
         any_non_whitespace = False
         for i in range(len(children)):
             child = children[i]
-            if not Node.whitespace_node(child):
+            if not Node.whitespace_node(child, all=all):
                 first_non_whitespace = i
                 any_non_whitespace = True
                 break
         for i in reversed(range(len(children))):
             child = children[i]
-            if not Node.whitespace_node(child):
+            if not Node.whitespace_node(child, all=all):
                 last_non_whitespace = i
                 any_non_whitespace = True
                 break

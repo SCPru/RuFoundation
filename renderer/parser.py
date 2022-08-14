@@ -193,6 +193,7 @@ class Parser(object):
                         # special handling
                         # if current node is div_, collapse first and last paragraph
                         if node.trim_paragraphs and node.children:
+                            node.children[:] = Node.strip(node.children, all=True)
                             if isinstance(node.children[0], ParagraphNode):
                                 node.children[0].collapsed = True
                             if isinstance(node.children[-1], ParagraphNode):
