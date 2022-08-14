@@ -152,12 +152,12 @@ class PageOptions extends Component<Props, State> {
     };
 
     renderRating() {
-        const { rating, ratingMode } = this.props;
+        const { rating, ratingMode, ratingVotes } = this.props;
 
         if (ratingMode === 'updown') {
             return sprintf("%+d", rating)
         } else if (ratingMode === 'stars') {
-            return sprintf("%.1f", rating)
+            return ratingVotes ? sprintf("%.1f", rating) : '—'
         } else {
             return 'n/a'
         }

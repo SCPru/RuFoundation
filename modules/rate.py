@@ -37,7 +37,7 @@ def render(context, _params):
                 '</div>'
             ]),
             page_id=context.article.full_name,
-            rating='%.1f' % rating,
+            rating=('%.1f' % rating) if votes else '—',
             rating_percentage='%d' % (rating * 20),
             votes='%d' % votes
         )
