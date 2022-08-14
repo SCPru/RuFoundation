@@ -11,8 +11,9 @@ class LinkNode(Node):
 
     @staticmethod
     def filter_url(url):
-        url = url.strip().lower()
-        if url.startswith('javascript:') or url.startswith('data:'):
+        url = url.strip()
+        test_url = url.lower()
+        if test_url.startswith('javascript:') or test_url.startswith('data:'):
             return '#invalid-url'
         return url
 
