@@ -20,7 +20,6 @@ class ExpressionNode(Node):
         allowed_expr_types = ['if', 'ifexpr', 'expr']
         t = p.tokenizer.read_token()
         if t.type != TokenType.String or t.value.lower() not in allowed_expr_types:
-            print(repr(t))
             return None
         expr_type = t.value.lower()
         p.tokenizer.skip_whitespace()

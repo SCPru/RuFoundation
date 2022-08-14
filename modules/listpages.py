@@ -1,5 +1,5 @@
 import calendar
-from datetime import datetime
+from datetime import datetime, timezone
 
 from django.utils.safestring import SafeString
 
@@ -95,8 +95,8 @@ def split_arg_operator(arg, allowed, default):
 
 def query_pages(context: RenderContext, params, allow_pagination=True):
     # legacy param aliases
-    if 'created_at' not in params:
-        params['created_at'] = params.get('date')
+    if 'created_at' not in params and 'date' in params:
+        params['created_at'] = params['date']
 
     pagination_page = 1
     page_index = 0
@@ -230,8 +230,8 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
                 try:
                     dd = f_created_at.split('-')
                     year = int(dd[0])
-                    first_date = datetime(year=year, month=1, day=1)
-                    last_date = datetime(year=year, month=12, day=31)
+                    first_date = datetime(year=year, month=1, day=1, tzinfo=timezone.utc)
+                    last_date = datetime(year=year, month=12, day=31, tzinfo=timezone.utc)
                     if len(dd) >= 2:
                         month = int(dd[1])
                         month = max(1, min(12, month))
