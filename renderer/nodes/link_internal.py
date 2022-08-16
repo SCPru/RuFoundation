@@ -58,7 +58,7 @@ class InternalLinkNode(LinkNode):
         all_articles = Article.objects.annotate(f_full_name=Concat('category', V(':'), 'name', output_field=TextField())).filter(f_full_name__in=names)
         articles_dict = dict()
         for article in all_articles:
-            articles_dict[article.full_name] = article
+            articles_dict[article.full_name.lower()] = article
         return articles_dict
 
     def pre_render(self, context=None):
@@ -71,11 +71,11 @@ class InternalLinkNode(LinkNode):
                 if not name:
                     continue
                 names.append(name)
-            articles_dict = InternalLinkNode.fetch_articles_by_names(names)
+            articles_dict = self.fetch_articles_by_names(names)
             render_globals['link_internal_articles'] = articles_dict
         else:
             articles_dict = render_globals['link_internal_articles']
-        article_obj = articles_dict.get(self.article_id) if not self.external else None
+        article_obj = articles_dict.get(self.article_id.lower()) if not self.external else None
         self.exists = self.external or (article_obj is not None)
         text = self.original_text
         if not text:
