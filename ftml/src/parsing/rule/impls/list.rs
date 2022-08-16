@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::borrow::Cow::Borrowed;
 use super::prelude::*;
 use crate::parsing::{process_depths, DepthItem, DepthList};
 use crate::tree::{AttributeMap, ListItem, ListType};
@@ -165,7 +166,18 @@ fn build_list_element(
         },
     });
 
+    // if this list consists of
     let attributes = AttributeMap::new();
+
+    if matches!(&items[..], [ListItem::Elements{ elements, .. }] if matches!(&elements[..], [Element::List{ .. }])) {
+        let item = &mut items[0];
+        match item {
+            ListItem::Elements { attributes: ref mut item_attrs, .. } => {
+                item_attrs.insert("style", Borrowed("display: inline; list-style-type: none"));
+            }
+            _ => {}
+        }
+    }
 
     // Return the Element::List object
     Element::List {
