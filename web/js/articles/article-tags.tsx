@@ -75,7 +75,12 @@ class ArticleTags extends Component<Props, State> {
         }
     }
 
-    onSubmit = async () => {
+    onSubmit = async (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
         const { pageId } = this.props;
         this.setState({ saving: true, error: null, savingSuccess: false });
         const input = {

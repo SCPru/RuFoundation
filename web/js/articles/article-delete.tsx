@@ -70,7 +70,12 @@ class ArticleDelete extends Component<Props, State> {
         }
     }
 
-    onSubmit = async () => {
+    onSubmit = async (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
         const { pageId } = this.props;
         const { permanent, new_name } = this.state;
         this.setState({ saving: true, error: null, savingSuccess: false });
