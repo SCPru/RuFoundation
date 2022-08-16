@@ -128,7 +128,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'site_title': title or site.title,
             'site_icon': site.icon,
 
-            'og_title': site.title,
+            'og_title': title or site.title,
             'og_description': excerpt,
             'og_image': image,
             'og_url': canonical_url,
