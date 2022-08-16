@@ -1,0 +1,54 @@
+{
+    "input": "[\n# A",
+    "tree": {
+        "elements": [
+            {
+                "element": "container",
+                "data": {
+                    "type": "paragraph",
+                    "attributes": {},
+                    "elements": [
+                        {
+                            "element": "text",
+                            "data": "["
+                        }
+                    ]
+                }
+            },
+            {
+                "element": "list",
+                "data": {
+                    "type": "numbered",
+                    "attributes": {},
+                    "items": [
+                        {
+                            "item-type": "elements",
+                            "attributes": {},
+                            "elements": [
+                                {
+                                    "element": "text",
+                                    "data": "A"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "element": "footnote-block",
+                "data": {
+                    "title": null,
+                    "hide": false
+                }
+            }
+        ],
+        "styles": [
+        ],
+        "table-of-contents": [
+        ],
+        "footnotes": [
+        ]
+    },
+    "warnings": [
+    ]
+}

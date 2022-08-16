@@ -1,0 +1,45 @@
+{
+    "input": "[[module Join button=\"Join our site!! ;-)\"]]\nApple",
+    "tree": {
+        "elements": [
+            {
+                "element": "module",
+                "data": {
+                    "module": "join",
+                    "data": {
+                        "button-text": "Join our site!! ;-)",
+                        "attributes": {}
+                    }
+                }
+            },
+            {
+                "element": "container",
+                "data": {
+                    "type": "paragraph",
+                    "attributes": {},
+                    "elements": [
+                        {
+                            "element": "text",
+                            "data": "Apple"
+                        }
+                    ]
+                }
+            },
+            {
+                "element": "footnote-block",
+                "data": {
+                    "title": null,
+                    "hide": false
+                }
+            }
+        ],
+        "styles": [
+        ],
+        "table-of-contents": [
+        ],
+        "footnotes": [
+        ]
+    },
+    "warnings": [
+    ]
+}

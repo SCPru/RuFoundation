@@ -1,0 +1,29 @@
+{
+    "input": "[[code]]\nmultiple\n**lines**\nof\ncode\n[[/code]]",
+    "tree": {
+        "elements": [
+            {
+                "element": "code",
+                "data": {
+                    "contents": "multiple\n**lines**\nof\ncode",
+                    "language": null
+                }
+            },
+            {
+                "element": "footnote-block",
+                "data": {
+                    "title": null,
+                    "hide": false
+                }
+            }
+        ],
+        "styles": [
+        ],
+        "table-of-contents": [
+        ],
+        "footnotes": [
+        ]
+    },
+    "warnings": [
+    ]
+}

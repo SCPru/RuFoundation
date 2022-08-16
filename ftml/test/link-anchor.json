@@ -1,0 +1,46 @@
+{
+    "input": "[#apple Some link]?",
+    "tree": {
+        "elements": [
+            {
+                "element": "container",
+                "data": {
+                    "type": "paragraph",
+                    "attributes": {},
+                    "elements": [
+                        {
+                            "element": "link",
+                            "data": {
+                                "type": "anchor",
+                                "link": "#apple",
+                                "label": {
+                                    "text": "Some link"
+                                },
+                                "target": null
+                            }
+                        },
+                        {
+                            "element": "text",
+                            "data": "?"
+                        }
+                    ]
+                }
+            },
+            {
+                "element": "footnote-block",
+                "data": {
+                    "title": null,
+                    "hide": false
+                }
+            }
+        ],
+        "styles": [
+        ],
+        "table-of-contents": [
+        ],
+        "footnotes": [
+        ]
+    },
+    "warnings": [
+    ]
+}

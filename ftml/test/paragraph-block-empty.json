@@ -1,0 +1,22 @@
+{
+    "input": "[[p]]\n[[/p]]",
+    "tree": {
+        "elements": [
+            {
+                "element": "footnote-block",
+                "data": {
+                    "title": null,
+                    "hide": false
+                }
+            }
+        ],
+        "styles": [
+        ],
+        "table-of-contents": [
+        ],
+        "footnotes": [
+        ]
+    },
+    "warnings": [
+    ]
+}

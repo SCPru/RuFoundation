@@ -1,0 +1,23 @@
+{
+    "input": "[[css]]\na { color: blue; }\n[[/css]]",
+    "tree": {
+        "elements": [
+            {
+                "element": "footnote-block",
+                "data": {
+                    "title": null,
+                    "hide": false
+                }
+            }
+        ],
+        "styles": [
+            "a { color: blue; }"
+        ],
+        "table-of-contents": [
+        ],
+        "footnotes": [
+        ]
+    },
+    "warnings": [
+    ]
+}
