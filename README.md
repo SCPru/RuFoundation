@@ -31,7 +31,7 @@ To start working, the following objects are required:
 
 You can provision these basic structures by running the following commands:
 
-- `python manage.py createsite -s scp-ru -d localhost -t "SCP Foundation" -H "Russian branch"`
+- `python manage.py createsite -s scp-ru -d localhost:8000 -t "SCP Foundation" -H "Russian branch"`
 - `python manage.py seed -s scp-ru`
 
 ## Running in Docker

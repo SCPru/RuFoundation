@@ -9,3 +9,10 @@ class RootNode(Node):
             threadvars.put('render_globals', dict())
             super().pre_render(context=context)
             return super().render(context=context)
+
+    def plain_text(self, context=None):
+        with threadvars.context():
+            threadvars.put('render_context', context)
+            threadvars.put('render_globals', dict())
+            super().pre_render(context=context)
+            return super().plain_text(context=context)

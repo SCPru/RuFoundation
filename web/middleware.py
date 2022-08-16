@@ -15,11 +15,19 @@ class MediaHostMiddleware(object):
     def __call__(self, request):
         # set current site
         with threadvars.context():
-            # find site by domain
-            raw_host = request.get_host().split(':')[0]
-            possible_sites = Site.objects.filter(Q(domain=raw_host) | Q(media_domain=raw_host))
+            # find site by domain+port
+            raw_host = request.get_host()
+            if ':' not in raw_host and 'SERVER_PORT' in request.META:
+                raw_host += ':' + request.META['SERVER_PORT']
+                possible_sites = Site.objects.filter(Q(domain=raw_host) | Q(media_domain=raw_host))
+            else:
+                possible_sites = []
             if not possible_sites:
-                raise RuntimeError('Site for this domain (\'%s\') is not configured' % raw_host)
+                # find site by domain
+                raw_host = request.get_host().split(':')[0]
+                possible_sites = Site.objects.filter(Q(domain=raw_host) | Q(media_domain=raw_host))
+                if not possible_sites:
+                    raise RuntimeError('Site for this domain (\'%s\') is not configured' % raw_host)
 
             site = possible_sites[0]
             threadvars.put('current_site', site)

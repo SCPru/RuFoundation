@@ -7,7 +7,7 @@ from renderer.utils import render_user_to_json
 from web.models.articles import Article
 from web.controllers import articles, permissions
 
-from renderer import single_pass_render
+from renderer import single_pass_render, single_pass_render_with_excerpt
 from renderer.parser import RenderContext
 
 from typing import Optional
@@ -49,7 +49,9 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             return single_pass_render(articles.get_latest_source(nav), RenderContext(article, nav, path_params, self.request.user))
         return ""
 
-    def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str]]:
+    def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str], str, Optional[str]]:
+        excerpt = ''
+        image = None
         if article is not None:
             if not permissions.check(self.request.user, 'view', article):
                 context = {'page_id': fullname}
@@ -64,7 +66,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                         template_source = articles.get_latest_source(template)
                         source = apply_template(template_source, {'content': source})
                 context = RenderContext(article, article, path_params, self.request.user)
-                content = single_pass_render(source, context)
+                content, excerpt, image = single_pass_render_with_excerpt(source, context)
                 redirect_to = context.redirect_to
                 status = 200
         else:
@@ -73,7 +75,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             content = render_to_string(self.template_404, context)
             redirect_to = None
             status = 404
-        return content, status, redirect_to
+        return content, status, redirect_to, excerpt, image
 
     def get_context_data(self, **kwargs):
         path = kwargs["path"]
@@ -89,7 +91,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         nav_top = self._render_nav("nav:top", article, path_params)
         nav_side = self._render_nav("nav:side", article, path_params)
 
-        content, status, redirect_to = self.render(article_name, article, path_params)
+        content, status, redirect_to, excerpt, image = self.render(article_name, article, path_params)
 
         context = super(ArticleView, self).get_context_data(**kwargs)
 
@@ -99,6 +101,13 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
         site = get_current_site()
         article_rating, article_votes, article_rating_mode = articles.get_rating(article)
+
+        encoded_params = ''
+        for param in path_params:
+            encoded_params += '/%s' % param
+            if path_params[param] is not None:
+                encoded_params += '/%s' % path_params[param]
+        canonical_url = '//%s/%s%s' % (site.domain, article.full_name if article else article_name, encoded_params)
 
         options_config = {
             'optionsEnabled': status == 200,
@@ -118,6 +127,11 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'site_headline': site.headline,
             'site_title': title or site.title,
             'site_icon': site.icon,
+
+            'og_title': site.title,
+            'og_description': excerpt,
+            'og_image': image,
+            'og_url': canonical_url,
 
             'nav_top': nav_top,
             'nav_side': nav_side,

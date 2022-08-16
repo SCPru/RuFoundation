@@ -21,7 +21,7 @@ class ImageNode(HTMLBaseNode):
         self.source = source
         self.attributes = attributes
 
-    def _get_image_url(self, context=None):
+    def get_image_url(self, context=None):
         if context is None or context.source_article is None:
             return None
         src_lower = self.source.lower()
@@ -36,7 +36,7 @@ class ImageNode(HTMLBaseNode):
         return path
 
     def render(self, context=None):
-        url = self._get_image_url(context)
+        url = self.get_image_url(context)
         attributes = HTMLNode.set_attribute(self.attributes, 'class', HTMLNode.get_attribute(self.attributes, 'class', '')+' image')
         attr_string = HTMLNode.render_attributes(attributes, ['style', 'class', 'width', 'height'])
         # image_tags = ['image', '=image', '>image', '<image', 'f<image', 'f>image']
