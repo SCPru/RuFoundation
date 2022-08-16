@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 from django import db
@@ -214,10 +215,16 @@ def refresh_article_links(article_version: ArticleVersion):
 def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: str, user: Optional[_UserType] = None):
     article = get_article(full_name_or_article)
     prev_full_name = get_full_name(full_name_or_article)
+
     category, name = get_name(new_full_name)
     article.category = category
     article.name = name
     article.save()
+
+    # update links
+    ExternalLink.objects.filter(link_from__iexact=new_full_name).delete()  # this should not happen, but just to be sure
+    ExternalLink.objects.filter(link_from__iexact=prev_full_name).update(link_from=new_full_name)
+
     log = ArticleLogEntry(
         article=article,
         user=user,
@@ -240,6 +247,21 @@ def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user:
         meta={'title': new_title, 'prev_title': prev_title}
     )
     add_log_entry(article, log)
+
+
+def delete_article(full_name_or_article: _FullNameOrArticle):
+    article = get_article(full_name_or_article)
+    ExternalLink.objects.filter(link_from__iexact=get_full_name(full_name_or_article)).delete()
+    article.delete()
+    file_storage = Path(settings.MEDIA_ROOT) / article.site.slug / article.media_name
+    # this may have race conditions with file upload, because filesystem does not know about database transactions
+    for i in range(3):
+        try:
+            if os.path.exists(file_storage):
+                shutil.rmtree(file_storage)
+                break
+        except IOError:  # expected: "directory is not empty" in case someone uploads while we are deleting
+            pass
 
 
 # Get specific entry of article

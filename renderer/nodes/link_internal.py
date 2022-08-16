@@ -83,7 +83,7 @@ class InternalLinkNode(LinkNode):
                 text = self.url
             else:
                 if article_obj is not None:
-                    text = article_obj.title
+                    text = article_obj.title.strip() or self.article_id
                 else:
                     text = self.article_id
         self.text = text
