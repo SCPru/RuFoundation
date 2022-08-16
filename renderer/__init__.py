@@ -17,8 +17,7 @@ def single_pass_render(source, context=None):
 def single_pass_render_with_excerpt(source, context=None):
     p = Parser(StaticTokenizer(source))
     result = p.parse()
-    s = result.root.render(context)
-    plain_text = result.root.plain_text(context).strip()
+    s, plain_text = result.root.render_with_plain_text(context)
     plain_text = re.sub(r'\n+', '\n\n', plain_text)
     if len(plain_text) > 256:
         plain_text = plain_text[:256].strip() + '...'
