@@ -12,10 +12,13 @@ from ftml import ftml
 
 
 def single_pass_render(source, context=None):
-    return SafeString(ftml.render_html(source))
+    html = ftml.render_html(source)
+    html = html['body'] + '<style>' + html['style'] + '</style>'
+    return SafeString(html)
 
 
 def single_pass_render_with_excerpt(source, context=None):
     html = ftml.render_html(source)
+    html = html['body'] + '<style>'+html['style']+'</style>'
     text = ftml.render_text(source)
     return SafeString(html), text, None

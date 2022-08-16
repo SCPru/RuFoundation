@@ -7,6 +7,9 @@ import atexit
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import platform
+import threading
+import time
+import psutil
 
 
 _ALREADY_WATCHING = False
@@ -32,6 +35,8 @@ class Command(BaseRunserverCommand):
         parser.add_argument('--no-first-reload', action='store_true', dest='no_first_reload', help='Internal parameter for FTML reloading')
 
     def handle(self, *args, **options):
+        if options['no_first_reload']:
+            time.sleep(1)
         if options['watch']:
             self.watch_js()
             self.watch_ftml(options['no_first_reload'])
@@ -58,6 +63,11 @@ class Command(BaseRunserverCommand):
         class FtmlWatcher(FileSystemEventHandler):
             def __init__(self):
                 super().__init__()
+                self.lock = threading.RLock()
+                self.is_updated = False
+                self.thread = threading.Thread(target=self.reload)
+                self.thread.daemon = True
+                self.thread.start()
                 if not no_first_reload:
                     self.updated(base_project_dir)
 
@@ -87,24 +97,36 @@ class Command(BaseRunserverCommand):
                 return filename, new_filename
 
             def updated(self, filename):
-                p = subprocess.Popen(['cargo', 'build'], shell=True, cwd=base_project_dir)
-                code = p.wait()
-                if code != 0:
-                    return
-                filename, new_filename = self.filenames()
-                if os.path.exists(base_project_dir+'/target/debug/'+filename):
-                    print('Copying FTML library')
-                    # move FTML library to another location (on Windows this fixes permissions)
-                    if os.path.exists(base_project_dir+'/'+new_filename):
-                        if os.path.exists(base_project_dir+'/'+new_filename+'.old'):
-                            os.remove(base_project_dir + '/' + new_filename + '.old')
-                        os.rename(base_project_dir+'/'+new_filename, base_project_dir+'/'+new_filename+'.old')
-                    shutil.copy(base_project_dir+'/target/debug/'+filename, base_project_dir+'/'+new_filename)
-                    # reload this script
-                    print('Reloading...')
-                    nofr = ['--no-first-reload'] if not no_first_reload else []
-                    os.execv(sys.executable, ['python'] + sys.argv + nofr)
+                with self.lock:
+                    self.is_updated = True
+
+            def reload(self):
+                while True:
+                    time.sleep(1)
+                    with self.lock:
+                        is_updated = self.is_updated
+                        self.is_updated = False
+                    if not is_updated:
+                        continue
+                    p = subprocess.Popen(['cargo', 'build'], shell=True, cwd=base_project_dir)
+                    code = p.wait()
+                    if code != 0:
+                        continue
+                    filename, new_filename = self.filenames()
+                    if os.path.exists(base_project_dir + '/target/debug/' + filename):
+                        print('Copying FTML library')
+                        # move FTML library to another location (on Windows this fixes permissions)
+                        if os.path.exists(base_project_dir + '/' + new_filename):
+                            if os.path.exists(base_project_dir + '/' + new_filename + '.old'):
+                                os.remove(base_project_dir + '/' + new_filename + '.old')
+                            os.rename(base_project_dir + '/' + new_filename, base_project_dir + '/' + new_filename + '.old')
+                        shutil.copy(base_project_dir + '/target/debug/' + filename, base_project_dir + '/' + new_filename)
+                        # reload this script
+                        print('Reloading...')
+                        nofr = ['--no-first-reload'] if not no_first_reload else []
+                        os.execv(sys.executable, ['python'] + sys.argv + nofr)
 
         observer = Observer()
         observer.schedule(FtmlWatcher(), base_project_dir+'/src', recursive=True)
         observer.start()
+
