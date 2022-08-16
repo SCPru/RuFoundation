@@ -169,13 +169,15 @@ fn build_list_element(
     // if this list consists of
     let attributes = AttributeMap::new();
 
-    if matches!(&items[..], [ListItem::Elements{ elements, .. }] if matches!(&elements[..], [Element::List{ .. }])) {
-        let item = &mut items[0];
-        match item {
-            ListItem::Elements { attributes: ref mut item_attrs, .. } => {
-                item_attrs.insert("style", Borrowed("display: inline; list-style-type: none"));
+
+
+    if items.len() == 1 {
+        if let Some(ListItem::Elements { attributes: ref mut item_attrs, elements }) = items.first_mut() {
+            if elements.len() == 1 {
+                if let Some(Element::List { .. }) = elements.first() {
+                    item_attrs.insert("style", Borrowed("display: inline; list-style-type: none"));
+                }
             }
-            _ => {}
         }
     }
 
