@@ -61,8 +61,8 @@ fn try_consume_fn<'p, 'r, 't>(
                 let spaces = parser.current().slice;
                 parser.step()?;
 
-                // Since these are only ASCII spaces a byte count is fine
-                spaces.len()
+                // Byte count is not fine because this might include NBSP's
+                spaces.chars().count()
             }
 
             // No depth, just the bullet
@@ -138,17 +138,33 @@ fn build_list_element(
     top_ltype: ListType,
     list: DepthList<ListType, Vec<Element>>,
 ) -> Element {
-    let build_item = |item| match item {
-        DepthItem::Item(elements) => ListItem::Elements {
-            elements,
-            attributes: AttributeMap::new(),
-        },
-        DepthItem::List(ltype, list) => ListItem::SubList {
-            element: Box::new(build_list_element(ltype, list)),
-        },
-    };
+    let mut items = vec![];
 
-    let items = list.into_iter().map(build_item).collect();
+    list.into_iter().for_each(|item| return match item {
+        DepthItem::Item(elements) => {
+            let item = ListItem::Elements {
+                elements,
+                attributes: AttributeMap::new(),
+            };
+            items.push(item);
+        },
+        DepthItem::List(ltype, list) => {
+            let sub = build_list_element(ltype, list);
+            if items.is_empty() {
+                items.push(ListItem::Elements {
+                    elements: vec![],
+                    attributes: AttributeMap::new(),
+                });
+            }
+            match items.last_mut().unwrap() {
+                ListItem::Elements { ref mut elements, attributes: _ } => {
+                    elements.push(sub);
+                }
+                _ => {}
+            }
+        },
+    });
+
     let attributes = AttributeMap::new();
 
     // Return the Element::List object
