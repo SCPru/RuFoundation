@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.conf import settings
 from django.contrib.postgres.fields import CITextField
 from django.db import models
@@ -70,6 +72,8 @@ class Article(SiteLimitedModel):
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
+
+    media_name = models.TextField(verbose_name="Название папки с файлами в ФС-хранилище", unique=True, default=uuid4)
 
     def get_settings(self):
         try:

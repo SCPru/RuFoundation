@@ -44,4 +44,4 @@ class File(SiteLimitedModel):
     @property
     def local_media_path(self) -> str:
         site = get_current_site()
-        return '%s/%s/%s/%s' % (settings.MEDIA_ROOT, self.escape_media_name(site.slug), self.escape_media_name(self.article.full_name), self.escape_media_name(self.media_name))
+        return '%s/%s/%s/%s' % (settings.MEDIA_ROOT, self.escape_media_name(site.slug), self.escape_media_name(self.article.media_name), self.escape_media_name(self.media_name))

@@ -47,6 +47,7 @@ def serve_static(request, dir_path, document_root=None, show_indexes=False):
                 file = articles.get_file_in_article(article, dir_path_split[1])
                 if file:
                     dir_path_split[1] = file.media_name
+                    dir_path_split[0] = article.media_name
     dir_path = '/'.join([partial_quote(x) for x in dir_path_split])
 
     return django.views.static.serve(request, dir_path, document_root=document_root, show_indexes=show_indexes)
