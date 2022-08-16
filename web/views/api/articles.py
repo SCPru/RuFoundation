@@ -46,7 +46,7 @@ class CreateView(ArticleView):
             raise APIError('Страница с таким ID уже существует', 409)
 
         # create page
-        article = articles.create_article(data['pageId'], request.user)
+        article = articles.create_article(articles.normalize_article_name(data['pageId']), request.user)
         article.title = data['title']
         article.save()
         version = articles.create_article_version(article, data['source'], request.user)
@@ -93,7 +93,7 @@ class FetchOrUpdateView(ArticleView):
             article2 = articles.get_article(data['pageId'])
             if article2 is not None:
                 raise APIError('Страница с таким ID уже существует', 409)
-            articles.update_full_name(article, data['pageId'], request.user)
+            articles.update_full_name(article, articles.normalize_article_name(data['pageId']), request.user)
 
         # check if changing title
         if 'title' in data and data['title'] != article.title:

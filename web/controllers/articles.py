@@ -197,7 +197,7 @@ def refresh_article_links(article_version: ArticleVersion):
         if kt in already_added:
             continue
         already_added.append(kt)
-        new_link = ExternalLink(link_from=article_name, link_type=ExternalLink.Type.Include, link_to=node.name)
+        new_link = ExternalLink(link_from=article_name.lower(), link_type=ExternalLink.Type.Include, link_to=node.name.lower())
         new_link.save()
     # find links
     for node in Node.find_nodes_recursively(parsed.root, InternalLinkNode):
@@ -207,7 +207,7 @@ def refresh_article_links(article_version: ArticleVersion):
         if kt in already_added:
             continue
         already_added.append(kt)
-        new_link = ExternalLink(link_from=article_name, link_type=ExternalLink.Type.Link, link_to=node.article_id)
+        new_link = ExternalLink(link_from=article_name.lower(), link_type=ExternalLink.Type.Link, link_to=node.article_id.lower())
         new_link.save()
 
 
