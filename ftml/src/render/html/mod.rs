@@ -40,7 +40,7 @@ use super::prelude;
 
 use self::attributes::AddedAttributes;
 use self::context::HtmlContext;
-use crate::data::PageInfo;
+use crate::data::{PageCallbacks, PageInfo};
 use crate::render::{Handle, Render};
 use crate::settings::WikitextSettings;
 use crate::tree::SyntaxTree;
@@ -55,6 +55,7 @@ impl Render for HtmlRender {
         &self,
         tree: &SyntaxTree,
         page_info: &PageInfo,
+        page_callbacks: &dyn PageCallbacks,
         settings: &WikitextSettings,
     ) -> HtmlOutput {
         info!(

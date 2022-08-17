@@ -142,6 +142,7 @@ pub use self::utf16::Utf16IndexMap;
 
 pub mod prelude {
     pub use super::data::PageInfo;
+    pub use super::data::PageCallbacks;
     pub use super::includes::{include, Includer};
     pub use super::parsing::{parse, ParseResult, ParseWarning};
     pub use super::preprocess;

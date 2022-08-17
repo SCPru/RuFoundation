@@ -36,7 +36,7 @@ pub mod html;
 mod handle;
 
 use self::handle::{Handle, ModuleRenderMode};
-use crate::data::PageInfo;
+use crate::data::{PageCallbacks, PageInfo};
 use crate::settings::WikitextSettings;
 use crate::tree::SyntaxTree;
 
@@ -63,6 +63,7 @@ pub trait Render {
         &self,
         tree: &SyntaxTree,
         page_info: &PageInfo,
+        page_callbacks: &dyn PageCallbacks,
         settings: &WikitextSettings,
     ) -> Self::Output;
 }

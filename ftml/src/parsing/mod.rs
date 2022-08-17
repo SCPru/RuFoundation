@@ -57,7 +57,7 @@ use self::parser_wrap::ParserWrap;
 use self::rule::impls::RULE_PAGE;
 use self::string::parse_string;
 use self::strip::{strip_newlines, strip_whitespace};
-use crate::data::PageInfo;
+use crate::data::{PageCallbacks, PageInfo};
 use crate::next_index::{NextIndex, TableOfContentsIndex};
 use crate::settings::WikitextSettings;
 use crate::tokenizer::Tokenization;
@@ -79,6 +79,7 @@ pub use self::token::{ExtractedToken, Token};
 pub fn parse<'r, 't>(
     tokenization: &'r Tokenization<'t>,
     page_info: &'r PageInfo<'t>,
+    page_callbacks: &'r dyn PageCallbacks<'t>,
     settings: &'r WikitextSettings,
 ) -> ParseOutcome<SyntaxTree<'t>>
 where
@@ -90,7 +91,7 @@ where
         table_of_contents_depths,
         footnotes,
         has_footnote_block,
-    } = parse_internal(page_info, settings, tokenization);
+    } = parse_internal(page_info, page_callbacks, settings, tokenization);
 
     // For producing table of contents indexes
     let mut incrementer = Incrementer(0);
@@ -168,13 +169,14 @@ where
 /// Runs the parser, but returns the raw internal results prior to conversion.
 pub fn parse_internal<'r, 't>(
     page_info: &'r PageInfo<'t>,
+    page_callbacks: &'r dyn PageCallbacks<'t>,
     settings: &'r WikitextSettings,
     tokenization: &'r Tokenization<'t>,
 ) -> UnstructuredParseResult<'r, 't>
 where
     'r: 't,
 {
-    let mut parser = Parser::new(tokenization, page_info, settings);
+    let mut parser = Parser::new(tokenization, page_info, page_callbacks, settings);
 
     // At the top level, we gather elements into paragraphs
     info!("Running parser on tokens");

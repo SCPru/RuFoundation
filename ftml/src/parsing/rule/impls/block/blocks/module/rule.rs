@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::borrow::Cow;
 use super::mapping::get_module_rule_with_name;
 use super::prelude::*;
 
@@ -45,6 +46,8 @@ fn parse_fn<'r, 't>(
 
     // Get module name and arguments
     let (subname, arguments) = parser.get_head_name_map(&BLOCK_MODULE, in_head)?;
+
+    let module_has_body = parser.page_callbacks().module_has_body(Cow::from(subname));
 
     // Get the module rule for this name
     let module_rule = match get_module_rule_with_name(subname) {

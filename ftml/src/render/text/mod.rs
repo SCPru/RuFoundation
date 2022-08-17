@@ -23,7 +23,7 @@ mod elements;
 
 use self::context::TextContext;
 use self::elements::render_elements;
-use crate::data::PageInfo;
+use crate::data::{PageCallbacks, PageInfo};
 use crate::render::{Handle, Render};
 use crate::settings::WikitextSettings;
 use crate::tree::{Element, SyntaxTree};
@@ -37,15 +37,17 @@ impl TextRender {
         &self,
         elements: &[Element],
         page_info: &PageInfo,
+        page_callbacks: &dyn PageCallbacks,
         settings: &WikitextSettings,
     ) -> String {
-        self.render_partial_direct(elements, page_info, settings, &[], &[])
+        self.render_partial_direct(elements, page_info, page_callbacks, settings, &[], &[])
     }
 
     fn render_partial_direct(
         &self,
         elements: &[Element],
         page_info: &PageInfo,
+        page_callbacks: &dyn PageCallbacks,
         settings: &WikitextSettings,
         table_of_contents: &[Element],
         footnotes: &[Vec<Element>],
@@ -85,11 +87,13 @@ impl Render for TextRender {
         &self,
         tree: &SyntaxTree,
         page_info: &PageInfo,
+        page_callbacks: &dyn PageCallbacks,
         settings: &WikitextSettings,
     ) -> String {
         self.render_partial_direct(
             &tree.elements,
             page_info,
+            page_callbacks,
             settings,
             &tree.table_of_contents,
             &tree.footnotes,

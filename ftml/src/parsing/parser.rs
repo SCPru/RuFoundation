@@ -22,7 +22,7 @@ use super::condition::ParseCondition;
 use super::prelude::*;
 use super::rule::Rule;
 use super::RULE_PAGE;
-use crate::data::PageInfo;
+use crate::data::{PageCallbacks, PageInfo};
 use crate::render::text::TextRender;
 use crate::tokenizer::Tokenization;
 use crate::tree::{AcceptsPartial, HeadingLevel};
@@ -36,6 +36,7 @@ const MAX_RECURSION_DEPTH: usize = 100;
 pub struct Parser<'r, 't> {
     // Page and parse information
     page_info: &'r PageInfo<'t>,
+    page_callbacks: &'r dyn PageCallbacks<'t>,
     settings: &'r WikitextSettings,
 
     // Parse state
@@ -77,6 +78,7 @@ impl<'r, 't> Parser<'r, 't> {
     pub(crate) fn new(
         tokenization: &'r Tokenization<'t>,
         page_info: &'r PageInfo<'t>,
+        page_callbacks: &'r dyn PageCallbacks<'t>,
         settings: &'r WikitextSettings,
     ) -> Self {
         let full_text = tokenization.full_text();
@@ -87,6 +89,7 @@ impl<'r, 't> Parser<'r, 't> {
 
         Parser {
             page_info,
+            page_callbacks,
             settings,
             current,
             remaining,
@@ -106,6 +109,11 @@ impl<'r, 't> Parser<'r, 't> {
     #[inline]
     pub fn page_info(&self) -> &PageInfo<'t> {
         self.page_info
+    }
+
+    #[inline]
+    pub fn page_callbacks(&self) -> &dyn PageCallbacks<'t> {
+        self.page_callbacks
     }
 
     #[inline]
@@ -207,7 +215,7 @@ impl<'r, 't> Parser<'r, 't> {
 
         // Render name as text, so it lacks formatting
         let name =
-            TextRender.render_partial(name_elements, self.page_info, self.settings);
+            TextRender.render_partial(name_elements, self.page_info, self.page_callbacks, self.settings);
 
         self.table_of_contents.borrow_mut().push((level, name));
     }

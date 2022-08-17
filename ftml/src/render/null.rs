@@ -23,6 +23,7 @@
 //! This implementation of `Render` will consume any input syntax tree
 //! and produce a unit value as output.
 
+use crate::data::PageCallbacks;
 use super::prelude::*;
 
 #[derive(Debug)]
@@ -36,6 +37,7 @@ impl Render for NullRender {
         &self,
         _tree: &SyntaxTree,
         _page_info: &PageInfo,
+        _page_callbacks: &dyn PageCallbacks,
         _settings: &WikitextSettings,
     ) {
     }
@@ -44,10 +46,11 @@ impl Render for NullRender {
 #[test]
 fn null() {
     let page_info = PageInfo::dummy();
+    let page_callbacks = PageCallbacks{};
     let settings = WikitextSettings::from_mode(WikitextMode::Page);
     let result = SyntaxTree::from_element_result(vec![], vec![], vec![], vec![], vec![]);
     let (tree, _) = result.into();
-    let output = NullRender.render(&tree, &page_info, &settings);
+    let output = NullRender.render(&tree, &page_info, page_callbacks, &settings);
 
     assert_eq!(output, (), "Null render didn't produce the unit value");
 }
