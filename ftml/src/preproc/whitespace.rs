@@ -28,10 +28,17 @@
 //! * Compress groups of 3+ newlines into 2 newlines
 
 use regex::{Regex, RegexBuilder};
+use serde_json::json;
 
 lazy_static! {
     static ref WHITESPACE: Regex = {
         RegexBuilder::new(r"^\s+$")
+            .multi_line(true)
+            .build()
+            .unwrap()
+    };
+    static ref LEADING_WHITESPACE: Regex = {
+        RegexBuilder::new(r"^[ \u00a0]+")
             .multi_line(true)
             .build()
             .unwrap()
@@ -47,6 +54,9 @@ pub fn substitute(text: &mut String) {
 
     // Strip lines with only whitespace
     regex_replace(text, &WHITESPACE, "");
+
+    // Strip leading whitespace
+    regex_replace_with_char(text, &LEADING_WHITESPACE, ' ');
 
     // Join concatenated lines (ending with '\')
     str_replace(text, "\\\n", "");
@@ -85,6 +95,26 @@ fn regex_replace(text: &mut String, regex: &Regex, replacement: &str) {
     while let Some(mtch) = regex.find(text) {
         let range = mtch.start()..mtch.end();
         text.replace_range(range, replacement);
+    }
+}
+
+fn regex_replace_with_char(text: &mut String, regex: &Regex, replacement_char: char) {
+    debug!(
+        "Replacing miscellaneous regular expression with char (pattern {}, replacement {})",
+        regex.as_str(),
+        replacement_char,
+    );
+
+    let mut offset = 0;
+    while let Some(mtch) = regex.find_at(text, offset) {
+        let range = mtch.start()..mtch.end();
+        let mut replacement = String::from("");
+        for _ in 0..range.len() {
+            replacement.push(replacement_char);
+        }
+        println!("replacing text: {}", json!(&text[mtch.start()..mtch.end()]));
+        offset = mtch.end() + (replacement.len() - range.len());
+        text.replace_range(range, replacement.as_str());
     }
 }
 
