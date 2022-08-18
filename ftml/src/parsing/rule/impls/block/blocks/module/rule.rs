@@ -57,5 +57,5 @@ fn parse_fn<'r, 't>(
         body = Cow::from("");
     }
 
-    return ok!(true; Elements::Single(Element::Module(Module::Generic{ name: Cow::from(subname), params: arguments.to_hash_map(), text: body })), vec![]);
+    return ok!(false; Elements::Single(Element::Module(Module::Generic{ name: Cow::from(subname), params: arguments.to_hash_map(), text: body })), vec![]);
 }
