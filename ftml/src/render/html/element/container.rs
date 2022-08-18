@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use regex::{Regex, RegexBuilder};
+
 use super::prelude::*;
 use crate::tree::{Container, ContainerType, HtmlTag};
 
@@ -87,13 +89,28 @@ pub fn render_container_internal(ctx: &mut HtmlContext, container: &Container) {
     tag.inner(container.elements());
 }
 
+lazy_static! {
+    static ref COLOR_REGEX: Regex = {
+        RegexBuilder::new(r"^([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$")
+            .build()
+            .unwrap()
+    };
+}
+
+
 pub fn render_color(ctx: &mut HtmlContext, color: &str, elements: &[Element]) {
     info!("Rendering color container (color '{color}')");
+
+    let real_color = if COLOR_REGEX.is_match(color) {
+        format!("#{color}")
+    } else {
+        String::from(color)
+    };
 
     ctx.html()
         .span()
         .attr(attr!(
-            "style" => "color: " color ";",
+            "style" => "color: " real_color.as_str() ";",
         ))
         .inner(elements);
 }
