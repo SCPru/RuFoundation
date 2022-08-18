@@ -42,6 +42,7 @@ use super::prelude;
 use self::attributes::AddedAttributes;
 use self::context::HtmlContext;
 use crate::data::{PageCallbacks, PageInfo};
+use crate::render::html::element::render_elements;
 use crate::render::{Handle, Render};
 use crate::settings::WikitextSettings;
 use crate::tree::SyntaxTree;
@@ -84,10 +85,7 @@ impl Render for HtmlRender {
         }
 
         // Crawl through elements and generate HTML
-        ctx.html()
-            .element("wj-body")
-            .attr(attr!("class" => "wj-body"))
-            .inner(&tree.elements);
+        render_elements(&mut ctx, &tree.elements);
 
         // Build and return HtmlOutput
         ctx.into()

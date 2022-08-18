@@ -55,7 +55,7 @@ pub fn substitute(text: &mut String) {
     regex_replace(text, &WHITESPACE, "");
 
     // Strip leading whitespace
-    regex_replace_with_char(text, &LEADING_WHITESPACE, ' ');
+    regex_replace(text, &LEADING_WHITESPACE, " ");
 
     // Join concatenated lines (ending with '\')
     str_replace(text, "\\\n", "");
@@ -91,28 +91,16 @@ fn regex_replace(text: &mut String, regex: &Regex, replacement: &str) {
         replacement,
     );
 
-    while let Some(mtch) = regex.find(text) {
-        let range = mtch.start()..mtch.end();
-        text.replace_range(range, replacement);
-    }
-}
-
-fn regex_replace_with_char(text: &mut String, regex: &Regex, replacement_char: char) {
-    debug!(
-        "Replacing miscellaneous regular expression with char (pattern {}, replacement {})",
-        regex.as_str(),
-        replacement_char,
-    );
-
     let mut offset = 0;
     while let Some(mtch) = regex.find_at(text, offset) {
         let range = mtch.start()..mtch.end();
-        let mut replacement = String::from("");
-        for _ in 0..range.len() {
-            replacement.push(replacement_char);
+        let actual_count = text[range.start..range.end].chars().count();
+        let mut actual_replacement = String::from("");
+        for _ in 0..actual_count {
+            actual_replacement.push_str(replacement);
         }
-        offset = mtch.end() + (replacement.len() - range.len());
-        text.replace_range(range, replacement.as_str());
+        offset = (mtch.end() as i32 + (replacement.len() as i32 - range.len() as i32)) as usize;
+        text.replace_range(range, &actual_replacement);
     }
 }
 
