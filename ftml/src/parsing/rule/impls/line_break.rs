@@ -33,7 +33,7 @@ pub const RULE_LINE_BREAK_PARAGRAPH: Rule = Rule {
 };
 
 fn line_break<'p, 'r, 't>(
-    parser: &'p mut Parser<'r, 't>,
+    _parser: &'p mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Consuming newline token as line break");
 
