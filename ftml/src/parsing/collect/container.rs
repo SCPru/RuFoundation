@@ -42,6 +42,7 @@ pub fn collect_container<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
     rule: Rule,
     container_type: ContainerType,
+    attributes: AttributeMap<'t>,
     open_conditions: &[ParseCondition],
     close_conditions: &[ParseCondition],
     invalid_conditions: &[ParseCondition],
@@ -70,7 +71,7 @@ pub fn collect_container<'p, 'r, 't>(
         Element::Container(Container::new(
             container_type,
             elements,
-            AttributeMap::new(),
+            attributes,
         )),
         exceptions,
     )

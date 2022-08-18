@@ -91,6 +91,7 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
 
     match element {
         Element::Fragment(elements) => render_elements(ctx, elements),
+        Element::AlignMarker(_) => {},
         Element::Container(container) => render_container(ctx, container),
         Element::Module(module) => render_module(ctx, module),
         Element::Text(text) => ctx.push_escaped(text),

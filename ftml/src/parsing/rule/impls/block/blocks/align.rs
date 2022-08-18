@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::borrow::Cow;
+
 use super::prelude::*;
 use crate::tree::{Alignment, AttributeMap};
 
@@ -79,11 +81,22 @@ pub fn parse_alignment_block<'r, 't>(
     // Get body content, with paragraphs
     let (elements, exceptions, _) = parser.get_body_elements(block_rule, true)?.into();
 
+    let mut attributes = AttributeMap::new();
+
+    let style = match alignment {
+        Alignment::Left => "text-align: left",
+        Alignment::Right => "text-align: right",
+        Alignment::Center => "text-align: center",
+        Alignment::Justify => "text-align: justify",
+    };
+
+    attributes.insert("style", Cow::from(style));
+
     // Build element
     let element = Element::Container(Container::new(
         ContainerType::Align(alignment),
         elements,
-        AttributeMap::new(),
+        attributes,
     ));
 
     ok!(element, exceptions)

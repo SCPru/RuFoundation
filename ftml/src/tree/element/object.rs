@@ -39,6 +39,11 @@ pub enum Element<'t> {
     /// Examples would include divs, italics, paragraphs, etc.
     Container(Container<'t>),
 
+    /// Paragraph text alignment marker.
+    /// 
+    /// This happens in the beginning of a <p> and sets it's text-align.
+    AlignMarker(Alignment),
+
     /// A Wikidot module being invoked, along with its arguments.
     ///
     /// These modules require some kind of processing by backend software,
@@ -305,6 +310,7 @@ impl Element<'_> {
     pub fn name(&self) -> &'static str {
         match self {
             Element::Container(container) => container.ctype().name(),
+            Element::AlignMarker(_) => "AlignMarker",
             Element::Fragment(_) => "Fragment",
             Element::Module(_) => "Module",
             Element::Text(_) => "Text",
@@ -356,6 +362,7 @@ impl Element<'_> {
     pub fn paragraph_safe(&self) -> bool {
         match self {
             Element::Container(container) => container.ctype().paragraph_safe(),
+            Element::AlignMarker(_) => true,
             Element::Module(_) => false,
             Element::Fragment(_) => true,
             Element::Text(_)
@@ -402,6 +409,7 @@ impl Element<'_> {
     pub fn to_owned(&self) -> Element<'static> {
         match self {
             Element::Fragment(elements) => Element::Fragment(elements_to_owned(elements)),
+            Element::AlignMarker(alignment) => Element::AlignMarker(alignment.to_owned()),
             Element::Container(container) => Element::Container(container.to_owned()),
             Element::Module(module) => Element::Module(module.to_owned()),
             Element::Text(text) => Element::Text(string_to_owned(text)),

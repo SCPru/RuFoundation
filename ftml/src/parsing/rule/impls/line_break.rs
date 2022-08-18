@@ -37,39 +37,6 @@ fn line_break<'p, 'r, 't>(
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Consuming newline token as line break");
 
-    // Skip this newline if we're coming up on a rule that starts
-    // on its own line.
-    //
-    // Grep for "LineRequirement::StartOfLine" and compare that with this list.
-
-    let upcoming_skip = parser.evaluate_fn(|parser| {
-        parser.step()?;
-        parser.get_optional_space()?;
-
-        Ok(matches!(
-            parser.current().token,
-            Token::Quote
-                | Token::BulletItem
-                | Token::NumberedItem
-                | Token::Heading
-                | Token::Equals
-                | Token::TripleDash
-                | Token::ClearFloatLeft
-                | Token::ClearFloatRight
-                | Token::ClearFloatBoth
-                | Token::TableColumn
-                | Token::TableColumnLeft
-                | Token::TableColumnRight
-                | Token::TableColumnCenter
-                | Token::TableColumnTitle
-        ))
-    });
-
-    if upcoming_skip {
-        info!("Skipping line break element because of upcoming token");
-        return ok!(Elements::None);
-    }
-
     ok!(Element::LineBreak)
 }
 

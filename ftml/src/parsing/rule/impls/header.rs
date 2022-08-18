@@ -57,6 +57,7 @@ fn try_consume_fn<'p, 'r, 't>(
         parser,
         RULE_HEADER,
         ContainerType::Header(heading),
+        AttributeMap::new(),
         &[],
         &[
             ParseCondition::current(Token::InputEnd),

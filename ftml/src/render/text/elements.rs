@@ -41,6 +41,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
 
     match element {
         Element::Fragment(elements) => render_elements(ctx, elements),
+        Element::AlignMarker(_) => {},
         Element::Container(container) => {
             let mut invisible = false;
             let (add_newlines, prefix) = match container.ctype() {

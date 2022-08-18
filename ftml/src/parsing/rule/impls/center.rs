@@ -32,33 +32,8 @@ fn try_consume_fn<'p, 'r, 't>(
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create centered container");
 
-    // Check that the rule has "= "
-    macro_rules! next {
-        ($token:expr) => {{
-            let token = parser.current().token;
-            if token != $token {
-                return Err(parser.make_warn(ParseWarningKind::RuleFailed));
-            }
+    check_step(parser, Token::Equals)?;
+    check_step(parser, Token::Whitespace)?;
 
-            parser.step()?;
-        }};
-    }
-
-    next!(Token::Equals);
-    next!(Token::Whitespace);
-
-    // Collect contents
-    collect_container(
-        parser,
-        RULE_CENTER,
-        ContainerType::Align(Alignment::Center),
-        &[],
-        &[
-            ParseCondition::current(Token::LineBreak),
-            ParseCondition::current(Token::ParagraphBreak),
-            ParseCondition::current(Token::InputEnd),
-        ],
-        &[],
-        None,
-    )
+    ok!(true; vec![Element::AlignMarker(Alignment::Center)], vec![])
 }

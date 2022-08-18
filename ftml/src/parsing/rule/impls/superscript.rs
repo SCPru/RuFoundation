@@ -34,6 +34,7 @@ fn try_consume_fn<'p, 'r, 't>(
         parser,
         RULE_SUPERSCRIPT,
         ContainerType::Superscript,
+        AttributeMap::new(),
         &[ParseCondition::current(Token::Superscript)],
         &[ParseCondition::current(Token::Superscript)],
         &[

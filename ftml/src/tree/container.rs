@@ -142,9 +142,7 @@ impl ContainerType {
             ContainerType::Ruby => HtmlTag::new("ruby"),
             ContainerType::RubyText => HtmlTag::new("rt"),
             ContainerType::Paragraph => HtmlTag::new("p"),
-            ContainerType::Align(alignment) => {
-                HtmlTag::with_class("div", alignment.html_class())
-            }
+            ContainerType::Align(_) => HtmlTag::new("div"),
             ContainerType::Header(heading) => heading.html_tag(indexer),
         }
     }

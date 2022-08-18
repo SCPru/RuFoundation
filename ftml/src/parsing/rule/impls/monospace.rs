@@ -34,6 +34,7 @@ fn try_consume_fn<'p, 'r, 't>(
         parser,
         RULE_MONOSPACE,
         ContainerType::Monospace,
+        AttributeMap::new(),
         &[ParseCondition::current(Token::LeftMonospace)],
         &[ParseCondition::current(Token::RightMonospace)],
         &[

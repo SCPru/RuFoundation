@@ -34,6 +34,7 @@ fn try_consume_fn<'p, 'r, 't>(
         parser,
         RULE_UNDERLINE,
         ContainerType::Underline,
+        AttributeMap::new(),
         &[ParseCondition::current(Token::Underline)],
         &[ParseCondition::current(Token::Underline)],
         &[
