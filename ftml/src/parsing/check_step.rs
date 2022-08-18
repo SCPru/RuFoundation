@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{ExtractedToken, ParseWarning, Parser, Token};
+use super::{ExtractedToken, ParseWarning, Parser, Token, ParseWarningKind};
 
 /// Helper function to assert that the current token matches, then step.
 ///
@@ -29,7 +29,7 @@ use super::{ExtractedToken, ParseWarning, Parser, Token};
 /// Since an assert is used, this function will panic
 /// if the extracted token does not match the one specified.
 #[inline]
-pub fn check_step<'r, 't>(
+pub fn assert_step<'r, 't>(
     parser: &mut Parser<'r, 't>,
     token: Token,
 ) -> Result<&'r ExtractedToken<'t>, ParseWarning> {
@@ -40,6 +40,21 @@ pub fn check_step<'r, 't>(
     parser.step()?;
 
     Ok(current)
+}
+
+#[inline]
+pub fn check_step<'r, 't>(
+    parser: &mut Parser<'r, 't>,
+    token: Token,
+) -> Result<&'r ExtractedToken<'t>, ParseWarning> {
+    let current = parser.current();
+
+    if current.token == token {
+        parser.step()?;
+        Ok(current)
+    } else {
+        Err(parser.make_warn(ParseWarningKind::RuleFailed))
+    }
 }
 
 #[test]
@@ -55,5 +70,5 @@ fn check_step_fail() {
     let tokenization = crate::tokenize("**Apple** banana");
     let mut parser = Parser::new(&tokenization, &page_info, Rc::new(NullPageCallbacks{}), &settings);
 
-    let _ = check_step(&mut parser, Token::Italics);
+    let _ = assert_step(&mut parser, Token::Italics);
 }

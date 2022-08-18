@@ -32,26 +32,14 @@ fn try_consume_fn<'p, 'r, 't>(
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create header container");
 
-    macro_rules! step {
-        ($token:expr) => {{
-            let current = parser.current();
-            if current.token != $token {
-                return Err(parser.make_warn(ParseWarningKind::RuleFailed));
-            }
-
-            parser.step()?;
-            current
-        }};
-    }
-
     // Get header depth
-    let heading = step!(Token::Heading)
+    let heading = check_step(parser, Token::Heading)?
         .slice
         .try_into()
         .expect("Received invalid heading length token slice");
 
     // Step over whitespace
-    step!(Token::Whitespace);
+    check_step(parser, Token::Whitespace)?;
 
     let (elements, mut all_exceptions, _) = collect_container(
         parser,
