@@ -20,11 +20,13 @@
 
 use crate::data::PageInfo;
 use crate::non_empty_vec::NonEmptyVec;
+use crate::prelude::PageCallbacks;
 use crate::render::Handle;
 use crate::settings::WikitextSettings;
 use crate::tree::{Element, VariableScopes};
 use std::fmt::{self, Write};
 use std::num::NonZeroUsize;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct TextContext<'i, 'h, 'e, 't>
@@ -33,6 +35,7 @@ where
 {
     output: String,
     info: &'i PageInfo<'i>,
+    callbacks: Rc<dyn PageCallbacks>,
     handle: &'h Handle,
     settings: &'e WikitextSettings,
 
@@ -75,6 +78,7 @@ where
     #[inline]
     pub fn new(
         info: &'i PageInfo<'i>,
+        callbacks: Rc<dyn PageCallbacks>,
         handle: &'h Handle,
         settings: &'e WikitextSettings,
         table_of_contents: &'e [Element<'t>],
@@ -83,6 +87,7 @@ where
         TextContext {
             output: String::new(),
             info,
+            callbacks,
             handle,
             settings,
             variables: VariableScopes::new(),
@@ -105,6 +110,11 @@ where
     #[inline]
     pub fn info(&self) -> &'i PageInfo<'i> {
         self.info
+    }
+
+    #[inline]
+    pub fn callbacks(&self) -> Rc<dyn PageCallbacks> {
+        self.callbacks.clone()
     }
 
     #[inline]

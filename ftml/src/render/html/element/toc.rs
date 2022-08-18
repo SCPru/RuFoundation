@@ -96,7 +96,7 @@ pub fn render_table_of_contents(
                         });
                 });
         }
-        float_class => {
+        _ => {
             build_toc(ctx);
         }
     };

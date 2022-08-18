@@ -62,7 +62,7 @@ use crate::next_index::{NextIndex, TableOfContentsIndex};
 use crate::settings::WikitextSettings;
 use crate::tokenizer::Tokenization;
 use crate::tree::{
-    AttributeMap, Element, LinkLabel, LinkLocation, LinkType, ListItem, ListType,
+    AttributeMap, Element, LinkLabel, LinkLocation, LinkType,
     SyntaxTree, Container, ContainerType,
 };
 use std::borrow::Cow;

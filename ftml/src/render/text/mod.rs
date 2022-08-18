@@ -64,7 +64,7 @@ impl TextRender {
         );
 
         let mut ctx =
-            TextContext::new(page_info, &Handle, settings, table_of_contents, footnotes);
+            TextContext::new(page_info, page_callbacks, &Handle, settings, table_of_contents, footnotes);
         render_elements(&mut ctx, elements);
 
         // Remove leading and trailing newlines
