@@ -23,6 +23,7 @@
 //! This implementation of `Render` will consume any input syntax tree
 //! and produce a unit value as output.
 
+use std::rc::Rc;
 use crate::data::PageCallbacks;
 use super::prelude::*;
 
@@ -37,7 +38,7 @@ impl Render for NullRender {
         &self,
         _tree: &SyntaxTree,
         _page_info: &PageInfo,
-        _page_callbacks: &dyn PageCallbacks,
+        _page_callbacks: Rc<dyn PageCallbacks>,
         _settings: &WikitextSettings,
     ) {
     }

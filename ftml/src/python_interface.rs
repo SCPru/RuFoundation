@@ -3,6 +3,7 @@ use std::borrow::Cow::Borrowed;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
+use std::rc::Rc;
 use pyo3::prelude::*;
 use crate::info::VERSION;
 
@@ -16,12 +17,12 @@ fn render<R: Render>(text: &mut String, renderer: &R, page_info: PageInfo, callb
     // TODO includer
     let settings = WikitextSettings::from_mode(WikitextMode::Page);
 
-    let page_callbacks = &PythonCallbacks{ phantom: Default::default(), callbacks: &callbacks };
+    let page_callbacks = Rc::new(PythonCallbacks{ callbacks: Box::new(callbacks) }).clone();
 
     preprocess(text);
     let tokens = tokenize(text);
-    let (tree, _warnings) = parse(&tokens, &page_info, page_callbacks, &settings).into();
-    let output = renderer.render(&tree, &page_info, page_callbacks, &settings);
+    let (tree, _warnings) = parse(&tokens, &page_info, page_callbacks.clone(), &settings).into();
+    let output = renderer.render(&tree, &page_info, page_callbacks.clone(), &settings);
     output
 }
 
@@ -40,19 +41,18 @@ fn page_info_dummy() -> PageInfo<'static>
     }
 }
 
-struct PythonCallbacks<'a> {
-    phantom: PhantomData<&'a String>,
-    callbacks: &'a Py<PyAny>,
+struct PythonCallbacks {
+    callbacks: Box<Py<PyAny>>,
 }
 
-impl<'a> Debug for PythonCallbacks<'a> {
+impl Debug for PythonCallbacks {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "<PythonCallbacks>")
     }
 }
 
-impl<'a> PageCallbacks<'a> for PythonCallbacks<'a> {
-    fn module_has_body(&self, module_name: Cow<'a, str>) -> bool {
+impl PageCallbacks for PythonCallbacks {
+    fn module_has_body(&self, module_name: Cow<str>) -> bool {
         let result = Python::with_gil(|py| {
             return self.callbacks.getattr(py, "module_has_body")?.call(py, (module_name,), None)?.extract(py);
         });
@@ -62,7 +62,7 @@ impl<'a> PageCallbacks<'a> for PythonCallbacks<'a> {
         }
     }
 
-    fn render_module(&self, module_name: Cow<'a, str>, params: HashMap<Cow<'a, str>, Cow<'a, str>>, body: Cow<'a, str>) -> Cow<'a, str> {
+    fn render_module(&self, module_name: Cow<str>, params: HashMap<Cow<str>, Cow<str>>, body: Cow<str>) -> Cow<'static, str> {
         let py_params: HashMap<String, String> = params.keys().fold(HashMap::new(), |mut acc, k| {
             acc.insert(k.to_string(), params.get(k).unwrap().to_string());
             acc

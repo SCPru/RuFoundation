@@ -36,7 +36,7 @@ const MAX_RECURSION_DEPTH: usize = 100;
 pub struct Parser<'r, 't> {
     // Page and parse information
     page_info: &'r PageInfo<'t>,
-    page_callbacks: &'r dyn PageCallbacks<'t>,
+    page_callbacks: Rc<dyn PageCallbacks>,
     settings: &'r WikitextSettings,
 
     // Parse state
@@ -78,7 +78,7 @@ impl<'r, 't> Parser<'r, 't> {
     pub(crate) fn new(
         tokenization: &'r Tokenization<'t>,
         page_info: &'r PageInfo<'t>,
-        page_callbacks: &'r dyn PageCallbacks<'t>,
+        page_callbacks: Rc<dyn PageCallbacks>,
         settings: &'r WikitextSettings,
     ) -> Self {
         let full_text = tokenization.full_text();
@@ -112,8 +112,8 @@ impl<'r, 't> Parser<'r, 't> {
     }
 
     #[inline]
-    pub fn page_callbacks(&self) -> &dyn PageCallbacks<'t> {
-        self.page_callbacks
+    pub fn page_callbacks(&self) -> Rc<dyn PageCallbacks> {
+        self.page_callbacks.clone()
     }
 
     #[inline]
@@ -215,7 +215,7 @@ impl<'r, 't> Parser<'r, 't> {
 
         // Render name as text, so it lacks formatting
         let name =
-            TextRender.render_partial(name_elements, self.page_info, self.page_callbacks, self.settings);
+            TextRender.render_partial(name_elements, self.page_info, self.page_callbacks.clone(), self.settings);
 
         self.table_of_contents.borrow_mut().push((level, name));
     }

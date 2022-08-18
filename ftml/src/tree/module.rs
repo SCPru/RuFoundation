@@ -23,8 +23,10 @@
 use super::clone::option_string_to_owned;
 use super::AttributeMap;
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::num::NonZeroU32;
 use strum_macros::IntoStaticStr;
+use crate::tree::clone::{string_map_to_owned, string_to_owned};
 
 #[derive(Serialize, Deserialize, IntoStaticStr, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case", tag = "module", content = "data")]
@@ -58,6 +60,13 @@ pub enum Module<'t> {
 
     /// A rating module, which can be used to vote on the page.
     Rate,
+
+    /// Generic module. TODO: replace all modules with just this
+    Generic {
+        name: Cow<'t, str>,
+        params: HashMap<Cow<'t, str>, Cow<'t, str>>,
+        text: Cow<'t, str>,
+    }
 }
 
 impl Module<'_> {
@@ -91,6 +100,15 @@ impl Module<'_> {
                 depth: *depth,
             },
             Module::Rate => Module::Rate,
+            Module::Generic {
+                name,
+                params,
+                text
+            } => Module::Generic {
+                name: string_to_owned(name),
+                params: string_map_to_owned(params),
+                text: string_to_owned(text),
+            },
         }
     }
 }

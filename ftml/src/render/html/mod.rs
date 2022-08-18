@@ -32,6 +32,7 @@ mod output;
 mod random;
 mod render;
 
+use std::rc::Rc;
 pub use self::meta::{HtmlMeta, HtmlMetaType};
 pub use self::output::HtmlOutput;
 
@@ -55,7 +56,7 @@ impl Render for HtmlRender {
         &self,
         tree: &SyntaxTree,
         page_info: &PageInfo,
-        page_callbacks: &dyn PageCallbacks,
+        page_callbacks: Rc<dyn PageCallbacks>,
         settings: &WikitextSettings,
     ) -> HtmlOutput {
         info!(
@@ -70,6 +71,7 @@ impl Render for HtmlRender {
 
         let mut ctx = HtmlContext::new(
             page_info,
+            page_callbacks,
             &Handle,
             settings,
             &tree.table_of_contents,

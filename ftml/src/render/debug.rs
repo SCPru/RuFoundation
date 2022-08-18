@@ -20,6 +20,7 @@
 
 //! A simple renderer that outputs the `SyntaxTree` using Rust's debug formatter.
 
+use std::rc::Rc;
 use crate::data::PageCallbacks;
 use super::prelude::*;
 
@@ -34,7 +35,7 @@ impl Render for DebugRender {
         &self,
         tree: &SyntaxTree,
         page_info: &PageInfo,
-        page_callbacks: &dyn PageCallbacks,
+        page_callbacks: Rc<dyn PageCallbacks>,
         settings: &WikitextSettings,
     ) -> String {
         info!("Running debug logger on syntax tree");

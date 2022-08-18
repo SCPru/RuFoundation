@@ -66,6 +66,7 @@ use crate::tree::{
     SyntaxTree,
 };
 use std::borrow::Cow;
+use std::rc::Rc;
 
 pub use self::boolean::{parse_boolean, NonBooleanValue};
 pub use self::exception::{ParseException, ParseWarning, ParseWarningKind};
@@ -79,7 +80,7 @@ pub use self::token::{ExtractedToken, Token};
 pub fn parse<'r, 't>(
     tokenization: &'r Tokenization<'t>,
     page_info: &'r PageInfo<'t>,
-    page_callbacks: &'r dyn PageCallbacks<'t>,
+    page_callbacks: Rc<dyn PageCallbacks>,
     settings: &'r WikitextSettings,
 ) -> ParseOutcome<SyntaxTree<'t>>
 where
@@ -169,7 +170,7 @@ where
 /// Runs the parser, but returns the raw internal results prior to conversion.
 pub fn parse_internal<'r, 't>(
     page_info: &'r PageInfo<'t>,
-    page_callbacks: &'r dyn PageCallbacks<'t>,
+    page_callbacks: Rc<dyn PageCallbacks>,
     settings: &'r WikitextSettings,
     tokenization: &'r Tokenization<'t>,
 ) -> UnstructuredParseResult<'r, 't>

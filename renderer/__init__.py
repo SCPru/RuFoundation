@@ -2,6 +2,7 @@ import re
 
 from django.utils.safestring import SafeString
 
+import modules
 from .nodes.html import HTMLNode
 from .nodes.image import ImageNode
 from .parser import Parser, ParseResult, ParseContext
@@ -17,12 +18,12 @@ class CallbacksWithContext(ftml.Callbacks):
         self.context = context
 
     def module_has_body(self, module_name: str) -> bool:
-        print('called body %s' % module_name)
-        return False
+        print('module has content: %s %s' %(module_name, modules.module_has_content(module_name.lower())))
+        return modules.module_has_content(module_name.lower())
 
     def render_module(self, module_name: str, params: dict[str, str], body: str) -> str:
-        print('called render %s' % module_name)
-        return ''
+        print('module render for: %s [%s]' % (module_name, repr(params)))
+        return modules.render_module(module_name, self.context, params, content=body)
 
 
 def single_pass_render(source, context=None):

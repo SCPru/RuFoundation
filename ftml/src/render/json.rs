@@ -23,6 +23,7 @@
 //! This implementation of `Render` will produce the same JSON
 //! output as is used in the AST tests at `src/test.rs`.
 
+use std::rc::Rc;
 use crate::data::PageCallbacks;
 use super::prelude::*;
 
@@ -51,7 +52,7 @@ impl Render for JsonRender {
         &self,
         syntax_tree: &SyntaxTree,
         page_info: &PageInfo,
-        _page_callbacks: &dyn PageCallbacks,
+        _page_callbacks: Rc<dyn PageCallbacks>,
         settings: &WikitextSettings,
     ) -> String {
         info!(

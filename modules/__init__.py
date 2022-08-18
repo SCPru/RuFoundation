@@ -59,7 +59,7 @@ def module_has_content(name_or_module):
         return False
     if 'has_content' not in m.__dict__ or not callable(m.__dict__['has_content']):
         return False
-    return m.__dict__['has_content']
+    return m.__dict__['has_content']()
 
 
 def module_allows_api(name_or_module):

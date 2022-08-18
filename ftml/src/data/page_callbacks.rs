@@ -2,12 +2,12 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-pub trait PageCallbacks<'a>: Debug {
-    fn module_has_body(&self, _module_name: Cow<'a, str>) -> bool {
+pub trait PageCallbacks: Debug {
+    fn module_has_body(&self, _module_name: Cow<str>) -> bool {
         return false
     }
 
-    fn render_module(&self, _module_name: Cow<'a, str>, _params: HashMap<Cow<'a, str>, Cow<'a, str>>, _body: Cow<'a, str>) -> Cow<'a, str> {
+    fn render_module<'a>(&self, _module_name: Cow<str>, _params: HashMap<Cow<str>, Cow<str>>, _body: Cow<str>) -> Cow<'static, str> {
         return Cow::from("");
     }
 }

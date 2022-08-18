@@ -47,6 +47,8 @@ mod prelude {
     pub use crate::tree::{Element, SyntaxTree};
 }
 
+use std::borrow::{Borrow, Cow};
+use std::rc::Rc;
 use self::collapsible::{render_collapsible, Collapsible};
 use self::container::{render_color, render_container};
 use self::date::render_date;
@@ -68,7 +70,7 @@ use self::user::render_user;
 use super::attributes::AddedAttributes;
 use super::HtmlContext;
 use crate::render::ModuleRenderMode;
-use crate::tree::Element;
+use crate::tree::{Element, Module};
 use ref_map::*;
 
 pub fn render_elements(ctx: &mut HtmlContext, elements: &[Element]) {
@@ -91,8 +93,18 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
     match element {
         Element::Container(container) => render_container(ctx, container),
         Element::Module(module) => {
-            ctx.handle()
-                .render_module(ctx.buffer(), module, ModuleRenderMode::Html);
+            match module {
+                Module::Generic{ name, params, text } => {
+                    let rendered: Cow<str> = {
+                        let v = ctx.callbacks().render_module(name.to_owned(), params.to_owned(), text.to_owned());
+                        v
+                    };
+                    str_write!(ctx.buffer(), "{}", rendered);
+                }
+                _ => {
+                    str_write!(ctx.buffer(), "<p>Unsupported: module {}</p>", module.name());
+                }
+            }
         }
         Element::Text(text) => ctx.push_escaped(text),
         Element::Raw(text) => render_wikitext_raw(ctx, text),

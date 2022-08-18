@@ -21,6 +21,7 @@
 mod context;
 mod elements;
 
+use std::rc::Rc;
 use self::context::TextContext;
 use self::elements::render_elements;
 use crate::data::{PageCallbacks, PageInfo};
@@ -37,17 +38,17 @@ impl TextRender {
         &self,
         elements: &[Element],
         page_info: &PageInfo,
-        page_callbacks: &dyn PageCallbacks,
+        page_callbacks: Rc<dyn PageCallbacks>,
         settings: &WikitextSettings,
     ) -> String {
-        self.render_partial_direct(elements, page_info, page_callbacks, settings, &[], &[])
+        self.render_partial_direct(elements, page_info, page_callbacks.clone(), settings, &[], &[])
     }
 
     fn render_partial_direct(
         &self,
         elements: &[Element],
         page_info: &PageInfo,
-        page_callbacks: &dyn PageCallbacks,
+        page_callbacks: Rc<dyn PageCallbacks>,
         settings: &WikitextSettings,
         table_of_contents: &[Element],
         footnotes: &[Vec<Element>],
@@ -87,13 +88,13 @@ impl Render for TextRender {
         &self,
         tree: &SyntaxTree,
         page_info: &PageInfo,
-        page_callbacks: &dyn PageCallbacks,
+        page_callbacks: Rc<dyn PageCallbacks>,
         settings: &WikitextSettings,
     ) -> String {
         self.render_partial_direct(
             &tree.elements,
             page_info,
-            page_callbacks,
+            page_callbacks.clone(),
             settings,
             &tree.table_of_contents,
             &tree.footnotes,

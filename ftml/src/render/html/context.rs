@@ -23,7 +23,7 @@ use super::escape::escape;
 use super::meta::{HtmlMeta, HtmlMetaType};
 use super::output::HtmlOutput;
 use super::random::Random;
-use crate::data::PageRef;
+use crate::data::{PageCallbacks, PageRef};
 use crate::data::{Backlinks, PageInfo};
 use crate::info;
 use crate::next_index::{NextIndex, TableOfContentsIndex};
@@ -35,6 +35,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::{self, Write};
 use std::num::NonZeroUsize;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct HtmlContext<'i, 'h, 'e, 't>
@@ -46,6 +47,7 @@ where
     meta: Vec<HtmlMeta>,
     backlinks: Backlinks<'static>,
     info: &'i PageInfo<'i>,
+    callbacks: Rc<dyn PageCallbacks>,
     handle: &'h Handle,
     settings: &'e WikitextSettings,
     random: Random,
@@ -79,6 +81,7 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
     #[inline]
     pub fn new(
         info: &'i PageInfo<'i>,
+        callbacks: Rc<dyn PageCallbacks>,
         handle: &'h Handle,
         settings: &'e WikitextSettings,
         table_of_contents: &'e [Element<'t>],
@@ -90,6 +93,7 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
             meta: Self::initial_metadata(info),
             backlinks: Backlinks::new(),
             info,
+            callbacks,
             handle,
             settings,
             random: Random::default(),
@@ -143,6 +147,11 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
     #[inline]
     pub fn info(&self) -> &PageInfo<'i> {
         self.info
+    }
+
+    #[inline]
+    pub fn callbacks(&self) -> Rc<dyn PageCallbacks> {
+        self.callbacks.clone()
     }
 
     #[inline]

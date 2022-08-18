@@ -19,6 +19,7 @@
  */
 
 use std::borrow::Cow;
+use crate::tree::Module;
 use super::mapping::get_module_rule_with_name;
 use super::prelude::*;
 
@@ -48,29 +49,13 @@ fn parse_fn<'r, 't>(
     let (subname, arguments) = parser.get_head_name_map(&BLOCK_MODULE, in_head)?;
 
     let module_has_body = parser.page_callbacks().module_has_body(Cow::from(subname));
+    let body: Cow<'t, str>;
 
-    // Get the module rule for this name
-    let module_rule = match get_module_rule_with_name(subname) {
-        Some(rule) => rule,
-        None => return Err(parser.make_warn(ParseWarningKind::NoSuchModule)),
-    };
+    if module_has_body {
+        body = Cow::from(parser.get_body_text(&BLOCK_MODULE)?);
+    } else {
+        body = Cow::from("");
+    }
 
-    // Prepare to run the module's parsing function
-    parser.set_module(module_rule);
-
-    // Run the parse function until the end.
-    // This starts after the head and its newline.
-    //
-    // If the module accepts a body, it should consume it,
-    // then the tail. Otherwise it shouldn't move the token pointer.
-    let (module, exceptions, paragraph_safe) =
-        (module_rule.parse_fn)(parser, subname, arguments)?.into();
-
-    debug_assert_eq!(
-        paragraph_safe,
-        module.is_none(),
-        "Module returned but marked as paragraph-safe",
-    );
-
-    ok!(paragraph_safe; module.map(Element::Module), exceptions)
+    return ok!(true; Elements::Single(Element::Module(Module::Generic{ name: Cow::from(subname), params: arguments.to_hash_map(), text: body })), vec![]);
 }
