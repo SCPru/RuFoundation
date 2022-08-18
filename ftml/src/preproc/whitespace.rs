@@ -28,7 +28,6 @@
 //! * Compress groups of 3+ newlines into 2 newlines
 
 use regex::{Regex, RegexBuilder};
-use serde_json::json;
 
 lazy_static! {
     static ref WHITESPACE: Regex = {
@@ -112,7 +111,6 @@ fn regex_replace_with_char(text: &mut String, regex: &Regex, replacement_char: c
         for _ in 0..range.len() {
             replacement.push(replacement_char);
         }
-        println!("replacing text: {}", json!(&text[mtch.start()..mtch.end()]));
         offset = mtch.end() + (replacement.len() - range.len());
         text.replace_range(range, replacement.as_str());
     }
