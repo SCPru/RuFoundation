@@ -66,11 +66,14 @@ impl Drop for ParserWrap<'_, '_, '_> {
 fn wrap() {
     use crate::data::PageInfo;
     use crate::settings::{WikitextMode, WikitextSettings};
+    use crate::data::NullPageCallbacks;
+    use std::rc::Rc;
+
 
     let page_info = PageInfo::dummy();
     let settings = WikitextSettings::from_mode(WikitextMode::Page);
     let tokens = crate::tokenize("Test input");
-    let mut parser = Parser::new(&tokens, &page_info, &settings);
+    let mut parser = Parser::new(&tokens, &page_info, Rc::new(NullPageCallbacks{}), &settings);
 
     assert_eq!(
         parser.accepts_partial(),

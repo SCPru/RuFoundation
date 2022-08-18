@@ -20,95 +20,52 @@
 
 //! Representation of Wikidot modules, along with their context.
 
-use super::clone::option_string_to_owned;
-use super::AttributeMap;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::num::NonZeroU32;
-use strum_macros::IntoStaticStr;
 use crate::tree::clone::{string_map_to_owned, string_to_owned};
 
-#[derive(Serialize, Deserialize, IntoStaticStr, Debug, Clone, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case", tag = "module", content = "data")]
-pub enum Module<'t> {
-    /// Lists all the backlinks on the given page.
-    ///
-    /// If no page is listed, the backlinks are returned for the current page.
-    Backlinks { page: Option<Cow<'t, str>> },
-
-    /// Lists all categories on the site, along with the pages they contain.
-    #[serde(rename_all = "kebab-case")]
-    Categories { include_hidden: bool },
-
-    /// Allows a user to join a site.
-    #[serde(rename_all = "kebab-case")]
-    Join {
-        button_text: Option<Cow<'t, str>>,
-        attributes: AttributeMap<'t>,
-    },
-
-    /// Lists the structure of pages as connected by parenthood.
-    ///
-    /// Shows the hierarchy of parent relationships present on the given page.
-    /// If no root page is listed, the tree returned is for the current page.
-    #[serde(rename_all = "kebab-case")]
-    PageTree {
-        root: Option<Cow<'t, str>>,
-        show_root: bool,
-        depth: Option<NonZeroU32>,
-    },
-
-    /// A rating module, which can be used to vote on the page.
-    Rate,
-
-    /// Generic module. TODO: replace all modules with just this
-    Generic {
-        name: Cow<'t, str>,
-        params: HashMap<Cow<'t, str>, Cow<'t, str>>,
-        text: Cow<'t, str>,
-    }
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub struct Module<'t> {
+    name: Cow<'t, str>,
+    params: HashMap<Cow<'t, str>, Cow<'t, str>>,
+    text: Cow<'t, str>,
 }
 
-impl Module<'_> {
+impl<'t> Module<'t> {
     #[inline]
-    pub fn name(&self) -> &'static str {
-        self.into()
+    pub fn new(
+        name: Cow<'t, str>,
+        params: HashMap<Cow<'t, str>, Cow<'t, str>>,
+        text: Cow<'t, str>
+    ) -> Self {
+        Module {
+            name,
+            params,
+            text
+        }
+    }
+
+    #[inline]
+    pub fn name(&self) -> &Cow<str> {
+        &self.name
+    }
+
+    #[inline]
+    pub fn params(&self) -> &HashMap<Cow<str>, Cow<str>> {
+        &self.params
+    }
+
+    #[inline]
+    pub fn text(&self) -> &Cow<str> {
+        &self.text
     }
 
     pub fn to_owned(&self) -> Module<'static> {
-        match self {
-            Module::Backlinks { page } => Module::Backlinks {
-                page: option_string_to_owned(page),
-            },
-            Module::Categories { include_hidden } => Module::Categories {
-                include_hidden: *include_hidden,
-            },
-            Module::Join {
-                button_text,
-                attributes,
-            } => Module::Join {
-                button_text: option_string_to_owned(button_text),
-                attributes: attributes.to_owned(),
-            },
-            Module::PageTree {
-                root,
-                show_root,
-                depth,
-            } => Module::PageTree {
-                root: option_string_to_owned(root),
-                show_root: *show_root,
-                depth: *depth,
-            },
-            Module::Rate => Module::Rate,
-            Module::Generic {
-                name,
-                params,
-                text
-            } => Module::Generic {
-                name: string_to_owned(name),
-                params: string_map_to_owned(params),
-                text: string_to_owned(text),
-            },
+        Module {
+            name: string_to_owned(&self.name),
+            params: string_map_to_owned(&self.params),
+            text: string_to_owned(&self.text),
         }
     }
 }

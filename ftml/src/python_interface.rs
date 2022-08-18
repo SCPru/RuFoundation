@@ -2,15 +2,14 @@ use std::borrow::Cow;
 use std::borrow::Cow::Borrowed;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
-use std::marker::PhantomData;
 use std::rc::Rc;
-use pyo3::prelude::*;
-use crate::info::VERSION;
 
+use pyo3::prelude::*;
+
+use crate::info::VERSION;
 use crate::prelude::*;
 use crate::render::html::HtmlRender;
 use crate::render::text::TextRender;
-
 
 fn render<R: Render>(text: &mut String, renderer: &R, page_info: PageInfo, callbacks: Py<PyAny>) -> R::Output
 {
@@ -88,11 +87,11 @@ impl Callbacks {
         Callbacks{}
     }
 
-    pub fn module_has_body(&self, module_name: String) -> PyResult<bool> {
+    pub fn module_has_body(&self, _module_name: String) -> PyResult<bool> {
         return Ok(false)
     }
 
-    pub fn render_module(&self, module_name: String, params: HashMap<String, String>, body: String) -> PyResult<String> {
+    pub fn render_module(&self, _module_name: String, _params: HashMap<String, String>, _body: String) -> PyResult<String> {
         return Ok("".to_string())
     }
 }

@@ -18,11 +18,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::data::PageInfo;
+use crate::data::{PageInfo, NullPageCallbacks};
 use crate::parsing::{ParseWarningKind, Token};
 use crate::settings::{WikitextMode, WikitextSettings};
 use crate::tree::{Element, SyntaxTree};
 use std::borrow::Cow;
+use std::rc::Rc;
 
 /// Test the parser's recursion limit.
 ///
@@ -48,7 +49,7 @@ fn recursion_depth() {
     // Run parser steps
     crate::preprocess(&mut input);
     let tokens = crate::tokenize(&input);
-    let (tree, warnings) = crate::parse(&tokens, &page_info, &settings).into();
+    let (tree, warnings) = crate::parse(&tokens, &page_info, Rc::new(NullPageCallbacks{}),  &settings).into();
 
     // Check outputted warnings
     let warning = warnings.get(0).expect("No warnings produced");
@@ -102,7 +103,7 @@ In hac habitasse platea dictumst. Vestibulum fermentum libero nec erat porttitor
     // Run parser steps
     crate::preprocess(&mut input);
     let tokens = crate::tokenize(&input);
-    let (_tree, warnings) = crate::parse(&tokens, &page_info, &settings).into();
+    let (_tree, warnings) = crate::parse(&tokens, &page_info, Rc::new(NullPageCallbacks{}), &settings).into();
 
     // Check output
     assert_eq!(warnings.len(), ITERATIONS * 3);

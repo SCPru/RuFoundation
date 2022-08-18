@@ -18,16 +18,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::borrow::Cow;
+use std::num::NonZeroU32;
+
+use ref_map::*;
+
 use crate::data::PageRef;
-use crate::tree::clone::*;
 use crate::tree::{
     Alignment, AnchorTarget, AttributeMap, ClearFloat, Container, Date,
     DefinitionListItem, Embed, FloatAlignment, ImageSource, LinkLabel, LinkLocation,
     LinkType, ListItem, ListType, Module, PartialElement, Tab, Table, VariableMap,
 };
-use ref_map::*;
-use std::borrow::Cow;
-use std::num::NonZeroU32;
+use crate::tree::clone::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case", tag = "element", content = "data")]
@@ -298,7 +300,7 @@ impl Element<'_> {
     pub fn name(&self) -> &'static str {
         match self {
             Element::Container(container) => container.ctype().name(),
-            Element::Module(module) => module.name(),
+            Element::Module(_) => "Module",
             Element::Text(_) => "Text",
             Element::Raw(_) => "Raw",
             Element::Variable(_) => "Variable",

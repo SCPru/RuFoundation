@@ -513,6 +513,8 @@ fn make_shared_vec<T>() -> Rc<RefCell<Vec<T>>> {
 #[test]
 fn parser_newline_flag() {
     use crate::settings::WikitextMode;
+    use crate::data::NullPageCallbacks;
+    use std::rc::Rc;
 
     let page_info = PageInfo::dummy();
     let settings = WikitextSettings::from_mode(WikitextMode::Page);
@@ -520,7 +522,7 @@ fn parser_newline_flag() {
     macro_rules! check {
         ($input:expr, $expected_steps:expr $(,)?) => {{
             let tokens = crate::tokenize($input);
-            let mut parser = Parser::new(&tokens, &page_info, &settings);
+            let mut parser = Parser::new(&tokens, &page_info, Rc::new(NullPageCallbacks{}), &settings);
             let mut actual_steps = Vec::new();
 
             // Iterate through the tokens.

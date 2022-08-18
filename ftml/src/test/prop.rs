@@ -18,19 +18,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::data::{PageInfo, PageRef};
+use crate::data::{PageInfo, PageRef, NullPageCallbacks};
 use crate::render::{html::HtmlRender, text::TextRender, Render};
 use crate::settings::{WikitextMode, WikitextSettings};
 use crate::tree::attribute::SAFE_ATTRIBUTES;
 use crate::tree::{
     Alignment, AnchorTarget, AttributeMap, ClearFloat, Container, ContainerType, Element,
     FloatAlignment, Heading, HeadingLevel, ImageSource, LinkLabel, LinkLocation,
-    LinkType, ListItem, ListType, Module, SyntaxTree,
+    LinkType, ListItem, ListType, SyntaxTree,
 };
 use proptest::option;
 use proptest::prelude::*;
 use std::borrow::Cow;
 use std::num::NonZeroU32;
+use std::rc::Rc;
 
 // Constants
 
@@ -78,35 +79,6 @@ fn arb_attribute_map() -> impl Strategy<Value = AttributeMap<'static>> {
 #[inline]
 fn arb_optional_str() -> impl Strategy<Value = Option<Cow<'static, str>>> {
     option::of(cow!(".*"))
-}
-
-fn arb_module() -> impl Strategy<Value = Element<'static>> {
-    let join = (arb_optional_str(), arb_attribute_map()).prop_map(
-        |(button_text, attributes)| Module::Join {
-            button_text,
-            attributes,
-        },
-    );
-
-    let page_tree = (
-        arb_optional_str(),
-        any::<bool>(),
-        any::<u32>().prop_map(NonZeroU32::new),
-    )
-        .prop_map(|(root, show_root, depth)| Module::PageTree {
-            root,
-            show_root,
-            depth,
-        });
-
-    prop_oneof![
-        Just(Module::Rate),
-        arb_optional_str().prop_map(|page| Module::Backlinks { page }),
-        any::<bool>().prop_map(|include_hidden| Module::Categories { include_hidden }),
-        join,
-        page_tree,
-    ]
-    .prop_map(Element::Module)
 }
 
 fn arb_target() -> impl Strategy<Value = Option<AnchorTarget>> {
@@ -347,7 +319,6 @@ fn arb_element_leaf() -> impl Strategy<Value = Element<'static>> {
         cow!(".*").prop_map(Element::Text),
         cow!(".*").prop_map(Element::Raw),
         cow!(SIMPLE_EMAIL_REGEX).prop_map(Element::Email),
-        arb_module(),
         arb_link_element(),
         arb_image(),
         // TODO: Element::RadioButton
@@ -446,7 +417,7 @@ fn render<R: Render>(
     page_info: PageInfo<'static>,
 ) -> R::Output {
     let settings = WikitextSettings::from_mode(WikitextMode::Page);
-    render.render(&tree, &page_info, &settings)
+    render.render(&tree, &page_info, Rc::new(NullPageCallbacks{}), &settings)
 }
 
 proptest! {

@@ -33,6 +33,7 @@ mod input;
 mod link;
 mod list;
 mod math;
+mod module;
 mod table;
 mod tabs;
 mod text;
@@ -47,8 +48,6 @@ mod prelude {
     pub use crate::tree::{Element, SyntaxTree};
 }
 
-use std::borrow::{Borrow, Cow};
-use std::rc::Rc;
 use self::collapsible::{render_collapsible, Collapsible};
 use self::container::{render_color, render_container};
 use self::date::render_date;
@@ -62,6 +61,7 @@ use self::input::{render_checkbox, render_radio_button};
 use self::link::{render_anchor, render_link};
 use self::list::render_list;
 use self::math::{render_equation_reference, render_math_block, render_math_inline};
+use self::module::render_module;
 use self::table::render_table;
 use self::tabs::render_tabview;
 use self::text::{render_code, render_email, render_wikitext_raw};
@@ -69,8 +69,7 @@ use self::toc::render_table_of_contents;
 use self::user::render_user;
 use super::attributes::AddedAttributes;
 use super::HtmlContext;
-use crate::render::ModuleRenderMode;
-use crate::tree::{Element, Module};
+use crate::tree::Element;
 use ref_map::*;
 
 pub fn render_elements(ctx: &mut HtmlContext, elements: &[Element]) {
@@ -92,20 +91,7 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
 
     match element {
         Element::Container(container) => render_container(ctx, container),
-        Element::Module(module) => {
-            match module {
-                Module::Generic{ name, params, text } => {
-                    let rendered: Cow<str> = {
-                        let v = ctx.callbacks().render_module(name.to_owned(), params.to_owned(), text.to_owned());
-                        v
-                    };
-                    str_write!(ctx.buffer(), "{}", rendered);
-                }
-                _ => {
-                    str_write!(ctx.buffer(), "<p>Unsupported: module {}</p>", module.name());
-                }
-            }
-        }
+        Element::Module(module) => render_module(ctx, module),
         Element::Text(text) => ctx.push_escaped(text),
         Element::Raw(text) => render_wikitext_raw(ctx, text),
         Element::Variable(name) => render_variable(ctx, name),

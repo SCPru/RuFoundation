@@ -46,12 +46,13 @@ impl Render for NullRender {
 
 #[test]
 fn null() {
+    use crate::data::NullPageCallbacks;
+
     let page_info = PageInfo::dummy();
-    let page_callbacks = PageCallbacks{};
     let settings = WikitextSettings::from_mode(WikitextMode::Page);
     let result = SyntaxTree::from_element_result(vec![], vec![], vec![], vec![], vec![]);
     let (tree, _) = result.into();
-    let output = NullRender.render(&tree, &page_info, page_callbacks, &settings);
+    let output = NullRender.render(&tree, &page_info, Rc::new(NullPageCallbacks{}), &settings);
 
     assert_eq!(output, (), "Null render didn't produce the unit value");
 }

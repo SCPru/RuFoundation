@@ -24,7 +24,7 @@
 //! in a dedicated test file.
 
 use super::includer::TestIncluder;
-use crate::data::PageInfo;
+use crate::data::{PageInfo, NullPageCallbacks};
 use crate::parsing::ParseWarning;
 use crate::render::html::HtmlRender;
 use crate::render::text::TextRender;
@@ -36,6 +36,7 @@ use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process;
+use std::rc::Rc;
 use void::ResultVoidExt;
 
 /// Temporary measure to not run certain tests.
@@ -224,10 +225,10 @@ impl Test<'_> {
 
         crate::preprocess(&mut text);
         let tokens = crate::tokenize(&text);
-        let result = crate::parse(&tokens, &page_info, &settings);
+        let result = crate::parse(&tokens, &page_info, Rc::new(NullPageCallbacks{}), &settings);
         let (tree, warnings) = result.into();
-        let html_output = HtmlRender.render(&tree, &page_info, &settings);
-        let text_output = TextRender.render(&tree, &page_info, &settings);
+        let html_output = HtmlRender.render(&tree, &page_info, Rc::new(NullPageCallbacks{}), &settings);
+        let text_output = TextRender.render(&tree, &page_info, Rc::new(NullPageCallbacks{}), &settings);
 
         fn json<T>(object: &T) -> String
         where

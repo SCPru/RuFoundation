@@ -18,12 +18,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::data::PageInfo;
+use crate::data::{PageInfo, NullPageCallbacks};
 use crate::settings::{WikitextMode, WikitextSettings, EMPTY_INTERWIKI};
 use crate::tree::{
     AttributeMap, Container, ContainerType, Element, ImageSource, ListItem, ListType,
 };
 use std::borrow::Cow;
+use std::rc::Rc;
+
 
 #[test]
 fn isolate_user_ids() {
@@ -74,7 +76,7 @@ fn isolate_user_ids() {
 
             crate::preprocess(&mut text);
             let tokens = crate::tokenize(&text);
-            let result = crate::parse(&tokens, &page_info, &settings);
+            let result = crate::parse(&tokens, &page_info, Rc::new(NullPageCallbacks{}), &settings);
             let (tree, warnings) = result.into();
 
             let actual = tree.elements;

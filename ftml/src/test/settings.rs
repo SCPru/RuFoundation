@@ -18,7 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::data::PageInfo;
+use std::rc::Rc;
+use crate::data::{PageInfo, NullPageCallbacks};
 use crate::render::{html::HtmlRender, Render};
 use crate::settings::{WikitextMode, WikitextSettings};
 
@@ -41,9 +42,9 @@ fn settings() {
             crate::preprocess(&mut text);
 
             let tokens = crate::tokenize(&text);
-            let result = crate::parse(&tokens, &page_info, &settings);
+            let result = crate::parse(&tokens, &page_info, Rc::new(NullPageCallbacks{}), &settings);
             let (tree, _warnings) = result.into();
-            let html_output = HtmlRender.render(&tree, &page_info, &settings);
+            let html_output = HtmlRender.render(&tree, &page_info, Rc::new(NullPageCallbacks{}), &settings);
 
             println!();
             println!("Input:  {:?}", $input);

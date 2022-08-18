@@ -1,5 +1,5 @@
 /*
- * parsing/rule/impls/block/blocks/module/modules/page_tree.rs
+ * render/html/element/tabs.rs
  *
  * ftml - Library to parse Wikidot text
  * Copyright (C) 2019-2022 Wikijump Team
@@ -18,29 +18,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::borrow::Cow;
 use super::prelude::*;
+use crate::tree::Module;
 
-pub const MODULE_PAGE_TREE: ModuleRule = ModuleRule {
-    name: "module-page-tree",
-    accepts_names: &["PageTree"],
-    parse_fn,
-};
+pub fn render_module(ctx: &mut HtmlContext, module: &Module) {
+    info!("Rendering module {}", module.name());
 
-fn parse_fn<'r, 't>(
-    parser: &mut Parser<'r, 't>,
-    name: &'t str,
-    mut arguments: Arguments<'t>,
-) -> ParseResult<'r, 't, Option<Module<'t>>> {
-    info!("Parsing PageTree module");
-    assert_module_name(&MODULE_PAGE_TREE, name);
-
-    let root = arguments.get("root");
-    let depth = arguments.get_value(parser, "depth")?;
-    let show_root = arguments.get_bool(parser, "showRoot")?.unwrap_or(false);
-
-    ok!(false; Some(Module::PageTree {
-        root,
-        show_root,
-        depth
-    }))
+    let rendered: Cow<str> = {
+        let v = ctx.callbacks().render_module(module.name().to_owned(), module.params().to_owned(), module.text().to_owned());
+        v
+    };
+    str_write!(ctx.buffer(), "{}", rendered);
 }

@@ -20,7 +20,6 @@
 
 use std::borrow::Cow;
 use crate::tree::Module;
-use super::mapping::get_module_rule_with_name;
 use super::prelude::*;
 
 pub const BLOCK_MODULE: BlockRule = BlockRule {
@@ -57,5 +56,5 @@ fn parse_fn<'r, 't>(
         body = Cow::from("");
     }
 
-    return ok!(false; Elements::Single(Element::Module(Module::Generic{ name: Cow::from(subname), params: arguments.to_hash_map(), text: body })), vec![]);
+    return ok!(false; Elements::Single(Element::Module(Module::new(Cow::from(subname), arguments.to_hash_map(), body))), vec![]);
 }

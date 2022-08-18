@@ -18,6 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::rc::Rc;
+
+use crate::data::NullPageCallbacks;
+
 use super::prelude::*;
 use super::HtmlRender;
 
@@ -29,6 +33,6 @@ fn html() {
     let result = SyntaxTree::from_element_result(vec![], vec![], vec![], vec![], vec![]);
     let (tree, _) = result.into();
     if false {
-        let _output = HtmlRender.render(&tree, &page_info, &settings);
+        let _output = HtmlRender.render(&tree, &page_info, Rc::new(NullPageCallbacks{}), &settings);
     }
 }
