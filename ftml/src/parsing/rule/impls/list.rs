@@ -64,8 +64,6 @@ fn try_consume_fn<'p, 'r, 't>(
                 let spaces = parser.current().slice;
                 parser.step()?;
 
-                println!("slice: {}", json!(spaces));
-
                 // Byte count is fine again
                 spaces.chars().count()
             }
@@ -79,8 +77,6 @@ fn try_consume_fn<'p, 'r, 't>(
                 break;
             }
         };
-
-        println!("list depth {}", depth);
 
         // Check that the depth isn't obscenely deep, to avoid DOS attacks via stack overflow.
         if depth > MAX_LIST_DEPTH {

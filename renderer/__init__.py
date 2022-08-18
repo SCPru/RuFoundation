@@ -11,6 +11,8 @@ from .nodes import Node
 
 from ftml import ftml
 
+import time
+
 
 class CallbacksWithContext(ftml.Callbacks):
     def __init__(self, context):
@@ -18,22 +20,26 @@ class CallbacksWithContext(ftml.Callbacks):
         self.context = context
 
     def module_has_body(self, module_name: str) -> bool:
-        print('module has content: %s %s' %(module_name, modules.module_has_content(module_name.lower())))
         return modules.module_has_content(module_name.lower())
 
     def render_module(self, module_name: str, params: dict[str, str], body: str) -> str:
-        print('module render for: %s [%s]' % (module_name, repr(params)))
         return modules.render_module(module_name, self.context, params, content=body)
 
 
 def single_pass_render(source, context=None):
+    t1 = time.time()
     html = ftml.render_html(source, CallbacksWithContext(context))
+    t2 = time.time()
+    print('rendering %s took %.2fs' % (context.source_article, t2-t1))
     html = html['body'] + '<style>' + html['style'] + '</style>'
     return SafeString(html)
 
 
 def single_pass_render_with_excerpt(source, context=None):
+    t1 = time.time()
     html = ftml.render_html(source, CallbacksWithContext(context))
+    t2 = time.time()
+    print('rendering %s took %.2fs' % (context.source_article, t2 - t1))
     html = html['body'] + '<style>'+html['style']+'</style>'
     text = ftml.render_text(source, CallbacksWithContext(context))
     return SafeString(html), text, None
