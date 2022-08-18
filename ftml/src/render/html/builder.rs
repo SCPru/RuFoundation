@@ -102,6 +102,7 @@ where
             });
     }
 
+    tag_method!(em);
     tag_method!(a);
     tag_method!(br);
     tag_method!(code);
