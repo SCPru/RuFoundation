@@ -4,9 +4,10 @@ from django.utils.safestring import SafeString
 
 import modules
 from system.models import User
+from web.models.sites import get_current_site
 from .nodes.html import HTMLNode
 from .nodes.image import ImageNode
-from .parser import Parser, ParseResult, ParseContext
+from .parser import Parser, ParseResult, ParseContext, RenderContext
 from .tokenizer import StaticTokenizer
 from .nodes import Node
 
@@ -44,10 +45,21 @@ class CallbacksWithContext(ftml.Callbacks):
             )
 
 
+def page_info_from_context(context: RenderContext):
+    site = get_current_site()
+    return ftml.PageInfo(
+        page=context.source_article.name,
+        category=context.source_article.category,
+        site=site.slug,
+        domain=site.domain,
+        media_domain=site.media_domain
+    )
+
+
 def single_pass_render(source, context=None):
     if USE_RUST:
         t1 = time.time()
-        html = ftml.render_html(source, CallbacksWithContext(context))
+        html = ftml.render_html(source, CallbacksWithContext(context), page_info_from_context(context))
         t2 = time.time()
         if context.article == context.source_article:
             print('rendering %s took %.2fs' % (context.source_article, t2-t1))
@@ -67,9 +79,9 @@ def single_pass_render(source, context=None):
 def single_pass_render_with_excerpt(source, context=None):
     if USE_RUST:
         t1 = time.time()
-        html = ftml.render_html(source, CallbacksWithContext(context))
+        html = ftml.render_html(source, CallbacksWithContext(context), page_info_from_context(context))
         html = html['body'] + '<style>'+html['style']+'</style>'
-        text = ftml.render_text(source, CallbacksWithContext(context))
+        text = ftml.render_text(source, CallbacksWithContext(context), page_info_from_context(context))
         t2 = time.time()
         if context.article == context.source_article:
             print('rendering %s with text took %.2fs' % (context.source_article, t2 - t1))

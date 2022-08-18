@@ -89,7 +89,7 @@ impl Handle {
     ) -> Option<Cow<'a, str>> {
         info!("Getting file link for image");
 
-        let (site, page, file): (&str, &str, &str) = match source {
+        let (site, page, file): (&str, Cow<str>, &str) = match source {
             ImageSource::Url(url) => return Some(Cow::clone(url)),
             ImageSource::File1 { .. }
             | ImageSource::File2 { .. }
@@ -99,15 +99,17 @@ impl Handle {
                 warn!("Specified path image source when local paths are disabled");
                 return None;
             }
-            ImageSource::File1 { file } => (&info.site, &info.page, file),
-            ImageSource::File2 { page, file } => (&info.site, page, file),
-            ImageSource::File3 { site, page, file } => (site, page, file),
+            ImageSource::File1 { file } => (&info.site, info.full_name(), file),
+            ImageSource::File2 { page, file } => (&info.site, page.to_owned(), file),
+            ImageSource::File3 { site, page, file } => (site, page.to_owned(), file),
         };
 
-        // TODO: emit url
-        Some(Cow::Owned(format!(
-            "https://{site}.wjfiles.com/local--files/{page}/{file}",
-        )))
+        // cross-site images are unsupported
+        if info.site != site {
+            None
+        } else {
+            Some(Cow::Owned(format!("//{}/local--files/{page}/{file}", &info.media_domain)))
+        }
     }
 
     pub fn get_link_label<F>(

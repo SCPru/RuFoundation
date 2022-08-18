@@ -42,8 +42,6 @@ pub const RULE_LIST: Rule = Rule {
 fn try_consume_fn<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
-    use serde_json::json;
-
     // We don't know the list type(s) yet, so just log that we're starting
     info!("Parsing a list");
 

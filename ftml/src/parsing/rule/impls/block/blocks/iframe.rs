@@ -42,10 +42,13 @@ fn parse_fn<'r, 't>(
     assert_block_name(&BLOCK_IFRAME, name);
 
     let (url, arguments) = parser.get_head_name_map(&BLOCK_IFRAME, in_head)?;
+
     let element = Element::Iframe {
         url: cow!(url),
         attributes: arguments.to_attribute_map(parser.settings()),
     };
+
+    println!("iframe args {:#?} to {:#?}", arguments.to_hash_map(),  arguments.to_attribute_map(parser.settings()));
 
     ok!(element)
 }

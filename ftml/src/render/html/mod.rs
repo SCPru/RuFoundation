@@ -39,7 +39,6 @@ pub use self::output::HtmlOutput;
 #[cfg(test)]
 use super::prelude;
 
-use self::attributes::AddedAttributes;
 use self::context::HtmlContext;
 use crate::data::{PageCallbacks, PageInfo};
 use crate::render::html::element::render_elements;

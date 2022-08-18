@@ -390,17 +390,21 @@ fn arb_page_info() -> impl Strategy<Value = PageInfo<'static>> {
         arb_optional_str(),
         cow!(".+"),
         cow!(".+"),
+        cow!(".+"),
+        cow!(".+"),
         arb_optional_str(),
         any::<f64>(),
         proptest::collection::vec(cow!(".+"), 0..20),
         cow!(r"[a-z\-]+"),
     )
         .prop_map(
-            |(page, category, site, title, alt_title, rating, tags, language)| PageInfo {
+            |(page, category, site, title, domain, media_domain, alt_title, rating, tags, language)| PageInfo {
                 page,
                 category,
                 site,
                 title,
+                domain,
+                media_domain,
                 alt_title,
                 rating,
                 tags,

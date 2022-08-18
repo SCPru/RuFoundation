@@ -46,6 +46,8 @@ fn isolate_user_ids() {
         category: None,
         site: cow!("test"),
         title: cow!("test"),
+        domain: cow!("test.wikidot.com"),
+        media_domain: cow!("test.wdfiles.com"),
         alt_title: None,
         rating: 0.0,
         tags: vec![],

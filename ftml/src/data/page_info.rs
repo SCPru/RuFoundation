@@ -40,6 +40,16 @@ pub struct PageInfo<'a> {
     /// That is, the part of the URL in the form `{slug}.wikijump.com`.
     pub site: Cow<'a, str>,
 
+    /// The main domain for this site.
+    /// 
+    /// Example: scpfoundation.net (replaces scp-ru.wikidot.com)
+    pub domain: Cow<'a, str>,
+
+    /// The media domain for this site.
+    /// 
+    /// Example: files.scpfoundation.net (replaces scp-ru.wdfiles.com)
+    pub media_domain: Cow<'a, str>,
+
     /// The title of this page.
     ///
     /// For SCPs this is "SCP-XXXX".
@@ -69,11 +79,24 @@ impl PageInfo<'_> {
             page: cow!("some-page"),
             category: None,
             site: cow!("sandbox"),
+            domain: cow!("sandbox.wikidot.com"),
+            media_domain: cow!("sandbox.wdfiles.com"),
             title: cow!("A page for the age"),
             alt_title: None,
             rating: 69.0,
             tags: vec![cow!("tale"), cow!("_cc")],
             language: cow!("default"),
+        }
+    }
+
+    pub fn full_name(&self) -> Cow<'static, str> {
+        let cat = match &self.category {
+            Some(category) => category.to_owned().into_owned(),
+            _ => String::from("_default"),
+        };
+        match cat.as_str() {
+            "_default" => Cow::from(self.page.to_owned().into_owned()),
+            cat => Cow::from(format!("{cat}:{}", self.page)),
         }
     }
 }

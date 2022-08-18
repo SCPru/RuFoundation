@@ -1,5 +1,4 @@
 use std::borrow::Cow;
-use std::borrow::Cow::Borrowed;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
@@ -25,18 +24,63 @@ fn render<R: Render>(text: &mut String, renderer: &R, page_info: PageInfo, callb
     output
 }
 
+#[pyclass(name="PageInfo")]
+struct PyPageInfo {
+    page: String,
+    category: String,
+    site: String,
+    title: String,
+    domain: String,
+    media_domain: String,
+    rating: f64,
+    tags: Vec<String>,
+    language: String
+}
 
-fn page_info_dummy() -> PageInfo<'static>
-{
-    PageInfo {
-        page: Borrowed("some-page"),
-        category: None,
-        site: Borrowed("sandbox"),
-        title: Borrowed("title"),
-        alt_title: None,
-        rating: 0.0,
-        tags: vec![],
-        language: Borrowed("default")
+#[pymethods]
+impl PyPageInfo {
+    #[new]
+    fn new(
+        page: String,
+        category: String,
+        domain: String,
+        media_domain: Option<String>,
+        site: Option<String>,
+        title: Option<String>,
+        rating: Option<f64>,
+        tags: Option<Vec<String>>,
+        language: Option<String>
+    ) -> Self {
+        let domain_split: Vec<&str> = domain.split(".").collect();
+
+        Self {
+            page: page.clone(),
+            category,
+            domain: domain.clone(),
+            media_domain: media_domain.unwrap_or(domain.clone()),
+            site: site.unwrap_or(String::from(*domain_split.first().unwrap())),
+            title: title.unwrap_or(page.clone()),
+            rating: rating.unwrap_or(0.0),
+            tags: tags.unwrap_or(vec![]),
+            language: language.unwrap_or(String::from("default")),
+        }
+    }
+}
+
+impl PyPageInfo {
+    fn to_page_info(&self) -> PageInfo<'static> {
+        PageInfo { 
+            page: Cow::Owned(self.page.clone()), 
+            category: Some(Cow::Owned(self.category.clone())),
+            site: Cow::Owned(self.site.clone()),
+            domain: Cow::Owned(self.domain.clone()),
+            media_domain: Cow::Owned(self.media_domain.clone()), 
+            title: Cow::Owned(self.title.clone()), // why is this part of page info?
+            alt_title: None, // why is this part of page info?
+            rating: self.rating, 
+            tags: self.tags.clone().iter().map(|x| Cow::Owned(x.clone())).collect(),
+            language: Cow::Owned(self.language.clone()),
+        }
     }
 }
 
@@ -111,9 +155,9 @@ impl Callbacks {
 }
 
 #[pyfunction(kwargs="**")]
-fn render_html(source: String, callbacks: Py<PyAny>) -> PyResult<HashMap<String, String>>
+fn render_html(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<HashMap<String, String>>
 {
-    let html_output = render(&mut source.to_string(), &HtmlRender, page_info_dummy(), callbacks);
+    let html_output = render(&mut source.to_string(), &HtmlRender, page_info.to_page_info(), callbacks);
 
     let mut output = HashMap::new();
     output.insert(String::from("body"), html_output.body);
@@ -124,9 +168,9 @@ fn render_html(source: String, callbacks: Py<PyAny>) -> PyResult<HashMap<String,
 
 
 #[pyfunction(kwargs="**")]
-fn render_text(source: String, callbacks: Py<PyAny>) -> PyResult<String>
+fn render_text(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<String>
 {
-    Ok(render(&mut source.to_string(), &TextRender, page_info_dummy(), callbacks))
+    Ok(render(&mut source.to_string(), &TextRender, page_info.to_page_info(), callbacks))
 }
 
 
@@ -137,6 +181,7 @@ fn ftml(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(render_html, m)?)?;
     m.add_function(wrap_pyfunction!(render_text, m)?)?;
     m.add_class::<Callbacks>()?;
+    m.add_class::<PyPageInfo>()?;
 
     Ok(())
 }
