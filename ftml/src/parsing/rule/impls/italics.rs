@@ -30,11 +30,11 @@ fn try_consume_fn<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create italics (emphasis) container");
-    check_step(parser, Token::Italics)?;
     collect_container(
         parser,
         RULE_ITALICS,
         ContainerType::Italics,
+        &[ParseCondition::current(Token::Italics)],
         &[ParseCondition::current(Token::Italics)],
         &[
             ParseCondition::current(Token::ParagraphBreak),

@@ -125,6 +125,7 @@ fn parse_item<'p, 'r, 't>(
     let mut key = collect_consume(
         parser,
         RULE_DEFINITION_LIST,
+        &[],
         &[ParseCondition::token_pair(Token::Whitespace, Token::Colon)],
         &[
             ParseCondition::current(Token::ParagraphBreak),
@@ -141,6 +142,7 @@ fn parse_item<'p, 'r, 't>(
     let (mut value, last) = collect_consume_keep(
         parser,
         RULE_DEFINITION_LIST,
+        &[],
         &[
             ParseCondition::current(Token::ParagraphBreak),
             ParseCondition::current(Token::LineBreak),

@@ -249,7 +249,7 @@ impl<'r, 't> Parser<'r, 't> {
     }
 
     // State evaluation
-    pub fn evaluate(&self, condition: ParseCondition) -> bool {
+    pub fn evaluate(&self, condition: ParseCondition, match_token_count: &mut Option<&mut usize>) -> bool {
         info!(
             "Evaluating parser condition (token {}, slice '{}', span {}..{})",
             self.current.token.name(),
@@ -258,51 +258,65 @@ impl<'r, 't> Parser<'r, 't> {
             self.current.span.end,
         );
 
-        match condition {
-            ParseCondition::CurrentToken(token) => self.current.token == token,
-            ParseCondition::TokenPair(current, next) => {
-                if self.current().token != current {
-                    debug!(
-                        "Current token in pair doesn't match, failing (expected '{}', actual '{}')",
-                        current.name(),
-                        self.current().token.name(),
-                    );
-                    return false;
+        // you can tell I coded in JavaScript before
+        let (matched, token_count) = (|| { 
+            match condition {
+                ParseCondition::CurrentToken(token) => {
+                    (self.current.token == token, 1)
                 }
+                ParseCondition::TokenPair(current, next) => {
+                    if self.current().token != current {
+                        debug!(
+                            "Current token in pair doesn't match, failing (expected '{}', actual '{}')",
+                            current.name(),
+                            self.current().token.name(),
+                        );
+                        return (false, 0);
+                    }
 
-                match self.look_ahead(0) {
-                    Some(actual) => {
-                        if actual.token != next {
+                    match self.look_ahead(0) {
+                        Some(actual) => {
+                            if actual.token != next {
+                                debug!(
+                                    "Second token in pair doesn't match, failing (expected {}, actual {})",
+                                    next.name(),
+                                    actual.token.name(),
+                                );
+                                return (false, 0);
+                            }
+                        }
+                        None => {
                             debug!(
-                                "Second token in pair doesn't match, failing (expected {}, actual {})",
+                                "Second token in pair doesn't exist (token {})",
                                 next.name(),
-                                actual.token.name(),
                             );
-                            return false;
+                            return (false, 0);
                         }
                     }
-                    None => {
-                        debug!(
-                            "Second token in pair doesn't exist (token {})",
-                            next.name(),
-                        );
-                        return false;
-                    }
-                }
 
-                true
+                    (true, 1)
+                }
+            }
+        })();
+
+        if matched {
+            match match_token_count {
+                Some(count) => **count = token_count,
+                _ => {}
             }
         }
+
+        matched
     }
 
     #[inline]
-    pub fn evaluate_any(&self, conditions: &[ParseCondition]) -> bool {
+    pub fn evaluate_any(&self, conditions: &[ParseCondition], matched_token_count: &mut Option<&mut usize>) -> bool {
         info!(
             "Evaluating to see if any parser condition is true (conditions length {})",
             conditions.len(),
         );
 
-        conditions.iter().any(|&condition| self.evaluate(condition))
+        conditions.iter().any(|&condition| self.evaluate(condition, matched_token_count))
     }
 
     #[inline]

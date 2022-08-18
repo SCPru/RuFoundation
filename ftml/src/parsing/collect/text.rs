@@ -29,6 +29,7 @@ use super::prelude::*;
 pub fn collect_text<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
     rule: Rule,
+    open_conditions: &[ParseCondition],
     close_conditions: &[ParseCondition],
     invalid_conditions: &[ParseCondition],
     warn_kind: Option<ParseWarningKind>,
@@ -39,6 +40,7 @@ where
     collect_text_keep(
         parser,
         rule,
+        open_conditions,
         close_conditions,
         invalid_conditions,
         warn_kind,
@@ -55,6 +57,7 @@ where
 pub fn collect_text_keep<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
     rule: Rule,
+    open_conditions: &[ParseCondition],
     close_conditions: &[ParseCondition],
     invalid_conditions: &[ParseCondition],
     warn_kind: Option<ParseWarningKind>,
@@ -73,6 +76,7 @@ where
     let (last, exceptions, _) = collect(
         parser,
         rule,
+        open_conditions,
         close_conditions,
         invalid_conditions,
         warn_kind,

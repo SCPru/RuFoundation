@@ -47,6 +47,7 @@ fn try_consume_fn<'p, 'r, 't>(
     let name = collect_text(
         parser,
         RULE_ANCHOR,
+        &[],
         &[ParseCondition::current(Token::RightBlock)],
         &[
             ParseCondition::current(Token::Whitespace),

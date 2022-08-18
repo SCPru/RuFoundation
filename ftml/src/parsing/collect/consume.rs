@@ -29,6 +29,7 @@ use super::prelude::*;
 pub fn collect_consume<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
     rule: Rule,
+    open_conditions: &[ParseCondition],
     close_conditions: &[ParseCondition],
     invalid_conditions: &[ParseCondition],
     warn_kind: Option<ParseWarningKind>,
@@ -36,6 +37,7 @@ pub fn collect_consume<'p, 'r, 't>(
     collect_consume_keep(
         parser,
         rule,
+        open_conditions,
         close_conditions,
         invalid_conditions,
         warn_kind,
@@ -52,6 +54,7 @@ pub fn collect_consume<'p, 'r, 't>(
 pub fn collect_consume_keep<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
     rule: Rule,
+    open_conditions: &[ParseCondition],
     close_conditions: &[ParseCondition],
     invalid_conditions: &[ParseCondition],
     warn_kind: Option<ParseWarningKind>,
@@ -64,6 +67,7 @@ where
     let (last, exceptions, paragraph_safe) = collect(
         parser,
         rule,
+        open_conditions,
         close_conditions,
         invalid_conditions,
         warn_kind,

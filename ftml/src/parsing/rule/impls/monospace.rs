@@ -30,11 +30,11 @@ fn try_consume_fn<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create monospace container");
-    check_step(parser, Token::LeftMonospace)?;
     collect_container(
         parser,
         RULE_MONOSPACE,
         ContainerType::Monospace,
+        &[ParseCondition::current(Token::LeftMonospace)],
         &[ParseCondition::current(Token::RightMonospace)],
         &[
             ParseCondition::current(Token::ParagraphBreak),

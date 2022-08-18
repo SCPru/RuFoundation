@@ -30,14 +30,14 @@ fn try_consume_fn<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create strikethrough container");
-    check_step(parser, Token::DoubleDash)?;
     collect_container(
         parser,
         RULE_STRIKETHROUGH,
         ContainerType::Strikethrough,
         &[ParseCondition::current(Token::DoubleDash)],
+        &[ParseCondition::current(Token::DoubleDash)],
         &[
-            ParseCondition::current(Token::ParagraphBreak),
+            ParseCondition::current(Token::LineBreak),
             ParseCondition::token_pair(Token::DoubleDash, Token::Whitespace),
             ParseCondition::token_pair(Token::Whitespace, Token::DoubleDash),
         ],

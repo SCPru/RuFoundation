@@ -42,6 +42,7 @@ pub fn collect_container<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
     rule: Rule,
     container_type: ContainerType,
+    open_conditions: &[ParseCondition],
     close_conditions: &[ParseCondition],
     invalid_conditions: &[ParseCondition],
     warn_kind: Option<ParseWarningKind>,
@@ -56,6 +57,7 @@ pub fn collect_container<'p, 'r, 't>(
     let (elements, exceptions, paragraph_safe) = collect_consume(
         parser,
         rule,
+        open_conditions,
         close_conditions,
         invalid_conditions,
         warn_kind,

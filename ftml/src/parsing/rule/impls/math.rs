@@ -34,6 +34,7 @@ fn try_consume_fn<'p, 'r, 't>(
     let source = collect_text(
         parser,
         RULE_MATH,
+        &[],
         &[ParseCondition::current(Token::RightMath)],
         &[
             ParseCondition::current(Token::ParagraphBreak),

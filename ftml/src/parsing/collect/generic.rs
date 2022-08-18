@@ -62,6 +62,7 @@ use super::prelude::*;
 pub fn collect<'p, 'r, 't, F>(
     parser: &'p mut Parser<'r, 't>,
     rule: Rule,
+    open_conditions: &[ParseCondition],
     close_conditions: &[ParseCondition],
     invalid_conditions: &[ParseCondition],
     warn_kind: Option<ParseWarningKind>,
@@ -75,6 +76,37 @@ where
     let mut exceptions = Vec::new();
     let mut paragraph_safe = true;
 
+    // if we have open conditions, it means we need to check for open token.
+    // if open token did not match or invalid token matched, break.
+    if !open_conditions.is_empty() {
+        let mut token_count: usize = 0;
+
+        if !parser.evaluate_any(open_conditions, &mut Some(&mut token_count)) {
+            debug!(
+                "Did not find starting condition, aborting container attempt (token {})",
+                parser.current().token.name(),
+            );
+
+            return Err(
+                parser.make_warn(warn_kind.unwrap_or(ParseWarningKind::RuleFailed))
+            );
+        }
+        if parser.evaluate_any(invalid_conditions, &mut Some(&mut token_count)) {
+            debug!(
+                "Found invalid token, aborting container attempt (token {})",
+                parser.current().token.name(),
+            );
+
+            return Err(
+                parser.make_warn(warn_kind.unwrap_or(ParseWarningKind::RuleFailed))
+            );
+        }
+        // all OK. step forward and continue
+        if parser.current().token != Token::InputEnd {
+            parser.step_n(token_count)?;
+        }
+    }
+
     loop {
         // Check current token state to decide how to proceed.
         //
@@ -83,7 +115,7 @@ where
         // * Continue the collection, consume to make a new element
 
         // See if the container has ended
-        if parser.evaluate_any(close_conditions) {
+        if parser.evaluate_any(close_conditions, &mut None) {
             debug!(
                 "Found ending condition, returning collected elements (token {})",
                 parser.current().token.name(),
@@ -98,7 +130,7 @@ where
         }
 
         // See if the container should be aborted
-        if parser.evaluate_any(invalid_conditions) {
+        if parser.evaluate_any(invalid_conditions, &mut None) {
             debug!(
                 "Found invalid token, aborting container attempt (token {})",
                 parser.current().token.name(),

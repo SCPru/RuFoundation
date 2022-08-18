@@ -67,6 +67,7 @@ fn try_consume_fn<'p, 'r, 't>(
         let mut elements = collect_consume(
             parser,
             RULE_BLOCKQUOTE,
+            &[],
             &[
                 ParseCondition::current(Token::LineBreak),
                 ParseCondition::current(Token::ParagraphBreak),

@@ -24,3 +24,4 @@ mod includer;
 mod large;
 mod prop;
 mod settings;
+mod edge_cases;

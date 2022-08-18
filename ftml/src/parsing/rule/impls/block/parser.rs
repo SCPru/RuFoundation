@@ -63,6 +63,7 @@ where
         collect_text_keep(
             self,
             self.rule(),
+            &[],
             &[
                 ParseCondition::current(Token::Whitespace),
                 ParseCondition::current(Token::LineBreak),
@@ -392,6 +393,7 @@ where
             let slice = collect_text(
                 self,
                 self.rule(),
+                &[],
                 &[ParseCondition::current(Token::RightBlock)],
                 &[
                     ParseCondition::current(Token::ParagraphBreak),

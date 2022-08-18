@@ -52,6 +52,7 @@ fn try_consume_fn<'p, 'r, 't>(
         parser,
         RULE_CENTER,
         ContainerType::Align(Alignment::Center),
+        &[],
         &[
             ParseCondition::current(Token::LineBreak),
             ParseCondition::current(Token::ParagraphBreak),

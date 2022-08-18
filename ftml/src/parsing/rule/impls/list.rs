@@ -107,6 +107,7 @@ fn try_consume_fn<'p, 'r, 't>(
         let elements = collect_consume(
             parser,
             RULE_LIST,
+            &[],
             &[
                 ParseCondition::current(Token::LineBreak),
                 ParseCondition::current(Token::InputEnd),

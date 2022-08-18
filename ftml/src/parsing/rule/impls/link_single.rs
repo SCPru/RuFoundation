@@ -72,6 +72,7 @@ fn try_consume_link<'p, 'r, 't>(
     let url = collect_text(
         parser,
         rule,
+        &[],
         &[ParseCondition::current(Token::Whitespace)],
         &[
             ParseCondition::current(Token::RightBracket),
@@ -92,6 +93,7 @@ fn try_consume_link<'p, 'r, 't>(
     let label = collect_text(
         parser,
         rule,
+        &[],
         &[ParseCondition::current(Token::RightBracket)],
         &[
             ParseCondition::current(Token::ParagraphBreak),

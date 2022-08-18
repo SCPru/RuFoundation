@@ -39,6 +39,7 @@ fn try_consume_fn<'p, 'r, 't>(
     let color = collect_text(
         parser,
         RULE_COLOR,
+        &[],
         &[ParseCondition::current(Token::Pipe)],
         &[
             ParseCondition::current(Token::ParagraphBreak),
@@ -53,6 +54,7 @@ fn try_consume_fn<'p, 'r, 't>(
     let (elements, exceptions, paragraph_safe) = collect_consume(
         parser,
         RULE_COLOR,
+        &[],
         &[ParseCondition::current(Token::Color)],
         &[ParseCondition::current(Token::ParagraphBreak)],
         None,

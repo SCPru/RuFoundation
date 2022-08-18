@@ -70,6 +70,7 @@ fn try_consume_link<'p, 'r, 't>(
     let (url, last) = collect_text_keep(
         parser,
         rule,
+        &[],
         &[
             ParseCondition::current(Token::Pipe),
             ParseCondition::current(Token::RightLink),
@@ -148,6 +149,7 @@ fn build_separate<'p, 'r, 't>(
     let label = collect_text(
         parser,
         rule,
+        &[],
         &[ParseCondition::current(Token::RightLink)],
         &[
             ParseCondition::current(Token::ParagraphBreak),

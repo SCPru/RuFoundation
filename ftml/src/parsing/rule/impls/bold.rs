@@ -30,11 +30,11 @@ fn try_consume_fn<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create bold (strong) container");
-    check_step(parser, Token::Bold)?;
     collect_container(
         parser,
         RULE_BOLD,
         ContainerType::Bold,
+        &[ParseCondition::current(Token::Bold)],
         &[ParseCondition::current(Token::Bold)],
         &[
             ParseCondition::current(Token::ParagraphBreak),

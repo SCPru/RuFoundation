@@ -30,11 +30,11 @@ fn try_consume_fn<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create superscript container");
-    check_step(parser, Token::Superscript)?;
     collect_container(
         parser,
         RULE_SUPERSCRIPT,
         ContainerType::Superscript,
+        &[ParseCondition::current(Token::Superscript)],
         &[ParseCondition::current(Token::Superscript)],
         &[
             ParseCondition::current(Token::ParagraphBreak),
