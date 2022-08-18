@@ -108,7 +108,7 @@ class Command(BaseRunserverCommand):
                         self.is_updated = False
                     if not is_updated:
                         continue
-                    p = subprocess.Popen(['cargo', 'build'], shell=True, cwd=base_project_dir)
+                    p = subprocess.Popen(['cargo', 'build', '--release'], shell=True, cwd=base_project_dir)
                     code = p.wait()
                     if code != 0:
                         continue
