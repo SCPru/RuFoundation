@@ -445,13 +445,11 @@ def set_lock(full_name_or_article: _FullNameOrArticle, locked: bool, user: Optio
 
 
 # Get file in article
-def get_file_in_article(full_name_or_article: _FullNameOrArticle, file_name: str, allow_deleted: bool = False) -> Optional[File]:
+def get_file_in_article(full_name_or_article: _FullNameOrArticle, file_name: str) -> Optional[File]:
     article = get_article(full_name_or_article)
     if article is None:
         return None
-    files = File.objects.filter(article=article, name__iexact=file_name)
-    if not allow_deleted:
-        files = files.filter(deleted_at__isnull=True)
+    files = File.objects.filter(article=article, name__iexact=file_name, deleted_at__isnull=True)
     if not files:
         return None
     return files[0]
