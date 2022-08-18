@@ -270,6 +270,11 @@ pub enum Element<'t> {
     /// A horizontal rule.
     HorizontalRule,
 
+    /// A fragment.
+    /// 
+    /// This allows returning many elements as one.
+    Fragment(Vec<Element<'t>>),
+
     /// A partial element.
     ///
     /// This will not appear in final syntax trees, but exists to
@@ -300,6 +305,7 @@ impl Element<'_> {
     pub fn name(&self) -> &'static str {
         match self {
             Element::Container(container) => container.ctype().name(),
+            Element::Fragment(_) => "Fragment",
             Element::Module(_) => "Module",
             Element::Text(_) => "Text",
             Element::Raw(_) => "Raw",
@@ -351,6 +357,7 @@ impl Element<'_> {
         match self {
             Element::Container(container) => container.ctype().paragraph_safe(),
             Element::Module(_) => false,
+            Element::Fragment(_) => true,
             Element::Text(_)
             | Element::Raw(_)
             | Element::Variable(_)
@@ -394,6 +401,7 @@ impl Element<'_> {
     /// suggests.
     pub fn to_owned(&self) -> Element<'static> {
         match self {
+            Element::Fragment(elements) => Element::Fragment(elements_to_owned(elements)),
             Element::Container(container) => Element::Container(container.to_owned()),
             Element::Module(module) => Element::Module(module.to_owned()),
             Element::Text(text) => Element::Text(string_to_owned(text)),

@@ -159,6 +159,8 @@ impl Handle {
             "collapsible-open" => "+ открыть блок",
             "collapsible-hide" => "- закрыть блок",
             "table-of-contents" => "Содержание",
+            "toc-open" => "Раскрыть",
+            "toc-close" => "Свернуть",
             "footnote" => "Сноска",
             "footnote-block-title" => "Сноски",
             "image-context-bad" => "Некорректное изображение",

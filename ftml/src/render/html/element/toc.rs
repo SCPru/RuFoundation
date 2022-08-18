@@ -19,7 +19,7 @@
  */
 
 use super::prelude::*;
-use crate::tree::{Alignment, AttributeMap, FloatAlignment};
+use crate::tree::{Alignment, AttributeMap};
 
 pub fn render_table_of_contents(
     ctx: &mut HtmlContext,
@@ -27,52 +27,77 @@ pub fn render_table_of_contents(
     attributes: &AttributeMap,
 ) {
     info!("Creating table of contents");
-    let use_true_ids = ctx.settings().use_true_ids;
 
-    let class_value = match align {
-        None => "",
-        Some(align) => {
-            // Only valid for float left / right
-            FloatAlignment { align, float: true }.html_class()
-        }
+    let (msg_toc_close, msg_toc_open, msg_toc) = {
+        let msg_toc_close = ctx.handle().get_message(&ctx.info().language, "toc-close");
+        let msg_toc_open = ctx.handle().get_message(&ctx.info().language, "toc-open");
+        let msg_toc = ctx.handle().get_message(&ctx.info().language, "table-of-contents");
+        (msg_toc_close, msg_toc_open, msg_toc)
     };
 
-    ctx.html()
-        .div()
-        .attr(attr!(
-            "id" => "wj-toc"; if use_true_ids,
-            "class" => class_value; if align.is_some();;
-            attributes
-        ))
-        .contents(|ctx| {
-            // TOC buttons
+    let float_class_append = match align {
+        Some(Alignment::Left) => " floatleft",
+        Some(Alignment::Right) => " floatright",
+        _ => "",
+    };
+
+    let build_toc = |ctx: &mut HtmlContext| {
+        ctx.html()
+            .div()
+            .attr(attr!("class" => &format!("w-toc{float_class_append}"), "id" => "toc"))
+            .contents(|ctx| {
+                ctx.html()
+                    .div()
+                    .attr(attr!("class" => "toc-action-bar"))
+                    .contents(|ctx| {
+                        ctx.html()
+                            .a()
+                            .attr(attr!("class" => "w-toc-hide", "href" => "javascript:;"))
+                            .inner(msg_toc_close);
+                        ctx.html()
+                            .a()
+                            .attr(attr!("class" => "w-toc-show", "style" => "display: none", "href" => "javascript:;"))
+                            .inner(msg_toc_open);
+                    });
+                ctx.html()
+                    .div()
+                    .attr(attr!("class" => "title"))
+                    .inner(msg_toc);
+
+                let table_of_contents = ctx.table_of_contents();
+
+                ctx.html()
+                    .div()
+                    .attr(attr!("class" => "w-toc-content", "id" => "toc-list"))
+                    .inner(table_of_contents);
+            });
+    };
+
+    // here comes the weird part
+    // if the TOC is not floating, it's wrapped in a TABLE
+
+    match float_class_append {
+        "" => {
             ctx.html()
-                .div()
-                .attr(attr!("id" => "wj-toc-action-bar"; if use_true_ids))
+                .table()
+                .attr(attr!("style" => "margin: 0; padding: 0"))
                 .contents(|ctx| {
-                    // TODO button
-                    ctx.html().a().attr(attr!(
-                        "href" => "javascript:;",
-                        "onclick" => "WIKIJUMP.page.listeners.foldToc(event)",
-                    ));
+                    ctx.html()
+                        .tbody()
+                        .contents(|ctx| { 
+                            ctx.html()
+                                .tr()
+                                .contents(|ctx| {
+                                    ctx.html()
+                                        .table_cell(false)
+                                        .attr(attr!("style" => "margin: 0; padding: 0"))
+                                        .contents(build_toc);
+                                });
+                        });
                 });
-
-            // TOC Heading
-            let table_of_contents_title = ctx
-                .handle()
-                .get_message(ctx.language(), "table-of-contents");
-
-            ctx.html()
-                .div()
-                .attr(attr!("class" => "title"))
-                .inner(table_of_contents_title);
-
-            // TOC List
-            let table_of_contents = ctx.table_of_contents();
-
-            ctx.html()
-                .div()
-                .attr(attr!("id" => "wj-toc-list"; if use_true_ids))
-                .inner(table_of_contents);
-        });
+        }
+        float_class => {
+            build_toc(ctx);
+        }
+    };
 }

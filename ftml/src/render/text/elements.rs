@@ -40,6 +40,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
     info!("Rendering element {}", element.name());
 
     match element {
+        Element::Fragment(elements) => render_elements(ctx, elements),
         Element::Container(container) => {
             let mut invisible = false;
             let (add_newlines, prefix) = match container.ctype() {

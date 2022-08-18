@@ -63,7 +63,7 @@ use crate::settings::WikitextSettings;
 use crate::tokenizer::Tokenization;
 use crate::tree::{
     AttributeMap, Element, LinkLabel, LinkLocation, LinkType, ListItem, ListType,
-    SyntaxTree,
+    SyntaxTree, Container, ContainerType,
 };
 use std::borrow::Cow;
 use std::rc::Rc;
@@ -214,14 +214,9 @@ fn extract_exceptions(
     (warnings, styles)
 }
 
-fn build_toc_list_element(
-    incr: &mut Incrementer,
-    list: DepthList<(), String>,
-) -> Element<'static> {
+fn unwrap_toc_list(depth: usize, incr: &mut Incrementer, list: DepthList<(), String>) -> Vec<Element<'static>> {
     let build_item = |item| match item {
-        DepthItem::List(_, list) => ListItem::SubList {
-            element: Box::new(build_toc_list_element(incr, list)),
-        },
+        DepthItem::List(_, list) => unwrap_toc_list(depth+1, incr, list),
         DepthItem::Item(name) => {
             let anchor = format!("#toc{}", incr.next());
             let link = Element::Link {
@@ -231,21 +226,22 @@ fn build_toc_list_element(
                 target: None,
             };
 
-            ListItem::Elements {
-                elements: vec![link],
-                attributes: AttributeMap::new(),
-            }
+            let mut attrs = AttributeMap::new();
+            attrs.insert("style", Cow::from(format!("margin-left: {}em", depth*2)));
+
+            vec![Element::Container(Container::new(ContainerType::Div, vec![link], attrs))]
         }
     };
 
-    let items = list.into_iter().map(build_item).collect();
-    let attributes = AttributeMap::new();
+    list.into_iter().flat_map(build_item).collect()
+}
 
-    Element::List {
-        ltype: ListType::Bullet,
-        items,
-        attributes,
-    }
+fn build_toc_list_element(
+    incr: &mut Incrementer,
+    list: DepthList<(), String>,
+) -> Element<'static> {
+    let items = unwrap_toc_list(0, incr, list);
+    Element::Fragment(items)
 }
 
 // Incrementer for TOC
