@@ -53,7 +53,7 @@ class PageLoginStatus extends Component<Props, State> {
         if (user.type === 'anonymous') {
             return (
                 <>
-                    <a href="/-/register">Создать учётную запись</a> или <a href="/-/login">Вход</a>
+                    <a href="/system:join">Создать учётную запись</a> или <a href="/-/login">Вход</a>
                 </>
             );
         } else {
