@@ -19,6 +19,7 @@
  */
 
 use std::borrow::Cow::Borrowed;
+
 use super::prelude::*;
 use crate::parsing::{process_depths, DepthItem, DepthList};
 use crate::tree::{AttributeMap, ListItem, ListType};
@@ -60,6 +61,7 @@ fn try_consume_fn<'p, 'r, 't>(
             // Count the number of spaces for its depth
             Token::Whitespace => {
                 let spaces = parser.current().slice;
+
                 parser.step()?;
 
                 // Byte count is fine again
@@ -104,7 +106,7 @@ fn try_consume_fn<'p, 'r, 't>(
         parser.step()?;
 
         // Parse elements until we hit the end of the line
-        let elements = collect_consume(
+        let collected_result = collect_consume_keep(
             parser,
             RULE_LIST,
             &[],
@@ -115,11 +117,24 @@ fn try_consume_fn<'p, 'r, 't>(
             ],
             &[],
             None,
-        )?
-        .chain(&mut exceptions, &mut paragraph_safe);
+        )?;
+
+        let should_break = match collected_result.item.1.token {
+            Token::LineBreak => false,
+            _ => true,
+        };
+
+        let elements =
+            collected_result
+                .map(|success| success.0)
+                .chain(&mut exceptions, &mut paragraph_safe);
 
         // Append list line
         depths.push((depth, list_type, elements));
+
+        if should_break {
+            break;
+        }
     }
 
     // This list has no rows, so the rule fails

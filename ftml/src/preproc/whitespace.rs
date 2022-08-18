@@ -31,7 +31,7 @@ use regex::{Regex, RegexBuilder};
 
 lazy_static! {
     static ref WHITESPACE: Regex = {
-        RegexBuilder::new(r"^\s+$")
+        RegexBuilder::new(r"^[ \u00a0]+$")
             .multi_line(true)
             .build()
             .unwrap()
