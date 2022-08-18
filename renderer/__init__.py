@@ -3,6 +3,7 @@ import re
 from django.utils.safestring import SafeString
 
 import modules
+from system.models import User
 from .nodes.html import HTMLNode
 from .nodes.image import ImageNode
 from .parser import Parser, ParseResult, ParseContext
@@ -13,6 +14,7 @@ from ftml import ftml
 
 import time
 
+from .utils import render_user_to_html, render_template_from_string
 
 USE_RUST = True
 
@@ -27,6 +29,19 @@ class CallbacksWithContext(ftml.Callbacks):
 
     def render_module(self, module_name: str, params: dict[str, str], body: str) -> str:
         return modules.render_module(module_name, self.context, params, content=body)
+
+    def render_user(self, user: str, avatar: bool) -> str:
+        try:
+            if user.lower().startswith('wd:'):
+                user = User.objects.get(type=User.UserType.Wikidot, wikidot_username=user[3:])
+            else:
+                user = User.objects.get(username=user)
+            return render_user_to_html(user, avatar=avatar)
+        except User.DoesNotExist:
+            return render_template_from_string(
+                '<span class="error-inline">Пользователь \'{{username}}\' не существует</span>',
+                username=user
+            )
 
 
 def single_pass_render(source, context=None):
