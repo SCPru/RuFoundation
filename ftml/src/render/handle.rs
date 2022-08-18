@@ -155,13 +155,13 @@ impl Handle {
 
         // TODO
         match message {
-            "button-copy-clipboard" => "Copy to Clipboard",
-            "collapsible-open" => "+ open block",
-            "collapsible-hide" => "- hide block",
-            "table-of-contents" => "Table of Contents",
-            "footnote" => "Footnote",
-            "footnote-block-title" => "Footnotes",
-            "image-context-bad" => "No images in this context",
+            "button-copy-clipboard" => "Скопировать",
+            "collapsible-open" => "+ открыть блок",
+            "collapsible-hide" => "- закрыть блок",
+            "table-of-contents" => "Содержание",
+            "footnote" => "Сноска",
+            "footnote-block-title" => "Сноски",
+            "image-context-bad" => "Некорректное изображение",
             _ => {
                 error!("Unknown message requested (key {message})");
                 "?"
