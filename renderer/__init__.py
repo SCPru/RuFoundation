@@ -53,11 +53,11 @@ def single_pass_render_with_excerpt(source, context=None):
     if USE_RUST:
         t1 = time.time()
         html = ftml.render_html(source, CallbacksWithContext(context))
+        html = html['body'] + '<style>'+html['style']+'</style>'
+        text = ftml.render_text(source, CallbacksWithContext(context))
         t2 = time.time()
         if context.article == context.source_article:
             print('rendering %s with text took %.2fs' % (context.source_article, t2 - t1))
-        html = html['body'] + '<style>'+html['style']+'</style>'
-        text = ftml.render_text(source, CallbacksWithContext(context))
         return SafeString(html), text, None
     else:
         t1 = time.time()
