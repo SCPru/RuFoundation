@@ -163,7 +163,7 @@ impl Handle {
             "toc-close" => "Свернуть",
             "footnote" => "Сноска",
             "footnote-block-title" => "Сноски",
-            "image-context-bad" => "Некорректное изображение",
+            "image-context-bad" => "Некорректный адрес изображения",
             _ => {
                 error!("Unknown message requested (key {message})");
                 "?"

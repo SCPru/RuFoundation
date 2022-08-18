@@ -117,6 +117,6 @@ fn render_image_missing(ctx: &mut HtmlContext) {
 
     ctx.html()
         .div()
-        .attr(attr!("class" => "wj-error-block"))
+        .attr(attr!("class" => "error-block"))
         .inner(message);
 }
