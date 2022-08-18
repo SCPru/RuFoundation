@@ -32,6 +32,7 @@ class Command(BaseRunserverCommand):
     def add_arguments(self, parser):
         super().add_arguments(parser)
         parser.add_argument('--watch', action='store_true', dest='watch', help='Runs JS build in development mode')
+        parser.add_argument('--ftml-release', action='store_true', dest='ftml_release', help='Build FTML in release mode')
         parser.add_argument('--no-first-reload', action='store_true', dest='no_first_reload', help='Internal parameter for FTML reloading')
 
     def handle(self, *args, **options):
@@ -39,7 +40,7 @@ class Command(BaseRunserverCommand):
             time.sleep(1)
         if options['watch']:
             self.watch_js()
-            self.watch_ftml(options['no_first_reload'])
+            self.watch_ftml(options['no_first_reload'], options['ftml_release'])
         super().handle(*args, **options)
 
     def watch_js(self):
@@ -52,7 +53,7 @@ class Command(BaseRunserverCommand):
         atexit.register(lambda: _safe_kill(p))
         _ALREADY_WATCHING = True
 
-    def watch_ftml(self, no_first_reload=False):
+    def watch_ftml(self, no_first_reload=False, ftml_release=False):
         # You cannot reload a PYD file. For this reason, entire watcher will restart.
         global _ALREADY_WATCHING_RUST
         if _ALREADY_WATCHING_RUST or os.environ.get('RUN_MAIN') == 'true':
@@ -108,19 +109,21 @@ class Command(BaseRunserverCommand):
                         self.is_updated = False
                     if not is_updated:
                         continue
-                    p = subprocess.Popen(['cargo', 'build', '--release'], shell=True, cwd=base_project_dir)
+                    rel_cmdline = ['--release'] if ftml_release else []
+                    p = subprocess.Popen(['cargo', 'build'] + rel_cmdline, shell=True, cwd=base_project_dir)
                     code = p.wait()
                     if code != 0:
                         continue
                     filename, new_filename = self.filenames()
-                    if os.path.exists(base_project_dir + '/target/debug/' + filename):
+                    target_dir = '/target/release/' if ftml_release else '/target/debug/'
+                    if os.path.exists(base_project_dir + target_dir + filename):
                         print('Copying FTML library')
                         # move FTML library to another location (on Windows this fixes permissions)
                         if os.path.exists(base_project_dir + '/' + new_filename):
                             if os.path.exists(base_project_dir + '/' + new_filename + '.old'):
                                 os.remove(base_project_dir + '/' + new_filename + '.old')
                             os.rename(base_project_dir + '/' + new_filename, base_project_dir + '/' + new_filename + '.old')
-                        shutil.copy(base_project_dir + '/target/debug/' + filename, base_project_dir + '/' + new_filename)
+                        shutil.copy(base_project_dir + target_dir + filename, base_project_dir + '/' + new_filename)
                         # reload this script
                         print('Reloading...')
                         nofr = ['--no-first-reload'] if not no_first_reload else []
