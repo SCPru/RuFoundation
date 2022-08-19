@@ -164,7 +164,7 @@ impl Callbacks {
         return Ok(format!("UnimplementedUser[{user}]").to_string())
     }
 
-    pub fn get_i18n_message(&self, message_id: String) -> PyResult<String> {
+    pub fn get_i18n_message(&self, _message_id: String) -> PyResult<String> {
         return Ok(String::from("?"))
     }
 }
