@@ -13,6 +13,7 @@
                     "items": [
                         {
                             "item-type": "elements",
+                            "hidden": false,
                             "attributes": {
                                 "id": "item-1"
                             },
@@ -25,6 +26,7 @@
                         },
                         {
                             "item-type": "elements",
+                            "hidden": false,
                             "attributes": {
                                 "id": "item-2"
                             },

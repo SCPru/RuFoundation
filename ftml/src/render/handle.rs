@@ -19,18 +19,26 @@
  */
 
 use crate::data::{PageInfo, UserInfo};
+use crate::prelude::PageCallbacks;
 use crate::settings::WikitextSettings;
 use crate::tree::{ImageSource, LinkLabel, LinkLocation, Module};
 use crate::url::BuildSiteUrl;
 use std::borrow::Cow;
 use std::num::NonZeroUsize;
+use std::rc::Rc;
 use strum_macros::IntoStaticStr;
 use wikidot_normalize::normalize;
 
 #[derive(Debug)]
-pub struct Handle;
+pub struct Handle {
+    callbacks: Rc<dyn PageCallbacks>
+}
 
 impl Handle {
+    pub fn new(callbacks: Rc<dyn PageCallbacks>) -> Self {
+        Handle { callbacks }
+    }
+
     pub fn render_module(
         &self,
         buffer: &mut String,
@@ -148,27 +156,8 @@ impl Handle {
         f(label_text);
     }
 
-    pub fn get_message(&self, language: &str, message: &str) -> &'static str {
-        info!("Fetching message (language {language}, key {message})");
-
-        let _ = language;
-
-        // TODO
-        match message {
-            "button-copy-clipboard" => "Скопировать",
-            "collapsible-open" => "+ открыть блок",
-            "collapsible-hide" => "- закрыть блок",
-            "table-of-contents" => "Содержание",
-            "toc-open" => "Раскрыть",
-            "toc-close" => "Свернуть",
-            "footnote" => "Сноска",
-            "footnote-block-title" => "Сноски",
-            "image-context-bad" => "Некорректный адрес изображения",
-            _ => {
-                error!("Unknown message requested (key {message})");
-                "?"
-            }
-        }
+    pub fn get_message(&self, message: &str) -> String {
+        self.callbacks.get_i18n_message(Cow::from(message)).as_ref().to_owned()
     }
 
     pub fn post_html(&self, info: &PageInfo, html: &str) -> String {

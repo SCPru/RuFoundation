@@ -76,11 +76,15 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
         show_bottom,
     );
 
-    let show_text = show_text
-        .unwrap_or_else(|| ctx.handle().get_message(ctx.language(), "collapsible-open"));
+    let show_text = match show_text {
+        Some(s) => String::from(s),
+        _ => ctx.handle().get_message("collapsible-open")
+    };
 
-    let hide_text = hide_text
-        .unwrap_or_else(|| ctx.handle().get_message(ctx.language(), "collapsible-hide"));
+    let hide_text = match hide_text {
+        Some(s) => String::from(s),
+        _ => ctx.handle().get_message("collapsible-hide")
+    };
 
     ctx.html()
         .div()
@@ -93,7 +97,7 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
                     ctx.html()
                         .a()
                         .attr(attr!("class" => "collapsible-block-link", "href" => "javascript:;"))
-                        .inner(show_text);
+                        .inner(show_text.as_str());
                 });
 
             ctx.html()
@@ -108,7 +112,7 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
                                 ctx.html()
                                     .a()
                                     .attr(attr!("class" => "collapsible-block-link", "href" => "javascript:;"))
-                                    .inner(hide_text);
+                                    .inner(hide_text.as_str());
                             });
                     };
 

@@ -30,6 +30,7 @@
                                 "items": [
                                     {
                                         "item-type": "elements",
+                                        "hidden": false,
                                         "attributes": {},
                                         "elements": [
                                             {
@@ -52,6 +53,7 @@
                     "items": [
                         {
                             "item-type": "elements",
+                            "hidden": false,
                             "attributes": {},
                             "elements": [
                                 {
@@ -76,6 +78,7 @@
                                             "items": [
                                                 {
                                                     "item-type": "elements",
+                                                    "hidden": false,
                                                     "attributes": {},
                                                     "elements": [
                                                         {
@@ -89,6 +92,7 @@
                                     },
                                     {
                                         "item-type": "elements",
+                                        "hidden": false,
                                         "attributes": {},
                                         "elements": [
                                             {

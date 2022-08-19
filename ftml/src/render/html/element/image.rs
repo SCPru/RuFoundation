@@ -113,7 +113,7 @@ fn render_image_missing(ctx: &mut HtmlContext) {
 
     let message = ctx
         .handle()
-        .get_message(ctx.language(), "image-context-bad");
+        .get_message("image-context-bad");
 
     ctx.html()
         .div()

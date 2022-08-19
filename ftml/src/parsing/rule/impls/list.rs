@@ -18,8 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use std::borrow::Cow::Borrowed;
-
 use super::prelude::*;
 use crate::parsing::{process_depths, DepthItem, DepthList};
 use crate::tree::{AttributeMap, ListItem, ListType};
@@ -160,6 +158,7 @@ fn build_list_element(
     list.into_iter().for_each(|item| return match item {
         DepthItem::Item(elements) => {
             let item = ListItem::Elements {
+                hidden: false,
                 elements,
                 attributes: AttributeMap::new(),
             };
@@ -169,12 +168,13 @@ fn build_list_element(
             let sub = build_list_element(ltype, list);
             if items.is_empty() {
                 items.push(ListItem::Elements {
+                    hidden: false,
                     elements: vec![],
                     attributes: AttributeMap::new(),
                 });
             }
             match items.last_mut().unwrap() {
-                ListItem::Elements { ref mut elements, attributes: _ } => {
+                ListItem::Elements { ref mut elements, .. } => {
                     elements.push(sub);
                 }
                 _ => {}
@@ -188,10 +188,10 @@ fn build_list_element(
 
 
     if items.len() == 1 {
-        if let Some(ListItem::Elements { attributes: ref mut item_attrs, elements }) = items.first_mut() {
+        if let Some(ListItem::Elements { ref mut hidden, elements, .. }) = items.first_mut() {
             if elements.len() == 1 {
                 if let Some(Element::List { .. }) = elements.first() {
-                    item_attrs.insert("style", Borrowed("display: inline; list-style-type: none"));
+                    *hidden = true;
                 }
             }
         }

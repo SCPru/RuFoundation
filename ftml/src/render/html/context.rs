@@ -170,11 +170,6 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
     }
 
     #[inline]
-    pub fn language(&self) -> &str {
-        &self.info.language
-    }
-
-    #[inline]
     pub fn variables(&self) -> &VariableScopes {
         &self.variables
     }

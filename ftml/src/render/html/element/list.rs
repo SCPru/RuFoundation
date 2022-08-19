@@ -39,10 +39,11 @@ pub fn render_list(
         for list_item in list_items {
             match list_item {
                 ListItem::Elements {
+                    hidden,
                     elements,
                     attributes,
                 } => {
-                    ctx.html().li().attr(attr!(;; attributes)).inner(elements);
+                    ctx.html().li().attr(if *hidden { attr!("style" => "display: inline; list-style-type: none") } else { attr!(;; attributes) }).inner(elements);
                 }
                 ListItem::SubList { element } => {
                     render_element(ctx, element);

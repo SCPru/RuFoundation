@@ -10,6 +10,7 @@
                     "elements": [
                         {
                             "item-type": "elements",
+                            "hidden": false,
                             "element": "text",
                             "data": "["
                         }
@@ -24,6 +25,7 @@
                     "items": [
                         {
                             "item-type": "elements",
+                            "hidden": false,
                             "attributes": {},
                             "elements": [
                                 {

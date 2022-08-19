@@ -189,6 +189,7 @@ where
 
     let list_item = (elements, arb_attribute_map()).prop_map(|(elements, attributes)| {
         ListItem::Elements {
+            hidden: false,
             elements,
             attributes,
         }

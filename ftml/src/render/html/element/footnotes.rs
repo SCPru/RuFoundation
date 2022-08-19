@@ -27,7 +27,7 @@ pub fn render_footnote(ctx: &mut HtmlContext) {
     let id = str!(index);
 
     // TODO make this into a locale template string
-    let footnote_string = ctx.handle().get_message(ctx.language(), "footnote");
+    let footnote_string = ctx.handle().get_message("footnote");
     let label = format!("{footnote_string} {index}.");
 
     let contents = ctx
@@ -81,15 +81,12 @@ pub fn render_footnote_block(ctx: &mut HtmlContext, title: Option<&str>) {
         title.unwrap_or("<default>"),
     );
 
-    let title_default;
-    let title: &str = match title {
-        Some(title) => title,
+    let title = match title {
+        Some(title) => String::from(title),
         None => {
-            title_default = ctx
+            ctx
                 .handle()
-                .get_message(ctx.language(), "footnote-block-title");
-
-            title_default
+                .get_message("footnote-block-title")
         }
     };
 
@@ -100,7 +97,7 @@ pub fn render_footnote_block(ctx: &mut HtmlContext, title: Option<&str>) {
             ctx.html()
                 .div()
                 .attr(attr!("class" => "wj-title"))
-                .inner(title);
+                .inner(title.as_str());
 
             ctx.html().ol().contents(|ctx| {
                 // TODO make this into a footnote helper method

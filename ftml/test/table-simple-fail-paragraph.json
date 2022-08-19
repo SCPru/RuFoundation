@@ -13,6 +13,9 @@
                             "data": "["
                         },
                         {
+                            "element": "line-break"
+                        },
+                        {
                             "element": "text",
                             "data": "||"
                         },

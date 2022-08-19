@@ -70,7 +70,7 @@ pub fn render_code(ctx: &mut HtmlContext, language: Option<&str>, contents: &str
                 .contents(|ctx| {
                     let button_title = ctx
                         .handle()
-                        .get_message(ctx.language(), "button-copy-clipboard");
+                        .get_message("button-copy-clipboard");
 
                     // Copy to clipboard button
                     ctx.html()
@@ -78,7 +78,7 @@ pub fn render_code(ctx: &mut HtmlContext, language: Option<&str>, contents: &str
                         .attr(attr!(
                             "type" => "button",
                             "class" => "wj-code-copy",
-                            "title" => button_title,
+                            "title" => button_title.as_str(),
                         ))
                         .contents(|ctx| {
                             ctx.html().sprite("wj-clipboard");

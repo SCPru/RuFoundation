@@ -101,6 +101,7 @@
                                                                     "items": [
                                                                         {
                                                                             "item-type": "elements",
+                                                                            "hidden": false,
                                                                             "attributes": {},
                                                                             "elements": [
                                                                                 {

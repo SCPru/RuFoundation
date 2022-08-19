@@ -226,7 +226,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
 
             for item in items {
                 match item {
-                    ListItem::Elements { elements, .. } => {
+                    ListItem::Elements { elements, hidden, .. } => {
                         // Don't do anything if it's empty
                         if elements.is_empty() {
                             continue;
@@ -238,25 +238,24 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                             ctx.push(' ');
                         }
 
-                        match *ltype {
-                            ListType::Bullet => ctx.push_str("* "),
-                            ListType::Numbered => {
-                                let index = ctx.next_list_index();
-                                str_write!(ctx, "{index}. ");
+                        if !*hidden {
+                            match *ltype {
+                                ListType::Bullet => ctx.push_str("* "),
+                                ListType::Numbered => {
+                                    let index = ctx.next_list_index();
+                                    str_write!(ctx, "{index}. ");
+                                }
+                                ListType::Generic => (),
                             }
-                            ListType::Generic => (),
                         }
 
                         // Render elements for this list item
+                        ctx.incr_list_depth();
                         render_elements(ctx, elements);
+                        ctx.decr_list_depth();
                         ctx.add_newline();
                     }
-                    ListItem::SubList { element } => {
-                        // Update bullet depth
-                        ctx.incr_list_depth();
-                        render_element(ctx, element);
-                        ctx.decr_list_depth();
-                    }
+                    _ => {},
                 }
             }
         }
@@ -285,25 +284,24 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             show_bottom,
             ..
         } => {
-            macro_rules! get_text {
-                ($input:expr, $message:expr) => {
-                    match $input {
-                        Some(ref text) => &text,
-                        None => ctx.handle().get_message(ctx.language(), $message),
-                    }
-                };
-            }
 
-            let show_text = get_text!(show_text, "collapsible-open");
-            let hide_text = get_text!(hide_text, "collapsible-hide");
+            let show_text = match show_text {
+                Some(s) => String::from(s.as_ref()),
+                _ => ctx.handle().get_message("collapsible-open")
+            };
+        
+            let hide_text = match hide_text {
+                Some(s) => String::from(s.as_ref()),
+                _ => ctx.handle().get_message("collapsible-hide")
+            };
 
             // Top of collapsible
             ctx.add_newline();
-            ctx.push_str(show_text);
+            ctx.push_str(show_text.as_str());
             ctx.add_newline();
 
             if *show_top {
-                ctx.push_str(hide_text);
+                ctx.push_str(hide_text.as_str());
                 ctx.add_newline();
             }
 
@@ -313,7 +311,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             // Bottom of collapsible
             if *show_bottom {
                 ctx.add_newline();
-                ctx.push_str(hide_text);
+                ctx.push_str(hide_text.as_str());
                 ctx.add_newline();
             }
         }
@@ -322,10 +320,10 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
 
             let table_of_contents_title = ctx
                 .handle()
-                .get_message(ctx.language(), "table-of-contents");
+                .get_message("table-of-contents");
 
             ctx.add_newline();
-            ctx.push_str(table_of_contents_title);
+            ctx.push_str(table_of_contents_title.as_str());
             ctx.add_newline();
             render_elements(ctx, ctx.table_of_contents());
         }
@@ -344,19 +342,19 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
 
             // Render footnote title
             let title_default;
-            let title: &str = match title {
-                Some(title) => title.as_ref(),
+            let title = match title {
+                Some(title) => String::from(title.as_ref()),
                 None => {
                     title_default = ctx
                         .handle()
-                        .get_message(ctx.language(), "footnote-block-title");
+                        .get_message("footnote-block-title");
 
                     title_default
                 }
             };
 
             ctx.add_newline();
-            ctx.push_str(title);
+            ctx.push_str(title.as_str());
             ctx.add_newline();
 
             // Render footnotes in order.

@@ -91,6 +91,16 @@ impl<'t> ParagraphStack<'t> {
         }
     }
 
+    // This drops leading and trailing newlines from the element list.
+    // TODO: I feel like this logic duplicates pop_line_break
+    fn strip_newlines(&mut self, elements: &mut Vec<Element>) {
+        let removed_start = elements.iter().position(|x| !matches!(x, Element::LineBreak)).unwrap_or(0);
+        let removed_end = elements.iter().rev().position(|x| !matches!(x, Element::LineBreak)).unwrap_or(0);
+
+        elements.drain(0..removed_start);
+        elements.drain(elements.len()-removed_end..elements.len());
+    }
+
     pub fn build_paragraph(&mut self) -> Option<Element<'t>> {
         debug!(
             "Building paragraph from current stack state (length {})",
@@ -104,7 +114,8 @@ impl<'t> ParagraphStack<'t> {
         }
 
         // Pull out gathered elements, then make a new paragraph container
-        let elements = mem::take(&mut self.current);
+        let mut elements = mem::take(&mut self.current);
+        self.strip_newlines(&mut elements);
         let container =
             Container::new(ContainerType::Paragraph, elements, AttributeMap::new());
         let element = Element::Container(container);

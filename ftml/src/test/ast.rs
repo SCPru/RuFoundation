@@ -248,7 +248,8 @@ impl Test<'_> {
         if tree != self.tree {
             result = TestResult::Fail;
             eprintln!(
-                "AST did not match:\nExpected: {:#?}\nActual: {:#?}\n{}\nWarnings: {:#?}",
+                "AST did not match:\nTest: {:?}\nExpected: {:#?}\nActual: {:#?}\n{}\nWarnings: {:#?}",
+                self.name,
                 self.tree,
                 tree,
                 json(&tree),
@@ -259,7 +260,8 @@ impl Test<'_> {
         if warnings != self.warnings {
             result = TestResult::Fail;
             eprintln!(
-                "Warnings did not match:\nExpected: {:#?}\nActual:   {:#?}\n{}\nTree (correct): {:#?}",
+                "Warnings did not match:\nTest: {:?}\nExpected: {:#?}\nActual:   {:#?}\n{}\nTree (correct): {:#?}",
+                self.name,
                 self.warnings,
                 warnings,
                 json(&warnings),
@@ -270,7 +272,8 @@ impl Test<'_> {
         if html_output.body != self.html {
             result = TestResult::Fail;
             eprintln!(
-                "HTML does not match:\nExpected: {:?}\nActual:   {:?}\n\n{}\n\nTree (correct): {:#?}",
+                "HTML does not match:\nTest: {:?}\nExpected: {:?}\nActual:   {:?}\n\n{}\n\nTree (correct): {:#?}",
+                self.name,
                 self.html,
                 html_output.body,
                 html_output.body,
@@ -281,7 +284,8 @@ impl Test<'_> {
         if text_output != self.text {
             result = TestResult::Fail;
             eprintln!(
-                "Text output does not match:\nExpected: {:?}\nActual:   {:?}\n\n{}\n\nTree (correct): {:#?}",
+                "Text output does not match:\nTest: {:?}\nExpected: {:?}\nActual:   {:?}\n\n{}\n\nTree (correct): {:#?}",
+                self.name,
                 self.text,
                 text_output,
                 text_output,

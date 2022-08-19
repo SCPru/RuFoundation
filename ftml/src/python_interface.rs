@@ -13,7 +13,8 @@ use crate::render::text::TextRender;
 fn render<R: Render>(text: &mut String, renderer: &R, page_info: PageInfo, callbacks: Py<PyAny>) -> R::Output
 {
     // TODO includer
-    let settings = WikitextSettings::from_mode(WikitextMode::Page);
+    let mut settings = WikitextSettings::from_mode(WikitextMode::Page);
+    settings.syntax_compatibility = true;
 
     let page_callbacks = Rc::new(PythonCallbacks{ callbacks: Box::new(callbacks) }).clone();
 
@@ -128,6 +129,16 @@ impl PageCallbacks for PythonCallbacks {
             Err(_) => Cow::from("")
         }
     }
+
+    fn get_i18n_message<'a>(&self, message_id: Cow<str>) -> Cow<'static, str> {
+        let result: PyResult<String> = Python::with_gil(|py| {
+            return self.callbacks.getattr(py, "get_i18n_message")?.call(py, (message_id,), None)?.extract(py);
+        });
+        match result {
+            Ok(result) => Cow::from(result.as_str().to_owned()),
+            Err(_) => Cow::from("?")
+        }
+    }
 }
 
 
@@ -151,6 +162,10 @@ impl Callbacks {
 
     pub fn render_user(&self, user: String, _avatar: bool) -> PyResult<String> {
         return Ok(format!("UnimplementedUser[{user}]").to_string())
+    }
+
+    pub fn get_i18n_message(&self, message_id: String) -> PyResult<String> {
+        return Ok(String::from("?"))
     }
 }
 

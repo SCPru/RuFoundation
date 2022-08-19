@@ -31,6 +31,7 @@ pub enum ListItem<'t> {
     /// It's just an item in the list, which may have multiple elements
     /// similar to any other container.
     Elements {
+        hidden: bool,
         attributes: AttributeMap<'t>,
         elements: Vec<Element<'t>>,
     },
@@ -48,11 +49,13 @@ impl ListItem<'_> {
     pub fn to_owned(&self) -> ListItem<'static> {
         match self {
             ListItem::Elements {
+                hidden,
                 attributes,
                 elements,
             } => ListItem::Elements {
                 attributes: attributes.to_owned(),
                 elements: elements_to_owned(elements),
+                hidden: hidden.to_owned(),
             },
             ListItem::SubList { element } => {
                 let element: &Element = element;

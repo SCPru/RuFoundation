@@ -44,6 +44,20 @@ class CallbacksWithContext(ftml.Callbacks):
                 username=user
             )
 
+    def get_i18n_message(self, message_id: str) -> str:
+        messages = {
+            "button-copy-clipboard": "Скопировать",
+            "collapsible-open": "+ открыть блок",
+            "collapsible-hide": "- закрыть блок",
+            "table-of-contents": "Содержание",
+            "toc-open": "Раскрыть",
+            "toc-close": "Свернуть",
+            "footnote": "Сноска",
+            "footnote-block-title": "Сноски",
+            "image-context-bad": "Некорректный адрес изображения",
+        }
+        return messages.get(message_id, '?')
+
 
 def page_info_from_context(context: RenderContext):
     site = get_current_site()

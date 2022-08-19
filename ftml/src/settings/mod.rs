@@ -85,6 +85,13 @@ pub struct WikitextSettings {
     ///   any beyond that are considered part of the link.
     /// * By convention, prefixes should be all-lowercase.
     pub interwiki: InterwikiSettings,
+
+    /// This causes the parser and the renderer to produce Wikidot-compatible nodes and HTML.
+    /// This means inline styles and class names as close as possible to the original.
+    /// Also, all new node types are disabled.
+    /// 
+    /// Set to false to produce WikiJump code.
+    pub syntax_compatibility: bool,
 }
 
 impl WikitextSettings {
@@ -100,6 +107,7 @@ impl WikitextSettings {
                 isolate_user_ids: false,
                 allow_local_paths: true,
                 interwiki,
+                syntax_compatibility: false,
             },
             WikitextMode::Draft => WikitextSettings {
                 mode,
@@ -109,6 +117,7 @@ impl WikitextSettings {
                 isolate_user_ids: false,
                 allow_local_paths: true,
                 interwiki,
+                syntax_compatibility: false,
             },
             WikitextMode::ForumPost | WikitextMode::DirectMessage => WikitextSettings {
                 mode,
@@ -118,6 +127,7 @@ impl WikitextSettings {
                 isolate_user_ids: false,
                 allow_local_paths: false,
                 interwiki,
+                syntax_compatibility: false,
             },
             WikitextMode::List => WikitextSettings {
                 mode,
@@ -127,6 +137,7 @@ impl WikitextSettings {
                 isolate_user_ids: false,
                 allow_local_paths: true,
                 interwiki,
+                syntax_compatibility: false,
             },
         }
     }

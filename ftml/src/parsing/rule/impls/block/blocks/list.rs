@@ -211,6 +211,7 @@ fn parse_list_item<'r, 't>(
     }
 
     let element = Element::Partial(PartialElement::ListItem(ListItem::Elements {
+        hidden: false,
         elements,
         attributes,
     }));

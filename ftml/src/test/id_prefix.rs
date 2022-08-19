@@ -62,6 +62,7 @@ fn isolate_user_ids() {
         isolate_user_ids: true,
         allow_local_paths: true,
         interwiki: EMPTY_INTERWIKI.clone(),
+        syntax_compatibility: true,
     };
 
     fn append_footnote_block(mut elements: Vec<Element>) -> Vec<Element> {
@@ -183,6 +184,7 @@ fn isolate_user_ids() {
                 cow!("id") => cow!("u-apple"),
             }),
             items: vec![ListItem::Elements {
+                hidden: false,
                 attributes: AttributeMap::from(btreemap! {
                     cow!("id") => cow!("u-banana"),
                 }),
@@ -198,6 +200,7 @@ fn isolate_user_ids() {
                 cow!("id") => cow!("u-apple"),
             }),
             items: vec![ListItem::Elements {
+                hidden: false,
                 attributes: AttributeMap::from(btreemap! {
                     cow!("id") => cow!("u-banana"),
                 }),
@@ -214,6 +217,7 @@ fn isolate_user_ids() {
                 cow!("id") => cow!("u-apple"),
             }),
             items: vec![ListItem::Elements {
+                hidden: false,
                 attributes: AttributeMap::from(btreemap! {
                     cow!("id") => cow!("u-banana"),
                 }),
@@ -229,6 +233,7 @@ fn isolate_user_ids() {
                 cow!("id") => cow!("u-apple"),
             }),
             items: vec![ListItem::Elements {
+                hidden: false,
                 attributes: AttributeMap::from(btreemap! {
                     cow!("id") => cow!("u-banana"),
                 }),
