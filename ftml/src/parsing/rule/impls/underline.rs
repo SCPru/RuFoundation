@@ -38,7 +38,6 @@ fn try_consume_fn<'p, 'r, 't>(
         &[ParseCondition::current(Token::Underline)],
         &[ParseCondition::current(Token::Underline)],
         &[
-            ParseCondition::current(Token::LineBreak),
             ParseCondition::current(Token::ParagraphBreak),
             ParseCondition::token_pair(Token::Underline, Token::Whitespace),
             ParseCondition::token_pair(Token::Whitespace, Token::Underline),

@@ -38,7 +38,6 @@ fn try_consume_fn<'p, 'r, 't>(
         &[ParseCondition::current(Token::Italics)],
         &[ParseCondition::current(Token::Italics)],
         &[
-            ParseCondition::current(Token::LineBreak),
             ParseCondition::current(Token::ParagraphBreak),
             ParseCondition::token_pair(Token::Italics, Token::Whitespace),
             ParseCondition::token_pair(Token::Whitespace, Token::Italics),
