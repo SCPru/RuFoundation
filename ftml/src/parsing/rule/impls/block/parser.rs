@@ -25,7 +25,7 @@ use crate::parsing::condition::ParseCondition;
 use crate::parsing::consume::consume;
 use crate::parsing::{
     gather_paragraphs, parse_string, ExtractedToken, ParseResult, ParseWarning,
-    ParseWarningKind, Parser, Token,
+    ParseWarningKind, Parser, Token
 };
 use crate::tree::Element;
 use regex::Regex;

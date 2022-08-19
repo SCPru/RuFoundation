@@ -185,17 +185,15 @@ fn build_list_element(
     // if this list consists of
     let attributes = AttributeMap::new();
 
-
-
-    if items.len() == 1 {
-        if let Some(ListItem::Elements { ref mut hidden, elements, .. }) = items.first_mut() {
+    items.iter_mut().for_each(|item| {
+        if let ListItem::Elements { ref mut hidden, elements, .. } = item {
             if elements.len() == 1 {
                 if let Some(Element::List { .. }) = elements.first() {
                     *hidden = true;
                 }
             }
         }
-    }
+    });
 
     // Return the Element::List object
     Element::List {

@@ -29,50 +29,48 @@
                                 {
                                     "element": "text",
                                     "data": "A"
-                                }
-                            ]
-                        },
-                        {
-                            "item-type": "sub-list",
-                            "element": "list",
-                            "data": {
-                                "type": "bullet",
-                                "attributes": {},
-                                "items": [
-                                    {
-                                        "item-type": "elements",
-                                        "hidden": false,
+                                },
+                                {
+                                    "element": "list",
+                                    "data": {
+                                        "type": "bullet",
                                         "attributes": {},
-                                        "elements": [
+                                        "items": [
                                             {
-                                                "element": "text",
-                                                "data": "B"
+                                                "item-type": "elements",
+                                                "hidden": false,
+                                                "attributes": {},
+                                                "elements": [
+                                                    {
+                                                        "element": "text",
+                                                        "data": "B"
+                                                    },
+                                                    {
+                                                        "element": "list",
+                                                        "data": {
+                                                            "type": "bullet",
+                                                            "attributes": {},
+                                                            "items": [
+                                                                {
+                                                                    "item-type": "elements",
+                                                                    "hidden": false,
+                                                                    "attributes": {},
+                                                                    "elements": [
+                                                                        {
+                                                                            "element": "text",
+                                                                            "data": "C"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
                                             }
                                         ]
-                                    },
-                                    {
-                                        "item-type": "sub-list",
-                                        "element": "list",
-                                        "data": {
-                                            "type": "bullet",
-                                            "attributes": {},
-                                            "items": [
-                                                {
-                                                    "item-type": "elements",
-                                                    "hidden": false,
-                                                    "attributes": {},
-                                                    "elements": [
-                                                        {
-                                                            "element": "text",
-                                                            "data": "C"
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        }
                                     }
-                                ]
-                            }
+                                }
+                            ]
                         }
                     ]
                 }
@@ -98,13 +96,9 @@
                 }
             }
         ],
-        "styles": [
-        ],
-        "table-of-contents": [
-        ],
-        "footnotes": [
-        ]
+        "styles": [],
+        "table-of-contents": [],
+        "footnotes": []
     },
-    "warnings": [
-    ]
+    "warnings": []
 }

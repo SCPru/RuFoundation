@@ -101,7 +101,6 @@ impl Handle {
             ImageSource::Url(url) => return Some(Cow::clone(url)),
             ImageSource::File1 { .. }
             | ImageSource::File2 { .. }
-            | ImageSource::File3 { .. }
                 if !settings.allow_local_paths =>
             {
                 warn!("Specified path image source when local paths are disabled");
@@ -109,7 +108,6 @@ impl Handle {
             }
             ImageSource::File1 { file } => (&info.site, info.full_name(), file),
             ImageSource::File2 { page, file } => (&info.site, page.to_owned(), file),
-            ImageSource::File3 { site, page, file } => (site, page.to_owned(), file),
         };
 
         // cross-site images are unsupported

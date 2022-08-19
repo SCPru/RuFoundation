@@ -68,48 +68,88 @@ fn render_image_element(
 ) {
     debug!("Found URL, rendering image (value '{url}')");
 
-    let build_image = |ctx: &mut HtmlContext| {
-        ctx.html().img().attr(attr!(
-            "src" => url,
-            "alt" => url.split("/").last().unwrap();;
-            attributes
-        ));
-    };
+    if ctx.settings().syntax_compatibility {
 
-    let build_link = |ctx: &mut HtmlContext| {
-        match link {
-            Some(link) => {
-                let url = normalize_link(link, ctx.handle());
-                ctx.html()
-                    .a()
-                    .attr(attr!("href" => &url, "target" => "_blank"))
-                    .contents(build_image);
+        let build_image = |ctx: &mut HtmlContext| {
+            ctx.html().img().attr(attr!(
+                "src" => url,
+                "alt" => url.split("/").last().unwrap();;
+                attributes
+            ));
+        };
+
+        let build_link = |ctx: &mut HtmlContext| {
+            match link {
+                Some(link) => {
+                    let url = normalize_link(link, ctx.handle());
+                    ctx.html()
+                        .a()
+                        .attr(attr!("href" => &url, "target" => "_blank"))
+                        .contents(build_image);
+                }
+                None => build_image(ctx),
             }
-            None => build_image(ctx),
-        }
-    };
+        };
 
-    let align_div_class = match alignment {
-        Some(FloatAlignment{align: Alignment::Left, float: true}) => "floatleft",
-        Some(FloatAlignment{align: Alignment::Right, float: true}) => "floatright",
-        Some(FloatAlignment{align: Alignment::Left, float: false}) => "alignleft",
-        Some(FloatAlignment{align: Alignment::Right, float: false}) => "alignright",
-        Some(FloatAlignment{align: Alignment::Center, float: false}) => "aligncenter",
-        _ => ""
-    };
+        let align_div_class = match alignment {
+            Some(FloatAlignment{align: Alignment::Left, float: true}) => "floatleft",
+            Some(FloatAlignment{align: Alignment::Right, float: true}) => "floatright",
+            Some(FloatAlignment{align: Alignment::Left, float: false}) => "alignleft",
+            Some(FloatAlignment{align: Alignment::Right, float: false}) => "alignright",
+            Some(FloatAlignment{align: Alignment::Center, float: false}) => "aligncenter",
+            _ => ""
+        };
 
-    match align_div_class {
-        "" => build_link(ctx),
-        other => {
-            ctx.html().div()
-                .attr(attr!("class" => format!("image-container {other}").as_str()))
-                .contents(build_link);
+        match align_div_class {
+            "" => build_link(ctx),
+            other => {
+                ctx.html().div()
+                    .attr(attr!("class" => format!("image-container {other}").as_str()))
+                    .contents(build_link);
+            }
         }
+
+    } else {
+
+        let (space, align_class) = match alignment {
+            Some(align) => (" ", align.html_class()),
+            None => ("", ""),
+        };
+
+        ctx.html()
+            .div()
+            .attr(attr!(
+                "class" => "wj-image-container" space align_class,
+            ))
+            .contents(|ctx| {
+                let build_image = |ctx: &mut HtmlContext| {
+                    ctx.html().img().attr(attr!(
+                        "class" => "wj-image",
+                        "src" => url,
+                        "crossorigin";;
+                        attributes
+                    ));
+                };
+
+                match link {
+                    Some(link) => {
+                        let url = normalize_link(link, ctx.handle());
+                        ctx.html()
+                            .a()
+                            .attr(attr!("href" => &url))
+                            .contents(build_image);
+                    }
+                    None => build_image(ctx),
+                };
+            });
+
     }
 }
 
 fn render_image_missing(ctx: &mut HtmlContext) {
     debug!("Image URL unresolved, missing or error");
+
+    let compat = ctx.settings().syntax_compatibility;
 
     let message = ctx
         .handle()
@@ -117,6 +157,6 @@ fn render_image_missing(ctx: &mut HtmlContext) {
 
     ctx.html()
         .div()
-        .attr(attr!("class" => "error-block"))
+        .attr(attr!("class" => if compat { "error-block" } else { "wj-error-block" }))
         .inner(message);
 }

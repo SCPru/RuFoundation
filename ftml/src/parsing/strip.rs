@@ -21,41 +21,17 @@
 use crate::tree::Element;
 
 pub fn strip_newlines(elements: &mut Vec<Element>) {
-    // Remove leading line breaks
-    while let Some(element) = elements.first() {
-        if !matches!(element, Element::LineBreak | Element::LineBreaks(_)) {
-            break;
-        }
+    let removed_start = elements.iter().position(|x| !matches!(x, Element::LineBreak)).unwrap_or(0);
+    let removed_end = elements.iter().rev().position(|x| !matches!(x, Element::LineBreak)).unwrap_or(0);
 
-        elements.remove(0);
-    }
-
-    // Remove trailing line breaks
-    while let Some(element) = elements.last() {
-        if !matches!(element, Element::LineBreak | Element::LineBreaks(_)) {
-            break;
-        }
-
-        elements.pop();
-    }
+    elements.drain(0..removed_start);
+    elements.drain(elements.len()-removed_end..);
 }
 
 pub fn strip_whitespace(elements: &mut Vec<Element>) {
-    // Remove leading whitespace
-    while let Some(element) = elements.first() {
-        if !element.is_whitespace() {
-            break;
-        }
+    let removed_start = elements.iter().position(|x| !x.is_whitespace()).unwrap_or(0);
+    let removed_end = elements.iter().rev().position(|x| !x.is_whitespace()).unwrap_or(0);
 
-        elements.remove(0);
-    }
-
-    // Remove trailing whitespace
-    while let Some(element) = elements.last() {
-        if !element.is_whitespace() {
-            break;
-        }
-
-        elements.pop();
-    }
+    elements.drain(0..removed_start);
+    elements.drain(elements.len()-removed_end..);
 }

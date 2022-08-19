@@ -19,7 +19,7 @@
  */
 
 use super::HtmlTag;
-use crate::{next_index::{NextIndex, TableOfContentsIndex}, prelude::ParseWarning};
+use crate::{next_index::{NextIndex, TableOfContentsIndex}};
 use std::convert::TryFrom;
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, Hash, PartialEq, Eq)]

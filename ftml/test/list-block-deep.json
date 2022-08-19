@@ -10,7 +10,7 @@
                     "items": [
                         {
                             "item-type": "elements",
-                            "hidden": false,
+                            "hidden": true,
                             "attributes": {},
                             "elements": [
                                 {
@@ -43,10 +43,6 @@
                                             }
                                         ]
                                     }
-                                },
-                                {
-                                    "element": "text",
-                                    "data": " "
                                 }
                             ]
                         },
@@ -104,13 +100,9 @@
                 }
             }
         ],
-        "styles": [
-        ],
-        "table-of-contents": [
-        ],
-        "footnotes": [
-        ]
+        "styles": [],
+        "table-of-contents": [],
+        "footnotes": []
     },
-    "warnings": [
-    ]
+    "warnings": []
 }

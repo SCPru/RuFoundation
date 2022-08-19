@@ -255,7 +255,12 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                         ctx.decr_list_depth();
                         ctx.add_newline();
                     }
-                    _ => {},
+                    ListItem::SubList { element } => {
+                        // Update bullet depth
+                        ctx.incr_list_depth();
+                        render_element(ctx, element);
+                        ctx.decr_list_depth();
+                    }
                 }
             }
         }

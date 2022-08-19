@@ -37,13 +37,6 @@ pub enum ImageSource<'a> {
         page: Cow<'a, str>,
         file: Cow<'a, str>,
     },
-
-    /// Image is attached to another page on another site.
-    File3 {
-        site: Cow<'a, str>,
-        page: Cow<'a, str>,
-        file: Cow<'a, str>,
-    },
 }
 
 impl<'t> ImageSource<'t> {
@@ -67,11 +60,6 @@ impl<'t> ImageSource<'t> {
                 page: cow!(parts[0]),
                 file: cow!(parts[1]),
             },
-            3 => ImageSource::File3 {
-                site: cow!(parts[0]),
-                page: cow!(parts[1]),
-                file: cow!(parts[2]),
-            },
             _ => return None,
         };
 
@@ -90,11 +78,6 @@ impl<'t> ImageSource<'t> {
                 file: string_to_owned(file),
             },
             ImageSource::File2 { page, file } => ImageSource::File2 {
-                page: string_to_owned(page),
-                file: string_to_owned(file),
-            },
-            ImageSource::File3 { site, page, file } => ImageSource::File3 {
-                site: string_to_owned(site),
                 page: string_to_owned(page),
                 file: string_to_owned(file),
             },

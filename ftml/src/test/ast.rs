@@ -212,7 +212,7 @@ impl Test<'_> {
             site: cow!("test"),
             title: cow!(self.name),
             domain: cow!("test.wikidot.com"),
-            media_domain: cow!("test.wdfiles.com"),
+            media_domain: cow!("test.wjfiles.com"),
             alt_title: None,
             rating: 0.0,
             tags: vec![cow!("fruit"), cow!("component")],

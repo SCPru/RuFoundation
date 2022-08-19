@@ -1,1 +1,1 @@
-A https://test.wjfiles.com/local--files/page-image-file1/my-picture.jpeg B
+A //test.wjfiles.com/local--files/page-image-file1/my-picture.jpeg B

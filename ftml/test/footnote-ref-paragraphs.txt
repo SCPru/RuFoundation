@@ -9,5 +9,4 @@ Apple
 Banana
 
 2. Cherry
-
 3. Durian

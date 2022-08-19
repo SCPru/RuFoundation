@@ -83,14 +83,16 @@ pub fn parse_alignment_block<'r, 't>(
 
     let mut attributes = AttributeMap::new();
 
-    let style = match alignment {
-        Alignment::Left => "text-align: left",
-        Alignment::Right => "text-align: right",
-        Alignment::Center => "text-align: center",
-        Alignment::Justify => "text-align: justify",
-    };
+    if parser.settings().syntax_compatibility {
+        let style = match alignment {
+            Alignment::Left => "text-align: left",
+            Alignment::Right => "text-align: right",
+            Alignment::Center => "text-align: center",
+            Alignment::Justify => "text-align: justify",
+        };
 
-    attributes.insert("style", Cow::from(style));
+        attributes.insert("style", Cow::from(style));
+    }
 
     // Build element
     let element = Element::Container(Container::new(

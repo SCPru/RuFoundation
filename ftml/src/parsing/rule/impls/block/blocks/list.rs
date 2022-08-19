@@ -19,6 +19,7 @@
  */
 
 use super::prelude::*;
+use crate::parsing::strip::strip_whitespace;
 use crate::parsing::{strip_newlines, ParserWrap};
 use crate::tree::{AcceptsPartial, ListItem, ListType, PartialElement};
 
@@ -205,13 +206,23 @@ fn parse_list_item<'r, 't>(
     let (mut elements, exceptions, _) =
         parser.get_body_elements(&BLOCK_LI, false)?.into();
 
+    // Strip whitespace. This is required for testing for "single contained item"
+    strip_whitespace(&mut elements);
+
     // Strip newlines, if desired
     if strip_line_breaks {
         strip_newlines(&mut elements);
     }
 
+    let mut hidden = false;
+    if elements.len() == 1 {
+        if let Some(Element::List { .. }) = elements.first() {
+            hidden = true;
+        }
+    }
+
     let element = Element::Partial(PartialElement::ListItem(ListItem::Elements {
-        hidden: false,
+        hidden,
         elements,
         attributes,
     }));

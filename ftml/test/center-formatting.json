@@ -5,11 +5,13 @@
             {
                 "element": "container",
                 "data": {
-                    "type": {
-                        "align": "center"
-                    },
+                    "type": "paragraph",
                     "attributes": {},
                     "elements": [
+                        {
+                            "element": "align-marker",
+                            "data": "center"
+                        },
                         {
                             "element": "container",
                             "data": {

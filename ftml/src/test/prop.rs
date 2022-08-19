@@ -137,8 +137,6 @@ fn arb_image() -> impl Strategy<Value = Element<'static>> {
         cow!(".*").prop_map(|file| ImageSource::File1 { file }),
         (cow!(".*"), cow!(".*"))
             .prop_map(|(page, file)| ImageSource::File2 { page, file }),
-        (cow!(".*"), cow!(".*"), cow!(".*"))
-            .prop_map(|(site, page, file)| ImageSource::File3 { site, page, file }),
     ];
 
     let alignment = select!([
