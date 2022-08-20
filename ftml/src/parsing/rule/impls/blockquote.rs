@@ -112,25 +112,23 @@ fn build_blockquote_element(list: DepthList<(), (Vec<Element>, bool)>) -> Elemen
     for item in list {
         match item {
             DepthItem::Item((elements, paragraph_safe)) => {
-                let mut new_elements = elements.clone();
-                strip_newlines(&mut new_elements);
-                for element in new_elements {
+                for element in elements {
                     stack.push_element(element, paragraph_safe);
                 }
             }
             DepthItem::List(_, list) => {
                 let blockquote = build_blockquote_element(list);
-                stack.pop_line_break();
                 stack.push_element(blockquote, false);
             }
         }
     }
 
-    stack.pop_line_break();
+    let mut elements = stack.into_elements();
+    strip_newlines(&mut elements);
 
     Element::Container(Container::new(
         ContainerType::Blockquote,
-        stack.into_elements(),
+        elements,
         AttributeMap::new(),
     ))
 }
