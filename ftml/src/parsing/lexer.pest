@@ -34,6 +34,7 @@ document = _{ SOI ~ token* ~ EOI }
 token = _{
     // Raw should have the highest priority
     raw |
+    html_entity |
     left_raw |
     right_raw |
 
@@ -134,7 +135,8 @@ url = @{
 
 // Symbols {{{
 
-raw = @{ "@@" }
+raw = @{ "@@" ~ !"<" }
+html_entity = @{ "&" ~ "#"? ~ (ASCII_ALPHANUMERIC | ASCII_DIGIT)+ ~ ";"?}
 left_raw = @{ "@<" }
 right_raw = @{ ">@" }
 

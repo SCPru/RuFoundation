@@ -31,6 +31,15 @@ pub fn render_wikitext_raw(ctx: &mut HtmlContext, text: &str) {
         .inner(text);
 }
 
+pub fn render_html_entity(ctx: &mut HtmlContext, entity: &str) {
+    info!("Rendering HTML entity '{entity}'");
+
+    str_write!(ctx.buffer(), "{entity}");
+    if !entity.ends_with(';') {
+        str_write!(ctx.buffer(), ";");
+    }
+}
+
 pub fn render_email(ctx: &mut HtmlContext, email: &str) {
     info!("Rendering email address '{email}'");
 

@@ -112,6 +112,7 @@ pub enum Token {
     RightMonospace,
     Color,
     Raw,
+    HtmlEntity,
     LeftRaw,
     RightRaw,
 
@@ -255,6 +256,7 @@ impl Token {
             Rule::left_monospace => Token::LeftMonospace,
             Rule::right_monospace => Token::RightMonospace,
             Rule::raw => Token::Raw,
+            Rule::html_entity => Token::HtmlEntity,
             Rule::left_raw => Token::LeftRaw,
             Rule::right_raw => Token::RightRaw,
 

@@ -64,7 +64,7 @@ use self::math::{render_equation_reference, render_math_block, render_math_inlin
 use self::module::render_module;
 use self::table::render_table;
 use self::tabs::render_tabview;
-use self::text::{render_code, render_email, render_wikitext_raw};
+use self::text::{render_code, render_email, render_wikitext_raw, render_html_entity};
 use self::toc::render_table_of_contents;
 use self::user::render_user;
 use super::attributes::AddedAttributes;
@@ -96,6 +96,7 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
         Element::Module(module) => render_module(ctx, module),
         Element::Text(text) => ctx.push_escaped(text),
         Element::Raw(text) => render_wikitext_raw(ctx, text),
+        Element::HtmlEntity(text) => render_html_entity(ctx, text),
         Element::Variable(name) => render_variable(ctx, name),
         Element::Email(email) => render_email(ctx, email),
         Element::Table(table) => render_table(ctx, table),

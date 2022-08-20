@@ -53,7 +53,6 @@ use self::depth::{process_depths, DepthItem, DepthList};
 use self::element_condition::{ElementCondition, ElementConditionType};
 use self::paragraph::{gather_paragraphs, NO_CLOSE_CONDITION};
 use self::parser::Parser;
-use self::parser_wrap::ParserWrap;
 use self::rule::impls::RULE_PAGE;
 use self::string::parse_string;
 use self::strip::{strip_newlines, strip_whitespace};

@@ -19,7 +19,7 @@
  */
 
 use super::prelude::*;
-use crate::parsing::{strip_whitespace, ParserWrap};
+use crate::parsing::strip_whitespace;
 use crate::tree::{AcceptsPartial, AttributeMap, PartialElement, RubyText};
 use std::mem;
 

@@ -47,6 +47,14 @@ impl<'t> FullText<'t> {
         self.text
     }
 
+    /// Slices by specified indices.
+    /// 
+    /// # Panics
+    /// If the slices are out of range for the string, this function will panic.
+    pub fn slice_indices(&self, start: usize, end: usize) -> &'t str {
+        self.slice_impl("partial", start, end)
+    }
+
     /// Slices from the given start to end token.
     ///
     /// This is performed inclusively, capturing both tokens on each side,

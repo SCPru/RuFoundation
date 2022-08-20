@@ -96,6 +96,7 @@ pub use self::monospace::RULE_MONOSPACE;
 pub use self::null::RULE_NULL;
 pub use self::page::RULE_PAGE;
 pub use self::raw::RULE_RAW;
+pub use self::raw::RULE_RAW_HTML;
 pub use self::strikethrough::RULE_STRIKETHROUGH;
 pub use self::subscript::RULE_SUBSCRIPT;
 pub use self::superscript::RULE_SUPERSCRIPT;

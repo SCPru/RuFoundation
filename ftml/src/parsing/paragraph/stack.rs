@@ -133,25 +133,4 @@ impl<'t> ParagraphStack<'t> {
         // Return finished element list
         ok!(paragraph_safe; elements, exceptions)
     }
-
-    /// Converts all paragraph context into a set of `Element`s.
-    ///
-    /// You should only use this if you know for sure there are no exceptions,
-    /// and either have an alternate means of determining paragraph safety, or
-    /// statically know what that value would be.
-    pub fn into_elements(mut self) -> Vec<Element<'t>> {
-        info!("Converting paragraph parse stack into a Vec<Element>");
-
-        // Finish current paragraph, if any
-        self.end_paragraph();
-
-        // Check that there are no exceptions
-        debug_assert!(
-            self.exceptions.is_empty(),
-            "Exceptions found in ParagraphStack::into_elements()!",
-        );
-
-        // Deconstruct stack, return
-        self.finished
-    }
 }

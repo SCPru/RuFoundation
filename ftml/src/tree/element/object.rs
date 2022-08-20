@@ -63,6 +63,11 @@ pub enum Element<'t> {
     /// produce a `&nbsp;`.
     Raw(Cow<'t, str>),
 
+    /// HTML entity.
+    /// 
+    /// This is produced by a @< >@ raw tag.
+    HtmlEntity(Cow<'t, str>),
+
     /// A wikitext variable.
     ///
     /// During rendering, this will be replaced with its actual value,
@@ -315,6 +320,7 @@ impl Element<'_> {
             Element::Module(_) => "Module",
             Element::Text(_) => "Text",
             Element::Raw(_) => "Raw",
+            Element::HtmlEntity(_) => "HtmlEntity",
             Element::Variable(_) => "Variable",
             Element::Email(_) => "Email",
             Element::Table(_) => "Table",
@@ -367,6 +373,7 @@ impl Element<'_> {
             Element::Fragment(_) => true,
             Element::Text(_)
             | Element::Raw(_)
+            | Element::HtmlEntity(_)
             | Element::Variable(_)
             | Element::Email(_) => true,
             Element::Table(_) => false,
@@ -414,6 +421,7 @@ impl Element<'_> {
             Element::Module(module) => Element::Module(module.to_owned()),
             Element::Text(text) => Element::Text(string_to_owned(text)),
             Element::Raw(text) => Element::Raw(string_to_owned(text)),
+            Element::HtmlEntity(text) => Element::HtmlEntity(string_to_owned(text)),
             Element::Variable(name) => Element::Variable(string_to_owned(name)),
             Element::Email(email) => Element::Email(string_to_owned(email)),
             Element::Table(table) => Element::Table(table.to_owned()),

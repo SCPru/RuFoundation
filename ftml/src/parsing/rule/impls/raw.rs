@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::borrow::Cow;
+
 use super::prelude::*;
 
 macro_rules! raw {
@@ -30,6 +32,12 @@ pub const RULE_RAW: Rule = Rule {
     name: "raw",
     position: LineRequirement::Any,
     try_consume_fn,
+};
+
+pub const RULE_RAW_HTML: Rule = Rule {
+    name: "raw-html",
+    position: LineRequirement::Any,
+    try_consume_fn: try_consume_html_fn,
 };
 
 fn try_consume_fn<'p, 'r, 't>(
@@ -167,4 +175,53 @@ fn try_consume_fn<'p, 'r, 't>(
         // Update last token and step.
         end = parser.step()?;
     }
+}
+
+fn try_consume_html_fn<'p, 'r, 't>(
+    parser: &'p mut Parser<'r, 't>,
+) -> ParseResult<'r, 't, Elements<'t>> {
+    info!("Consuming tokens until end of HTML raw");
+
+    parser.step()?;
+
+    let mut elements = Vec::new();
+    let mut last_position = parser.current().span.start;
+
+    loop {
+        let ExtractedToken {
+            token,
+            slice,
+            span,
+        } = parser.current();
+
+        match token {
+            Token::RightRaw => {
+                // Possibly add more slices to the elements
+                if last_position != span.start {
+                    elements.push(text!(parser.full_text().slice_indices(last_position, span.start)));
+                }
+                parser.step()?;
+                break
+            }
+
+            Token::LineBreak | Token::ParagraphBreak | Token::InputEnd => {
+                return Err(parser.make_warn(ParseWarningKind::RuleFailed));
+            }
+
+            Token::HtmlEntity => {
+                // do not do anything yet
+                if last_position != span.start {
+                    elements.push(text!(parser.full_text().slice_indices(last_position, span.start)));
+                }
+                elements.push(Element::HtmlEntity(Cow::from(*slice)));
+                last_position = span.end;
+            }
+
+            _ => {}
+        }
+
+        parser.step()?;
+    }
+
+    ok!(true; elements, vec![])
 }

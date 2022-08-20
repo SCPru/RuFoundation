@@ -113,6 +113,11 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
         Element::Text(text) | Element::Raw(text) | Element::Email(text) => {
             ctx.push_str(text)
         }
+        Element::HtmlEntity(text) => {
+            ctx.push_str("<");
+            ctx.push_str(text);
+            ctx.push_str(">");
+        }
         Element::Variable(name) => {
             let value = match ctx.variables().get(name) {
                 Some(value) => str!(value),
