@@ -24,6 +24,7 @@ use super::clone::string_to_owned;
 use crate::id_prefix::isolate_ids;
 use crate::parsing::parse_boolean;
 use crate::settings::WikitextSettings;
+use crate::url::validate_href;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{self, Debug};
@@ -62,6 +63,11 @@ impl<'t> AttributeMap<'t> {
                             return None;
                         }
                     }
+                }
+
+                // Check for invalid [[a href]] attempt
+                if key.eq_ignore_ascii_case("href") && !validate_href(value) {
+                    return None;
                 }
 
                 // Add key/value pair to map

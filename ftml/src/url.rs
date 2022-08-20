@@ -20,6 +20,7 @@
 
 use crate::tree::LinkLocation;
 use std::borrow::Cow;
+use regex::{RegexBuilder, Regex};
 use wikidot_normalize::normalize;
 
 pub const URL_SCHEMES: [&str; 20] = [
@@ -45,10 +46,18 @@ pub const URL_SCHEMES: [&str; 20] = [
     "sftp://",
 ];
 
+lazy_static! {
+    static ref URL_REGEX: Regex = {
+        RegexBuilder::new(r"^[A-Za-z0-9$&+,/:;=?@%\-._~#]")
+            .build()
+            .unwrap()
+    };
+}
+
 pub fn is_url(url: &str) -> bool {
-    // If it's a URL
+    let lowered = url.to_lowercase();
     for scheme in &URL_SCHEMES {
-        if url.starts_with(scheme) {
+        if lowered.starts_with(scheme) {
             return true;
         }
     }
@@ -74,7 +83,7 @@ pub fn normalize_link<'a>(
 }
 
 pub fn normalize_href(url: &str) -> Cow<str> {
-    if is_url(url) || url.starts_with('#') || url == "javascript:;" {
+    if is_url(url) || url.starts_with('#') || url.contains('/') || url.eq_ignore_ascii_case("javascript:;") {
         Cow::Borrowed(url)
     } else {
         let mut url = str!(url);
@@ -82,6 +91,25 @@ pub fn normalize_href(url: &str) -> Cow<str> {
         url.insert(0, '/');
         Cow::Owned(url)
     }
+}
+
+pub fn validate_href(url: &str) -> bool {
+    // this attempts to match an URL that makes sense.
+    // if it starts with a scheme, then it's definitely valid and allowed
+    if is_url(url) {
+        return true
+    }
+    // if it starts with a weird character, it's not valid and not allowed
+    if !URL_REGEX.is_match(url) {
+        return false
+    }
+    // if it starts with invalid protocol, it's not allowed
+    let lowered = url.to_ascii_lowercase();
+    if lowered != "javascript:;" && lowered.starts_with("javascript:") {
+        return false
+    }
+
+    true
 }
 
 pub trait BuildSiteUrl {
