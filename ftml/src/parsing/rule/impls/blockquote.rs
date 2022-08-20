@@ -56,12 +56,12 @@ fn try_consume_fn<'p, 'r, 't>(
             tokens.push(parser.current().clone());
             parser.step()?;
             match parser.current().token {
-                Token::LineBreak | Token::ParagraphBreak => {
+                Token::LineBreak => {
                     tokens.push(parser.current().clone());
                     parser.step()?;
                     break
                 }
-                Token::InputEnd => break,
+                Token::InputEnd | Token::ParagraphBreak => break,
                 _ => {}
             }
         }
