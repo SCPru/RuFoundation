@@ -50,6 +50,16 @@ fn try_consume_fn<'p, 'r, 't>(
             Token::Whitespace => {
                 parser.step()?;
             }
+            Token::LineBreak => {
+                tokens.push(parser.current().clone());
+                parser.step()?;
+                continue
+            }
+            Token::ParagraphBreak => {
+                tokens.push(parser.current().clone());
+                parser.step()?;
+                break
+            }
             _ => {}
         }
         loop {
