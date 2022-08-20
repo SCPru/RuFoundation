@@ -20,6 +20,7 @@
 
 use super::prelude::*;
 use crate::parsing::paragraph::ParagraphStack;
+use crate::parsing::strip::strip_newlines;
 use crate::parsing::{process_depths, DepthItem, DepthList};
 use crate::tree::{AttributeMap, Container, ContainerType};
 
@@ -111,7 +112,9 @@ fn build_blockquote_element(list: DepthList<(), (Vec<Element>, bool)>) -> Elemen
     for item in list {
         match item {
             DepthItem::Item((elements, paragraph_safe)) => {
-                for element in elements {
+                let mut new_elements = elements.clone();
+                strip_newlines(&mut new_elements);
+                for element in new_elements {
                     stack.push_element(element, paragraph_safe);
                 }
             }

@@ -69,7 +69,7 @@ mod url;
 mod variable;
 
 pub use self::anchor::RULE_ANCHOR;
-pub use self::block::{RULE_BLOCK, RULE_BLOCK_SKIP_NEWLINE, RULE_BLOCK_STAR};
+pub use self::block::{RULE_BLOCK, RULE_BLOCK_STAR};
 pub use self::blockquote::RULE_BLOCKQUOTE;
 pub use self::bold::RULE_BOLD;
 pub use self::center::RULE_CENTER;

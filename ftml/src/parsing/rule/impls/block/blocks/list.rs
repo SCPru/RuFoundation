@@ -41,7 +41,7 @@ pub const BLOCK_OL: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: true,
     accepts_newlines: true,
-    accepts_partial: AcceptsPartial::None,
+    accepts_partial: AcceptsPartial::ListItem,
     parse_fn: parse_ordered_block,
 };
 

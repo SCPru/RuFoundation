@@ -35,12 +35,6 @@ pub const RULE_BLOCK_STAR: Rule = Rule {
     try_consume_fn: block_star,
 };
 
-pub const RULE_BLOCK_SKIP_NEWLINE: Rule = Rule {
-    name: "block-skip",
-    position: LineRequirement::Any, // this rule happens *on* a newline, not after one
-    try_consume_fn: block_skip,
-};
-
 // Rule implementations
 
 fn block_regular<'r, 't>(
@@ -53,35 +47,6 @@ fn block_regular<'r, 't>(
 fn block_star<'r, 't>(parser: &mut Parser<'r, 't>) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to process a block (with star flag)");
     parse_block(parser, true)
-}
-
-fn block_skip<'r, 't>(parser: &mut Parser<'r, 't>) -> ParseResult<'r, 't, Elements<'t>> {
-    info!("Trying to see if we skip a newline due to upcoming block");
-    let current = parser.step()?;
-
-    // See if there's a block upcoming
-    let result = parser.evaluate_fn(|parser| {
-        // Make sure this is the start of a block
-        if ![Token::LeftBlock, Token::LeftBlockStar].contains(&current.token) {
-            return Ok(false);
-        }
-
-        // Get the block's name
-        let (name, _) = parser.get_block_name(false)?;
-
-        // Get the block rule: if it accepts newlines, then we consume here
-        match get_block_rule_with_name(name) {
-            Some(block_rule) => Ok(block_rule.accepts_newlines),
-            None => Ok(false),
-        }
-    });
-
-    if result {
-        info!("Skipping newline due to upcoming line-terminated block");
-        ok!(Elements::None)
-    } else {
-        Err(parser.make_warn(ParseWarningKind::RuleFailed))
-    }
 }
 
 // Block parsing implementation

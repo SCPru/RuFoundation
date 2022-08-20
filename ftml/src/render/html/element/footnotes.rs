@@ -18,8 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::render::html::render::ItemRender;
-
 use super::prelude::*;
 
 pub fn render_footnote(ctx: &mut HtmlContext) {
