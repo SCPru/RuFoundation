@@ -29,6 +29,7 @@ pub const BLOCK_RUBY: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::Ruby,
     parse_fn: parse_block,
 };
 
@@ -38,6 +39,7 @@ pub const BLOCK_RT: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::None,
     parse_fn: parse_text,
 };
 
@@ -47,6 +49,7 @@ pub const BLOCK_RB: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: false,
+    accepts_partial: AcceptsPartial::None,
     parse_fn: parse_shortcut,
 };
 
@@ -64,7 +67,6 @@ fn parse_block<'r, 't>(
     assert!(!flag_score, "Ruby doesn't allow score flag");
     assert_block_name(&BLOCK_RUBY, name);
 
-    let parser = &mut ParserWrap::new(parser, AcceptsPartial::Ruby);
     let arguments = parser.get_head_map(&BLOCK_RUBY, in_head)?;
 
     let (mut elements, exceptions, paragraph_safe) =

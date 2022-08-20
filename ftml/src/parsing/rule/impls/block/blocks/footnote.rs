@@ -27,6 +27,7 @@ pub const BLOCK_FOOTNOTE: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: false,
+    accepts_partial: AcceptsPartial::None,
     parse_fn: parse_footnote_ref,
 };
 
@@ -36,6 +37,7 @@ pub const BLOCK_FOOTNOTE_BLOCK: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::None,
     parse_fn: parse_footnote_block,
 };
 

@@ -19,7 +19,7 @@
  */
 
 use super::prelude::*;
-use crate::parsing::{strip_whitespace, ParserWrap};
+use crate::parsing::strip_whitespace;
 use crate::tree::{
     AcceptsPartial, AttributeMap, PartialElement, Table, TableCell, TableRow,
 };
@@ -31,6 +31,7 @@ pub const BLOCK_TABLE: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::TableRow,
     parse_fn: parse_table,
 };
 
@@ -40,6 +41,7 @@ pub const BLOCK_TABLE_ROW: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::TableCell,
     parse_fn: parse_row,
 };
 
@@ -49,6 +51,7 @@ pub const BLOCK_TABLE_CELL_REGULAR: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::None,
     parse_fn: parse_cell_regular,
 };
 
@@ -58,6 +61,7 @@ pub const BLOCK_TABLE_CELL_HEADER: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::None,
     parse_fn: parse_cell_header,
 };
 
@@ -140,8 +144,6 @@ fn parse_table<'r, 't>(
     flag_score: bool,
     in_head: bool,
 ) -> ParseResult<'r, 't, Elements<'t>> {
-    let parser = &mut ParserWrap::new(parser, AcceptsPartial::TableRow);
-
     // Get block contents.
     let ParsedBlock {
         elements,
@@ -173,8 +175,6 @@ fn parse_row<'r, 't>(
     flag_score: bool,
     in_head: bool,
 ) -> ParseResult<'r, 't, Elements<'t>> {
-    let parser = &mut ParserWrap::new(parser, AcceptsPartial::TableCell);
-
     // Get block contents.
     let ParsedBlock {
         elements,
@@ -232,8 +232,6 @@ fn parse_cell_header<'r, 't>(
     flag_score: bool,
     in_head: bool,
 ) -> ParseResult<'r, 't, Elements<'t>> {
-    let parser = &mut ParserWrap::new(parser, AcceptsPartial::TableCell);
-
     // Get block contents.
     let ParsedBlock {
         elements,

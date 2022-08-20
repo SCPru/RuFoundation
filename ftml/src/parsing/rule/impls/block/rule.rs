@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use crate::parsing::parser_wrap::ParserWrap;
+
 use super::super::prelude::*;
 use super::mapping::get_block_rule_with_name;
 
@@ -137,5 +139,6 @@ where
     // This is responsible for parsing any arguments,
     // and terminating the block (the ']]' token),
     // then processing the body (if any) and tail block.
+    let parser = &mut ParserWrap::new(parser, block.accepts_partial);
     (block.parse_fn)(parser, name, flag_star, flag_score, in_head)
 }

@@ -27,6 +27,7 @@ pub const BLOCK_SPAN: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: true,
     accepts_newlines: false,
+    accepts_partial: AcceptsPartial::None,
     parse_fn,
 };
 

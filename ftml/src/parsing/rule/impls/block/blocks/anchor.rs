@@ -28,6 +28,7 @@ pub const BLOCK_ANCHOR: BlockRule = BlockRule {
     accepts_star: true,
     accepts_score: true,
     accepts_newlines: false,
+    accepts_partial: AcceptsPartial::None,
     parse_fn,
 };
 

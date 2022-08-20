@@ -35,6 +35,7 @@ pub const BLOCK_LATER: BlockRule = BlockRule {
     accepts_star: true,
     accepts_score: false,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::None,
     parse_fn,
 };
 

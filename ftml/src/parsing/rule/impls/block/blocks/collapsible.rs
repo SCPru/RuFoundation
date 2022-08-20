@@ -27,6 +27,7 @@ pub const BLOCK_COLLAPSIBLE: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::None,
     parse_fn,
 };
 

@@ -26,6 +26,7 @@ pub const BLOCK_DIV: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: true,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::None,
     parse_fn,
 };
 

@@ -20,7 +20,7 @@
 
 use super::prelude::*;
 use crate::parsing::strip::strip_whitespace;
-use crate::parsing::{strip_newlines, ParserWrap};
+use crate::parsing::strip_newlines;
 use crate::tree::{AcceptsPartial, ListItem, ListType, PartialElement};
 
 // Definitions
@@ -31,6 +31,7 @@ pub const BLOCK_UL: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: true,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::ListItem,
     parse_fn: parse_unordered_block,
 };
 
@@ -40,6 +41,7 @@ pub const BLOCK_OL: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: true,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::None,
     parse_fn: parse_ordered_block,
 };
 
@@ -49,6 +51,7 @@ pub const BLOCK_LI: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: true,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::None,
     parse_fn: parse_list_item,
 };
 
@@ -104,8 +107,6 @@ fn parse_list_block<'r, 't>(
         in_head,
         flag_score,
     );
-
-    let parser = &mut ParserWrap::new(parser, AcceptsPartial::ListItem);
 
     assert!(!flag_star, "List block doesn't allow star flag");
     assert_block_name(block_rule, name);

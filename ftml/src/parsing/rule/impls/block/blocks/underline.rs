@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use crate::tree::AcceptsPartial;
+
 use super::prelude::*;
 
 pub const BLOCK_UNDERLINE: BlockRule = BlockRule {
@@ -26,6 +28,7 @@ pub const BLOCK_UNDERLINE: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: false,
+    accepts_partial: AcceptsPartial::None,
     parse_fn,
 };
 

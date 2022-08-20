@@ -19,7 +19,6 @@
  */
 
 use super::prelude::*;
-use crate::parsing::ParserWrap;
 use crate::tree::{AcceptsPartial, PartialElement, Tab};
 
 pub const BLOCK_TABVIEW: BlockRule = BlockRule {
@@ -28,6 +27,7 @@ pub const BLOCK_TABVIEW: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::Tab,
     parse_fn: parse_tabview,
 };
 
@@ -37,6 +37,7 @@ pub const BLOCK_TAB: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: true,
+    accepts_partial: AcceptsPartial::None,
     parse_fn: parse_tab,
 };
 
@@ -47,8 +48,6 @@ fn parse_tabview<'r, 't>(
     flag_score: bool,
     in_head: bool,
 ) -> ParseResult<'r, 't, Elements<'t>> {
-    let parser = &mut ParserWrap::new(parser, AcceptsPartial::Tab);
-
     info!("Parsing tabview block (name '{name}', in-head {in_head})");
     assert!(!flag_star, "Tabview doesn't allow star flag");
     assert!(!flag_score, "Tabview doesn't allow score flag");

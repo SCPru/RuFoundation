@@ -27,7 +27,7 @@
 use crate::parsing::result::ParseResult;
 use crate::parsing::rule::{LineRequirement, Rule};
 use crate::parsing::Parser;
-use crate::tree::Elements;
+use crate::tree::{Elements, AcceptsPartial};
 use std::fmt::{self, Debug};
 
 mod arguments;
@@ -83,6 +83,9 @@ pub struct BlockRule {
     /// [[div]]My fancy inline div![[/div]]
     /// ```
     accepts_newlines: bool,
+
+    /// Whether this block accepts partial.
+    accepts_partial: AcceptsPartial,
 
     /// Function which implements the processing for this rule.
     parse_fn: BlockParseFn,
