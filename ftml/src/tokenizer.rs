@@ -29,6 +29,11 @@ pub struct Tokenization<'t> {
 
 impl<'t> Tokenization<'t> {
     #[inline]
+    pub fn new(full_text: FullText<'t>, tokens: Vec<ExtractedToken<'t>>) -> Self {
+        Tokenization { tokens, full_text }
+    }
+
+    #[inline]
     pub fn tokens<'r>(&'r self) -> &'r [ExtractedToken<'t>] {
         &self.tokens
     }

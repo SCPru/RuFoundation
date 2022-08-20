@@ -29,20 +29,6 @@ use super::{ExtractedToken, ParseWarning, Parser, Token, ParseWarningKind};
 /// Since an assert is used, this function will panic
 /// if the extracted token does not match the one specified.
 #[inline]
-pub fn assert_step<'r, 't>(
-    parser: &mut Parser<'r, 't>,
-    token: Token,
-) -> Result<&'r ExtractedToken<'t>, ParseWarning> {
-    let current = parser.current();
-
-    assert_eq!(current.token, token, "Opening token isn't {}", token.name());
-
-    parser.step()?;
-
-    Ok(current)
-}
-
-#[inline]
 pub fn check_step<'r, 't>(
     parser: &mut Parser<'r, 't>,
     token: Token,
@@ -70,5 +56,6 @@ fn check_step_fail() {
     let tokenization = crate::tokenize("**Apple** banana");
     let mut parser = Parser::new(&tokenization, &page_info, Rc::new(NullPageCallbacks{}), &settings);
 
-    let _ = assert_step(&mut parser, Token::Italics);
+    let result = check_step(&mut parser, Token::Italics);
+    assert!(matches!(result, Err(_)));
 }

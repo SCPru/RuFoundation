@@ -166,7 +166,7 @@ pipe = @{ "|" }
 equals = @{ "=" }
 colon = @{ ":" }
 underscore = @{ "_" }
-quote = @{ ">"+ }
+quote = @{ ">" ~ !!(space | NEWLINE | quote) }
 heading = @{ "+"{1,6} ~ ("*" ~ !"*")? }
 
 // }}}

@@ -74,7 +74,7 @@ class Command(BaseRunserverCommand):
 
             def on_moved(self, event):
                 super().on_moved(event)
-                self.updated(event.dst_path)
+                self.updated(event.dest_path)
 
             def on_created(self, event):
                 super().on_created(event)

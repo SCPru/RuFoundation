@@ -19,13 +19,13 @@
  */
 
 use super::condition::ParseCondition;
-use super::prelude::*;
+use super::{prelude::*, parse_internal, UnstructuredParseResult};
 use super::rule::Rule;
 use super::RULE_PAGE;
 use crate::data::{PageCallbacks, PageInfo};
 use crate::render::text::TextRender;
 use crate::tokenizer::Tokenization;
-use crate::tree::{AcceptsPartial, HeadingLevel};
+use crate::tree::{AcceptsPartial, HeadingLevel, Container, ContainerType, AttributeMap};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::{mem, ptr};
@@ -102,6 +102,67 @@ impl<'r, 't> Parser<'r, 't> {
             in_footnote: false,
             has_footnote_block: false,
             start_of_line: true,
+        }
+    }
+
+    // This runs a sub-parser, appending state to current structure.
+    #[inline]
+    pub fn sub_parse(&mut self, mut tokens: Vec<ExtractedToken<'t>>) -> Vec<Element<'t>> {
+        match tokens.first() {
+            Some(ExtractedToken{token: Token::InputStart, ..}) => {},
+            None => {},
+            _ => {
+                tokens.insert(0, ExtractedToken{token: Token::InputStart, slice: "", span: 0..0});
+            }
+        }
+
+        match tokens.last() {
+            Some(ExtractedToken{token: Token::InputEnd, ..}) => {},
+            None => {},
+            Some(ExtractedToken{span, ..}) => {
+                tokens.push(ExtractedToken{token: Token::InputEnd, slice: "", span: span.end..span.end});
+            }
+        }
+
+        let tokens_as_raw_text = tokens.iter().map(|x| x.slice).collect::<Vec<&str>>().join("");
+        let sub_tokenization: Tokenization = Tokenization::new(self.full_text, tokens);
+        let UnstructuredParseResult {
+            result,
+            table_of_contents_depths,
+            footnotes,
+            has_footnote_block,
+        } = parse_internal(self.page_info, self.page_callbacks.clone(), self.settings, &sub_tokenization);
+
+        match result {
+            Ok(ParseSuccess{item, ..}) => {
+                let elements: Vec<Element<'static>> = item.iter().map(|element| element.to_owned()).collect();
+
+                let mut toc_upd = self.table_of_contents.borrow_mut();
+                let mut foot_upd = self.footnotes.borrow_mut();
+        
+                for toc_depth in table_of_contents_depths {
+                    toc_upd.push(toc_depth.to_owned());
+                }
+        
+                for foot in footnotes {
+                    let elements = foot.iter().map(|element| element.to_owned()).collect();
+                    foot_upd.push(elements);
+                }
+        
+                self.has_footnote_block |= has_footnote_block;
+        
+                
+                elements
+            }
+            Err(_) => {
+                let element = Element::Container(Container::new(
+                    ContainerType::Paragraph,
+                    vec![text!(tokens_as_raw_text.as_str())],
+                    AttributeMap::new(),
+                )).to_owned();
+
+                vec![element]
+            }
         }
     }
 

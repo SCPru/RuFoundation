@@ -19,12 +19,7 @@
  */
 
 use super::prelude::*;
-use crate::parsing::paragraph::ParagraphStack;
-use crate::parsing::strip::strip_newlines;
-use crate::parsing::{process_depths, DepthItem, DepthList};
 use crate::tree::{AttributeMap, Container, ContainerType};
-
-const MAX_BLOCKQUOTE_DEPTH: usize = 30;
 
 pub const RULE_BLOCKQUOTE: Rule = Rule {
     name: "blockquote",
@@ -38,97 +33,48 @@ fn try_consume_fn<'p, 'r, 't>(
     info!("Parsing nested native blockquotes");
 
     // Context variables
-    let mut depths = Vec::new();
-    let mut exceptions = Vec::new();
+    let mut tokens = Vec::new();
+    let exceptions = Vec::new();
 
-    // Produce a depth list with elements
+    // Collect tokens inside this blockquote level.
     loop {
-        let current = parser.current();
-        let depth = match current.token {
-            // 1 or more ">"s in one token. Return ASCII length.
-            Token::Quote => current.slice.len(),
-
-            // Invalid token, bail
-            _ => {
-                warn!("Didn't find blockquote token, ending list iteration");
-                break;
-            }
-        };
+        match parser.current().token {
+            Token::Quote => {}
+            _ => break
+        }
+        // read all tokens until newline.
+        // after that, append the newline to tokens as well
         parser.step()?;
-        parser.get_optional_space()?; // allow whitespace after ">"
-
-        // Check that the depth isn't obscenely deep, to avoid DOS attacks via stack overflow.
-        if depth > MAX_BLOCKQUOTE_DEPTH {
-            info!("Native blockquote has a depth ({depth}) greater than the maximum ({MAX_BLOCKQUOTE_DEPTH})! Failing");
-            return Err(parser.make_warn(ParseWarningKind::BlockquoteDepthExceeded));
+        // if next token is whitespace, step over it. next token might be `>`, in which case we just ignore
+        match parser.current().token {
+            Token::Whitespace => {
+                parser.step()?;
+            }
+            _ => {}
         }
-
-        // Parse elements until we hit the end of the line
-        let mut paragraph_safe = true;
-        let mut elements = collect_consume(
-            parser,
-            RULE_BLOCKQUOTE,
-            &[],
-            &[
-                ParseCondition::current(Token::LineBreak),
-                ParseCondition::current(Token::ParagraphBreak),
-                ParseCondition::current(Token::InputEnd),
-            ],
-            &[],
-            None,
-        )?
-        .chain(&mut exceptions, &mut paragraph_safe);
-
-        // Add a line break for the end of the line
-        elements.push(Element::LineBreak);
-
-        // Append blockquote line
-        //
-        // Depth lists expect zero-based list depths, but tokens are one-based.
-        // So, we subtract one.
-        //
-        // This will not overflow because Token::Quote requires at least one ">".
-        depths.push((depth - 1, (), (elements, paragraph_safe)))
-    }
-
-    // This blockquote has no rows, so the rule fails
-    if depths.is_empty() {
-        return Err(parser.make_warn(ParseWarningKind::RuleFailed));
-    }
-
-    let depth_lists = process_depths((), depths);
-    let elements: Vec<Element> = depth_lists
-        .into_iter()
-        .map(|(_, depth_list)| build_blockquote_element(depth_list))
-        .collect();
-
-    ok!(false; elements, exceptions)
-}
-
-fn build_blockquote_element(list: DepthList<(), (Vec<Element>, bool)>) -> Element {
-    let mut stack = ParagraphStack::new();
-
-    // Convert depth list into a list of elements
-    for item in list {
-        match item {
-            DepthItem::Item((elements, paragraph_safe)) => {
-                for element in elements {
-                    stack.push_element(element, paragraph_safe);
+        loop {
+            tokens.push(parser.current().clone());
+            parser.step()?;
+            match parser.current().token {
+                Token::LineBreak | Token::ParagraphBreak => {
+                    tokens.push(parser.current().clone());
+                    parser.step()?;
+                    break
                 }
-            }
-            DepthItem::List(_, list) => {
-                let blockquote = build_blockquote_element(list);
-                stack.push_element(blockquote, false);
+                Token::InputEnd => break,
+                _ => {}
             }
         }
     }
 
-    let mut elements = stack.into_elements();
-    strip_newlines(&mut elements);
+    // tokens must contain the list of tokens inside the blockquote, as if it was separate source.
+    let elements = parser.sub_parse(tokens);
 
-    Element::Container(Container::new(
+    let result = Element::Container(Container::new(
         ContainerType::Blockquote,
         elements,
         AttributeMap::new(),
-    ))
+    ));
+
+    ok!(false; vec![result], exceptions)
 }
