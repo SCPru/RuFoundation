@@ -76,22 +76,6 @@ impl<'t> ParagraphStack<'t> {
         self.exceptions.append(exceptions);
     }
 
-    /// Remove the trailing line break if one exists.
-    ///
-    /// Exclusively for native blockquote logic, since
-    /// it needs to build blockquotes but also strip
-    /// excess line breaks.
-    ///
-    /// This should only be between lines in the blockquote.
-    #[inline]
-    pub fn pop_line_break(&mut self) {
-        debug!("Popping last element if Element::LineBreak");
-
-        if let Some(Element::LineBreak) = self.current.last() {
-            self.current.pop();
-        }
-    }
-
     pub fn build_paragraph(&mut self) -> Option<Element<'t>> {
         debug!(
             "Building paragraph from current stack state (length {})",
