@@ -49,7 +49,5 @@ fn parse_fn<'r, 't>(
         attributes: arguments.to_attribute_map(parser.settings()),
     };
 
-    println!("iframe args {:#?} to {:#?}", arguments.to_hash_map(),  arguments.to_attribute_map(parser.settings()));
-
     ok!(element)
 }

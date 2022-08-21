@@ -42,6 +42,12 @@ lazy_static! {
             .build()
             .unwrap()
     };
+    static ref TRAILING_WHITESPACE: Regex = {
+        RegexBuilder::new(r"[ \u00a0]+$")
+            .multi_line(true)
+            .build()
+            .unwrap()
+    };
     static ref LEADING_NEWLINES: Regex = Regex::new(r"^\n+").unwrap();
     static ref TRAILING_NEWLINES: Regex = Regex::new(r"\n+$").unwrap();
 }
@@ -56,6 +62,9 @@ pub fn substitute(text: &mut String) {
 
     // Strip leading whitespace
     regex_replace(text, &LEADING_WHITESPACE, " ");
+
+    // Strip trailing whitespace
+    regex_replace(text, &TRAILING_WHITESPACE, "");
 
     // Join concatenated lines (ending with '\')
     str_replace(text, "\\\n", "");
