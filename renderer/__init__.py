@@ -6,7 +6,6 @@ from django.utils.safestring import SafeString
 
 import modules
 from system.models import User
-from web.controllers import articles
 from web.models.articles import ArticleVersion, Article
 from web.models.sites import get_current_site
 from .parser import RenderContext
@@ -61,9 +60,8 @@ class CallbacksWithContext(ftml.Callbacks):
     # This function converts magical _default category to explicit _default category
     # This is so that we can later reuse this in the database query that will just concat the category+name for articles
     @staticmethod
-    def _page_name_to_dumb(page_name):
-        category, name = articles.get_name(page_name.lower())
-        return '%s:%s' % (category, name)
+    def _page_name_to_dumb(name):
+        return ('_default:%s' % name).lower() if ':' not in name else name.lower()
 
     def fetch_includes(self, include_refs: list[ftml.IncludeRef]) -> list[ftml.FetchedPage]:
         refs_as_dumb = [self._page_name_to_dumb(x.full_name) for x in include_refs]
