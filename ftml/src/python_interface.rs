@@ -12,7 +12,11 @@ use crate::prelude::*;
 use crate::render::html::HtmlRender;
 use crate::render::text::TextRender;
 
-fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, callbacks: Py<PyAny>) -> R::Output
+fn page_refs_to_string(refs: &Vec<PageRef>) -> Vec<String> {
+    refs.iter().map(|x| x.to_string()).collect()
+}
+
+fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, callbacks: Py<PyAny>) -> (R::Output, Vec<String>, Vec<String>)
 {
     let mut settings = WikitextSettings::from_mode(WikitextMode::Page);
     settings.use_include_compatibility = true;
@@ -21,13 +25,24 @@ fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, call
     let page_callbacks = Rc::new(PythonCallbacks{ callbacks: Box::new(callbacks) });
 
     // Substitute page inclusions
-    let (mut text, _included_pages) = include(input, &settings, includer, || panic!("Mismatched includer page count")).unwrap_or((input.to_owned(), vec![]));
+    let (mut text, included_pages) = include(input, &settings, includer, || panic!("Mismatched includer page count")).unwrap_or((input.to_owned(), vec![]));
 
     preprocess(&mut text);
     let tokens = tokenize(&mut text);
     let (tree, _warnings) = parse(&tokens, &page_info, page_callbacks.clone(), &settings).into();
     let output = renderer.render(&tree, &page_info, page_callbacks, &settings);
-    output
+    
+    (output, page_refs_to_string(&included_pages), page_refs_to_string(&tree.internal_links))
+}
+
+#[pyclass(name="RenderResult")]
+struct PyRenderResult {
+    #[pyo3(get)]
+    pub body: String,
+    #[pyo3(get)]
+    pub included_pages: Vec<String>,
+    #[pyo3(get)]
+    pub linked_pages: Vec<String>,
 }
 
 #[pyclass(name="IncludeRef")]
@@ -234,7 +249,7 @@ impl PageCallbacks for PythonCallbacks {
     }
 
     fn get_page_info<'a>(&self, page_refs: &Vec<PageRef<'a>>) -> Vec<PartialPageInfo<'static>> {
-        let py_names: Vec<String> = page_refs.iter().map(|x| x.to_string()).collect();
+        let py_names: Vec<String> = page_refs_to_string(&page_refs);
         let result: PyResult<Vec<PartialPageInfo<'static>>> = Python::with_gil(|py| {
             Ok(self.callbacks.getattr(py, "fetch_internal_links")?.call(py, (py_names,), None)?.extract::<Vec<PyRef<PyPartialPageInfo>>>(py)
                 ?.iter().map(|x| x.to_partial_page_info()).collect())
@@ -317,22 +332,28 @@ impl Callbacks {
 }
 
 #[pyfunction(kwargs="**")]
-fn render_html(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<HashMap<String, String>>
+fn render_html(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<PyRenderResult>
 {
-    let html_output = render(&mut source.to_string(), &HtmlRender, page_info.to_page_info(), callbacks);
+    let (html_output, included_pages, linked_pages) = render(&mut source.to_string(), &HtmlRender, page_info.to_page_info(), callbacks);
 
-    let mut output = HashMap::new();
-    output.insert(String::from("body"), html_output.body);
-    output.insert(String::from("style"), html_output.styles.join("\n"));
-
-    Ok(output)
+    Ok(PyRenderResult{
+        body: html_output.body,
+        included_pages,
+        linked_pages,
+    })
 }
 
 
 #[pyfunction(kwargs="**")]
-fn render_text(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<String>
+fn render_text(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<PyRenderResult>
 {
-    Ok(render(&mut source.to_string(), &TextRender, page_info.to_page_info(), callbacks))
+    let (text_output, included_pages, linked_pages) = render(&mut source.to_string(), &TextRender, page_info.to_page_info(), callbacks);
+
+    Ok(PyRenderResult{
+        body: text_output,
+        included_pages,
+        linked_pages,
+    })
 }
 
 

@@ -1,16 +1,12 @@
 import shutil
 from pathlib import Path
 
-from django import db
 from django.contrib.auth.models import AbstractUser as _UserType
-from django.db.models import QuerySet, Sum, Avg, Count, Max
-from django.db.models.functions import Coalesce
+from django.db.models import QuerySet, Sum, Avg, Count, Max, TextField, Value
+from django.db.models.functions import Coalesce, Concat, Lower
 
-from renderer import Parser
-from renderer.nodes import Node
-from renderer.nodes.include import IncludeNode
-from renderer.nodes.link_internal import InternalLinkNode
-from renderer.tokenizer import StaticTokenizer
+import renderer
+from renderer import RenderContext
 from web.models.articles import *
 from web.models.files import *
 
@@ -189,25 +185,23 @@ def refresh_article_links(article_version: ArticleVersion):
     # drop all links known before
     ExternalLink.objects.filter(link_from=article_name).delete()
     # parse current source
-    parsed = Parser(StaticTokenizer(article_version.source)).parse()
     already_added = []
-    # find include nodes
-    for node in Node.find_nodes_recursively(parsed.root, IncludeNode):
-        kt = '%s:include:%s' % (article_name.lower(), node.name.lower())
+    rc = RenderContext(article=article_version.article, source_article=article_version.article, path_params={}, user=None)
+    linked_pages, included_pages = renderer.single_pass_fetch_backlinks(article_version.source, rc)
+    for linked_page in linked_pages:
+        kt = '%s:include:%s' % (article_name.lower(), linked_page.lower())
         if kt in already_added:
             continue
         already_added.append(kt)
-        new_link = ExternalLink(link_from=article_name.lower(), link_type=ExternalLink.Type.Include, link_to=node.name.lower())
+        new_link = ExternalLink(link_from=article_name.lower(), link_type=ExternalLink.Type.Include, link_to=linked_page.lower())
         new_link.save()
     # find links
-    for node in Node.find_nodes_recursively(parsed.root, InternalLinkNode):
-        if node.external:
-            continue
-        kt = '%s:link:%s' % (article_name.lower(), node.article_id.lower())
+    for included_page in included_pages:
+        kt = '%s:link:%s' % (article_name.lower(), included_page.lower())
         if kt in already_added:
             continue
         already_added.append(kt)
-        new_link = ExternalLink(link_from=article_name.lower(), link_type=ExternalLink.Type.Link, link_to=node.article_id.lower())
+        new_link = ExternalLink(link_from=article_name.lower(), link_type=ExternalLink.Type.Link, link_to=included_page.lower())
         new_link.save()
 
 
@@ -565,3 +559,18 @@ def is_full_name_allowed(article_name: str) -> bool:
     if not category.strip() or not name.strip():
         return False
     return True
+
+
+# Fetch multiple articles by names
+def fetch_articles_by_names(original_names):
+    names = list(dict.fromkeys([('_default:%s' % x).lower() if ':' not in x else x.lower() for x in original_names]))
+    all_articles = Article.objects.annotate(
+        dumb_name=Lower(Concat('category', Value(':'), 'name', output_field=TextField()))).filter(dumb_name__in=names)
+    ret_map = dict()
+    for article in all_articles:
+        ret_map[article.dumb_name] = article
+    articles_dict = dict()
+    for name in original_names:
+        dumb_name = ('_default:%s' % name).lower() if ':' not in name else name.lower()
+        articles_dict[name] = ret_map[dumb_name]
+    return articles_dict

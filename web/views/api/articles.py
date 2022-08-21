@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 
-from renderer.nodes.link_internal import InternalLinkNode
 from . import APIView, APIError, takes_json
 
 from web.controllers import articles, permissions
@@ -221,7 +220,8 @@ class FetchExternalLinks(APIView):
         links_include = []
         links_links = []
 
-        articles_dict = InternalLinkNode.fetch_articles_by_names([link.link_from.lower() for link in links_all])
+        articles_dict = articles.fetch_articles_by_names([link.link_from.lower() for link in links_all])
+        print(repr(articles_dict))
 
         for link in links_all:
             article = articles_dict.get(link.link_from.lower())

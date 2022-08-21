@@ -1,5 +1,4 @@
-import logging
-import re
+from typing import Optional
 
 from django.db.models import TextField, Value
 from django.db.models.functions import Concat, Lower
@@ -10,19 +9,10 @@ from system.models import User
 from web.controllers import articles
 from web.models.articles import ArticleVersion, Article
 from web.models.sites import get_current_site
-from .nodes.html import HTMLNode
-from .nodes.image import ImageNode
-from .parser import Parser, ParseResult, ParseContext, RenderContext
-from .tokenizer import StaticTokenizer
-from .nodes import Node
-
-from ftml import ftml
-
-import time
-
+from .parser import RenderContext
 from .utils import render_user_to_html, render_template_from_string
 
-USE_RUST = True
+from ftml import ftml
 
 
 class CallbacksWithContext(ftml.Callbacks):
@@ -108,6 +98,7 @@ class CallbacksWithContext(ftml.Callbacks):
                 result.append(ftml.PartialPageInfo(full_name=ref, exists=True, title=page_map[ref_dumb].title))
         return result
 
+
 def page_info_from_context(context: RenderContext):
     site = get_current_site()
     return ftml.PageInfo(
@@ -119,50 +110,17 @@ def page_info_from_context(context: RenderContext):
     )
 
 
-def single_pass_render(source, context=None):
-    if USE_RUST:
-        t1 = time.time()
-        html = ftml.render_html(source, CallbacksWithContext(context), page_info_from_context(context))
-        t2 = time.time()
-        if context.article == context.source_article:
-            print('rendering %s took %.2fs' % (context.source_article, t2-t1))
-        html = html['body'] + '<style>' + html['style'] + '</style>'
-        return SafeString(html)
-    else:
-        t1 = time.time()
-        p = Parser(StaticTokenizer(source))
-        result = p.parse()
-        s = result.root.render(context)
-        t2 = time.time()
-        if context.article == context.source_article:
-            print('rendering %s took %.2fs' % (context.source_article, t2 - t1))
-        return s
+def single_pass_render(source, context=None) -> str:
+    html = ftml.render_html(source, CallbacksWithContext(context), page_info_from_context(context))
+    return SafeString(html.body)
 
 
-def single_pass_render_with_excerpt(source, context=None):
-    if USE_RUST:
-        t1 = time.time()
-        html = ftml.render_html(source, CallbacksWithContext(context), page_info_from_context(context))
-        html = html['body'] + '<style>'+html['style']+'</style>'
-        text = ftml.render_text(source, CallbacksWithContext(context), page_info_from_context(context))
-        t2 = time.time()
-        if context.article == context.source_article:
-            print('rendering %s with text took %.2fs' % (context.source_article, t2 - t1))
-        return SafeString(html), text, None
-    else:
-        t1 = time.time()
-        p = Parser(StaticTokenizer(source))
-        result = p.parse()
-        s, plain_text = result.root.render_with_plain_text(context)
-        plain_text = re.sub(r'\n+', '\n\n', plain_text)
-        if len(plain_text) > 256:
-            plain_text = plain_text[:256].strip() + '...'
-        image_nodes = Node.find_nodes_recursively(result.root, ImageNode)
-        image = None
-        for node in image_nodes:
-            if HTMLNode.get_attribute(node.attributes, 'featured', None):
-                image = node.get_image_url(context)
-        t2 = time.time()
-        if context.article == context.source_article:
-            print('rendering %s with text took %.2fs' % (context.source_article, t2 - t1))
-        return s, plain_text, image
+def single_pass_render_with_excerpt(source, context=None) -> [str, str, Optional[str]]:
+    html = ftml.render_html(source, CallbacksWithContext(context), page_info_from_context(context))
+    text = ftml.render_text(source, CallbacksWithContext(context), page_info_from_context(context))
+    return SafeString(html.body), text.body, None
+
+
+def single_pass_fetch_backlinks(source, context=None) -> tuple[list[str], list[str]]:
+    text = ftml.render_text(source, CallbacksWithContext(context), page_info_from_context(context))
+    return text.included_pages, text.linked_pages
