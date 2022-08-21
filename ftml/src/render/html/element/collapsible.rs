@@ -97,7 +97,7 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
                     ctx.html()
                         .a()
                         .attr(attr!("class" => "collapsible-block-link", "href" => "javascript:;"))
-                        .inner(show_text.as_str());
+                        .inner(&show_text);
                 });
 
             ctx.html()
@@ -112,7 +112,7 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
                                 ctx.html()
                                     .a()
                                     .attr(attr!("class" => "collapsible-block-link", "href" => "javascript:;"))
-                                    .inner(hide_text.as_str());
+                                    .inner(&hide_text);
                             });
                     };
 

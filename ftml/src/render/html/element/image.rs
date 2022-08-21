@@ -102,7 +102,7 @@ fn render_image_element(
         "" => build_link(ctx),
         other => {
             ctx.html().div()
-                .attr(attr!("class" => format!("image-container {other}").as_str()))
+                .attr(attr!("class" => &format!("image-container {other}")))
                 .contents(build_link);
         }
     }

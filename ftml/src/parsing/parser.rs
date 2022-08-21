@@ -157,7 +157,7 @@ impl<'r, 't> Parser<'r, 't> {
             Err(_) => {
                 let element = Element::Container(Container::new(
                     ContainerType::Paragraph,
-                    vec![text!(tokens_as_raw_text.as_str())],
+                    vec![text!(&tokens_as_raw_text)],
                     AttributeMap::new(),
                 )).to_owned();
 

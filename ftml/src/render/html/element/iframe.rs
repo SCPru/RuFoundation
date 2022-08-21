@@ -62,7 +62,7 @@ pub fn render_html(ctx: &mut HtmlContext, contents: &str) {
         .iframe()
         .attr(attr!(
             "id" => &id,
-            "srcdoc" => format!("{prepended_script}{contents}").as_str(),
+            "srcdoc" => &format!("{prepended_script}{contents}"),
             "sandbox" => "allow-scripts allow-top-navigation allow-popups",
             "style" => "width: 100%; height: 0",
             "class" => "w-iframe-autoresize",

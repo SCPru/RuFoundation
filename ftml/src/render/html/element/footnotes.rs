@@ -62,16 +62,16 @@ pub fn render_footnote_block(ctx: &mut HtmlContext, title: Option<&str>) {
             ctx.html()
                 .div()
                 .attr(attr!("class" => "title"))
-                .inner(title.as_str());
+                .inner(&title);
             for (index, contents) in ctx.footnotes().iter().enumerate() {
                 let index = index + 1;
                 ctx.html()
                     .div()
-                    .attr(attr!("id" => format!("footnote-{}", index).as_str(), "class" => "footnote-footer"))
+                    .attr(attr!("id" => &format!("footnote-{}", index), "class" => "footnote-footer"))
                     .contents(|ctx| {
                         ctx.html()
                             .a()
-                            .attr(attr!("href" => format!("#footnoteref-{}", index).as_str()))
+                            .attr(attr!("href" => &format!("#footnoteref-{}", index)))
                             .inner(index.to_string());
                         str_write!(ctx, ". ");
                         render_elements(ctx, contents);

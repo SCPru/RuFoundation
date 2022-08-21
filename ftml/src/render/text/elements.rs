@@ -307,11 +307,11 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
 
             // Top of collapsible
             ctx.add_newline();
-            ctx.push_str(show_text.as_str());
+            ctx.push_str(&show_text);
             ctx.add_newline();
 
             if *show_top {
-                ctx.push_str(hide_text.as_str());
+                ctx.push_str(&hide_text);
                 ctx.add_newline();
             }
 
@@ -321,7 +321,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             // Bottom of collapsible
             if *show_bottom {
                 ctx.add_newline();
-                ctx.push_str(hide_text.as_str());
+                ctx.push_str(&hide_text);
                 ctx.add_newline();
             }
         }
@@ -333,7 +333,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                 .get_message("table-of-contents");
 
             ctx.add_newline();
-            ctx.push_str(table_of_contents_title.as_str());
+            ctx.push_str(&table_of_contents_title);
             ctx.add_newline();
             render_elements(ctx, ctx.table_of_contents());
         }
@@ -364,7 +364,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             };
 
             ctx.add_newline();
-            ctx.push_str(title.as_str());
+            ctx.push_str(&title);
             ctx.add_newline();
 
             // Render footnotes in order.

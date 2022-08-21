@@ -53,16 +53,16 @@ pub fn render_table_of_contents(
                         ctx.html()
                             .a()
                             .attr(attr!("class" => "w-toc-hide", "href" => "javascript:;"))
-                            .inner(msg_toc_close.as_str());
+                            .inner(&msg_toc_close);
                         ctx.html()
                             .a()
                             .attr(attr!("class" => "w-toc-show", "style" => "display: none", "href" => "javascript:;"))
-                            .inner(msg_toc_open.as_str());
+                            .inner(&msg_toc_open);
                     });
                 ctx.html()
                     .div()
                     .attr(attr!("class" => "title"))
-                    .inner(msg_toc.as_str());
+                    .inner(&msg_toc);
 
                 let table_of_contents = ctx.table_of_contents();
 
