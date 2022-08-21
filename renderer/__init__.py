@@ -1,3 +1,4 @@
+import re
 from typing import Optional
 
 from django.db.models import TextField, Value
@@ -87,7 +88,6 @@ class CallbacksWithContext(ftml.Callbacks):
             .filter(dumb_name__in=refs_as_dumb)
         page_map = {}
         for item in pages:
-            print(repr(item))
             page_map[item.dumb_name] = item
         result = []
         for ref in page_refs:
@@ -115,8 +115,12 @@ def single_pass_render(source, context=None) -> str:
 
 def single_pass_render_with_excerpt(source, context=None) -> [str, str, Optional[str]]:
     html = ftml.render_html(source, CallbacksWithContext(context), page_info_from_context(context))
-    text = ftml.render_text(source, CallbacksWithContext(context), page_info_from_context(context))
-    return SafeString(html.body), text.body, None
+    text = ftml.render_text(source, CallbacksWithContext(context), page_info_from_context(context)).body
+    text = '\n'.join([x.strip() for x in text.split('\n')])
+    text = re.sub(r'\n+', '\n', text)
+    if len(text) > 384:
+        text = text[:384] + '...'
+    return SafeString(html.body), text, None
 
 
 def single_pass_fetch_backlinks(source, context=None) -> tuple[list[str], list[str]]:

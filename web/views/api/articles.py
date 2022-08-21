@@ -221,7 +221,6 @@ class FetchExternalLinks(APIView):
         links_links = []
 
         articles_dict = articles.fetch_articles_by_names([link.link_from.lower() for link in links_all])
-        print(repr(articles_dict))
 
         for link in links_all:
             article = articles_dict.get(link.link_from.lower())
