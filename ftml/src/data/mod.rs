@@ -21,13 +21,11 @@
 //! Module for POD (plain old data) structs.
 
 mod backlinks;
-mod karma;
 mod page_callbacks;
 mod page_info;
 mod page_ref;
 
 pub use self::backlinks::Backlinks;
-pub use self::karma::KarmaLevel;
 pub use self::page_callbacks::{PageCallbacks, NullPageCallbacks};
 pub use self::page_info::PageInfo;
 pub use self::page_ref::{PageRef, PageRefParseError};
