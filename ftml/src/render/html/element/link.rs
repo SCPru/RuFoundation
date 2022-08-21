@@ -84,7 +84,6 @@ pub fn render_link(
         }
     };
 
-    let site = ctx.info().site.as_ref().to_string();
     let mut tag = ctx.html().a();
     tag.attr(attr!(
         "href" => &url,

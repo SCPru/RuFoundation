@@ -17,7 +17,7 @@ name = "ftml"
 crate-type = ["cdylib", "lib"]
 
 [features]
-default  = ["html", "mathml"]
+default  = ["html"]
 # Adds HTML rendering.
 html     = []
 # Adds LaTeX -> MathML support for rendering.
