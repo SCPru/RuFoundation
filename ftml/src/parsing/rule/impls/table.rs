@@ -186,7 +186,7 @@ fn try_consume_fn<'p, 'r, 't>(
 
     // Build table
     let mut attributes = AttributeMap::new();
-    attributes.insert("class", cow!("wj-table"));
+    attributes.insert("class", cow!("wiki-content-table"));
 
     let table = Table { rows, attributes };
     ok!(false; Element::Table(table), exceptions)

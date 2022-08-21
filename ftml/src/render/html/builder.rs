@@ -82,26 +82,6 @@ where
         }
     }
 
-    /// Creates an inline `<svg>` using the `ui.svg` spritesheet.
-    pub fn sprite(self, id: &'t str) {
-        let viewbox = match id {
-            "wj-karma" => "0 0 64 114",
-            _ => "0 0 24 24",
-        };
-
-        let class = format!("wj-sprite sprite-{id}");
-        let href = format!("/files--static/media/ui.svg#{id}");
-
-        self.tag("svg")
-            .attr(attr!(
-                "class" => &class,
-                "viewBox" => viewbox,
-            ))
-            .contents(|ctx| {
-                ctx.html().tag("use").attr(attr!("href" => &href));
-            });
-    }
-
     tag_method!(em);
     tag_method!(a);
     tag_method!(br);

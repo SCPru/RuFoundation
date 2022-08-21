@@ -58,7 +58,7 @@ impl<'a> Collapsible<'a> {
 pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
     let Collapsible {
         elements,
-        attributes,
+        attributes: _attributes,
         start_open,
         show_text,
         hide_text,
@@ -86,107 +86,48 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
         _ => ctx.handle().get_message("collapsible-hide")
     };
 
-    if ctx.settings().syntax_compatibility {
-    
-        ctx.html()
-            .div()
-            .attr(attr!("class" => "w-collapsible collapsible-block"))
-            .contents(|ctx| {
-                ctx.html()
-                    .div()
-                    .attr(attr!("class" => "collapsible-block-folded", "style" => if start_open { "display: none" } else { "display: block" }))
-                    .contents(|ctx| {
-                        ctx.html()
-                            .a()
-                            .attr(attr!("class" => "collapsible-block-link", "href" => "javascript:;"))
-                            .inner(show_text.as_str());
-                    });
+    ctx.html()
+        .div()
+        .attr(attr!("class" => "w-collapsible collapsible-block"))
+        .contents(|ctx| {
+            ctx.html()
+                .div()
+                .attr(attr!("class" => "collapsible-block-folded", "style" => if start_open { "display: none" } else { "display: block" }))
+                .contents(|ctx| {
+                    ctx.html()
+                        .a()
+                        .attr(attr!("class" => "collapsible-block-link", "href" => "javascript:;"))
+                        .inner(show_text.as_str());
+                });
 
-                ctx.html()
-                    .div()
-                    .attr(attr!("class" => "collapsible-block-unfolded", "style" => if start_open { "display: block" } else { "display: none" }))
-                    .contents(|ctx| {
-                        let build_unfolded_link = |ctx: &mut HtmlContext| {
-                            ctx.html()
-                                .div()
-                                .attr(attr!("class" => "collapsible-block-unfolded-link"))
-                                .contents(|ctx| {
-                                    ctx.html()
-                                        .a()
-                                        .attr(attr!("class" => "collapsible-block-link", "href" => "javascript:;"))
-                                        .inner(hide_text.as_str());
-                                });
-                        };
-
-                        if show_top || !show_bottom {
-                            build_unfolded_link(ctx);
-                        }
-
+            ctx.html()
+                .div()
+                .attr(attr!("class" => "collapsible-block-unfolded", "style" => if start_open { "display: block" } else { "display: none" }))
+                .contents(|ctx| {
+                    let build_unfolded_link = |ctx: &mut HtmlContext| {
                         ctx.html()
                             .div()
-                            .attr(attr!("class" => "collapsible-block-content"))
-                            .inner(elements);
+                            .attr(attr!("class" => "collapsible-block-unfolded-link"))
+                            .contents(|ctx| {
+                                ctx.html()
+                                    .a()
+                                    .attr(attr!("class" => "collapsible-block-link", "href" => "javascript:;"))
+                                    .inner(hide_text.as_str());
+                            });
+                    };
 
-                        if show_bottom {
-                            build_unfolded_link(ctx);
-                        }
-                    });
-            });
+                    if show_top || !show_bottom {
+                        build_unfolded_link(ctx);
+                    }
 
-    } else {
-        
-        ctx.html()
-            .details()
-            .attr(attr!(
-                "class" => "wj-collapsible",
-                "open"; if start_open,
-                "data-show-top"; if show_top,
-                "data-show-bottom"; if show_bottom;;
-                attributes,
-            ))
-            .contents(|ctx| {
-                // Open/close button
-                ctx.html()
-                    .summary()
-                    .attr(attr!(
-                        "class" => "wj-collapsible-button wj-collapsible-button-top",
-                    ))
-                    .contents(|ctx| {
-                        // Block is folded text
-                        ctx.html()
-                            .span()
-                            .attr(attr!("class" => "wj-collapsible-show-text"))
-                            .inner(show_text.as_str());
-
-                        // Block is unfolded text
-                        ctx.html()
-                            .span()
-                            .attr(attr!("class" => "wj-collapsible-hide-text"))
-                            .inner(hide_text.as_str());
-                    });
-
-                // Content block
-                ctx.html()
-                    .div()
-                    .attr(attr!("class" => "wj-collapsible-content"))
-                    .inner(elements);
-
-                // Bottom open/close button
-                if show_bottom {
                     ctx.html()
-                        .element("wj-collapsible-button-bottom")
-                        .attr(attr!(
-                            "class" => "wj-collapsible-button wj-collapsible-button-bottom",
-                        ))
-                        .contents(|ctx| {
-                            // Block is unfolded text
-                            ctx.html()
-                                .span()
-                                .attr(attr!("class" => "wj-collapsible-hide-text"))
-                                .inner(hide_text.as_str());
-                        });
-                }
-            });
+                        .div()
+                        .attr(attr!("class" => "collapsible-block-content"))
+                        .inner(elements);
 
-    }
+                    if show_bottom {
+                        build_unfolded_link(ctx);
+                    }
+                });
+        });
 }

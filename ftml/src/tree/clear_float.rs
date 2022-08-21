@@ -25,13 +25,3 @@ pub enum ClearFloat {
     Right,
     Both,
 }
-
-impl ClearFloat {
-    pub fn html_class(self) -> &'static str {
-        match self {
-            ClearFloat::Left => "wj-clear-float-left",
-            ClearFloat::Right => "wj-clear-float-right",
-            ClearFloat::Both => "wj-clear-float-both",
-        }
-    }
-}

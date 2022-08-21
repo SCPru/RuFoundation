@@ -39,15 +39,6 @@ impl Alignment {
             Alignment::Justify => "justify",
         }
     }
-
-    pub fn html_class(self) -> &'static str {
-        match self {
-            Alignment::Left => "wj-align-left",
-            Alignment::Right => "wj-align-right",
-            Alignment::Center => "wj-align-center",
-            Alignment::Justify => "wj-align-justify",
-        }
-    }
 }
 
 impl TryFrom<&'_ str> for Alignment {
@@ -81,16 +72,6 @@ impl FloatAlignment {
         IMAGE_ALIGNMENT_REGEX
             .find(name)
             .and_then(|mtch| FloatAlignment::try_from(mtch.as_str()).ok())
-    }
-
-    pub fn html_class(self) -> &'static str {
-        match (self.align, self.float) {
-            (align, false) => align.html_class(),
-            (Alignment::Left, true) => "wj-float-left",
-            (Alignment::Center, true) => "wj-float-center",
-            (Alignment::Right, true) => "wj-float-right",
-            (Alignment::Justify, true) => "wj-float-justify",
-        }
     }
 }
 

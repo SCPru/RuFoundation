@@ -39,7 +39,6 @@ pub use self::output::HtmlOutput;
 #[cfg(test)]
 use super::prelude;
 
-use self::attributes::AddedAttributes;
 use self::context::HtmlContext;
 use crate::data::{PageCallbacks, PageInfo};
 use crate::render::html::element::render_elements;
@@ -87,14 +86,7 @@ impl Render for HtmlRender {
         }
 
         // Crawl through elements and generate HTML
-        if settings.syntax_compatibility {
-            render_elements(&mut ctx, &tree.elements);
-        } else {
-            ctx.html()
-                .element("wj-body")
-                .attr(attr!("class" => "wj-body"))
-                .inner(&tree.elements);
-        }
+        render_elements(&mut ctx, &tree.elements);
 
         // Build and return HtmlOutput
         ctx.into()

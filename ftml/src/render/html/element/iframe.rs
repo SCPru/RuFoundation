@@ -34,12 +34,39 @@ pub fn render_iframe(ctx: &mut HtmlContext, url: &str, attributes: &AttributeMap
 }
 
 pub fn render_html(ctx: &mut HtmlContext, contents: &str) {
-    info!("Rendering html block (submitting to remote for iframe)");
+    info!("Rendering html block");
 
-    // Submit HTML to be hosted on wjfiles, then get back its URL for the iframe.
-    let iframe_url = ctx.handle().post_html(ctx.info(), contents);
-    ctx.html().iframe().attr(attr!(
-        "src" => &iframe_url,
-        "crossorigin",
-    ));
+    let id = ctx.random().generate_html_id();
+
+    let prepended_script = format!(r#"
+    <script>
+    (function(){{
+        let lastHeight = 0;
+        function doFrame() {{
+            const body = document.body;
+            const html = document.documentElement;
+            const height = Math.max(body && body.scrollHeight, body && body.offsetHeight,
+                html.clientHeight, html.scrollHeight, html.offsetHeight, body && body.getBoundingClientRect().height);
+            window.requestAnimationFrame(doFrame);
+            if (lastHeight !== height) {{
+                parent.postMessage({{type: 'iframe-change-height', payload: {{ height, id: '{id}' }} }}, '*');
+                lastHeight = height;
+            }}
+        }}
+        doFrame();
+    }})();
+    </script>
+    "#);
+
+    ctx.html()
+        .iframe()
+        .attr(attr!(
+            "id" => &id,
+            "srcdoc" => format!("{prepended_script}{contents}").as_str(),
+            "sandbox" => "allow-scripts allow-top-navigation allow-popups",
+            "style" => "width: 100%; height: 0",
+            "class" => "w-iframe-autoresize",
+            "frameborder" => "0",
+            "allowtransparency" => "true"
+        ));
 }

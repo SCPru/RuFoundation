@@ -39,46 +39,32 @@ pub fn render_container(ctx: &mut HtmlContext, container: &Container) {
         ContainerType::Paragraph => {
             match container.elements().first() {
                 Some(Element::AlignMarker(alignment)) => {
-                    if ctx.settings().syntax_compatibility {
-                        let style = match alignment {
-                            crate::tree::Alignment::Left => "text-align: left",
-                            crate::tree::Alignment::Right => "text-align: right",
-                            crate::tree::Alignment::Center => "text-align: center",
-                            crate::tree::Alignment::Justify => "text-align: justify",
-                        };
-                        ctx.html()
-                            .tag("p")
-                            .attr(attr!("style" => style))
-                            .inner(container.elements());
-                    } else {
-                        ctx.html()
-                            .tag("p")
-                            .attr(attr!("class" => alignment.html_class()))
-                            .inner(container.elements());
-                    }
+                    let style = match alignment {
+                        crate::tree::Alignment::Left => "text-align: left",
+                        crate::tree::Alignment::Right => "text-align: right",
+                        crate::tree::Alignment::Center => "text-align: center",
+                        crate::tree::Alignment::Justify => "text-align: justify",
+                    };
+                    ctx.html()
+                        .tag("p")
+                        .attr(attr!("style" => style))
+                        .inner(container.elements());
                 }
                 _ => render_container_internal(ctx, container),
             }
         }
 
         ContainerType::Align(alignment) => {
-            if ctx.settings().syntax_compatibility {
-                let style = match alignment {
-                    crate::tree::Alignment::Left => "text-align: left",
-                    crate::tree::Alignment::Right => "text-align: right",
-                    crate::tree::Alignment::Center => "text-align: center",
-                    crate::tree::Alignment::Justify => "text-align: justify",
-                };
-                ctx.html()
-                    .tag("div")
-                    .attr(attr!("style" => style))
-                    .inner(container.elements());
-            } else {
-                ctx.html()
-                    .tag("div")
-                    .attr(attr!("class" => alignment.html_class()))
-                    .inner(container.elements());
-            }
+            let style = match alignment {
+                crate::tree::Alignment::Left => "text-align: left",
+                crate::tree::Alignment::Right => "text-align: right",
+                crate::tree::Alignment::Center => "text-align: center",
+                crate::tree::Alignment::Justify => "text-align: justify",
+            };
+            ctx.html()
+                .tag("div")
+                .attr(attr!("style" => style))
+                .inner(container.elements());
         }
 
         // Render normally

@@ -18,13 +18,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::data::{PageInfo, UserInfo};
+use crate::data::PageInfo;
 use crate::prelude::PageCallbacks;
 use crate::settings::WikitextSettings;
 use crate::tree::{ImageSource, LinkLabel, LinkLocation, Module};
 use crate::url::BuildSiteUrl;
 use std::borrow::Cow;
-use std::num::NonZeroUsize;
 use std::rc::Rc;
 use strum_macros::IntoStaticStr;
 use wikidot_normalize::normalize;
@@ -81,14 +80,6 @@ impl Handle {
         true
     }
 
-    pub fn get_user_info<'a>(&self, name: &'a str) -> Option<UserInfo<'a>> {
-        info!("Fetching user info (name '{name}')");
-        let mut info = UserInfo::dummy();
-        info.user_name = cow!(name);
-        info.user_profile_url = Cow::Owned(format!("/user:info/{name}"));
-        Some(info)
-    }
-
     pub fn get_image_link<'a>(
         &self,
         source: &ImageSource<'a>,
@@ -136,8 +127,8 @@ impl Handle {
                 LinkLocation::Page(page_ref) => page_ref.page(),
             },
             LinkLabel::Page => match link {
-                LinkLocation::Url(_) => {
-                    panic!("Requested link label of page for a URL");
+                LinkLocation::Url(url) => {
+                    url.as_ref()
                 }
                 LinkLocation::Page(page_ref) => {
                     let (site, page) = page_ref.fields_or(site);
@@ -156,25 +147,6 @@ impl Handle {
 
     pub fn get_message(&self, message: &str) -> String {
         self.callbacks.get_i18n_message(Cow::from(message)).as_ref().to_owned()
-    }
-
-    pub fn post_html(&self, info: &PageInfo, html: &str) -> String {
-        info!("Submitting HTML to create iframe-able snippet");
-
-        let _ = info;
-        let _ = html;
-
-        // TODO
-        str!("https://example.com/")
-    }
-
-    pub fn post_code(&self, index: NonZeroUsize, code: &str) {
-        info!("Submitting code snippet (index {})", index.get());
-
-        let _ = index;
-        let _ = code;
-
-        // TODO
     }
 }
 

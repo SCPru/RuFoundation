@@ -19,7 +19,7 @@
  */
 
 use super::prelude::*;
-use crate::tree::Table;
+use crate::tree::{Table, Alignment};
 use std::num::NonZeroU32;
 
 pub fn render_table(ctx: &mut HtmlContext, table: &Table) {
@@ -43,8 +43,11 @@ pub fn render_table(ctx: &mut HtmlContext, table: &Table) {
                             // Each cell in a row
                             for cell in &row.cells {
                                 let elements: &[Element] = &cell.elements;
-                                let align_class = match cell.align {
-                                    Some(align) => align.html_class(),
+                                let align_style = match cell.align {
+                                    Some(Alignment::Left) => "text-align: left",
+                                    Some(Alignment::Right) => "text-align: right",
+                                    Some(Alignment::Center) => "text-align: center",
+                                    Some(Alignment::Justify) => "text-align: justify",
                                     None => "",
                                 };
 
@@ -61,7 +64,7 @@ pub fn render_table(ctx: &mut HtmlContext, table: &Table) {
                                             if cell.column_span > value_one,
 
                                         // Add alignment if specified
-                                        "class" => align_class;
+                                        "style" => align_style;
                                             if cell.align.is_some();;
 
                                         &cell.attributes,

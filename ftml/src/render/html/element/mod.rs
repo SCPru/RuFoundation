@@ -69,7 +69,7 @@ use self::toc::render_table_of_contents;
 use self::user::render_user;
 use super::attributes::AddedAttributes;
 use super::HtmlContext;
-use crate::tree::Element;
+use crate::tree::{Element, ClearFloat};
 use ref_map::*;
 
 pub fn render_elements(ctx: &mut HtmlContext, elements: &[Element]) {
@@ -200,8 +200,13 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
             }
         }
         Element::ClearFloat(clear_float) => {
+            let style = match clear_float {
+                ClearFloat::Left => "clear: left; ",
+                ClearFloat::Right => "clear: right; ",
+                ClearFloat::Both => "clear: both; ",
+            };
             ctx.html().div().attr(attr!(
-                "class" => "wj-clear-float " clear_float.html_class(),
+                "style" => style "height: 0; font-size: 1px;",
             ));
         }
         Element::HorizontalRule => {

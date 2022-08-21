@@ -25,11 +25,9 @@ mod karma;
 mod page_callbacks;
 mod page_info;
 mod page_ref;
-mod user_info;
 
 pub use self::backlinks::Backlinks;
 pub use self::karma::KarmaLevel;
 pub use self::page_callbacks::{PageCallbacks, NullPageCallbacks};
 pub use self::page_info::PageInfo;
 pub use self::page_ref::{PageRef, PageRefParseError};
-pub use self::user_info::UserInfo;

@@ -57,56 +57,24 @@ pub fn render_code(ctx: &mut HtmlContext, language: Option<&str>, contents: &str
         "Rendering code block (language {})",
         language.unwrap_or("<none>"),
     );
-    let index = ctx.next_code_snippet_index();
-    ctx.handle().post_code(index, contents);
 
     let class = {
-        let mut class = format!("wj-code wj-language-{}", language.unwrap_or("none"));
+        let mut class = format!("code w-code w-code-{}", language.unwrap_or("none"));
         class.make_ascii_lowercase();
         class
     };
 
     ctx.html()
-        .element("wj-code")
+        .div()
         .attr(attr!("class" => &class))
         .contents(|ctx| {
-            // Panel for holding additional features
             ctx.html()
                 .div()
-                .attr(attr!(
-                    "class" => "wj-code-panel",
-                ))
+                .attr(attr!("class" => "hl-main"))
                 .contents(|ctx| {
-                    let button_title = ctx
-                        .handle()
-                        .get_message("button-copy-clipboard");
-
-                    // Copy to clipboard button
                     ctx.html()
-                        .element("wj-code-copy")
-                        .attr(attr!(
-                            "type" => "button",
-                            "class" => "wj-code-copy",
-                            "title" => button_title.as_str(),
-                        ))
-                        .contents(|ctx| {
-                            ctx.html().sprite("wj-clipboard");
-                            // Hidden normally, shown when clicked
-                            ctx.html().sprite("wj-clipboard-success");
-                        });
-
-                    // Span showing name of language
-                    ctx.html()
-                        .span()
-                        .attr(attr!(
-                            "class" => "wj-code-language",
-                        ))
-                        .inner(language.unwrap_or(""));
+                        .pre()
+                        .inner(contents);
                 });
-
-            // Code block containing highlighted contents
-            ctx.html().pre().contents(|ctx| {
-                ctx.html().code().inner(contents);
-            });
         });
 }

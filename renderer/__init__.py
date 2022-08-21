@@ -34,7 +34,8 @@ class CallbacksWithContext(ftml.Callbacks):
         return modules.module_has_content(module_name.lower())
 
     def render_module(self, module_name: str, params: dict[str, str], body: str) -> str:
-        return modules.render_module(module_name, self.context, params, content=body)
+        params_for_module = {key.lower(): value for (key, value) in params.items()}
+        return modules.render_module(module_name, self.context, params_for_module, content=body)
 
     def render_user(self, user: str, avatar: bool) -> str:
         try:

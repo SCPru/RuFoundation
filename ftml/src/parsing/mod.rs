@@ -62,7 +62,7 @@ use crate::settings::WikitextSettings;
 use crate::tokenizer::Tokenization;
 use crate::tree::{
     AttributeMap, Element, LinkLabel, LinkLocation, LinkType,
-    SyntaxTree, Container, ContainerType, ListItem, ListType,
+    SyntaxTree, Container, ContainerType,
 };
 use std::borrow::Cow;
 use std::rc::Rc;
@@ -119,7 +119,7 @@ where
             // Convert TOC depth lists
             let table_of_contents = process_depths((), table_of_contents_depths)
                 .into_iter()
-                .map(|(_, items)| build_toc_list_element(&mut incrementer, items, settings.syntax_compatibility))
+                .map(|(_, items)| build_toc_list_element(&mut incrementer, items))
                 .collect::<Vec<_>>();
 
             // Add a footnote block at the end,
@@ -238,42 +238,9 @@ fn unwrap_toc_list(depth: usize, incr: &mut Incrementer, list: DepthList<(), Str
 fn build_toc_list_element(
     incr: &mut Incrementer,
     list: DepthList<(), String>,
-    syntax_compatibility: bool,
 ) -> Element<'static> {
-    if syntax_compatibility {
-        let items = unwrap_toc_list(0, incr, list);
-        Element::Fragment(items)
-    } else {
-        let build_item = |item| match item {
-            DepthItem::List(_, list) => ListItem::SubList {
-                element: Box::new(build_toc_list_element(incr, list, false)),
-            },
-            DepthItem::Item(name) => {
-                let anchor = format!("#toc{}", incr.next());
-                let link = Element::Link {
-                    ltype: LinkType::TableOfContents,
-                    link: LinkLocation::Url(Cow::Owned(anchor)),
-                    label: LinkLabel::Text(Cow::Owned(name)),
-                    target: None,
-                };
-    
-                ListItem::Elements {
-                    hidden: false,
-                    elements: vec![link],
-                    attributes: AttributeMap::new(),
-                }
-            }
-        };
-    
-        let items = list.into_iter().map(build_item).collect();
-        let attributes = AttributeMap::new();
-    
-        Element::List {
-            ltype: ListType::Bullet,
-            items,
-            attributes,
-        }
-    }
+    let items = unwrap_toc_list(0, incr, list);
+    Element::Fragment(items)
 }
 
 // Incrementer for TOC

@@ -40,7 +40,6 @@ pub fn render_anchor(
     ctx.html()
         .a()
         .attr(attr!(
-            "class" => "wj-anchor",
             "target" => target_value; if target.is_some();;
             attributes,
         ))
@@ -68,23 +67,14 @@ pub fn render_link(
     };
 
     let css_class = match link {
-        LinkLocation::Url(url) if url == "javascript:;" => "wj-link-anchor",
-        LinkLocation::Url(url) if url.starts_with('#') => "wj-link-anchor",
-        LinkLocation::Url(url) if url.starts_with('/') => "wj-link-internal",
-        LinkLocation::Url(_) => "wj-link-external",
+        LinkLocation::Url(_) => None,
         LinkLocation::Page(page) => {
             if ctx.page_exists(page) {
-                "wj-link-internal"
+                None
             } else {
-                "wj-link-internal wj-link-missing"
+                Some("newpage")
             }
         }
-    };
-
-    let interwiki_class = if ltype == LinkType::Interwiki {
-        " wj-link-interwiki"
-    } else {
-        ""
     };
 
     let site = ctx.info().site.as_ref().to_string();
@@ -92,8 +82,7 @@ pub fn render_link(
     tag.attr(attr!(
         "href" => &url,
         "target" => target_value; if target.is_some(),
-        "class" => "wj-link " css_class interwiki_class,
-        "data-link-type" => ltype.name(),
+        "class" => css_class.unwrap_or(""); if css_class.is_some(),
     ));
 
     // Add <a> internals, i.e. the link name

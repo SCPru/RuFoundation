@@ -62,7 +62,6 @@ fn isolate_user_ids() {
         isolate_user_ids: true,
         allow_local_paths: true,
         interwiki: EMPTY_INTERWIKI.clone(),
-        syntax_compatibility: true,
     };
 
     fn append_footnote_block(mut elements: Vec<Element>) -> Vec<Element> {

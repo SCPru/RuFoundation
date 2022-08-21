@@ -15,7 +15,6 @@ use crate::render::text::TextRender;
 fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, callbacks: Py<PyAny>) -> R::Output
 {
     let mut settings = WikitextSettings::from_mode(WikitextMode::Page);
-    settings.syntax_compatibility = true;
     settings.use_include_compatibility = true;
 
     let includer = PythonCallbacks{ callbacks: Box::new(callbacks.clone()) };
