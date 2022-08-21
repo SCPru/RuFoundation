@@ -19,7 +19,7 @@
  */
 
 use super::prelude::*;
-use crate::tree::{FloatAlignment, ImageSource, LinkLocation};
+use crate::{tree::{FloatAlignment, ImageSource, LinkLocation}, url::validate_href};
 
 pub const BLOCK_IMAGE: BlockRule = BlockRule {
     name: "block-image",
@@ -44,7 +44,15 @@ fn parse_fn<'r, 't>(
     assert_block_name(&BLOCK_IMAGE, name);
 
     let (source, mut arguments) = parser.get_head_name_map(&BLOCK_IMAGE, in_head)?;
-    let link = arguments.get("link").map(LinkLocation::parse);
+    let link = match arguments.get("link") {
+        Some(link) => {
+            if !validate_href(&link) {
+                return Err(parser.make_warn(ParseWarningKind::InvalidUrl));
+            }
+            Some(LinkLocation::parse(link))
+        }
+        None => None
+    };
     let alignment = FloatAlignment::parse(name);
 
     // Parse the image source based on format
