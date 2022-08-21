@@ -129,6 +129,17 @@ impl<'r, 't> ParseSuccess<'r, 't, Elements<'t>> {
 
         Ok(())
     }
+
+    pub fn has_partials(&self) -> bool {
+        let mut has_partials = false;
+        for element in &self.item {
+            if matches!(element, Element::Partial(_)) {
+                has_partials = true;
+                break
+            }
+        }
+        has_partials
+    }
 }
 
 impl<'r, 't> ParseSuccess<'r, 't, ()> {

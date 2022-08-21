@@ -68,6 +68,7 @@ pub fn consume<'p, 'r, 't>(
         debug!("Trying rule consumption for tokens (rule {})", rule.name());
 
         let old_remaining = parser.remaining();
+
         match rule.try_consume(parser) {
             Ok(output) => {
                 info!("Rule {} matched, returning generated result", rule.name());
@@ -89,7 +90,8 @@ pub fn consume<'p, 'r, 't>(
 
                 // Store to cache
                 // Avoid caching InputStart, InputEnd or other possible null tokens; this breaks cache
-                if current.span.start != current.span.end {
+                // Avoid caching partials because they depend on the _real_ context
+                if current.span.start != current.span.end && !output.has_partials() {
                     parser.put_cached_node(this_pos, step_orig - parser.remaining().len(), output.to_owned());
                 }
 
@@ -113,14 +115,26 @@ pub fn consume<'p, 'r, 't>(
     debug!("Removing non-warnings from exceptions list");
     all_exceptions.retain(|exception| matches!(exception, ParseException::Warning(_)));
 
+    let mut is_partial_error = false;
     // If we've hit the recursion limit, just bail
+    // If the error was caused by presence of unexpected partials, do not cache it; this partial might be valid in other context
     if let Some(ParseException::Warning(warning)) = all_exceptions.last() {
-        if warning.kind() == ParseWarningKind::RecursionDepthExceeded {
-            error!("Found recursion depth error, failing");
-            return Err(warning.clone());
+        match warning.kind() {
+            ParseWarningKind::RecursionDepthExceeded => {
+                error!("Found recursion depth error, failing");
+                return Err(warning.clone());
+            }
+            ParseWarningKind::ListItemOutsideList
+            |ParseWarningKind::TableRowOutsideTable
+            |ParseWarningKind::TableCellOutsideTable
+            |ParseWarningKind::TabOutsideTabView
+            |ParseWarningKind::RubyTextOutsideRuby => {
+                is_partial_error = true;
+            }
+            _ => {}
         }
     }
-
+    
     // Add fallback warning to exceptions list
     all_exceptions.push(ParseException::Warning(ParseWarning::new(
         ParseWarningKind::NoRulesMatch,
@@ -135,7 +149,7 @@ pub fn consume<'p, 'r, 't>(
 
     // Store text node to cache as well; this is the most important part so that we know to not re-parse failed nodes
     // Avoid caching InputStart, InputEnd or other possible null tokens; this breaks cache
-    if current.span.start != current.span.end {
+    if current.span.start != current.span.end && !is_partial_error {
         parser.put_cached_node(this_pos, step_orig - parser.remaining().len(), failure_output.clone().unwrap());
     }
 
