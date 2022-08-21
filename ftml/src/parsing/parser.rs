@@ -27,6 +27,7 @@ use crate::render::text::TextRender;
 use crate::tokenizer::Tokenization;
 use crate::tree::{AcceptsPartial, HeadingLevel, Container, ContainerType, AttributeMap};
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::{mem, ptr};
 
@@ -43,6 +44,7 @@ pub struct Parser<'r, 't> {
     current: &'r ExtractedToken<'t>,
     remaining: &'r [ExtractedToken<'t>],
     full_text: FullText<'t>,
+    ast_cache: Rc<RefCell<HashMap<usize, (usize, ParseSuccess<'r, 't, Elements<'t>>)>>>,
 
     // Rule state
     rule: Rule,
@@ -93,6 +95,7 @@ impl<'r, 't> Parser<'r, 't> {
             settings,
             current,
             remaining,
+            ast_cache: Rc::new(RefCell::new(HashMap::new())),
             full_text,
             rule: RULE_PAGE,
             depth: 0,
@@ -414,6 +417,19 @@ impl<'r, 't> Parser<'r, 't> {
     #[inline]
     pub fn remaining(&self) -> &'r [ExtractedToken<'t>] {
         self.remaining
+    }
+
+    #[inline]
+    pub fn cached_node(&self, offset: usize) -> Option<(usize, ParseSuccess<'r, 't, Elements<'t>>)> {
+        match self.ast_cache.borrow().get(&offset) {
+            Some((consumed_tokens, success)) => Some((*consumed_tokens, success.to_owned())),
+            None => None
+        }
+    }
+
+    #[inline]
+    pub fn put_cached_node(&mut self, offset: usize, consumed_tokens: usize, node: ParseSuccess<'r, 't, Elements<'t>>) {
+        self.ast_cache.borrow_mut().insert(offset, (consumed_tokens, node));
     }
 
     #[inline]

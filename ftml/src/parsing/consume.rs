@@ -52,6 +52,18 @@ pub fn consume<'p, 'r, 't>(
     let mut all_exceptions = Vec::new();
     let current = parser.current();
 
+    // check if this node is cached
+    let this_pos = current.span.start;
+    let step_orig = parser.remaining().len();
+    match parser.cached_node(this_pos) {
+        Some((consumed_tokens, result)) => {
+            parser.step_n(consumed_tokens)?;
+            parser.depth_decrement();
+            return Ok(result);
+        }
+        None => {}
+    }
+
     for &rule in get_rules_for_token(current) {
         debug!("Trying rule consumption for tokens (rule {})", rule.name());
 
@@ -74,6 +86,12 @@ pub fn consume<'p, 'r, 't>(
 
                 // Decrement recursion depth
                 parser.depth_decrement();
+
+                // Store to cache
+                // Avoid caching InputStart, InputEnd or other possible null tokens; this breaks cache
+                if current.span.start != current.span.end {
+                    parser.put_cached_node(this_pos, step_orig - parser.remaining().len(), output.to_owned());
+                }
 
                 return Ok(output);
             }
@@ -113,5 +131,13 @@ pub fn consume<'p, 'r, 't>(
     // Decrement recursion depth
     parser.depth_decrement();
 
-    ok!(element, all_exceptions)
+    let failure_output = ok!(element, all_exceptions);
+
+    // Store text node to cache as well; this is the most important part so that we know to not re-parse failed nodes
+    // Avoid caching InputStart, InputEnd or other possible null tokens; this breaks cache
+    if current.span.start != current.span.end {
+        parser.put_cached_node(this_pos, step_orig - parser.remaining().len(), failure_output.clone().unwrap());
+    }
+
+    failure_output
 }
