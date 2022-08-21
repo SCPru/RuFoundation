@@ -45,78 +45,68 @@ fn try_consume_fn<'p, 'r, 't>(
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Consuming tokens until end of raw");
 
-    // Are we in a @@..@@ type raw, or a @<..>@ type?
-    let ending_token = match parser.current().token {
-        Token::Raw => Token::Raw,
-        Token::LeftRaw => Token::RightRaw,
-        _ => panic!("Current token is not a starting raw"),
-    };
-
     // Check for four special cases:
     // * Raw Raw  "@" -> Element::Raw("@")
     // * Raw Raw !Raw -> Element::Raw("")
     // * Raw Raw  Raw -> Element::Raw("@@")
     // * Raw ??   Raw -> Element::Raw(slice)
-    if ending_token == Token::Raw {
-        debug!("First token is '@@', checking for special cases");
+    debug!("First token is '@@', checking for special cases");
 
-        // Get next two tokens. If they don't exist, exit early
-        let next_1 = parser.look_ahead_warn(0)?;
-        let next_2 = parser.look_ahead_warn(1)?;
+    // Get next two tokens. If they don't exist, exit early
+    let next_1 = parser.look_ahead_warn(0)?;
+    let next_2 = parser.look_ahead_warn(1)?;
 
-        // Determine which case they fall under
-        match (next_1.token, next_2.token) {
-            // "@@@@@@" -> Element::Raw("@@")
-            (Token::Raw, Token::Raw) => {
-                debug!("Found meta-raw (\"@@@@@@\"), returning");
+    // Determine which case they fall under
+    match (next_1.token, next_2.token) {
+        // "@@@@@@" -> Element::Raw("@@")
+        (Token::Raw, Token::Raw) => {
+            debug!("Found meta-raw (\"@@@@@@\"), returning");
+            parser.step_n(3)?;
+            return ok!(raw!("@@"));
+        }
+
+        // "@@@@@" -> Element::Raw("@")
+        // This case is strange since the lexer returns Raw Raw Other (@@ @@ @)
+        // So we capture this and return the intended output
+        (Token::Raw, Token::Other) => {
+            if next_2.slice == "@" {
+                debug!("Found single-raw (\"@@@@@\"), returning");
                 parser.step_n(3)?;
-                return ok!(raw!("@@"));
-            }
-
-            // "@@@@@" -> Element::Raw("@")
-            // This case is strange since the lexer returns Raw Raw Other (@@ @@ @)
-            // So we capture this and return the intended output
-            (Token::Raw, Token::Other) => {
-                if next_2.slice == "@" {
-                    debug!("Found single-raw (\"@@@@@\"), returning");
-                    parser.step_n(3)?;
-                    return ok!(raw!("@"));
-                } else {
-                    debug!("Found empty raw (\"@@@@\"), followed by other text");
-                    parser.step_n(2)?;
-                    return ok!(raw!(""));
-                }
-            }
-
-            // "@@@@" -> Element::Raw("")
-            // Only consumes two tokens.
-            (Token::Raw, _) => {
-                debug!("Found empty raw (\"@@@@\"), returning");
+                return ok!(raw!("@"));
+            } else {
+                debug!("Found empty raw (\"@@@@\"), followed by other text");
                 parser.step_n(2)?;
                 return ok!(raw!(""));
             }
-
-            // "@@ \n @@" -> Abort
-            (Token::LineBreak, Token::Raw) | (Token::ParagraphBreak, Token::Raw) => {
-                debug!("Found interrupted raw, aborting");
-                return Err(parser.make_warn(ParseWarningKind::RuleFailed));
-            }
-
-            // "@@ [something] @@" -> Element::Raw(token)
-            (_, Token::Raw) => {
-                debug!("Found single-element raw, returning");
-                parser.step_n(3)?;
-                return ok!(raw!(next_1.slice));
-            }
-
-            // Other, proceed with rule logic
-            (_, _) => (),
         }
+
+        // "@@@@" -> Element::Raw("")
+        // Only consumes two tokens.
+        (Token::Raw, _) => {
+            debug!("Found empty raw (\"@@@@\"), returning");
+            parser.step_n(2)?;
+            return ok!(raw!(""));
+        }
+
+        // "@@ \n @@" -> Abort
+        (Token::ParagraphBreak, Token::Raw) => {
+            debug!("Found interrupted raw, aborting");
+            return Err(parser.make_warn(ParseWarningKind::RuleFailed));
+        }
+
+        // "@@ [something] @@" -> Element::Raw(token)
+        (_, Token::Raw) => {
+            debug!("Found single-element raw, returning");
+            parser.step_n(3)?;
+            return ok!(raw!(next_1.slice));
+        }
+
+        // Other, proceed with rule logic
+        (_, _) => (),
     }
 
-    // Handle the other cases, which are:
+    // Handle the other case:
     // * "@@ [tokens] @@"
-    // * "@< [tokens] >@"
     //
     // Collect the first and last token to build a slice of its contents.
     // The last will be updated with each step in the iterator.
@@ -139,23 +129,19 @@ fn try_consume_fn<'p, 'r, 't>(
         // Check token
         match token {
             // Possibly hit end of raw. If not, continue.
-            Token::RightRaw | Token::Raw => {
+            Token::Raw => {
                 // If block is inside match rule for clarity
-                if *token == ending_token {
-                    trace!("Reached end of raw, returning");
+                trace!("Reached end of raw, returning");
 
-                    let slice = parser.full_text().slice_partial(start, end);
-                    parser.step()?;
+                let slice = parser.full_text().slice_partial(start, end);
+                parser.step()?;
 
-                    let element = Element::Raw(cow!(slice));
-                    return ok!(element);
-                }
-
-                trace!("Wasn't end of raw, continuing");
+                let element = Element::Raw(cow!(slice));
+                return ok!(element);
             }
 
             // Hit a newline, abort
-            Token::LineBreak | Token::ParagraphBreak => {
+            Token::ParagraphBreak => {
                 trace!("Reached newline, aborting");
                 return Err(parser.make_warn(ParseWarningKind::RuleFailed));
             }
