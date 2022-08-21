@@ -110,7 +110,7 @@ fn process_pairs(mut pairs: Pairs<Rule>) -> Result<IncludeRef, IncludeParseError
 
         if !arguments.contains_key(key) && value != var_reference {
             let key = Cow::Borrowed(key);
-            let value = Cow::Borrowed(value);
+            let value = Cow::Borrowed(value.trim());
 
             arguments.insert(key, value);
         }
