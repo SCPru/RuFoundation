@@ -83,7 +83,7 @@ impl<'t> PageRef<'t> {
         (self.site().unwrap_or(current_site), self.page())
     }
 
-    pub fn parse(s: &'t str) -> Result<PageRef<'t>, PageRefParseError> {
+    pub fn parse(s: &str) -> Result<PageRef<'t>, PageRefParseError> {
         let s = s.trim();
         if s.is_empty() {
             return Err(PageRefParseError);
@@ -106,14 +106,14 @@ impl<'t> PageRef<'t> {
                 let site = s[1..idx].trim();
                 let page = s[idx + 1..].trim();
 
-                PageRef::page_and_site(site, page)
+                PageRef::page_and_site(site.to_owned(), page.to_owned())
             }
 
             // On-site page, e.g. "component:thing"
-            Some(_) => PageRef::page_only(s),
+            Some(_) => PageRef::page_only(s.to_owned()),
 
             // On-site page, with no category, e.g. "page"
-            None => PageRef::page_only(s),
+            None => PageRef::page_only(s.to_owned()),
         };
 
         Ok(result)

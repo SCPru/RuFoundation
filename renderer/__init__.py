@@ -1,9 +1,14 @@
+import logging
 import re
 
+from django.db.models import TextField, Value
+from django.db.models.functions import Concat
 from django.utils.safestring import SafeString
 
 import modules
 from system.models import User
+from web.controllers import articles
+from web.models.articles import ArticleVersion, Article
 from web.models.sites import get_current_site
 from .nodes.html import HTMLNode
 from .nodes.image import ImageNode
@@ -57,6 +62,34 @@ class CallbacksWithContext(ftml.Callbacks):
             "image-context-bad": "Некорректный адрес изображения",
         }
         return messages.get(message_id, '?')
+
+    def render_include_not_found(self, full_name: str) -> str:
+        # this must return Wiki markup because of the stage it runs at.
+        return '[[div class="error-block"]]Вставленная страница "%s" не существует ([[a href="/%s/edit/true" target="_blank"]]создать её сейчас[[/a]])[[/div]]' % (full_name, full_name)
+
+    # This function converts magical _default category to explicit _default category
+    # This is so that we can later reuse this in the database query that will just concat the category+name for articles
+    @staticmethod
+    def _page_name_to_dumb(page_name):
+        category, name = articles.get_name(page_name)
+        return '%s:%s' % (category, name)
+
+    def fetch_includes(self, include_refs: list[ftml.IncludeRef]) -> list[ftml.FetchedPage]:
+        refs_as_dumb = [self._page_name_to_dumb(x.full_name) for x in include_refs]
+        included = ArticleVersion.objects\
+            .select_related('article')\
+            .annotate(full_name=Concat('article__category', Value(':'), 'article__name', output_field=TextField()))\
+            .filter(full_name__in=refs_as_dumb)\
+            .order_by('article__id', '-created_at')\
+            .distinct('article__id')
+        included_map = {}
+        for item in included:
+            included_map[item.full_name] = item.source
+        result = []
+        for ref in include_refs:
+            ref_dumb = self._page_name_to_dumb(ref.full_name)
+            result.append(ftml.FetchedPage(full_name=ref.full_name, content=included_map.get(ref_dumb, None)))
+        return result
 
 
 def page_info_from_context(context: RenderContext):

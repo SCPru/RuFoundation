@@ -1,16 +1,14 @@
 ## ftml
 
-<p>
-  <a href="https://github.com/scpwiki/wikijump/actions?query=workflow%3A%22%5Bftml%5D+Rust%22">
-    <img src="https://github.com/scpwiki/wikijump/workflows/%5Bftml%5D%20Rust/badge.svg"
-         alt="Build status">
-  </a>
+### Note from SCPRU/RuFoundation Team
 
-  <a href="https://docs.rs/ftml">
-    <img src="https://docs.rs/ftml/badge.svg"
-         alt="docs.rs link">
-  </a>
-</p>
+This is a fork / alternate version of WikiJump's FTML.
+
+Link to the original repository: https://github.com/scpwiki/wikijump/tree/develop/ftml
+
+Our fork is largely unmodified and some texts may still refer to WikiJump, however this version **IS NOT OFFICIALLY SUPPORTED** by the original WikiJump team.
+
+Please do not report any issues with this version to WikiJump, unless the issue also reproduces in the original version.
 
 ### Foundation Text Markup Language
 

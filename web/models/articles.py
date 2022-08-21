@@ -99,7 +99,7 @@ class ArticleVersion(SiteLimitedModel):
 
         indexes = [models.Index(fields=['article', 'created_at'])]
 
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья", related_name='versions')
     source = models.TextField(verbose_name="Исходник")
     ast = models.JSONField(blank=True, null=True, verbose_name="AST-дерево статьи")
     rendered = models.TextField(blank=True, null=True, verbose_name="Рендер статьи")

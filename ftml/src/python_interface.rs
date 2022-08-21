@@ -5,24 +5,84 @@ use std::rc::Rc;
 
 use pyo3::prelude::*;
 
+use crate::data::PageRef;
+use crate::includes::{FetchedPage, IncludeRef};
 use crate::info::VERSION;
 use crate::prelude::*;
 use crate::render::html::HtmlRender;
 use crate::render::text::TextRender;
 
-fn render<R: Render>(text: &mut String, renderer: &R, page_info: PageInfo, callbacks: Py<PyAny>) -> R::Output
+fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, callbacks: Py<PyAny>) -> R::Output
 {
-    // TODO includer
     let mut settings = WikitextSettings::from_mode(WikitextMode::Page);
     settings.syntax_compatibility = true;
+    settings.use_include_compatibility = true;
 
-    let page_callbacks = Rc::new(PythonCallbacks{ callbacks: Box::new(callbacks) }).clone();
+    let includer = PythonCallbacks{ callbacks: Box::new(callbacks.clone()) };
+    let page_callbacks = Rc::new(PythonCallbacks{ callbacks: Box::new(callbacks) });
 
-    preprocess(text);
-    let tokens = tokenize(text);
+    // Substitute page inclusions
+    let (mut text, _included_pages) = include(input, &settings, includer, || panic!("Mismatched includer page count")).unwrap_or((input.to_owned(), vec![]));
+
+    preprocess(&mut text);
+    let tokens = tokenize(&mut text);
     let (tree, _warnings) = parse(&tokens, &page_info, page_callbacks.clone(), &settings).into();
-    let output = renderer.render(&tree, &page_info, page_callbacks.clone(), &settings);
+    let output = renderer.render(&tree, &page_info, page_callbacks, &settings);
     output
+}
+
+#[pyclass(name="IncludeRef")]
+struct PyIncludeRef {
+    #[pyo3(get)]
+    pub full_name: String,
+    #[pyo3(get)]
+    pub variables: HashMap<String, String>
+}
+
+impl<'t> From<&IncludeRef<'t>> for PyIncludeRef {
+    fn from(r: &IncludeRef<'t>) -> Self {
+        let variables = r.variables();
+        let py_variables: HashMap<String, String> = variables.keys().fold(HashMap::new(), |mut acc, k| {
+            acc.insert(k.to_string(), variables.get(k).unwrap().to_string());
+            acc
+        });
+
+        Self {
+            full_name: r.page_ref().to_string(),
+            variables: py_variables
+        }
+    }
+}
+
+#[pyclass(name="FetchedPage")]
+struct PyFetchedPage {
+    full_name: String,
+    content: Option<String>,
+}
+
+#[pymethods]
+impl PyFetchedPage {
+    #[new]
+    fn new(
+        full_name: String,
+        content: Option<String>
+    ) -> Self {
+        Self { full_name: full_name.clone(), content: content.clone() }
+    }
+}
+
+impl PyFetchedPage {
+    fn to_fetched_page(&self) -> FetchedPage<'static> {
+        let content = match &self.content {
+            Some(content) => Some(Cow::from(content.to_owned())),
+            None => None
+        };
+
+        FetchedPage{
+            page_ref: PageRef::parse(&self.full_name).expect("PageRef returned back from Python is invalid"),
+            content
+        }
+    }
 }
 
 #[pyclass(name="PageInfo")]
@@ -141,6 +201,36 @@ impl PageCallbacks for PythonCallbacks {
     }
 }
 
+impl<'t> Includer<'t> for PythonCallbacks {
+    type Error = ();
+
+    #[inline]
+    fn include_pages(
+        &mut self,
+        includes: &[IncludeRef<'t>],
+    ) -> Result<Vec<FetchedPage<'t>>, ()> {
+        let py_includes: Vec<PyIncludeRef> = includes.iter().map(|x| PyIncludeRef::from(x)).collect();
+        let result: PyResult<Vec<FetchedPage>> = Python::with_gil(|py| {
+            Ok(self.callbacks.getattr(py, "fetch_includes")?.call(py, (py_includes,), None)?.extract::<Vec<PyRef<PyFetchedPage>>>(py)
+                ?.iter().map(|x| x.to_fetched_page()).collect())
+        });
+        match result {
+            Ok(fetched_pages) => Ok(fetched_pages),
+            Err(_) => Err(())
+        }
+    }
+
+    #[inline]
+    fn no_such_include(&mut self, page_ref: &PageRef<'t>) -> Result<Cow<'t, str>, ()> {
+        let result: PyResult<String> = Python::with_gil(|py| {
+            return self.callbacks.getattr(py, "render_include_not_found")?.call(py, (page_ref.to_string(),), None)?.extract(py);
+        });
+        match result {
+            Ok(result) => Ok(Cow::from(result.as_str().to_owned())),
+            Err(_) => Err(())
+        }
+    }
+}
 
 #[pyclass(subclass)]
 struct Callbacks {}
@@ -166,6 +256,14 @@ impl Callbacks {
 
     pub fn get_i18n_message(&self, _message_id: String) -> PyResult<String> {
         return Ok(String::from("?"))
+    }
+
+    pub fn render_include_not_found(&self, full_name: String) -> PyResult<String> {
+        return Ok(format!("UnimplementedIncludeNotFound[{full_name}]").to_string())
+    }
+
+    pub fn fetch_includes(&self, includes: Vec<PyRef<PyIncludeRef>>) -> PyResult<Vec<PyFetchedPage>> {
+        return Ok(includes.iter().map(|x| PyFetchedPage{full_name: x.full_name.to_owned(), content: None}).collect())
     }
 }
 
@@ -197,6 +295,8 @@ fn ftml(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(render_text, m)?)?;
     m.add_class::<Callbacks>()?;
     m.add_class::<PyPageInfo>()?;
+    m.add_class::<PyIncludeRef>()?;
+    m.add_class::<PyFetchedPage>()?;
 
     Ok(())
 }

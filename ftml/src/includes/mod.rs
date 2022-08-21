@@ -38,11 +38,20 @@ use self::parse::parse_include_block;
 use crate::data::PageRef;
 use crate::settings::WikitextSettings;
 use crate::tree::VariableMap;
+use lazy_static::__Deref;
 use regex::{Regex, RegexBuilder};
 
 lazy_static! {
     static ref INCLUDE_REGEX: Regex = {
         RegexBuilder::new(r"^\[\[\s*include-messy\s+")
+            .case_insensitive(true)
+            .multi_line(true)
+            .dot_matches_new_line(true)
+            .build()
+            .unwrap()
+    };
+    static ref INCLUDE_COMPAT_REGEX: Regex = {
+        RegexBuilder::new(r"^\[\[\s*include\s+")
             .case_insensitive(true)
             .multi_line(true)
             .dot_matches_new_line(true)
@@ -76,8 +85,14 @@ where
     let mut ranges = Vec::new();
     let mut includes = Vec::new();
 
+    let regex = if settings.use_include_compatibility { 
+        INCLUDE_COMPAT_REGEX.deref()
+    } else {
+        INCLUDE_REGEX.deref()
+    };
+
     // Get include references
-    for mtch in INCLUDE_REGEX.find_iter(input) {
+    for mtch in regex.find_iter(input) {
         let start = mtch.start();
 
         debug!(
