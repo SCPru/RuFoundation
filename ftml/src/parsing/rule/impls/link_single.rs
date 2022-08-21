@@ -26,7 +26,7 @@
 
 use super::prelude::*;
 use crate::tree::{AnchorTarget, LinkLabel, LinkLocation, LinkType};
-use crate::url::is_url;
+use crate::url::validate_href;
 
 pub const RULE_LINK_SINGLE: Rule = Rule {
     name: "link-single",
@@ -83,7 +83,7 @@ fn try_consume_link<'p, 'r, 't>(
     )?;
 
     // Return error if the resultant URL is not valid.
-    if !url_valid(url) {
+    if !validate_href(url) {
         return Err(parser.make_warn(ParseWarningKind::InvalidUrl));
     }
 
@@ -117,23 +117,4 @@ fn try_consume_link<'p, 'r, 't>(
 
     // Return result
     ok!(element)
-}
-
-fn url_valid(url: &str) -> bool {
-    // If url is an empty string
-    if url.is_empty() {
-        return false;
-    }
-
-    // If it's a relative link
-    if url.starts_with('/') {
-        return true;
-    }
-
-    // If it's a URL
-    if is_url(url) {
-        return true;
-    }
-
-    false
 }

@@ -55,6 +55,10 @@ lazy_static! {
 }
 
 pub fn is_url(url: &str) -> bool {
+    if url.contains('/') {
+        return true
+    }
+
     let lowered = url.to_lowercase();
     for scheme in &URL_SCHEMES {
         if lowered.starts_with(scheme) {
