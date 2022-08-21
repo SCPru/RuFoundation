@@ -69,21 +69,18 @@ impl Render for HtmlRender {
             },
         );
 
-        let handle = Handle::new(page_callbacks.clone());
+        // fetch page details
+        let internal_links = page_callbacks.get_page_info(&tree.internal_links);
+        let handle = Handle::new(page_callbacks.clone(), &internal_links);
 
         let mut ctx = HtmlContext::new(
             page_info,
-            page_callbacks.clone(),
+            page_callbacks,
             &handle,
             settings,
             &tree.table_of_contents,
             &tree.footnotes,
         );
-
-        // Add styles
-        for style in &tree.styles {
-            ctx.add_style(str!(style));
-        }
 
         // Crawl through elements and generate HTML
         render_elements(&mut ctx, &tree.elements);

@@ -20,7 +20,10 @@
 
 use std::borrow::Cow;
 
+use super::PageRef;
+
 /// Metadata information on the article being rendered.
+/// [ZZ] Half of the info here is useless but it will break tests if removed.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct PageInfo<'a> {
@@ -69,6 +72,14 @@ pub struct PageInfo<'a> {
 
     /// The language that this page is being rendered for.
     pub language: Cow<'a, str>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub struct PartialPageInfo<'a> {
+    pub page_ref: PageRef<'a>,
+    pub title: Option<Cow<'a, str>>,
+    pub exists: bool,
 }
 
 impl PageInfo<'_> {

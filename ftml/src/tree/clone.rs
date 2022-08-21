@@ -29,6 +29,8 @@
 //!
 //! This module has helpers to make this process easier.
 
+use crate::data::PageRef;
+
 use super::element::Element;
 use super::list::ListItem;
 use ref_map::*;
@@ -45,13 +47,6 @@ pub fn option_string_to_owned(
 #[inline]
 pub fn string_to_owned(string: &str) -> Cow<'static, str> {
     Cow::Owned(str!(string))
-}
-
-pub fn strings_to_owned(strings: &[Cow<'_, str>]) -> Vec<Cow<'static, str>> {
-    strings
-        .iter()
-        .map(|string| string_to_owned(string))
-        .collect()
 }
 
 pub fn elements_to_owned(elements: &[Element<'_>]) -> Vec<Element<'static>> {
@@ -71,6 +66,13 @@ pub fn list_items_to_owned(list_items: &[ListItem<'_>]) -> Vec<ListItem<'static>
     list_items
         .iter()
         .map(|list_item| list_item.to_owned())
+        .collect()
+}
+
+pub fn page_refs_to_owned(page_refs: &[PageRef<'_>]) -> Vec<PageRef<'static>> {
+    page_refs
+        .iter()
+        .map(|page_ref| page_ref.to_owned())
         .collect()
 }
 

@@ -22,7 +22,7 @@ use super::{blocks::*, BlockRule};
 use std::collections::HashMap;
 use unicase::UniCase;
 
-pub const BLOCK_RULES: [BlockRule; 58] = [
+pub const BLOCK_RULES: [BlockRule; 57] = [
     BLOCK_ALIGN_CENTER,
     BLOCK_ALIGN_JUSTIFY,
     BLOCK_ALIGN_LEFT,
@@ -47,7 +47,6 @@ pub const BLOCK_RULES: [BlockRule; 58] = [
     BLOCK_IFRAME,
     BLOCK_IFTAGS,
     BLOCK_IMAGE,
-    BLOCK_INCLUDE_ELEMENTS,
     BLOCK_INCLUDE_MESSY,
     BLOCK_INS,
     BLOCK_INVISIBLE,

@@ -36,7 +36,7 @@ where
     output: String,
     info: &'i PageInfo<'i>,
     callbacks: Rc<dyn PageCallbacks>,
-    handle: &'h Handle,
+    handle: &'h Handle<'t>,
     settings: &'e WikitextSettings,
 
     //
@@ -79,7 +79,7 @@ where
     pub fn new(
         info: &'i PageInfo<'i>,
         callbacks: Rc<dyn PageCallbacks>,
-        handle: &'h Handle,
+        handle: &'h Handle<'t>,
         settings: &'e WikitextSettings,
         table_of_contents: &'e [Element<'t>],
         footnotes: &'e [Vec<Element<'t>>],

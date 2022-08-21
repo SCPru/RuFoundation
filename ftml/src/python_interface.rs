@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use pyo3::prelude::*;
 
-use crate::data::PageRef;
+use crate::data::{PageRef, PartialPageInfo};
 use crate::includes::{FetchedPage, IncludeRef};
 use crate::info::VERSION;
 use crate::prelude::*;
@@ -80,6 +80,40 @@ impl PyFetchedPage {
         FetchedPage{
             page_ref: PageRef::parse(&self.full_name).expect("PageRef returned back from Python is invalid"),
             content
+        }
+    }
+}
+
+#[pyclass(name="PartialPageInfo")]
+struct PyPartialPageInfo {
+    full_name: String,
+    title: Option<String>,
+    exists: bool,
+}
+
+#[pymethods]
+impl PyPartialPageInfo {
+    #[new]
+    fn new(
+        full_name: String,
+        title: Option<String>,
+        exists: Option<bool>,
+    ) -> Self {
+        Self { full_name: full_name.clone(), title, exists: exists.unwrap_or(false) }
+    }
+}
+
+impl PyPartialPageInfo {
+    fn to_partial_page_info(&self) -> PartialPageInfo<'static> {
+        let title = match &self.title {
+            Some(title) => Some(Cow::from(title.to_owned())),
+            None => None
+        };
+
+        PartialPageInfo{
+            page_ref: PageRef::parse(&self.full_name).expect("PageRef returned back from Python is invalid"),
+            title,
+            exists: self.exists,
         }
     }
 }
@@ -198,6 +232,18 @@ impl PageCallbacks for PythonCallbacks {
             Err(_) => Cow::from("?")
         }
     }
+
+    fn get_page_info<'a>(&self, page_refs: &Vec<PageRef<'a>>) -> Vec<PartialPageInfo<'static>> {
+        let py_names: Vec<String> = page_refs.iter().map(|x| x.to_string()).collect();
+        let result: PyResult<Vec<PartialPageInfo<'static>>> = Python::with_gil(|py| {
+            Ok(self.callbacks.getattr(py, "fetch_internal_links")?.call(py, (py_names,), None)?.extract::<Vec<PyRef<PyPartialPageInfo>>>(py)
+                ?.iter().map(|x| x.to_partial_page_info()).collect())
+        });
+        match result {
+            Ok(info) => info,
+            Err(_) => vec![],
+        }
+    }
 }
 
 impl<'t> Includer<'t> for PythonCallbacks {
@@ -264,6 +310,10 @@ impl Callbacks {
     pub fn fetch_includes(&self, includes: Vec<PyRef<PyIncludeRef>>) -> PyResult<Vec<PyFetchedPage>> {
         return Ok(includes.iter().map(|x| PyFetchedPage{full_name: x.full_name.to_owned(), content: None}).collect())
     }
+
+    pub fn fetch_internal_links(&self, page_refs: Vec<String>) -> PyResult<Vec<PyPartialPageInfo>> {
+        return Ok(page_refs.iter().map(|x| PyPartialPageInfo{full_name: x.to_owned(), title: None, exists: false}).collect())
+    }
 }
 
 #[pyfunction(kwargs="**")]
@@ -296,6 +346,7 @@ fn ftml(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyPageInfo>()?;
     m.add_class::<PyIncludeRef>()?;
     m.add_class::<PyFetchedPage>()?;
+    m.add_class::<PyPartialPageInfo>()?;
 
     Ok(())
 }

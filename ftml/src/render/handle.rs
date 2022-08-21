@@ -18,66 +18,55 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::data::PageInfo;
+use crate::data::{PageInfo, PageRef, PartialPageInfo};
 use crate::prelude::PageCallbacks;
 use crate::settings::WikitextSettings;
-use crate::tree::{ImageSource, LinkLabel, LinkLocation, Module};
+use crate::tree::{ImageSource, LinkLabel, LinkLocation};
 use crate::url::BuildSiteUrl;
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::rc::Rc;
 use strum_macros::IntoStaticStr;
 use wikidot_normalize::normalize;
 
 #[derive(Debug)]
-pub struct Handle {
-    callbacks: Rc<dyn PageCallbacks>
+pub struct Handle<'t> {
+    callbacks: Rc<dyn PageCallbacks>,
+    internal_links: HashMap<PageRef<'t>, PartialPageInfo<'t>>,
 }
 
-impl Handle {
-    pub fn new(callbacks: Rc<dyn PageCallbacks>) -> Self {
-        Handle { callbacks }
-    }
-
-    pub fn render_module(
-        &self,
-        buffer: &mut String,
-        module: &Module,
-        mode: ModuleRenderMode,
-    ) {
-        info!(
-            "Rendering module '{}' (mode '{}')",
-            module.name(),
-            mode.name(),
-        );
-
-        match mode {
-            ModuleRenderMode::Html => {
-                str_write!(buffer, "<p>TODO: module {}</p>", module.name());
-            }
-            ModuleRenderMode::Text => {
-                str_write!(buffer, "TODO: module {}", module.name());
-            }
+impl<'t> Handle<'t> {
+    pub fn new(callbacks: Rc<dyn PageCallbacks>, raw_internal_links: &Vec<PartialPageInfo<'t>>) -> Self {
+        let mut internal_links = HashMap::new();
+        for info in raw_internal_links {
+            internal_links.insert(info.page_ref.to_owned(), info.to_owned());
         }
+
+        Handle { callbacks, internal_links }
     }
 
-    pub fn get_page_title(&self, _site: &str, _page: &str) -> Option<String> {
+    pub fn get_page_title(&self, page_ref: &PageRef) -> Option<String> {
         info!("Fetching page title");
 
-        // TODO
-        Some(format!("TODO: actual title ({_site} {_page})"))
+        match self.internal_links.get(page_ref) {
+            Some(info) => {
+                match &info.title {
+                    Some(Cow::Borrowed("")) => None,
+                    None => None,
+                    Some(title) => Some(title.to_string())
+                }
+            },
+            None => None
+        }
     }
 
-    pub fn get_page_exists(&self, _site: &str, _page: &str) -> bool {
+    pub fn get_page_exists(&self, page_ref: &PageRef) -> bool {
         info!("Checking page existence");
 
-        // For testing
-        #[cfg(test)]
-        if _page == "missing" {
-            return false;
+        match self.internal_links.get(page_ref) {
+            Some(info) => info.exists,
+            None => false
         }
-
-        // TODO
-        true
     }
 
     pub fn get_image_link<'a>(
@@ -111,7 +100,6 @@ impl Handle {
 
     pub fn get_link_label<F>(
         &self,
-        site: &str,
         link: &LinkLocation,
         label: &LinkLabel,
         f: F,
@@ -131,8 +119,7 @@ impl Handle {
                     url.as_ref()
                 }
                 LinkLocation::Page(page_ref) => {
-                    let (site, page) = page_ref.fields_or(site);
-                    page_title = match self.get_page_title(site, page) {
+                    page_title = match self.get_page_title(page_ref) {
                         Some(title) => title,
                         None => page_ref.to_string(),
                     };
@@ -150,7 +137,7 @@ impl Handle {
     }
 }
 
-impl BuildSiteUrl for Handle {
+impl<'t> BuildSiteUrl for Handle<'t> {
     fn build_url(&self, site: &str, path: &str) -> String {
         // TODO make this a parser setting
         // get url of wikijump instance here

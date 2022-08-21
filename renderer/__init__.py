@@ -2,7 +2,7 @@ import logging
 import re
 
 from django.db.models import TextField, Value
-from django.db.models.functions import Concat
+from django.db.models.functions import Concat, Lower
 from django.utils.safestring import SafeString
 
 import modules
@@ -72,14 +72,14 @@ class CallbacksWithContext(ftml.Callbacks):
     # This is so that we can later reuse this in the database query that will just concat the category+name for articles
     @staticmethod
     def _page_name_to_dumb(page_name):
-        category, name = articles.get_name(page_name)
+        category, name = articles.get_name(page_name.lower())
         return '%s:%s' % (category, name)
 
     def fetch_includes(self, include_refs: list[ftml.IncludeRef]) -> list[ftml.FetchedPage]:
         refs_as_dumb = [self._page_name_to_dumb(x.full_name) for x in include_refs]
         included = ArticleVersion.objects\
             .select_related('article')\
-            .annotate(full_name=Concat('article__category', Value(':'), 'article__name', output_field=TextField()))\
+            .annotate(full_name=Lower(Concat('article__category', Value(':'), 'article__name', output_field=TextField())))\
             .filter(full_name__in=refs_as_dumb)\
             .order_by('article__id', '-created_at')\
             .distinct('article__id')
@@ -92,6 +92,21 @@ class CallbacksWithContext(ftml.Callbacks):
             result.append(ftml.FetchedPage(full_name=ref.full_name, content=included_map.get(ref_dumb, None)))
         return result
 
+    def fetch_internal_links(self, page_refs: list[str]) -> list[ftml.PartialPageInfo]:
+        refs_as_dumb = [self._page_name_to_dumb(x) for x in page_refs]
+        pages = Article.objects\
+            .annotate(dumb_name=Lower(Concat('category', Value(':'), 'name', output_field=TextField())))\
+            .filter(dumb_name__in=refs_as_dumb)
+        page_map = {}
+        for item in pages:
+            print(repr(item))
+            page_map[item.dumb_name] = item
+        result = []
+        for ref in page_refs:
+            ref_dumb = self._page_name_to_dumb(ref)
+            if ref_dumb in page_map:
+                result.append(ftml.PartialPageInfo(full_name=ref, exists=True, title=page_map[ref_dumb].title))
+        return result
 
 def page_info_from_context(context: RenderContext):
     site = get_current_site()

@@ -54,7 +54,14 @@ pub fn render_link(
     ltype: LinkType,
 ) {
     info!("Rendering link '{:?}' (type {})", link, ltype.name());
-    let handle = ctx.handle();
+
+    let label = {
+        let mut o_label: String = String::new();
+        ctx.handle().get_link_label(link, label, |label| {
+            o_label = label.to_owned();
+        });
+        o_label
+    };
 
     // Add to backlinks
     ctx.add_link(link);
@@ -86,7 +93,5 @@ pub fn render_link(
     ));
 
     // Add <a> internals, i.e. the link name
-    handle.get_link_label(&site, link, label, |label| {
-        tag.inner(label);
-    });
+    tag.inner(label);
 }

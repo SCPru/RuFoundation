@@ -22,7 +22,7 @@ use super::condition::ParseCondition;
 use super::{prelude::*, parse_internal, UnstructuredParseResult};
 use super::rule::Rule;
 use super::RULE_PAGE;
-use crate::data::{PageCallbacks, PageInfo};
+use crate::data::{PageCallbacks, PageInfo, PageRef};
 use crate::render::text::TextRender;
 use crate::tokenizer::Tokenization;
 use crate::tree::{AcceptsPartial, HeadingLevel, Container, ContainerType, AttributeMap};
@@ -65,6 +65,9 @@ pub struct Parser<'r, 't> {
     // Schema: Vec<List of elements in a footnote>
     footnotes: Rc<RefCell<Vec<Vec<Element<'t>>>>>,
 
+    // Internal links
+    internal_links: Rc<RefCell<Vec<PageRef<'t>>>>,
+
     // Flags
     accepts_partial: AcceptsPartial,
     in_footnote: bool, // Whether we're currently inside [[footnote]] ... [[/footnote]].
@@ -101,6 +104,7 @@ impl<'r, 't> Parser<'r, 't> {
             depth: 0,
             table_of_contents: make_shared_vec(),
             footnotes: make_shared_vec(),
+            internal_links: make_shared_vec(),
             accepts_partial: AcceptsPartial::None,
             in_footnote: false,
             has_footnote_block: false,
@@ -134,6 +138,7 @@ impl<'r, 't> Parser<'r, 't> {
             table_of_contents_depths,
             footnotes,
             has_footnote_block,
+            internal_links,
         } = parse_internal(self.page_info, self.page_callbacks.clone(), self.settings, &sub_tokenization);
 
         match result {
@@ -142,6 +147,7 @@ impl<'r, 't> Parser<'r, 't> {
 
                 let mut toc_upd = self.table_of_contents.borrow_mut();
                 let mut foot_upd = self.footnotes.borrow_mut();
+                let mut link_upd = self.internal_links.borrow_mut();
         
                 for toc_depth in table_of_contents_depths {
                     toc_upd.push(toc_depth.to_owned());
@@ -150,6 +156,10 @@ impl<'r, 't> Parser<'r, 't> {
                 for foot in footnotes {
                     let elements = foot.iter().map(|element| element.to_owned()).collect();
                     foot_upd.push(elements);
+                }
+
+                for internal in internal_links {
+                    link_upd.push(internal.to_owned());
                 }
         
                 self.has_footnote_block |= has_footnote_block;
@@ -297,6 +307,16 @@ impl<'r, 't> Parser<'r, 't> {
     #[cold]
     pub fn remove_footnotes(&mut self) -> Vec<Vec<Element<'t>>> {
         mem::take(&mut self.footnotes.borrow_mut())
+    }
+
+    // Internal links
+    pub fn push_internal_link(&mut self, page_ref: PageRef<'t>) {
+        self.internal_links.borrow_mut().push(page_ref);
+    }
+
+    #[cold]
+    pub fn remove_internal_links(&mut self) -> Vec<PageRef<'t>> {
+        mem::take(&mut self.internal_links.borrow_mut())
     }
 
     // Special for [[include]], appending a SyntaxTree

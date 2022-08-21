@@ -2,11 +2,15 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter, Result};
 
+use super::PageRef;
+use super::page_info::PartialPageInfo;
+
 pub trait PageCallbacks: Debug {
     fn module_has_body(&self, module_name: Cow<str>) -> bool;
     fn render_module<'a>(&self, module_name: Cow<str>, params: HashMap<Cow<str>, Cow<str>>, body: Cow<str>) -> Cow<'static, str>;
     fn render_user<'a>(&self, user: Cow<str>, avatar: bool) -> Cow<'static, str>;
     fn get_i18n_message<'a>(&self, message_id: Cow<str>) -> Cow<'static, str>;
+    fn get_page_info<'a>(&self, page_refs: &Vec<PageRef<'a>>) -> Vec<PartialPageInfo<'static>>;
 }
 
 pub struct NullPageCallbacks {}
@@ -44,6 +48,10 @@ impl PageCallbacks for NullPageCallbacks {
         };
 
         Cow::from(s)
+    }
+
+    fn get_page_info<'a>(&self, page_refs: &Vec<PageRef<'a>>) -> Vec<PartialPageInfo<'static>> {
+        return page_refs.iter().map(|x| PartialPageInfo{page_ref: x.to_owned(), exists: false, title: None}).collect()
     }
 }
 

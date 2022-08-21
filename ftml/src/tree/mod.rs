@@ -45,6 +45,7 @@ pub use self::align::*;
 pub use self::anchor::*;
 pub use self::attribute::AttributeMap;
 pub use self::clear_float::*;
+use self::clone::page_refs_to_owned;
 pub use self::container::*;
 pub use self::date::Date;
 pub use self::definition_list::*;
@@ -62,9 +63,9 @@ pub use self::table::*;
 pub use self::tag::*;
 pub use self::variables::*;
 
-use self::clone::{elements_lists_to_owned, elements_to_owned, strings_to_owned};
+use self::clone::{elements_lists_to_owned, elements_to_owned};
+use crate::data::PageRef;
 use crate::parsing::{ParseOutcome, ParseWarning};
-use std::borrow::Cow;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -76,12 +77,6 @@ pub struct SyntaxTree<'t> {
     /// syntax tree.
     pub elements: Vec<Element<'t>>,
 
-    /// The list of CSS styles added in this page, in order.
-    ///
-    /// How the renderer decides to consume these is up to the implementation,
-    /// however the recommendation is to add these as separate style tags.
-    pub styles: Vec<Cow<'t, str>>,
-
     /// The full table of contents for this page.
     ///
     /// Depth list conversion happens here, so that depths on the table
@@ -90,21 +85,26 @@ pub struct SyntaxTree<'t> {
 
     /// The full footnote list for this page.
     pub footnotes: Vec<Vec<Element<'t>>>,
+
+    /// The list of internal links referenced in the tree.
+    /// 
+    /// This is used for bulk querying the database for page titles and existence.
+    pub internal_links: Vec<PageRef<'t>>,
 }
 
 impl<'t> SyntaxTree<'t> {
     pub(crate) fn from_element_result(
         elements: Vec<Element<'t>>,
         warnings: Vec<ParseWarning>,
-        styles: Vec<Cow<'t, str>>,
         table_of_contents: Vec<Element<'t>>,
         footnotes: Vec<Vec<Element<'t>>>,
+        internal_links: Vec<PageRef<'t>>,
     ) -> ParseOutcome<Self> {
         let tree = SyntaxTree {
             elements,
-            styles,
             table_of_contents,
             footnotes,
+            internal_links,
         };
         ParseOutcome::new(tree, warnings)
     }
@@ -112,9 +112,9 @@ impl<'t> SyntaxTree<'t> {
     pub fn to_owned(&self) -> SyntaxTree<'static> {
         SyntaxTree {
             elements: elements_to_owned(&self.elements),
-            styles: strings_to_owned(&self.styles),
             table_of_contents: elements_to_owned(&self.table_of_contents),
             footnotes: elements_lists_to_owned(&self.footnotes),
+            internal_links: page_refs_to_owned(&self.internal_links),
         }
     }
 }

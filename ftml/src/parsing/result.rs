@@ -24,7 +24,7 @@ use crate::tree::{Element, Elements};
 use std::marker::PhantomData;
 
 pub type ParseResult<'r, 't, T> = Result<ParseSuccess<'r, 't, T>, ParseWarning>;
-pub type ParseSuccessTuple<'t, T> = (T, Vec<ParseException<'t>>, bool);
+pub type ParseSuccessTuple<'t, T> = (T, Vec<ParseException>, bool);
 
 #[must_use]
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -34,19 +34,21 @@ where
     T: 't,
 {
     pub item: T,
-    pub exceptions: Vec<ParseException<'t>>,
+    pub exceptions: Vec<ParseException>,
     pub paragraph_safe: bool,
 
     // Marker field to assert that the 'r lifetime is at least as long as 't.
     #[doc(hidden)]
     _marker: PhantomData<&'r ()>,
+    #[doc(hidden)]
+    _marker2: PhantomData<&'t ()>,
 }
 
 impl<'r, 't, T> ParseSuccess<'r, 't, T> {
     #[inline]
     pub fn new(
         item: T,
-        exceptions: Vec<ParseException<'t>>,
+        exceptions: Vec<ParseException>,
         paragraph_safe: bool,
     ) -> Self {
         ParseSuccess {
@@ -54,12 +56,13 @@ impl<'r, 't, T> ParseSuccess<'r, 't, T> {
             exceptions,
             paragraph_safe,
             _marker: PhantomData,
+            _marker2: PhantomData,
         }
     }
 
     pub fn chain(
         self,
-        all_exceptions: &mut Vec<ParseException<'t>>,
+        all_exceptions: &mut Vec<ParseException>,
         all_paragraph_safe: &mut bool,
     ) -> T {
         let ParseSuccess {
@@ -102,6 +105,7 @@ where
             exceptions,
             paragraph_safe,
             _marker: PhantomData,
+            _marker2: PhantomData,
         }
     }
 
@@ -144,7 +148,7 @@ impl<'r, 't> ParseSuccess<'r, 't, Elements<'t>> {
 
 impl<'r, 't> ParseSuccess<'r, 't, ()> {
     #[inline]
-    pub fn into_exceptions(self) -> Vec<ParseException<'t>> {
+    pub fn into_exceptions(self) -> Vec<ParseException> {
         self.exceptions
     }
 }

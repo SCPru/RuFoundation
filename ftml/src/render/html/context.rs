@@ -32,7 +32,6 @@ use crate::settings::WikitextSettings;
 use crate::tree::{Element, LinkLocation, VariableScopes};
 use crate::url::is_url;
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::fmt::{self, Write};
 use std::num::NonZeroUsize;
 use std::rc::Rc;
@@ -48,7 +47,7 @@ where
     backlinks: Backlinks<'static>,
     info: &'i PageInfo<'i>,
     callbacks: Rc<dyn PageCallbacks>,
-    handle: &'h Handle,
+    handle: &'h Handle<'t>,
     settings: &'e WikitextSettings,
     random: Random,
 
@@ -64,11 +63,6 @@ where
     footnotes: &'e [Vec<Element<'t>>],
 
     //
-    // Cached data
-    //
-    pages_exists: HashMap<PageRef<'static>, bool>,
-
-    //
     // Other fields to track
     //
     code_snippet_index: NonZeroUsize,
@@ -82,7 +76,7 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
     pub fn new(
         info: &'i PageInfo<'i>,
         callbacks: Rc<dyn PageCallbacks>,
-        handle: &'h Handle,
+        handle: &'h Handle<'t>,
         settings: &'e WikitextSettings,
         table_of_contents: &'e [Element<'t>],
         footnotes: &'e [Vec<Element<'t>>],
@@ -100,7 +94,6 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
             variables: VariableScopes::new(),
             table_of_contents,
             footnotes,
-            pages_exists: HashMap::new(),
             code_snippet_index: NonZeroUsize::new(1).unwrap(),
             table_of_contents_index: 0,
             equation_index: NonZeroUsize::new(1).unwrap(),
@@ -255,24 +248,7 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
     }
 
     pub fn page_exists(&mut self, page_ref: &PageRef) -> bool {
-        let (site, page) = page_ref.fields_or(&self.info.site);
-
-        // Get from cache, or fetch and add
-        match self.pages_exists.get(page_ref) {
-            Some(exists) => *exists,
-            None => {
-                let exists = self.handle.get_page_exists(site, page);
-                self.pages_exists.insert(page_ref.to_owned(), exists);
-                exists
-            }
-        }
-    }
-
-    // TODO
-    #[allow(dead_code)]
-    #[inline]
-    pub fn add_include(&mut self, page: PageRef) {
-        self.backlinks.included_pages.push(page.to_owned());
+        self.handle().get_page_exists(page_ref)
     }
 
     // Buffer management

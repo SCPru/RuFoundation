@@ -63,7 +63,7 @@ impl TextRender {
             },
         );
 
-        let handle = Handle::new(page_callbacks.clone());
+        let handle = Handle::new(page_callbacks.clone(), &vec![]);
 
         let mut ctx =
             TextContext::new(page_info, page_callbacks.clone(), &handle, settings, table_of_contents, footnotes);

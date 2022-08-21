@@ -124,6 +124,13 @@ fn build_same<'p, 'r, 't>(
         None => return Err(parser.make_warn(ParseWarningKind::RuleFailed)),
     };
 
+    match &link {
+        LinkLocation::Page(page_ref) => {
+            parser.push_internal_link(page_ref.to_owned());
+        },
+        _ => {},
+    }
+
     // Build and return element
     let element = Element::Link {
         ltype,
@@ -177,6 +184,13 @@ fn build_separate<'p, 'r, 't>(
         Some(result) => result,
         None => return Err(parser.make_warn(ParseWarningKind::RuleFailed)),
     };
+
+    match &link {
+        LinkLocation::Page(page_ref) => {
+            parser.push_internal_link(page_ref.to_owned());
+        },
+        _ => {},
+    }
 
     // Build link element
     let element = Element::Link {

@@ -21,7 +21,6 @@
 //! Module that implements text rendering for `Element` and its children.
 
 use super::TextContext;
-use crate::render::ModuleRenderMode;
 use crate::tree::{
     ContainerType, DefinitionListItem, Element, LinkLocation, ListItem, ListType, Tab,
 };
@@ -107,8 +106,10 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             }
         }
         Element::Module(module) => {
-            ctx.handle()
-                .render_module(ctx.buffer(), module, ModuleRenderMode::Text)
+            // for now: do nothing. text rendering is not supported on Python side yet
+            ctx.push_str("[[module ");
+            ctx.push_str(module.name());
+            ctx.push_str("]]")
         }
         Element::Text(text) | Element::Raw(text) | Element::Email(text) => {
             ctx.push_str(text)
@@ -184,16 +185,19 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
         }
         Element::Link { link, label, .. } => {
             let url = get_url_from_link(ctx, link);
-            let site = ctx.info().site.as_ref().to_string();
 
-            ctx.handle().get_link_label(&site, link, label, |label| {
-                ctx.push_str(label);
+            let label = {
+                let mut o_label: String = String::new();
+                ctx.handle().get_link_label(link, label, |label| {
+                    o_label = label.to_owned();
+                });
+                o_label
+            };
 
-                // Don't show URL if it's a name link, or an anchor
-                if url != label && !url.starts_with('#') {
-                    str_write!(ctx, " [{url}]");
-                }
-            });
+            ctx.push_str(&label);
+            if url != label && !url.starts_with('#') {
+                str_write!(ctx, " [{url}]");
+            }
         }
         Element::Image {
             source,
