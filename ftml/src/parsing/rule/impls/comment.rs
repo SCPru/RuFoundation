@@ -31,7 +31,7 @@ fn try_consume_fn<'p, 'r, 't>(
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Consuming tokens until end of comment");
 
-    check_step(parser, Token::LeftComment)?;
+    check_step(parser, Token::LeftComment, ParseWarningKind::RuleFailed)?;
 
     loop {
         let ExtractedToken {

@@ -94,7 +94,9 @@ lazy_static! {
             Token::Email => vec![RULE_EMAIL],
             Token::Url => vec![RULE_URL],
             Token::Variable => vec![RULE_VARIABLE, RULE_TEXT],
-            Token::String => vec![RULE_TEXT],
+            Token::StringQuote
+            | Token::StringQuoteDoubleEscape
+            | Token::StringQuoteEscape => vec![RULE_TEXT],
 
             // Input boundaries
             Token::LineBreak => vec![RULE_DEFINITION_LIST_SKIP_NEWLINE, RULE_LINE_BREAK],

@@ -145,7 +145,9 @@ pub enum Token {
     Email,
     Url,
     Variable,
-    String,
+    StringQuote,
+    StringQuoteEscape,
+    StringQuoteDoubleEscape,
 
     //
     // Miscellaneous
@@ -281,14 +283,16 @@ impl Token {
             Rule::email => Token::Email,
             Rule::url => Token::Url,
             Rule::variable => Token::Variable,
-            Rule::string => Token::String,
+            Rule::string_quote => Token::StringQuote,
+            Rule::string_quote_escape => Token::StringQuoteEscape,
+            Rule::string_quote_doubleescape => Token::StringQuoteDoubleEscape,
 
             // Other
             Rule::other => Token::Other,
             Rule::EOI => Token::InputEnd,
 
             // Invalid
-            Rule::char | Rule::document | Rule::token => {
+            Rule::document | Rule::token => {
                 panic!("Received invalid pest rule: {:?}", rule)
             }
         }

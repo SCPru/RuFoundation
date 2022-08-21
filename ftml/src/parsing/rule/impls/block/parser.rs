@@ -23,6 +23,7 @@ use super::BlockRule;
 use crate::parsing::collect::{collect_text, collect_text_keep};
 use crate::parsing::condition::ParseCondition;
 use crate::parsing::consume::consume;
+use crate::parsing::rule::impls::prelude::check_step;
 use crate::parsing::{
     gather_paragraphs, parse_string, ExtractedToken, ParseResult, ParseWarning,
     ParseWarningKind, Parser, Token
@@ -338,10 +339,7 @@ where
 
                 // Get the argument value
                 self.get_optional_space()?;
-                let value_raw = self.get_token(
-                    Token::String,
-                    ParseWarningKind::BlockMalformedArguments,
-                )?;
+                let value_raw = self.get_quoted_string(ParseWarningKind::BlockMalformedArguments)?;
 
                 // Parse the string
                 let value = parse_string(value_raw);
@@ -353,6 +351,25 @@ where
 
         self.get_head_block(block_rule, in_head)?;
         Ok(map)
+    }
+
+    pub fn get_quoted_string(&mut self, kind: ParseWarningKind) -> Result<&'t str, ParseWarning> {
+        let first_token = self.current();
+        let mut last_token;
+        check_step(self, Token::StringQuote, kind)?;
+        loop {
+            let read = self.step()?;
+            last_token = read;
+            match read.token {
+                Token::StringQuote => {
+                    self.step()?;
+                    break
+                }
+                Token::InputEnd => return Err(self.make_warn(kind)),
+                _ => {}
+            }
+        }
+        return Ok(self.full_text().slice(first_token, last_token))
     }
 
     pub fn get_head_name_map(

@@ -30,7 +30,7 @@ fn try_consume_fn<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create color container");
-    check_step(parser, Token::Color)?;
+    check_step(parser, Token::Color, ParseWarningKind::RuleFailed)?;
 
     // The pattern for color is:
     // ## [color-style] | [text to be colored] ##

@@ -32,6 +32,7 @@ use super::{ExtractedToken, ParseWarning, Parser, Token, ParseWarningKind};
 pub fn check_step<'r, 't>(
     parser: &mut Parser<'r, 't>,
     token: Token,
+    kind: ParseWarningKind,
 ) -> Result<&'r ExtractedToken<'t>, ParseWarning> {
     let current = parser.current();
 
@@ -39,7 +40,7 @@ pub fn check_step<'r, 't>(
         parser.step()?;
         Ok(current)
     } else {
-        Err(parser.make_warn(ParseWarningKind::RuleFailed))
+        Err(parser.make_warn(kind))
     }
 }
 
@@ -56,6 +57,6 @@ fn check_step_fail() {
     let tokenization = crate::tokenize("**Apple** banana");
     let mut parser = Parser::new(&tokenization, &page_info, Rc::new(NullPageCallbacks{}), &settings);
 
-    let result = check_step(&mut parser, Token::Italics);
+    let result = check_step(&mut parser, Token::Italics, ParseWarningKind::RuleFailed);
     assert!(matches!(result, Err(_)));
 }

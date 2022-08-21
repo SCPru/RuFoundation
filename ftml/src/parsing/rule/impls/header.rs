@@ -33,13 +33,13 @@ fn try_consume_fn<'p, 'r, 't>(
     info!("Trying to create header container");
 
     // Get header depth
-    let heading = check_step(parser, Token::Heading)?
+    let heading = check_step(parser, Token::Heading, ParseWarningKind::RuleFailed)?
         .slice
         .try_into()
         .expect("Received invalid heading length token slice");
 
     // Step over whitespace
-    check_step(parser, Token::Whitespace)?;
+    check_step(parser, Token::Whitespace, ParseWarningKind::RuleFailed)?;
 
     let (elements, mut all_exceptions, _) = collect_container(
         parser,

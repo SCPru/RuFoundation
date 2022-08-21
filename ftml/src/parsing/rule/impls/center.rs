@@ -32,8 +32,8 @@ fn try_consume_fn<'p, 'r, 't>(
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create centered container");
 
-    check_step(parser, Token::Equals)?;
-    check_step(parser, Token::Whitespace)?;
+    check_step(parser, Token::Equals, ParseWarningKind::RuleFailed)?;
+    check_step(parser, Token::Whitespace, ParseWarningKind::RuleFailed)?;
 
     ok!(true; vec![Element::AlignMarker(Alignment::Center)], vec![])
 }
