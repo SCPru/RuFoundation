@@ -364,19 +364,20 @@ fn arb_tree() -> impl Strategy<Value = SyntaxTree<'static>> {
     let toc_elements = proptest::collection::vec(arb_element_leaf(), 1..5);
     let toc_heading = arb_list(toc_elements);
     let footnote = proptest::collection::vec(element.clone(), 5..10);
+    let internal_link = arb_page_ref();
 
     (
         proptest::collection::vec(element, 1..100),
-        proptest::collection::vec(cow!(".*"), 0..128),
         proptest::collection::vec(toc_heading, 0..2),
         proptest::collection::vec(footnote, 0..2),
+        proptest::collection::vec(internal_link, 0..5),
     )
         .prop_map(
-            |(elements, styles, table_of_contents, footnotes)| SyntaxTree {
+            |(elements, table_of_contents, footnotes, internal_links)| SyntaxTree {
                 elements,
-                styles,
                 table_of_contents,
                 footnotes,
+                internal_links,
             },
         )
 }
