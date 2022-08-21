@@ -1,3 +1,20 @@
+# Rust stuff
+FROM rust:1.63-buster AS rust_build
+
+WORKDIR /build
+
+COPY ftml/Cargo.lock .
+COPY ftml/Cargo.toml .
+
+RUN mkdir src
+RUN touch src/lib.rs
+
+RUN cargo build --release
+
+COPY ftml .
+
+RUN cargo build --release
+
 # JS stuff
 FROM node:17 as js_build
 
@@ -20,6 +37,7 @@ RUN python -m pip install gunicorn
 
 COPY . .
 COPY --from=js_build /build/static/* ./static/
+COPY --from=rust_build /build/target/release/libftml.so ./ftml/ftml.so
 
 RUN useradd -u 8877 scpwiki
 RUN chown scpwiki:scpwiki /app -R

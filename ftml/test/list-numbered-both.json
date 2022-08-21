@@ -1,0 +1,42 @@
+{
+    "input": "# A",
+    "tree": {
+        "elements": [
+            {
+                "element": "list",
+                "data": {
+                    "type": "numbered",
+                    "attributes": {},
+                    "items": [
+                        {
+                            "item-type": "elements",
+                            "hidden": false,
+                            "attributes": {},
+                            "elements": [
+                                {
+                                    "element": "text",
+                                    "data": "A"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "element": "footnote-block",
+                "data": {
+                    "title": null,
+                    "hide": false
+                }
+            }
+        ],
+        "styles": [
+        ],
+        "table-of-contents": [
+        ],
+        "footnotes": [
+        ]
+    },
+    "warnings": [
+    ]
+}

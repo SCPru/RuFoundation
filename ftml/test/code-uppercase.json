@@ -1,0 +1,29 @@
+{
+    "input": "[[CODE]]\ntext here\n[[/CODE]]",
+    "tree": {
+        "elements": [
+            {
+                "element": "code",
+                "data": {
+                    "contents": "text here",
+                    "language": null
+                }
+            },
+            {
+                "element": "footnote-block",
+                "data": {
+                    "title": null,
+                    "hide": false
+                }
+            }
+        ],
+        "styles": [
+        ],
+        "table-of-contents": [
+        ],
+        "footnotes": [
+        ]
+    },
+    "warnings": [
+    ]
+}

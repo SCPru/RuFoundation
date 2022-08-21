@@ -1,0 +1,115 @@
+{
+    "input": "`~!@#$%^&*()-=+[]{}\\|",
+    "tree": {
+        "elements": [
+            {
+                "element": "container",
+                "data": {
+                    "type": "paragraph",
+                    "attributes": {},
+                    "elements": [
+                        {
+                            "element": "text",
+                            "data": "`"
+                        },
+                        {
+                            "element": "text",
+                            "data": "~"
+                        },
+                        {
+                            "element": "text",
+                            "data": "!"
+                        },
+                        {
+                            "element": "text",
+                            "data": "@"
+                        },
+                        {
+                            "element": "text",
+                            "data": "#"
+                        },
+                        {
+                            "element": "text",
+                            "data": "$"
+                        },
+                        {
+                            "element": "text",
+                            "data": "%"
+                        },
+                        {
+                            "element": "text",
+                            "data": "^"
+                        },
+                        {
+                            "element": "text",
+                            "data": "&"
+                        },
+                        {
+                            "element": "text",
+                            "data": "*"
+                        },
+                        {
+                            "element": "text",
+                            "data": "("
+                        },
+                        {
+                            "element": "text",
+                            "data": ")"
+                        },
+                        {
+                            "element": "text",
+                            "data": "-"
+                        },
+                        {
+                            "element": "text",
+                            "data": "="
+                        },
+                        {
+                            "element": "text",
+                            "data": "+"
+                        },
+                        {
+                            "element": "text",
+                            "data": "["
+                        },
+                        {
+                            "element": "text",
+                            "data": "]"
+                        },
+                        {
+                            "element": "text",
+                            "data": "{"
+                        },
+                        {
+                            "element": "text",
+                            "data": "}"
+                        },
+                        {
+                            "element": "text",
+                            "data": "\\"
+                        },
+                        {
+                            "element": "text",
+                            "data": "|"
+                        }
+                    ]
+                }
+            },
+            {
+                "element": "footnote-block",
+                "data": {
+                    "title": null,
+                    "hide": false
+                }
+            }
+        ],
+        "styles": [
+        ],
+        "table-of-contents": [
+        ],
+        "footnotes": [
+        ]
+    },
+    "warnings": [
+    ]
+}

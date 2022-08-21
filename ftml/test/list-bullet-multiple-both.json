@@ -1,0 +1,64 @@
+{
+    "input": "* A\n* B\n* C",
+    "tree": {
+        "elements": [
+            {
+                "element": "list",
+                "data": {
+                    "type": "bullet",
+                    "attributes": {},
+                    "items": [
+                        {
+                            "item-type": "elements",
+                            "hidden": false,
+                            "attributes": {},
+                            "elements": [
+                                {
+                                    "element": "text",
+                                    "data": "A"
+                                }
+                            ]
+                        },
+                        {
+                            "item-type": "elements",
+                            "hidden": false,
+                            "attributes": {},
+                            "elements": [
+                                {
+                                    "element": "text",
+                                    "data": "B"
+                                }
+                            ]
+                        },
+                        {
+                            "item-type": "elements",
+                            "hidden": false,
+                            "attributes": {},
+                            "elements": [
+                                {
+                                    "element": "text",
+                                    "data": "C"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "element": "footnote-block",
+                "data": {
+                    "title": null,
+                    "hide": false
+                }
+            }
+        ],
+        "styles": [
+        ],
+        "table-of-contents": [
+        ],
+        "footnotes": [
+        ]
+    },
+    "warnings": [
+    ]
+}

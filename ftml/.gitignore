@@ -1,0 +1,12 @@
+# Artifacts
+target/
+pkg/
+
+# Logging
+ftml.log
+
+# Artifacts related to RUFoundation
+ftml.pyd
+ftml.pyd.old
+ftml.so
+ftml.so.old

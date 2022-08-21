@@ -1,0 +1,16 @@
+[all]
+
+all-features = true
+
+workspace = true
+exclude-files = [
+    "src/log.rs",
+    "src/test.rs",
+    "src/ffi/*",
+    "src/wasm/*",
+]
+
+[report]
+
+out = ["Html", "Xml"]
+output-dir = "target/coverage"

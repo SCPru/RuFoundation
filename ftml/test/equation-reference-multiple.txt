@@ -1,0 +1,4 @@
+A[alpha], B[beta]
+
+C[omega]
+D

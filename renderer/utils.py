@@ -88,3 +88,11 @@ def render_user_to_json(user: User, avatar=True):
     staff = user.is_staff
     admin = user.is_superuser
     return {'type': user_type, 'id': user.id, 'avatar': user.get_avatar(), 'name': displayname, 'username': user.username, 'showAvatar': avatar, 'staff': staff, 'admin': admin}
+
+
+def filter_url(url):
+    url = url.strip()
+    test_url = url.lower()
+    if test_url.startswith('javascript:') or test_url.startswith('data:'):
+        return '#invalid-url'
+    return url
