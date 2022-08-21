@@ -19,6 +19,7 @@
  */
 
 use super::prelude::*;
+use crate::parsing::strip::strip_whitespace;
 use crate::parsing::{process_depths, DepthItem, DepthList};
 use crate::tree::{AttributeMap, ListItem, ListType};
 
@@ -122,13 +123,18 @@ fn try_consume_fn<'p, 'r, 't>(
             _ => true,
         };
 
-        let elements =
+        let mut elements =
             collected_result
                 .map(|success| success.0)
                 .chain(&mut exceptions, &mut paragraph_safe);
 
-        // Append list line
-        depths.push((depth, list_type, elements));
+        // Check if depth is empty.
+        strip_whitespace(&mut elements);
+        
+        if !elements.is_empty() {
+            // Append list line
+            depths.push((depth, list_type, elements));
+        }
 
         if should_break {
             break;
