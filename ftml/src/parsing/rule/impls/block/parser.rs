@@ -358,7 +358,6 @@ where
                     Ok(false) => break, 
                     Ok(true) => {},
                     Err(_) => {
-                        println!("err at {:#?}", self.current());
                         if self.remaining().len() == original_position {
                             self.step()?;
                         }
