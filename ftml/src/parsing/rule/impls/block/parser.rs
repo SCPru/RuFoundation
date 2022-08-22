@@ -278,74 +278,92 @@ where
         if in_head {
             // Only process if the block isn't done yet
             loop {
-                self.get_optional_spaces_any()?;
+                let original_position = self.remaining().len();
+                // This closure silently swallows any argument processing errors.
+                // This is for compatibility with broken Wikidot code.
+                let is_continuing = (|| {
+                    self.get_optional_spaces_any()?;
 
-                // Try to get the argument key
-                // Allows any token that matches the regular expression
-                // i.e., alphanumeric, dash, or underscore
-                //
-                // This logic determines if we stop or keep getting arguments
-                //
-                // We could use collect_text_keep() here, but it messes with
-                // get_head_block() so we just have it inline. Also it's a bit
-                // strange since one of the outcomes is to break out of the loop.
+                    // Try to get the argument key
+                    // Allows any token that matches the regular expression
+                    // i.e., alphanumeric, dash, or underscore
+                    //
+                    // This logic determines if we stop or keep getting arguments
+                    //
+                    // We could use collect_text_keep() here, but it messes with
+                    // get_head_block() so we just have it inline. Also it's a bit
+                    // strange since one of the outcomes is to break out of the loop.
 
-                let key = {
-                    let start = self.current();
-                    let mut args_finished = false;
+                    let key = {
+                        let start = self.current();
+                        let mut args_finished = false;
 
-                    loop {
-                        let current = self.current();
-                        match current.token {
-                            // End parsing block head
-                            Token::RightBlock => {
-                                args_finished = true;
-                                break;
-                            }
+                        loop {
+                            let current = self.current();
+                            match current.token {
+                                // End parsing block head
+                                Token::RightBlock => {
+                                    args_finished = true;
+                                    break;
+                                }
 
-                            // End parsing argument key
-                            Token::Whitespace
-                            | Token::LineBreak
-                            | Token::ParagraphBreak
-                            | Token::Equals => break,
+                                // End parsing argument key
+                                Token::Whitespace
+                                | Token::LineBreak
+                                | Token::ParagraphBreak
+                                | Token::Equals => break,
 
-                            // Continue iterating to gather key
-                            _ if ARGUMENT_KEY.is_match(current.slice) => {
-                                self.step()?;
-                            }
+                                // Continue iterating to gather key
+                                _ if ARGUMENT_KEY.is_match(current.slice) => {
+                                    self.step()?;
+                                }
 
-                            // Invalid token
-                            _ => {
-                                return Err(self.make_warn(
-                                    ParseWarningKind::BlockMalformedArguments,
-                                ))
+                                // Invalid token
+                                _ => {
+                                    return Err(self.make_warn(
+                                        ParseWarningKind::BlockMalformedArguments,
+                                    ))
+                                }
                             }
                         }
-                    }
 
-                    // Stop iterating for more argument key-value pairs
-                    if args_finished {
-                        break;
-                    }
+                        // Stop iterating for more argument key-value pairs
+                        if args_finished {
+                            return Ok(false)
+                        }
 
-                    // Gather argument key string slice
-                    let end = self.current();
-                    self.full_text().slice_partial(start, end)
-                };
+                        // Gather argument key string slice
+                        let end = self.current();
+                        self.full_text().slice_partial(start, end)
+                    };
 
-                // Equal sign
-                self.get_optional_space()?;
-                self.get_token(Token::Equals, ParseWarningKind::BlockMalformedArguments)?;
+                    // Equal sign
+                    self.get_optional_space()?;
+                    self.get_token(Token::Equals, ParseWarningKind::BlockMalformedArguments)?;
 
-                // Get the argument value
-                self.get_optional_space()?;
-                let value_raw = self.get_quoted_string(ParseWarningKind::BlockMalformedArguments)?;
+                    // Get the argument value
+                    self.get_optional_space()?;
+                    let value_raw = self.get_quoted_string(ParseWarningKind::BlockMalformedArguments)?;
 
-                // Parse the string
-                let value = parse_string(value_raw);
+                    // Parse the string
+                    let value = parse_string(value_raw);
 
-                // Add to argument map
-                map.insert(key, value);
+                    // Add to argument map
+                    map.insert(key, value);
+
+                    Ok(true)
+                })();
+
+                match is_continuing {
+                    Ok(false) => break, 
+                    Ok(true) => {},
+                    Err(_) => {
+                        println!("err at {:#?}", self.current());
+                        if self.remaining().len() == original_position {
+                            self.step()?;
+                        }
+                    },
+                }
             }
         }
 
