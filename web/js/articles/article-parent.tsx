@@ -67,7 +67,12 @@ class ArticleParent extends Component<Props, State> {
         }
     }
 
-    onSubmit = async () => {
+    onSubmit = async (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
         const { pageId } = this.props;
         this.setState({ saving: true, error: null, savingSuccess: false });
         const input = {
@@ -145,7 +150,7 @@ class ArticleParent extends Component<Props, State> {
                     <div className="buttons form-actions">
                         <input type="button" className="btn btn-danger" value="Закрыть" onClick={this.onCancel} />
                         <input type="button" className="btn btn-default" value="Очистить" onClick={this.onClear} />
-                        <input type="button" className="btn btn-primary" value="Сохранить теги" onClick={this.onSubmit}/>
+                        <input type="button" className="btn btn-primary" value="Установить родителя" onClick={this.onSubmit}/>
                     </div>
                 </form>
             </Styles>
