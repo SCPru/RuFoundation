@@ -40,10 +40,12 @@ fn try_consume_fn<'p, 'r, 't>(
         Token::LeftDoubleAngle => ok!(text!("\u{0ab}")),
 
         // » - RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
-        Token::Quote if current.slice == ">>" => ok!(text!("\u{0bb}")),
-
-        // Some other series of ">"s in a line
-        Token::Quote => Err(parser.make_warn(ParseWarningKind::RuleFailed)),
+        Token::RightDoubleAngle => ok!(text!("\u{0bb}")),
+        Token::Quote => {
+            check_step(parser, Token::Quote, ParseWarningKind::RuleFailed)?;
+            check_step(parser, Token::Quote, ParseWarningKind::RuleFailed)?;
+            ok!(text!("\u{0bb}"))
+        }
 
         // Invalid token for this rule
         _ => unreachable!(),

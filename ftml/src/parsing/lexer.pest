@@ -101,6 +101,7 @@ token = _{
     colon |
     underscore |
     quote |
+    right_double_angle |
     heading |
     bullet_item |
     numbered_item |
@@ -166,6 +167,7 @@ clear_float_right = @{ "~"{3,} ~ ">" }
 triple_dash = @{ "-"{3,} }
 double_dash = @{ "-"{2} }
 left_double_angle = @{ "<<" }
+right_double_angle = @{ ">>" }
 pipe = @{ "|" }
 equals = @{ "=" }
 colon = @{ ":" }

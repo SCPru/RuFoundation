@@ -48,6 +48,7 @@ lazy_static! {
             Token::DoubleDash => vec![RULE_STRIKETHROUGH, RULE_DASH],
             Token::TripleDash => vec![RULE_HORIZONTAL_RULE],
             Token::LeftDoubleAngle => vec![RULE_DOUBLE_ANGLE],
+            Token::RightDoubleAngle => vec![RULE_DOUBLE_ANGLE],
             Token::ClearFloatBoth => vec![RULE_CLEAR_FLOAT],
             Token::ClearFloatLeft => vec![RULE_CLEAR_FLOAT],
             Token::ClearFloatRight => vec![RULE_CLEAR_FLOAT],
