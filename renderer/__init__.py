@@ -102,8 +102,10 @@ def page_info_from_context(context: RenderContext):
 
     site = get_current_site()
     return ftml.PageInfo(
-        page=context.article.name if context.article else '',
-        category=context.article.category if context.article else '',
+        # This is a bit hacky; we just know that "page" and "category" are only used for image URL generation.
+        # TODO: fix PageInfo struct to use proper fields
+        page=context.source_article.name if context.source_article else '',
+        category=context.source_article.category if context.source_article else '',
         site=site.slug,
         domain=site.domain,
         media_domain=site.media_domain,
