@@ -1,6 +1,8 @@
+import signal
+import sys
+
 from django.core.management.commands.runserver import Command as BaseRunserverCommand
 import os
-import sys
 import shutil
 import subprocess
 import atexit
@@ -9,7 +11,6 @@ from watchdog.events import FileSystemEventHandler
 import platform
 import threading
 import time
-import psutil
 
 
 _ALREADY_WATCHING = False
@@ -33,15 +34,15 @@ class Command(BaseRunserverCommand):
         super().add_arguments(parser)
         parser.add_argument('--watch', action='store_true', dest='watch', help='Runs JS build in development mode')
         parser.add_argument('--ftml-release', action='store_true', dest='ftml_release', help='Build FTML in release mode')
-        parser.add_argument('--no-first-reload', action='store_true', dest='no_first_reload', help='Internal parameter for FTML reloading')
+        parser.add_argument('--internal-run', action='store_true', dest='internal_run', help='This starts the actual server')
 
     def handle(self, *args, **options):
-        if options['no_first_reload']:
-            time.sleep(1)
-        if options['watch']:
-            self.watch_js()
-            self.watch_ftml(options['no_first_reload'], options['ftml_release'])
-        super().handle(*args, **options)
+        if not options['watch'] or options['internal_run']:
+            super().handle(*args, **options)
+            return
+
+        self.watch_js()
+        self.watch_ftml(options['ftml_release'])
 
     def watch_js(self):
         global _ALREADY_WATCHING
@@ -53,24 +54,28 @@ class Command(BaseRunserverCommand):
         atexit.register(lambda: _safe_kill(p))
         _ALREADY_WATCHING = True
 
-    def watch_ftml(self, no_first_reload=False, ftml_release=False):
+    # Runs this command but with --internal-run
+    def run_child(self):
+        return subprocess.Popen([sys.executable] + sys.argv + ['--internal-run'])
+
+    def watch_ftml(self, ftml_release=False) -> bool:
         # You cannot reload a PYD file. For this reason, entire watcher will restart.
         global _ALREADY_WATCHING_RUST
         if _ALREADY_WATCHING_RUST or os.environ.get('RUN_MAIN') == 'true':
-            return
+            return True
         print('Will watch FTML '+repr(self))
         base_project_dir = os.path.dirname(__file__) + '/../../../ftml'
+
+        observer = Observer()
 
         class FtmlWatcher(FileSystemEventHandler):
             def __init__(self):
                 super().__init__()
                 self.lock = threading.RLock()
                 self.is_updated = False
-                self.thread = threading.Thread(target=self.reload)
-                self.thread.daemon = True
-                self.thread.start()
-                if not no_first_reload:
-                    self.updated(base_project_dir)
+                self.child_pid = 0
+                self.should_continue_normally = False
+                self.updated(base_project_dir)
 
             def on_moved(self, event):
                 super().on_moved(event)
@@ -101,35 +106,35 @@ class Command(BaseRunserverCommand):
                 with self.lock:
                     self.is_updated = True
 
-            def reload(self):
-                while True:
-                    time.sleep(1)
-                    with self.lock:
-                        is_updated = self.is_updated
-                        self.is_updated = False
-                    if not is_updated:
-                        continue
-                    rel_cmdline = ['--release'] if ftml_release else []
-                    p = subprocess.Popen(['cargo', 'build'] + rel_cmdline, shell=True, cwd=base_project_dir)
-                    code = p.wait()
-                    if code != 0:
-                        continue
-                    filename, new_filename = self.filenames()
-                    target_dir = '/target/release/' if ftml_release else '/target/debug/'
-                    if os.path.exists(base_project_dir + target_dir + filename):
-                        print('Copying FTML library')
-                        # move FTML library to another location (on Windows this fixes permissions)
-                        if os.path.exists(base_project_dir + '/' + new_filename):
-                            if os.path.exists(base_project_dir + '/' + new_filename + '.old'):
-                                os.remove(base_project_dir + '/' + new_filename + '.old')
-                            os.rename(base_project_dir + '/' + new_filename, base_project_dir + '/' + new_filename + '.old')
-                        shutil.copy(base_project_dir + target_dir + filename, base_project_dir + '/' + new_filename)
-                        # reload this script
-                        print('Reloading...')
-                        nofr = ['--no-first-reload'] if not no_first_reload else []
-                        os.execv(sys.executable, ['python'] + sys.argv + nofr)
-
-        observer = Observer()
-        observer.schedule(FtmlWatcher(), base_project_dir+'/src', recursive=True)
+        w = FtmlWatcher()
+        observer.schedule(w, base_project_dir+'/src', recursive=True)
         observer.start()
-
+        current_child = self.run_child()
+        while observer.is_alive():
+            time.sleep(1)
+            with w.lock:
+                is_updated = w.is_updated
+                w.is_updated = False
+            if not is_updated:
+                continue
+            rel_cmdline = ['--release'] if ftml_release else []
+            p = subprocess.Popen(['cargo', 'build'] + rel_cmdline, shell=True, cwd=base_project_dir)
+            code = p.wait()
+            if code != 0:
+                print('FTML compilation failed; skipping')
+                continue
+            filename, new_filename = w.filenames()
+            target_dir = '/target/release/' if ftml_release else '/target/debug/'
+            if os.path.exists(base_project_dir + target_dir + filename):
+                # Kill child
+                if current_child:
+                    print('Interrupting child process...')
+                    current_child.terminate()
+                    current_child.wait()
+                    current_child = None
+                print('Copying FTML library')
+                shutil.copy(base_project_dir + target_dir + filename, base_project_dir + '/' + new_filename)
+                # Create another instance of runserver
+                print('Reloading...')
+                current_child = self.run_child()
+        return w.should_continue_normally
