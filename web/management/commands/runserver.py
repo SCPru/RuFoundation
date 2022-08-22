@@ -1,6 +1,7 @@
 import signal
 import sys
 
+import psutil
 from django.core.management.commands.runserver import Command as BaseRunserverCommand
 import os
 import shutil
@@ -55,16 +56,18 @@ class Command(BaseRunserverCommand):
         _ALREADY_WATCHING = True
 
     # Runs this command but with --internal-run
-    def run_child(self):
-        return subprocess.Popen([sys.executable] + sys.argv + ['--internal-run'])
+    def run_child(self, second=False):
+        add_args = ['--skip-checks']
+        c = subprocess.Popen([sys.executable] + sys.argv + ['--internal-run', '--noreload'] + add_args, shell=True)
+        return c
 
-    def watch_ftml(self, ftml_release=False) -> bool:
+    def watch_ftml(self, ftml_release=False):
         # You cannot reload a PYD file. For this reason, entire watcher will restart.
         global _ALREADY_WATCHING_RUST
         if _ALREADY_WATCHING_RUST or os.environ.get('RUN_MAIN') == 'true':
             return True
         print('Will watch FTML '+repr(self))
-        base_project_dir = os.path.dirname(__file__) + '/../../../ftml'
+        base_project_dir = './ftml'
 
         observer = Observer()
 
@@ -73,9 +76,8 @@ class Command(BaseRunserverCommand):
                 super().__init__()
                 self.lock = threading.RLock()
                 self.is_updated = False
-                self.child_pid = 0
                 self.should_continue_normally = False
-                self.updated(base_project_dir)
+                self.updated(base_project_dir + '/src')
 
             def on_moved(self, event):
                 super().on_moved(event)
@@ -103,15 +105,22 @@ class Command(BaseRunserverCommand):
                 return filename, new_filename
 
             def updated(self, filename):
-                with self.lock:
-                    self.is_updated = True
+                filename = filename.replace('\\', '/')
+                # filename must start with ./
+                if filename.endswith('.py') or filename.startswith(base_project_dir + '/src/') or filename == base_project_dir + '/src':
+                    with self.lock:
+                        self.is_updated = True
 
         w = FtmlWatcher()
-        observer.schedule(w, base_project_dir+'/src', recursive=True)
+        observer.schedule(w, '.', recursive=True)
         observer.start()
         current_child = self.run_child()
         while observer.is_alive():
             time.sleep(1)
+            s = current_child.poll()
+            if s is not None:
+                print('Child process died with status %d' % s)
+                return
             with w.lock:
                 is_updated = w.is_updated
                 w.is_updated = False
@@ -129,12 +138,25 @@ class Command(BaseRunserverCommand):
                 # Kill child
                 if current_child:
                     print('Interrupting child process...')
-                    current_child.terminate()
+                    # KILL everything in the child tree
+                    # Otherwise we have hanging processes that prevent us from copying into PYD/so
+                    parent = psutil.Process(current_child.pid)
+                    for child in parent.children(recursive=True):
+                        child.kill()
                     current_child.wait()
-                    current_child = None
                 print('Copying FTML library')
-                shutil.copy(base_project_dir + target_dir + filename, base_project_dir + '/' + new_filename)
+                copied = False
+                for i in range(30):
+                    try:
+                        shutil.copy(base_project_dir + target_dir + filename, base_project_dir + '/' + new_filename)
+                        copied = True
+                        break
+                    except PermissionError:
+                        print('Could not replace FTML library, retrying...')
+                    time.sleep(1)
+                if not copied:
+                    print('Fatal: could not unlock FTML dynamic library, reloading is not possible. Is this the only instance running?')
+                    return
                 # Create another instance of runserver
                 print('Reloading...')
-                current_child = self.run_child()
-        return w.should_continue_normally
+                current_child = self.run_child(True)

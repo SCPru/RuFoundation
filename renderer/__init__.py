@@ -12,6 +12,8 @@ from web.models.sites import get_current_site
 from .parser import RenderContext
 from .utils import render_user_to_html, render_template_from_string
 
+import os
+
 
 # FTML is not imported globally to prevent loading DLL for commands that don't require it
 
@@ -123,15 +125,15 @@ def page_info_from_context(context: RenderContext):
 def single_pass_render(source, context=None) -> str:
     from ftml import ftml
 
-    html = ftml.render_html(source, CallbacksWithContext(context), page_info_from_context(context))
+    html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context))
     return SafeString(html.body)
 
 
 def single_pass_render_with_excerpt(source, context=None) -> [str, str, Optional[str]]:
     from ftml import ftml
 
-    html = ftml.render_html(source, CallbacksWithContext(context), page_info_from_context(context))
-    text = ftml.render_text(source, CallbacksWithContext(context), page_info_from_context(context)).body
+    html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context))
+    text = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context)).body
     text = '\n'.join([x.strip() for x in text.split('\n')])
     text = re.sub(r'\n+', '\n', text)
     if len(text) > 384:
@@ -142,5 +144,5 @@ def single_pass_render_with_excerpt(source, context=None) -> [str, str, Optional
 def single_pass_fetch_backlinks(source, context=None) -> tuple[list[str], list[str]]:
     from ftml import ftml
 
-    text = ftml.collect_backlinks(source, CallbacksWithContext(context), page_info_from_context(context))
+    text = ftml.collect_backlinks(source, callbacks_with_context(context), page_info_from_context(context))
     return text.included_pages, text.linked_pages
