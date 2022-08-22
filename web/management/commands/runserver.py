@@ -76,6 +76,7 @@ class Command(BaseRunserverCommand):
                 super().__init__()
                 self.lock = threading.RLock()
                 self.is_updated = False
+                self.updated_rust = False
                 self.should_continue_normally = False
                 self.updated(base_project_dir + '/src')
 
@@ -110,53 +111,65 @@ class Command(BaseRunserverCommand):
                 if filename.endswith('.py') or filename.startswith(base_project_dir + '/src/') or filename == base_project_dir + '/src':
                     with self.lock:
                         self.is_updated = True
+                        self.updated_rust = not filename.endswith('.py')
 
         w = FtmlWatcher()
         observer.schedule(w, '.', recursive=True)
         observer.start()
         current_child = self.run_child()
         while observer.is_alive():
-            time.sleep(1)
+            time.sleep(0.25)
             s = current_child.poll()
             if s is not None:
                 print('Child process died with status %d' % s)
                 return
             with w.lock:
                 is_updated = w.is_updated
+                updated_rust = w.updated_rust
                 w.is_updated = False
             if not is_updated:
                 continue
-            rel_cmdline = ['--release'] if ftml_release else []
-            p = subprocess.Popen(['cargo', 'build'] + rel_cmdline, shell=True, cwd=base_project_dir)
-            code = p.wait()
-            if code != 0:
-                print('FTML compilation failed; skipping')
-                continue
-            filename, new_filename = w.filenames()
-            target_dir = '/target/release/' if ftml_release else '/target/debug/'
-            if os.path.exists(base_project_dir + target_dir + filename):
-                # Kill child
-                if current_child:
-                    print('Interrupting child process...')
-                    # KILL everything in the child tree
-                    # Otherwise we have hanging processes that prevent us from copying into PYD/so
-                    parent = psutil.Process(current_child.pid)
-                    for child in parent.children(recursive=True):
-                        child.kill()
-                    current_child.wait()
-                print('Copying FTML library')
-                copied = False
-                for i in range(30):
-                    try:
-                        shutil.copy(base_project_dir + target_dir + filename, base_project_dir + '/' + new_filename)
-                        copied = True
-                        break
-                    except PermissionError:
-                        print('Could not replace FTML library, retrying...')
-                    time.sleep(1)
-                if not copied:
-                    print('Fatal: could not unlock FTML dynamic library, reloading is not possible. Is this the only instance running?')
-                    return
-                # Create another instance of runserver
+            if not updated_rust:
+                # This branch means we just have .py updates; restart child, don't do anything else
+                print('Interrupting child process...')
+                parent = psutil.Process(current_child.pid)
+                for child in parent.children(recursive=True):
+                    child.kill()
+                current_child.wait()
                 print('Reloading...')
                 current_child = self.run_child(True)
+            else:
+                rel_cmdline = ['--release'] if ftml_release else []
+                p = subprocess.Popen(['cargo', 'build'] + rel_cmdline, shell=True, cwd=base_project_dir)
+                code = p.wait()
+                if code != 0:
+                    print('FTML compilation failed; skipping')
+                    continue
+                filename, new_filename = w.filenames()
+                target_dir = '/target/release/' if ftml_release else '/target/debug/'
+                if os.path.exists(base_project_dir + target_dir + filename):
+                    # Kill child
+                    if current_child:
+                        print('Interrupting child process...')
+                        # KILL everything in the child tree
+                        # Otherwise we have hanging processes that prevent us from copying into PYD/so
+                        parent = psutil.Process(current_child.pid)
+                        for child in parent.children(recursive=True):
+                            child.kill()
+                        current_child.wait()
+                    print('Copying FTML library')
+                    copied = False
+                    for i in range(30):
+                        try:
+                            shutil.copy(base_project_dir + target_dir + filename, base_project_dir + '/' + new_filename)
+                            copied = True
+                            break
+                        except PermissionError:
+                            print('Could not replace FTML library, retrying...')
+                        time.sleep(1)
+                    if not copied:
+                        print('Fatal: could not unlock FTML dynamic library, reloading is not possible. Is this the only instance running?')
+                        return
+                    # Create another instance of runserver
+                    print('Reloading...')
+                    current_child = self.run_child(True)
