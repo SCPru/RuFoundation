@@ -58,11 +58,7 @@ fn try_consume_fn<'p, 'r, 't>(
     )?;
 
     // Isolate ID if requested
-    let name = if parser.settings().isolate_user_ids {
-        Cow::Owned(isolate_ids(name))
-    } else {
-        cow!(name)
-    };
+    let name = cow!(name);
 
     // Build and return link element
     ok!(Element::AnchorName(name))
