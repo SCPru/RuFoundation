@@ -79,6 +79,7 @@ impl Render for HtmlRender {
             &handle,
             settings,
             &tree.table_of_contents,
+            tree.has_toc_block,
             &tree.footnotes,
         );
 

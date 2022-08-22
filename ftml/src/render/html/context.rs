@@ -60,6 +60,7 @@ where
     // Fields from syntax tree
     //
     table_of_contents: &'e [Element<'t>],
+    has_toc_block: bool,
     footnotes: &'e [Vec<Element<'t>>],
 
     //
@@ -79,6 +80,7 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
         handle: &'h Handle<'t>,
         settings: &'e WikitextSettings,
         table_of_contents: &'e [Element<'t>],
+        has_toc_block: bool,
         footnotes: &'e [Vec<Element<'t>>],
     ) -> Self {
         HtmlContext {
@@ -93,6 +95,7 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
             random: Random::default(),
             variables: VariableScopes::new(),
             table_of_contents,
+            has_toc_block,
             footnotes,
             code_snippet_index: NonZeroUsize::new(1).unwrap(),
             table_of_contents_index: 0,
@@ -175,6 +178,11 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
     #[inline]
     pub fn table_of_contents(&self) -> &'e [Element<'t>] {
         self.table_of_contents
+    }
+
+    #[inline]
+    pub fn has_toc_block(&self) -> bool {
+        self.has_toc_block
     }
 
     #[inline]

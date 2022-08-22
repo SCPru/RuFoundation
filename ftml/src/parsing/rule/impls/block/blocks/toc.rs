@@ -48,5 +48,9 @@ fn parse_fn<'r, 't>(
     let attributes = arguments.to_attribute_map(parser.settings());
     let align = FloatAlignment::parse(name).map(|float| float.align);
     let element = Element::TableOfContents { align, attributes };
+
+    // Tell parser that a TOC block was added
+    parser.set_toc_block();
+
     ok!(false; element)
 }

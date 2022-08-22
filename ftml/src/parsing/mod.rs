@@ -91,6 +91,7 @@ where
         table_of_contents_depths,
         footnotes,
         has_footnote_block,
+        has_toc_block,
         internal_links,
     } = parse_internal(page_info, page_callbacks, settings, tokenization);
 
@@ -137,6 +138,7 @@ where
                 elements,
                 warnings,
                 table_of_contents,
+                has_toc_block,
                 footnotes,
                 internal_links,
             )
@@ -159,6 +161,7 @@ where
                 elements,
                 warnings,
                 table_of_contents,
+                has_toc_block,
                 footnotes,
                 internal_links,
             )
@@ -187,12 +190,14 @@ where
     let footnotes = parser.remove_footnotes();
     let internal_links = parser.remove_internal_links();
     let has_footnote_block = parser.has_footnote_block();
+    let has_toc_block = parser.has_toc_block();
 
     UnstructuredParseResult {
         result,
         table_of_contents_depths,
         footnotes,
         has_footnote_block,
+        has_toc_block,
         internal_links,
     }
 }
@@ -259,8 +264,8 @@ impl NextIndex<TableOfContentsIndex> for Incrementer {
 // Parse internal result
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+/// The returned result from parsing.
 pub struct UnstructuredParseResult<'r, 't> {
-    /// The returned result from parsing.
     pub result: ParseResult<'r, 't, Vec<Element<'t>>>,
 
     /// The "depths" list for table of content entries.
@@ -276,6 +281,9 @@ pub struct UnstructuredParseResult<'r, 't> {
 
     /// Whether a footnote block was placed during parsing.
     pub has_footnote_block: bool,
+
+    /// Whether a TOC block was placed during parsing.
+    pub has_toc_block: bool,
 
     // The list of internal links.
     pub internal_links: Vec<PageRef<'t>>,

@@ -82,6 +82,7 @@ pub struct SyntaxTree<'t> {
     /// Depth list conversion happens here, so that depths on the table
     /// match the heading level.
     pub table_of_contents: Vec<Element<'t>>,
+    pub has_toc_block: bool,
 
     /// The full footnote list for this page.
     pub footnotes: Vec<Vec<Element<'t>>>,
@@ -97,12 +98,14 @@ impl<'t> SyntaxTree<'t> {
         elements: Vec<Element<'t>>,
         warnings: Vec<ParseWarning>,
         table_of_contents: Vec<Element<'t>>,
+        has_toc_block: bool,
         footnotes: Vec<Vec<Element<'t>>>,
         internal_links: Vec<PageRef<'t>>,
     ) -> ParseOutcome<Self> {
         let tree = SyntaxTree {
             elements,
             table_of_contents,
+            has_toc_block,
             footnotes,
             internal_links,
         };
@@ -113,6 +116,7 @@ impl<'t> SyntaxTree<'t> {
         SyntaxTree {
             elements: elements_to_owned(&self.elements),
             table_of_contents: elements_to_owned(&self.table_of_contents),
+            has_toc_block: self.has_toc_block,
             footnotes: elements_lists_to_owned(&self.footnotes),
             internal_links: page_refs_to_owned(&self.internal_links),
         }

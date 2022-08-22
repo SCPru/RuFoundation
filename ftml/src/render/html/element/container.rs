@@ -26,6 +26,8 @@ use crate::tree::{Container, ContainerType, HtmlTag};
 pub fn render_container(ctx: &mut HtmlContext, container: &Container) {
     info!("Rendering container '{}'", container.ctype().name());
 
+    let has_toc_block = ctx.has_toc_block();
+
     match container.ctype() {
         // We wrap with <rp> around the <rt> contents
         ContainerType::RubyText => {
@@ -62,9 +64,25 @@ pub fn render_container(ctx: &mut HtmlContext, container: &Container) {
                 crate::tree::Alignment::Justify => "text-align: justify",
             };
             ctx.html()
-                .tag("div")
+                .div()
                 .attr(attr!("style" => style))
                 .inner(container.elements());
+        }
+
+        ContainerType::Header(_) => {
+            let tag_spec = container.ctype().html_tag(ctx);
+            let mut tag = ctx.html().tag(tag_spec.tag());
+            match tag_spec {
+                HtmlTag::TagAndId { id, .. } if has_toc_block => {
+                    tag.attr(attr!("id" => &id));
+                }
+                _ => {}
+            }
+            tag.contents(|ctx| {
+                ctx.html()
+                    .span()
+                    .inner(container.elements());
+            });
         }
 
         // Render normally

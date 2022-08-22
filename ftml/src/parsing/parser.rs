@@ -72,6 +72,7 @@ pub struct Parser<'r, 't> {
     accepts_partial: AcceptsPartial,
     in_footnote: bool, // Whether we're currently inside [[footnote]] ... [[/footnote]].
     has_footnote_block: bool, // Whether a [[footnoteblock]] was created.
+    has_toc_block: bool, // Whether a [[toc]] was created.
     start_of_line: bool,
 }
 
@@ -108,6 +109,7 @@ impl<'r, 't> Parser<'r, 't> {
             accepts_partial: AcceptsPartial::None,
             in_footnote: false,
             has_footnote_block: false,
+            has_toc_block: false,
             start_of_line: true,
         }
     }
@@ -138,6 +140,7 @@ impl<'r, 't> Parser<'r, 't> {
             table_of_contents_depths,
             footnotes,
             has_footnote_block,
+            has_toc_block,
             internal_links,
         } = parse_internal(self.page_info, self.page_callbacks.clone(), self.settings, &sub_tokenization);
 
@@ -163,7 +166,7 @@ impl<'r, 't> Parser<'r, 't> {
                 }
         
                 self.has_footnote_block |= has_footnote_block;
-        
+                self.has_toc_block |= has_toc_block;
                 
                 elements
             }
@@ -221,6 +224,11 @@ impl<'r, 't> Parser<'r, 't> {
     }
 
     #[inline]
+    pub fn has_toc_block(&self) -> bool {
+        self.has_toc_block
+    }
+
+    #[inline]
     pub fn start_of_line(&self) -> bool {
         self.start_of_line
     }
@@ -267,6 +275,11 @@ impl<'r, 't> Parser<'r, 't> {
     #[inline]
     pub fn set_footnote_block(&mut self) {
         self.has_footnote_block = true;
+    }
+
+    #[inline]
+    pub fn set_toc_block(&mut self) {
+        self.has_toc_block = true;
     }
 
     // Parse settings helpers
@@ -458,6 +471,7 @@ impl<'r, 't> Parser<'r, 't> {
         self.accepts_partial = parser.accepts_partial;
         self.in_footnote = parser.in_footnote;
         self.has_footnote_block = parser.has_footnote_block;
+        self.has_toc_block = parser.has_toc_block;
         self.start_of_line = parser.start_of_line;
 
         // Token pointers
