@@ -106,7 +106,7 @@ fn build_same<'p, 'r, 't>(
     info!("Building link with same URL and label (url '{url}')");
 
     // Remove category, if present
-    let label = strip_category(url).map(Cow::Borrowed);
+    let label = Some(Cow::from(strip_category(url)));
 
     // Parse out link location
     let (link, ltype) = match LinkLocation::parse_interwiki(cow!(url), parser.settings())
@@ -210,7 +210,7 @@ fn build_separate<'p, 'r, 't>(
 ///
 /// It returns `Some(_)` if a slice was performed, and `None` if
 /// the string would have been returned as-is.
-fn strip_category(url: &str) -> Option<&str> {
+fn strip_category(url: &str) -> &str {
     match url.find(':') {
         // Link with site, e.g. :scp-wiki:component:image-block.
         Some(0) => {
@@ -218,22 +218,25 @@ fn strip_category(url: &str) -> Option<&str> {
 
             // If there is no colon, it's malformed, return None.
             // Else, return a stripped version
-            url.find(':').map(|idx| {
-                let url = url[idx + 1..].trim_start();
+            match url.find(':') {
+                Some(idx) => {
+                    let url = url[idx + 1..].trim_start();
 
-                // Skip past the site portion, then use the regular strip case.
-                //
-                // We unwrap_or() here because, at minimum, we return the substring
-                // not containing the site.
-                strip_category(url).unwrap_or(url)
-            })
+                    // Skip past the site portion, then use the regular strip case.
+                    //
+                    // We unwrap_or() here because, at minimum, we return the substring
+                    // not containing the site.
+                    strip_category(&url)
+                }
+                None => url
+            }
         }
 
         // Link with category but no site, e.g. theme:sigma-9.
-        Some(idx) => Some(url[idx + 1..].trim_start()),
+        Some(idx) => url[idx + 1..].trim_start(),
 
         // No stripping necessary
-        None => None,
+        None => url,
     }
 }
 
@@ -250,30 +253,30 @@ fn test_strip_category() {
         }};
     }
 
-    check!("", None);
-    check!("scp-001", None);
-    check!("Guide Hub", None);
-    check!("theme:just-girly-things", Some("just-girly-things"));
-    check!("theme: just-girly-things", Some("just-girly-things"));
-    check!("theme: Just Girly Things", Some("Just Girly Things"));
-    check!("component:fancy-sidebar", Some("fancy-sidebar"));
-    check!("component:Fancy Sidebar", Some("Fancy Sidebar"));
-    check!("component: Fancy Sidebar", Some("Fancy Sidebar"));
+    check!("", "");
+    check!("scp-001", "scp-001");
+    check!("Guide Hub", "Guide Hub");
+    check!("theme:just-girly-things", "just-girly-things");
+    check!("theme: just-girly-things", "just-girly-things");
+    check!("theme: Just Girly Things", "Just Girly Things");
+    check!("component:fancy-sidebar", "fancy-sidebar");
+    check!("component:Fancy Sidebar", "Fancy Sidebar");
+    check!("component: Fancy Sidebar", "Fancy Sidebar");
     check!(
         "multiple:categories:here:test",
-        Some("categories:here:test"),
+        "categories:here:test",
     );
     check!(
         "multiple: categories: here: test",
-        Some("categories: here: test"),
+        "categories: here: test",
     );
-    check!(":scp-wiki:scp-001", Some("scp-001"));
-    check!(":scp-wiki : SCP-001", Some("SCP-001"));
-    check!(":scp-wiki:system:recent-changes", Some("recent-changes"));
+    check!(":scp-wiki:scp-001", "scp-001");
+    check!(":scp-wiki : SCP-001", "SCP-001");
+    check!(":scp-wiki:system:recent-changes", "recent-changes");
     check!(
         ":scp-wiki : system : Recent Changes",
-        Some("Recent Changes"),
+        "Recent Changes",
     );
-    check!(": snippets : redirect", Some("redirect"));
-    check!(":", None);
+    check!(": snippets : redirect", "redirect");
+    check!(":", ":");
 }

@@ -69,7 +69,7 @@ pub fn render_link(
 
     let url = match link {
         LinkLocation::Page(page_ref, anchor) => {
-            Cow::Owned(format!("{}{}", &page_ref.to_string(), match anchor {
+            Cow::Owned(format!("/{}{}", &page_ref.to_string(), match anchor {
                 Some(anchor) => format!("#{anchor}"),
                 None => String::from("")
             }))
