@@ -24,8 +24,6 @@ use crate::tree::AttributeMap;
 pub fn render_iframe(ctx: &mut HtmlContext, url: &str, attributes: &AttributeMap) {
     info!("Rendering iframe block (url '{url}')");
 
-    println!("iframe args {:#?}", attributes);
-
     ctx.html().iframe().attr(attr!(
         "src" => url,
         "crossorigin";;

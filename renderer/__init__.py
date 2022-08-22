@@ -124,5 +124,5 @@ def single_pass_render_with_excerpt(source, context=None) -> [str, str, Optional
 
 
 def single_pass_fetch_backlinks(source, context=None) -> tuple[list[str], list[str]]:
-    text = ftml.render_text(source, CallbacksWithContext(context), page_info_from_context(context))
+    text = ftml.collect_backlinks(source, CallbacksWithContext(context), page_info_from_context(context))
     return text.included_pages, text.linked_pages

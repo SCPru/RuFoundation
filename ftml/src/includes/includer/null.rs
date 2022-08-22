@@ -30,9 +30,9 @@ impl<'t> Includer<'t> for NullIncluder {
     #[inline]
     fn include_pages(
         &mut self,
-        _includes: &[IncludeRef<'t>],
+        includes: &[IncludeRef<'t>],
     ) -> Result<Vec<FetchedPage<'t>>, Void> {
-        Ok(Vec::new())
+        Ok(includes.iter().map(|x| FetchedPage{page_ref: x.page_ref().to_owned(), content: None}).collect())
     }
 
     #[inline]

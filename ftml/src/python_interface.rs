@@ -6,7 +6,7 @@ use std::rc::Rc;
 use pyo3::prelude::*;
 
 use crate::data::{PageRef, PartialPageInfo};
-use crate::includes::{FetchedPage, IncludeRef};
+use crate::includes::{FetchedPage, IncludeRef, NullIncluder};
 use crate::info::VERSION;
 use crate::prelude::*;
 use crate::render::html::HtmlRender;
@@ -16,19 +16,34 @@ fn page_refs_to_string(refs: &Vec<PageRef>) -> Vec<String> {
     refs.iter().map(|x| x.to_string()).collect()
 }
 
+fn page_refs_to_owned(refs: &Vec<PageRef>) -> Vec<PageRef<'static>> {
+    refs.iter().map(|x| x.to_owned()).collect()
+}
+
 fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, callbacks: Py<PyAny>) -> (R::Output, Vec<String>, Vec<String>)
 {
     let mut settings = WikitextSettings::from_mode(WikitextMode::Page);
     settings.use_include_compatibility = true;
 
-    let includer = PythonCallbacks{ callbacks: Box::new(callbacks.clone()) };
-    let page_callbacks = Rc::new(PythonCallbacks{ callbacks: Box::new(callbacks) });
+    let page_callbacks = Rc::new(PythonCallbacks{ callbacks: Box::new(callbacks.clone()) });
 
     // Substitute page inclusions
-    let (mut text, included_pages) = include(input, &settings, includer, || panic!("Mismatched includer page count")).unwrap_or((input.to_owned(), vec![]));
+    let mut included_text = input.clone();
+    let mut included_pages = vec![];
+    loop {
+        let includer = PythonCallbacks{ callbacks: Box::new(callbacks.clone()) };
+        let current_text = included_text.clone();
+        let (l_text, l_included_pages) = include(&current_text, &settings, includer, || panic!("Mismatched includer page count")).unwrap_or((input.to_owned(), vec![]));
+        if l_included_pages.is_empty() {
+            break
+        }
+        included_text = l_text.clone();
+        included_pages.append(&mut page_refs_to_owned(&l_included_pages));
+    }
 
-    preprocess(&mut text);
-    let tokens = tokenize(&mut text);
+    let text = &mut included_text.clone();
+    preprocess(text);
+    let tokens = tokenize(text);
     let (tree, _warnings) = parse(&tokens, &page_info, page_callbacks.clone(), &settings).into();
     let output = renderer.render(&tree, &page_info, page_callbacks, &settings);
     
@@ -331,9 +346,8 @@ impl Callbacks {
     }
 }
 
-#[pyfunction(kwargs="**")]
-fn render_html(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<PyRenderResult>
-{
+#[pyfunction]
+fn render_html(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<PyRenderResult> {
     let (html_output, included_pages, linked_pages) = render(&mut source.to_string(), &HtmlRender, page_info.to_page_info(), callbacks);
 
     Ok(PyRenderResult{
@@ -344,15 +358,38 @@ fn render_html(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> 
 }
 
 
-#[pyfunction(kwargs="**")]
-fn render_text(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<PyRenderResult>
-{
+#[pyfunction]
+fn render_text(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<PyRenderResult> {
     let (text_output, included_pages, linked_pages) = render(&mut source.to_string(), &TextRender, page_info.to_page_info(), callbacks);
 
     Ok(PyRenderResult{
         body: text_output,
         included_pages,
         linked_pages,
+    })
+}
+
+#[pyfunction]
+fn collect_backlinks(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<PyRenderResult> {
+    let mut settings = WikitextSettings::from_mode(WikitextMode::Page);
+    settings.use_include_compatibility = true;
+
+    let page_callbacks = Rc::new(PythonCallbacks{ callbacks: Box::new(callbacks.clone()) });
+
+    let includer = NullIncluder{};
+    
+    let (included_text, included_pages) = include(&source, &settings, includer, || panic!("Mismatched includer page count")).unwrap_or((source.to_owned(), vec![]));
+
+    let text = &mut included_text.clone();
+    preprocess(text);
+    let tokens = tokenize(text);
+    let page_info = page_info.to_page_info();
+    let (tree, _warnings) = parse(&tokens, &page_info, page_callbacks.clone(), &settings).into();
+
+    Ok(PyRenderResult{
+        body: String::from(""),
+        included_pages: page_refs_to_string(&included_pages),
+        linked_pages: page_refs_to_string(&tree.internal_links)
     })
 }
 
@@ -363,6 +400,7 @@ fn ftml(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add("ftml_version", VERSION.to_string())?;
     m.add_function(wrap_pyfunction!(render_html, m)?)?;
     m.add_function(wrap_pyfunction!(render_text, m)?)?;
+    m.add_function(wrap_pyfunction!(collect_backlinks, m)?)?;
     m.add_class::<Callbacks>()?;
     m.add_class::<PyPageInfo>()?;
     m.add_class::<PyIncludeRef>()?;
