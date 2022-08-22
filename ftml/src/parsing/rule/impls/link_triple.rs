@@ -28,10 +28,8 @@
 //! This method allows any URL, either opening in a new tab or not.
 //! Its syntax is `[[[page-name | Label text]`.
 
-use wikidot_normalize::normalize;
-
 use super::prelude::*;
-use crate::{tree::{AnchorTarget, LinkLabel, LinkLocation}, url::normalize_link};
+use crate::{tree::{AnchorTarget, LinkLabel, LinkLocation}, url::validate_href};
 use std::borrow::Cow;
 
 pub const RULE_LINK_TRIPLE: Rule = Rule {
@@ -40,36 +38,21 @@ pub const RULE_LINK_TRIPLE: Rule = Rule {
     try_consume_fn: link,
 };
 
-pub const RULE_LINK_TRIPLE_NEW_TAB: Rule = Rule {
-    name: "link-triple-new-tab",
-    position: LineRequirement::Any,
-    try_consume_fn: link_new_tab,
-};
-
 fn link<'p, 'r, 't>(parser: &'p mut Parser<'r, 't>) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create a triple-bracket link (regular)");
     check_step(parser, Token::LeftLink, ParseWarningKind::RuleFailed)?;
-    try_consume_link(parser, RULE_LINK_TRIPLE, None)
-}
-
-fn link_new_tab<'p, 'r, 't>(
-    parser: &'p mut Parser<'r, 't>,
-) -> ParseResult<'r, 't, Elements<'t>> {
-    info!("Trying to create a triple-bracket link (new tab)");
-    check_step(parser, Token::LeftLinkStar, ParseWarningKind::RuleFailed)?;
-    try_consume_link(parser, RULE_LINK_TRIPLE_NEW_TAB, Some(AnchorTarget::NewTab))
+    try_consume_link(parser, RULE_LINK_TRIPLE)
 }
 
 /// Build a triple-bracket link with the given target.
 fn try_consume_link<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
-    rule: Rule,
-    target: Option<AnchorTarget>,
+    rule: Rule
 ) -> ParseResult<'r, 't, Elements<'t>> {
     debug!("Trying to create a triple-bracket link");
 
     // Gather path for link
-    let (url, last) = collect_text_keep(
+    let (collected_url, last) = collect_text_keep(
         parser,
         rule,
         &[],
@@ -83,6 +66,12 @@ fn try_consume_link<'p, 'r, 't>(
         ],
         None,
     )?;
+
+    let (url, target) = if collected_url.starts_with('*') {
+        (&collected_url[1..], Some(AnchorTarget::NewTab))
+    } else {
+        (collected_url, None)
+    };
 
     debug!("Retrieved url for link, now build element (url: '{url}')");
 
@@ -107,12 +96,6 @@ fn try_consume_link<'p, 'r, 't>(
     }
 }
 
-pub fn normalized(text: &str) -> Cow<'static, str> {
-    let mut r = String::from(text);
-    normalize(&mut r);
-    Cow::from(r)
-}
-
 /// Helper to build link with the same URL and label.
 /// e.g. `[[[name]]]`
 fn build_same<'p, 'r, 't>(
@@ -124,10 +107,9 @@ fn build_same<'p, 'r, 't>(
 
     // Remove category, if present
     let label = strip_category(url).map(Cow::Borrowed);
-    let url = normalized(url);
 
     // Parse out link location
-    let (link, ltype) = match LinkLocation::parse_interwiki(url, parser.settings())
+    let (link, ltype) = match LinkLocation::parse_interwiki(cow!(url), parser.settings())
     {
         Some(result) => result,
         None => return Err(parser.make_warn(ParseWarningKind::RuleFailed)),
@@ -137,7 +119,11 @@ fn build_same<'p, 'r, 't>(
         LinkLocation::Page(page_ref) => {
             parser.push_internal_link(page_ref.to_owned());
         },
-        _ => {},
+        LinkLocation::Url(url) => {
+            if !validate_href(url, true) {
+                return Err(parser.make_warn(ParseWarningKind::RuleFailed));
+            }
+        }
     }
 
     // Build and return element
@@ -178,7 +164,6 @@ fn build_separate<'p, 'r, 't>(
 
     // Trim label
     let label = label.trim();
-    let url = normalized(url);
 
     // If label is empty, then it takes on the page's title
     // Otherwise, use the label
@@ -189,7 +174,7 @@ fn build_separate<'p, 'r, 't>(
     };
 
     // Parse out link location
-    let (link, ltype) = match LinkLocation::parse_interwiki(url, parser.settings())
+    let (link, ltype) = match LinkLocation::parse_interwiki(cow!(url), parser.settings())
     {
         Some(result) => result,
         None => return Err(parser.make_warn(ParseWarningKind::RuleFailed)),
@@ -199,7 +184,11 @@ fn build_separate<'p, 'r, 't>(
         LinkLocation::Page(page_ref) => {
             parser.push_internal_link(page_ref.to_owned());
         },
-        _ => {},
+        LinkLocation::Url(url) => {
+            if !validate_href(url, true) {
+                return Err(parser.make_warn(ParseWarningKind::RuleFailed));
+            }
+        }
     }
 
     // Build link element

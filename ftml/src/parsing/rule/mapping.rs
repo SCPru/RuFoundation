@@ -35,8 +35,6 @@ lazy_static! {
         enum_map! {
             // Symbols
             Token::LeftBracket => vec![RULE_LINK_SINGLE, RULE_TEXT],
-            Token::LeftBracketAnchor => vec![RULE_LINK_ANCHOR],
-            Token::LeftBracketStar => vec![RULE_LINK_SINGLE_NEW_TAB],
             Token::RightBracket => vec![RULE_TEXT],
             Token::LeftBlock => vec![RULE_BLOCK],
             Token::LeftBlockEnd => vec![],
@@ -80,7 +78,6 @@ lazy_static! {
 
             // Links
             Token::LeftLink => vec![RULE_LINK_TRIPLE],
-            Token::LeftLinkStar => vec![RULE_LINK_TRIPLE_NEW_TAB],
             Token::RightLink => vec![],
 
             // Tables

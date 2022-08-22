@@ -70,8 +70,6 @@ pub enum Token {
     // Symbols
     //
     LeftBracket,
-    LeftBracketAnchor,
-    LeftBracketStar,
     RightBracket,
     LeftBlock,
     LeftBlockEnd,
@@ -127,7 +125,6 @@ pub enum Token {
     // Links
     //
     LeftLink,
-    LeftLinkStar,
     RightLink,
 
     //
@@ -221,8 +218,6 @@ impl Token {
             Rule::left_comment => Token::LeftComment,
             Rule::right_comment => Token::RightComment,
             Rule::left_bracket => Token::LeftBracket,
-            Rule::left_bracket_anchor => Token::LeftBracketAnchor,
-            Rule::left_bracket_star => Token::LeftBracketStar,
             Rule::right_bracket => Token::RightBracket,
             Rule::left_block => Token::LeftBlock,
             Rule::left_block_end => Token::LeftBlockEnd,
@@ -270,7 +265,6 @@ impl Token {
 
             // Links
             Rule::left_link => Token::LeftLink,
-            Rule::left_link_star => Token::LeftLinkStar,
             Rule::right_link => Token::RightLink,
 
             // Tables

@@ -46,7 +46,7 @@ fn parse_fn<'r, 't>(
     let (source, mut arguments) = parser.get_head_name_map(&BLOCK_IMAGE, in_head)?;
     let link = match arguments.get("link") {
         Some(link) => {
-            if !validate_href(&link) {
+            if !validate_href(&link, false) {
                 return Err(parser.make_warn(ParseWarningKind::InvalidUrl));
             }
             Some(LinkLocation::parse(link))

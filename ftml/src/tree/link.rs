@@ -24,6 +24,7 @@ use crate::settings::WikitextSettings;
 use crate::url::is_url;
 use std::borrow::Cow;
 use strum_macros::EnumIter;
+use wikidot_normalize::normalize;
 
 #[derive(Serialize, Deserialize, Debug, Hash, Clone, PartialEq, Eq)]
 #[serde(untagged)]
@@ -58,19 +59,16 @@ impl<'a> LinkLocation<'a> {
     }
 
     pub fn parse(link: Cow<'a, str>) -> Self {
-        let mut link_str = link.as_ref();
+        let mut link_str = link.to_string();
 
         // Check for direct URLs or anchor links
-        if is_url(link_str) || link_str.starts_with('#') {
+        if is_url(&link_str) || link_str.starts_with('#') {
             return LinkLocation::Url(link);
         }
 
-        // Check for local links starting with '/'
-        if link_str.starts_with('/') {
-            link_str = &link_str[1..];
-        }
+        normalize(&mut link_str);
 
-        match PageRef::parse(link_str) {
+        match PageRef::parse(&link_str) {
             Err(_) => LinkLocation::Url(link),
             Ok(page_ref) => LinkLocation::Page(page_ref.to_owned()),
         }

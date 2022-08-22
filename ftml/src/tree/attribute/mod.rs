@@ -66,7 +66,7 @@ impl<'t> AttributeMap<'t> {
                 }
 
                 // Check for invalid [[a href]] attempt
-                if key.eq_ignore_ascii_case("href") && !validate_href(value) {
+                if key.eq_ignore_ascii_case("href") && !validate_href(value, false) {
                     return None;
                 }
 

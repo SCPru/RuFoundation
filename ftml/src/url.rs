@@ -52,13 +52,14 @@ lazy_static! {
             .build()
             .unwrap()
     };
+    static ref URL_STRICT_REGEX: Regex = {
+        RegexBuilder::new(r"^(#[A-Za-z0-9_\-%]+|/[^/]+.*|[^/].*/.*)$")
+            .build() 
+            .unwrap()
+    };
 }
 
-pub fn is_url(url: &str) -> bool {
-    if url.contains('/') {
-        return true
-    }
-
+pub fn is_known_scheme(url: &str) -> bool {
     let lowered = url.to_lowercase();
     for scheme in &URL_SCHEMES {
         if lowered.starts_with(scheme) {
@@ -67,6 +68,14 @@ pub fn is_url(url: &str) -> bool {
     }
 
     false
+}
+
+pub fn is_url(url: &str) -> bool {
+    if url.contains('/') {
+        return true
+    }
+
+    is_known_scheme(url)
 }
 
 pub fn normalize_link<'a>(
@@ -97,10 +106,10 @@ pub fn normalize_href(url: &str) -> Cow<str> {
     }
 }
 
-pub fn validate_href(url: &str) -> bool {
+pub fn validate_href(url: &str, strict: bool) -> bool {
     // this attempts to match an URL that makes sense.
     // if it starts with a scheme, then it's definitely valid and allowed
-    if is_url(url) {
+    if is_known_scheme(url) {
         return true
     }
     // if it starts with a weird character, it's not valid and not allowed
@@ -110,6 +119,10 @@ pub fn validate_href(url: &str) -> bool {
     // if it starts with invalid protocol, it's not allowed
     let lowered = url.to_ascii_lowercase();
     if lowered != "javascript:;" && lowered.starts_with("javascript:") {
+        return false
+    }
+    // strict mode is used to disambiguate between [##green|FORBIDDEN PLACE##] and [#anchor text on the anchor]
+    if strict && !URL_STRICT_REGEX.is_match(url) {
         return false
     }
 

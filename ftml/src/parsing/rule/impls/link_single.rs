@@ -34,42 +34,23 @@ pub const RULE_LINK_SINGLE: Rule = Rule {
     try_consume_fn: link,
 };
 
-pub const RULE_LINK_SINGLE_NEW_TAB: Rule = Rule {
-    name: "link-single-new-tab",
-    position: LineRequirement::Any,
-    try_consume_fn: link_new_tab,
-};
-
 fn link<'p, 'r, 't>(parser: &'p mut Parser<'r, 't>) -> ParseResult<'r, 't, Elements<'t>> {
     debug!("Trying to create a single-bracket link (regular)");
     check_step(parser, Token::LeftBracket, ParseWarningKind::RuleFailed)?;
-    try_consume_link(parser, RULE_LINK_SINGLE, None)
-}
-
-fn link_new_tab<'p, 'r, 't>(
-    parser: &'p mut Parser<'r, 't>,
-) -> ParseResult<'r, 't, Elements<'t>> {
-    debug!("Trying to create a single-bracket link (new tab)");
-    check_step(parser, Token::LeftBracketStar, ParseWarningKind::RuleFailed)?;
-    try_consume_link(parser, RULE_LINK_SINGLE_NEW_TAB, Some(AnchorTarget::NewTab))
+    try_consume_link(parser, RULE_LINK_SINGLE)
 }
 
 /// Build a single-bracket link with the given target.
 fn try_consume_link<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
-    rule: Rule,
-    target: Option<AnchorTarget>,
+    rule: Rule
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!(
-        "Trying to create a single-bracket link (target {})",
-        match target {
-            Some(target) => target.name(),
-            None => "<none>",
-        },
+        "Trying to create a single-bracket link"
     );
 
     // Gather path for link
-    let url = collect_text(
+    let collected_url = collect_text(
         parser,
         rule,
         &[],
@@ -82,10 +63,22 @@ fn try_consume_link<'p, 'r, 't>(
         None,
     )?;
 
+    let (url, target) = if collected_url.starts_with('*') {
+        (&collected_url[1..], Some(AnchorTarget::NewTab))
+    } else {
+        (collected_url, None)
+    };
+
     // Return error if the resultant URL is not valid.
-    if !validate_href(url) {
+    if !validate_href(url, true) {
         return Err(parser.make_warn(ParseWarningKind::InvalidUrl));
     }
+
+    let ltype = if url.starts_with('#') {
+        LinkType::Anchor
+    } else {
+        LinkType::Direct
+    };
 
     debug!("Retrieved URL '{url}' for link, now fetching label");
 
@@ -109,7 +102,7 @@ fn try_consume_link<'p, 'r, 't>(
 
     // Build link element
     let element = Element::Link {
-        ltype: LinkType::Direct,
+        ltype,
         link: LinkLocation::Url(cow!(url)),
         label: LinkLabel::Text(cow!(label)),
         target,
