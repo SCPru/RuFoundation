@@ -139,7 +139,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
                 q = q.filter(name=f_name)
         f_tags = params.get('tags', '*')
         if f_tags != '*':
-            f_tags = f_tags.replace(',', ' ')
+            f_tags = f_tags.replace(',', ' ').lower()
             if f_tags == '-':
                 q = q.filter(tags__isnull=True)
             elif f_tags == '=':
