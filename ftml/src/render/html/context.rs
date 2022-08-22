@@ -228,7 +228,7 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
         // See https://scuttle.atlassian.net/browse/WJ-24
 
         match link {
-            LinkLocation::Page(page) => {
+            LinkLocation::Page(page, _) => {
                 self.backlinks.internal_links.push(page.to_owned());
             }
             LinkLocation::Url(link) => {

@@ -116,7 +116,7 @@ fn build_same<'p, 'r, 't>(
     };
 
     match &link {
-        LinkLocation::Page(page_ref) => {
+        LinkLocation::Page(page_ref, _) => {
             parser.push_internal_link(page_ref.to_owned());
         },
         LinkLocation::Url(url) => {
@@ -181,7 +181,7 @@ fn build_separate<'p, 'r, 't>(
     };
 
     match &link {
-        LinkLocation::Page(page_ref) => {
+        LinkLocation::Page(page_ref, _) => {
             parser.push_internal_link(page_ref.to_owned());
         },
         LinkLocation::Url(url) => {

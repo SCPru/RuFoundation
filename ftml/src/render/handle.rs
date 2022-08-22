@@ -112,13 +112,13 @@ impl<'t> Handle<'t> {
             LinkLabel::Url(Some(ref text)) => text,
             LinkLabel::Url(None) => match link {
                 LinkLocation::Url(url) => url,
-                LinkLocation::Page(page_ref) => page_ref.page(),
+                LinkLocation::Page(page_ref, _) => page_ref.page(),
             },
             LinkLabel::Page => match link {
                 LinkLocation::Url(url) => {
                     url.as_ref()
                 }
-                LinkLocation::Page(page_ref) => {
+                LinkLocation::Page(page_ref, _) => {
                     page_title = match self.get_page_title(page_ref) {
                         Some(title) => title,
                         None => page_ref.to_string(),

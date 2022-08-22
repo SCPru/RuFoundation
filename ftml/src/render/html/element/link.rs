@@ -18,11 +18,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::borrow::Cow;
+
 use super::prelude::*;
 use crate::tree::{
     AnchorTarget, AttributeMap, Element, LinkLabel, LinkLocation, LinkType,
 };
-use crate::url::normalize_link;
 
 pub fn render_anchor(
     ctx: &mut HtmlContext,
@@ -66,7 +67,15 @@ pub fn render_link(
     // Add to backlinks
     ctx.add_link(link);
 
-    let url = normalize_link(link, ctx.handle());
+    let url = match link {
+        LinkLocation::Page(page_ref, anchor) => {
+            Cow::Owned(format!("{}{}", &page_ref.to_string(), match anchor {
+                Some(anchor) => format!("#{anchor}"),
+                None => String::from("")
+            }))
+        },
+        LinkLocation::Url(url) => url.to_owned(),
+    };
 
     let target_value = match target {
         Some(target) => target.html_attr(),
@@ -75,7 +84,7 @@ pub fn render_link(
 
     let css_class = match link {
         LinkLocation::Url(_) => None,
-        LinkLocation::Page(page) => {
+        LinkLocation::Page(page, _) => {
             if ctx.page_exists(page) {
                 None
             } else {

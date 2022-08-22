@@ -84,12 +84,17 @@ pub fn normalize_link<'a>(
 ) -> Cow<'a, str> {
     match link {
         LinkLocation::Url(url) => normalize_href(url),
-        LinkLocation::Page(page_ref) => {
+        LinkLocation::Page(page_ref, anchor) => {
             let (site, page) = page_ref.fields();
 
-            match site {
+            let normalized = match site {
                 Some(site) => Cow::Owned(helper.build_url(site, page)),
                 None => normalize_href(page),
+            };
+
+            match anchor {
+                Some(anchor) => Cow::Owned(format!("#{anchor}")),
+                None => normalized
             }
         }
     }

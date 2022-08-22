@@ -99,7 +99,7 @@ fn arb_page_ref() -> impl Strategy<Value = PageRef<'static>> {
 
 fn arb_link_location() -> impl Strategy<Value = LinkLocation<'static>> {
     prop_oneof![
-        arb_page_ref().prop_map(LinkLocation::Page),
+        (arb_page_ref(), option::of(cow!(".*"))).prop_map(|(page_ref, anchor)| LinkLocation::Page(page_ref, anchor)),
         cow!(".+").prop_map(LinkLocation::Url),
     ]
 }

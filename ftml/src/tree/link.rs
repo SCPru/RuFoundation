@@ -30,7 +30,7 @@ use wikidot_normalize::normalize;
 #[serde(untagged)]
 pub enum LinkLocation<'a> {
     /// This link points to a particular page on a wiki.
-    Page(PageRef<'a>),
+    Page(PageRef<'a>, Option<Cow<'a, str>>),
 
     /// This link is to a specific URL.
     Url(Cow<'a, str>),
@@ -66,24 +66,32 @@ impl<'a> LinkLocation<'a> {
             return LinkLocation::Url(link);
         }
 
+        let anchor = match link_str.clone().split_once('#') {
+            Some((left, right)) => {
+                link_str = String::from(left);
+                Some(Cow::Owned(right.to_string()))
+            }
+            None => None
+        };
+
         normalize(&mut link_str);
 
         match PageRef::parse(&link_str) {
             Err(_) => LinkLocation::Url(link),
-            Ok(page_ref) => LinkLocation::Page(page_ref.to_owned()),
+            Ok(page_ref) => LinkLocation::Page(page_ref.to_owned(), anchor),
         }
     }
 
     pub fn to_owned(&self) -> LinkLocation<'static> {
         match self {
-            LinkLocation::Page(page) => LinkLocation::Page(page.to_owned()),
+            LinkLocation::Page(page, _) => LinkLocation::Page(page.to_owned(), None),
             LinkLocation::Url(url) => LinkLocation::Url(string_to_owned(url)),
         }
     }
 
     pub fn link_type(&self) -> LinkType {
         match self {
-            LinkLocation::Page(_) => LinkType::Page,
+            LinkLocation::Page(_, _) => LinkType::Page,
             LinkLocation::Url(_) => LinkType::Direct,
         }
     }
@@ -95,7 +103,7 @@ fn test_link_location() {
         ($input:expr => $site:expr, $page:expr) => {{
             let site = $site.map(|site| cow!(site));
             let page = cow!($page);
-            let expected = LinkLocation::Page(PageRef { site, page });
+            let expected = LinkLocation::Page(PageRef { site, page }, None);
 
             check!($input; expected);
         }};
