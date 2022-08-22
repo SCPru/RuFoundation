@@ -98,13 +98,16 @@ class CallbacksWithContext(ftml.Callbacks):
 
 
 def page_info_from_context(context: RenderContext):
+    from web.controllers import articles
+
     site = get_current_site()
     return ftml.PageInfo(
-        page=context.source_article.name if context.source_article else '',
-        category=context.source_article.category if context.source_article else '',
+        page=context.article.name if context.article else '',
+        category=context.article.category if context.article else '',
         site=site.slug,
         domain=site.domain,
-        media_domain=site.media_domain
+        media_domain=site.media_domain,
+        tags=articles.get_tags(context.article) if context.article else []
     )
 
 
