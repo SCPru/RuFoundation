@@ -25,8 +25,6 @@
 //! `<a id="name-of-anchor">` anchor that can be jumped to.
 
 use super::prelude::*;
-use crate::id_prefix::isolate_ids;
-use std::borrow::Cow;
 
 pub const RULE_ANCHOR: Rule = Rule {
     name: "anchor",
