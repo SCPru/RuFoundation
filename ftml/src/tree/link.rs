@@ -62,7 +62,7 @@ impl<'a> LinkLocation<'a> {
         let mut link_str = link.to_string();
 
         // Check for direct URLs or anchor links
-        if is_url(&link_str) || link_str.starts_with('#') {
+        if is_url(&link_str) || link_str.starts_with('#') || link_str.starts_with('/') {
             return LinkLocation::Url(link);
         }
 
