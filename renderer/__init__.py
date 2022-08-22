@@ -100,8 +100,8 @@ class CallbacksWithContext(ftml.Callbacks):
 def page_info_from_context(context: RenderContext):
     site = get_current_site()
     return ftml.PageInfo(
-        page=context.source_article.name,
-        category=context.source_article.category,
+        page=context.source_article.name if context.source_article else '',
+        category=context.source_article.category if context.source_article else '',
         site=site.slug,
         domain=site.domain,
         media_domain=site.media_domain
