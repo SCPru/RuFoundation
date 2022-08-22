@@ -28,8 +28,10 @@
 //! This method allows any URL, either opening in a new tab or not.
 //! Its syntax is `[[[page-name | Label text]`.
 
+use wikidot_normalize::normalize;
+
 use super::prelude::*;
-use crate::tree::{AnchorTarget, LinkLabel, LinkLocation};
+use crate::{tree::{AnchorTarget, LinkLabel, LinkLocation}, url::normalize_link};
 use std::borrow::Cow;
 
 pub const RULE_LINK_TRIPLE: Rule = Rule {
@@ -105,6 +107,12 @@ fn try_consume_link<'p, 'r, 't>(
     }
 }
 
+pub fn normalized(text: &str) -> Cow<'static, str> {
+    let mut r = String::from(text);
+    normalize(&mut r);
+    Cow::from(r)
+}
+
 /// Helper to build link with the same URL and label.
 /// e.g. `[[[name]]]`
 fn build_same<'p, 'r, 't>(
@@ -116,9 +124,10 @@ fn build_same<'p, 'r, 't>(
 
     // Remove category, if present
     let label = strip_category(url).map(Cow::Borrowed);
+    let url = normalized(url);
 
     // Parse out link location
-    let (link, ltype) = match LinkLocation::parse_interwiki(cow!(url), parser.settings())
+    let (link, ltype) = match LinkLocation::parse_interwiki(url, parser.settings())
     {
         Some(result) => result,
         None => return Err(parser.make_warn(ParseWarningKind::RuleFailed)),
@@ -169,6 +178,7 @@ fn build_separate<'p, 'r, 't>(
 
     // Trim label
     let label = label.trim();
+    let url = normalized(url);
 
     // If label is empty, then it takes on the page's title
     // Otherwise, use the label
@@ -179,7 +189,7 @@ fn build_separate<'p, 'r, 't>(
     };
 
     // Parse out link location
-    let (link, ltype) = match LinkLocation::parse_interwiki(cow!(url), parser.settings())
+    let (link, ltype) = match LinkLocation::parse_interwiki(url, parser.settings())
     {
         Some(result) => result,
         None => return Err(parser.make_warn(ParseWarningKind::RuleFailed)),
