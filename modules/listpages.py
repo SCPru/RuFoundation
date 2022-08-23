@@ -129,7 +129,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
                 q = q.filter(Q(name__startswith='_'))
         f_name = params.get('name', '*')
         if f_name != '*':
-            f_name = f_name.replace('%', '*')
+            f_name = f_name.replace('%', '*').lower()
             if f_name == '=':
                 q = q.filter(name=context.article.name)
             elif '*' in f_name:
@@ -168,7 +168,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
                     q = q.filter(~Q(tags__name__in=not_allowed_tags))
         f_category = params.get('category', '.')
         if f_category != '*':
-            f_category = f_category.replace(',', ' ')
+            f_category = f_category.replace(',', ' ').lower()
             if f_category == '.':
                 q = q.filter(category=context.article.category)
             else:
