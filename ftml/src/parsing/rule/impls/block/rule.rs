@@ -44,9 +44,11 @@ fn parse_block<'r, 't>(parser: &mut Parser<'r, 't>) -> ParseResult<'r, 't, Eleme
 where
     'r: 't,
 {
+    check_step(parser, Token::LeftBlock, ParseWarningKind::RuleFailed)?;
+
     // Check star flag
     let flag_star = match parser.current().token {
-        Token::Star => {
+        Token::BulletItem => {
             parser.step()?;
             true
         },

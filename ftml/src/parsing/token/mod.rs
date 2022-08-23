@@ -89,8 +89,6 @@ pub enum Token {
     Underscore,
     Quote,
     Heading,
-    Star,
-    Anchor,
 
     //
     // Whitespace
@@ -238,8 +236,6 @@ impl Token {
             Rule::equals => Token::Equals,
             Rule::quote => Token::Quote,
             Rule::heading => Token::Heading,
-            Rule::anchor => Token::Anchor,
-            Rule::star => Token::Star,
 
             // Whitespace
             Rule::line_break => Token::LineBreak,

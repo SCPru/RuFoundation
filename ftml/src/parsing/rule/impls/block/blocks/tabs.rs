@@ -19,7 +19,7 @@
  */
 
 use super::prelude::*;
-use crate::tree::{AcceptsPartial, PartialElement, Tab};
+use crate::{tree::{AcceptsPartial, PartialElement, Tab}, parsing::string::parse_string};
 
 pub const BLOCK_TABVIEW: BlockRule = BlockRule {
     name: "block-tabview",
@@ -94,17 +94,27 @@ fn parse_tab<'r, 't>(
     assert!(!flag_score, "Tab doesn't allow score flag");
     assert_block_name(&BLOCK_TAB, name);
 
-    let label =
+    let mut raw_label =
         parser.get_head_value(&BLOCK_TAB, in_head, |parser, value| match value {
             Some(name) => Ok(name),
             None => Err(parser.make_warn(ParseWarningKind::BlockMissingArguments)),
         })?;
 
+    raw_label = raw_label.trim();
+
+    // hack: Wikidot allows [[tab title=""]]
+    // no other arguments are allowed like this. so we just check for tab title
+    let label = if raw_label.starts_with("title=\"") && raw_label.ends_with('"') {
+        parse_string(&raw_label[6..])
+    } else {
+        cow!(raw_label)
+    };
+
     let (elements, exceptions, _) = parser.get_body_elements(&BLOCK_TAB, true)?.into();
 
     // Build element and return
     let element = Element::Partial(PartialElement::Tab(Tab {
-        label: cow!(label),
+        label: label,
         elements,
     }));
 

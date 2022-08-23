@@ -37,7 +37,7 @@ fn try_consume_fn<'p, 'r, 't>(
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create a named anchor");
     check_step(parser, Token::LeftBlock, ParseWarningKind::RuleFailed)?;
-    check_step(parser, Token::Anchor, ParseWarningKind::RuleFailed)?;
+    check_step(parser, Token::NumberedItem, ParseWarningKind::RuleFailed)?;
 
     // Requires a space before the name
     parser.get_token(Token::Whitespace, ParseWarningKind::RuleFailed)?;

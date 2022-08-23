@@ -19,7 +19,7 @@
  */
 
 use super::clone::string_to_owned;
-use crate::url::is_url;
+use crate::url::is_known_scheme;
 use std::borrow::Cow;
 use strum_macros::IntoStaticStr;
 
@@ -41,7 +41,7 @@ pub enum ImageSource<'a> {
 
 impl<'t> ImageSource<'t> {
     pub fn parse(source: &'t str) -> Option<ImageSource<'t>> {
-        if is_url(source) {
+        if is_known_scheme(source) {
             return Some(ImageSource::Url(cow!(source)));
         }
 
