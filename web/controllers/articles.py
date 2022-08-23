@@ -2,7 +2,7 @@ import shutil
 from pathlib import Path
 
 from django.contrib.auth.models import AbstractUser as _UserType
-from django.db.models import QuerySet, Sum, Avg, Count, Max, TextField, Value
+from django.db.models import QuerySet, Sum, Avg, Count, Max, TextField, Value, IntegerField
 from django.db.models.functions import Coalesce, Concat, Lower
 
 import renderer
@@ -397,7 +397,7 @@ def get_rating(full_name_or_article: _FullNameOrArticle) -> (int | float, int, S
         return 0, 0, Settings.RatingMode.Disabled
     obj_settings = article.get_settings()
     if obj_settings.rating_mode == Settings.RatingMode.UpDown:
-        data = Vote.objects.filter(article=article).aggregate(sum=Coalesce(Sum('rate'), 0), count=Count('rate'))
+        data = Vote.objects.filter(article=article).aggregate(sum=Coalesce(Sum('rate'), 0, output_field=IntegerField()), count=Count('rate'))
         return data['sum'] or 0, data['count'] or 0, obj_settings.rating_mode
     elif obj_settings.rating_mode == Settings.RatingMode.Stars:
         data = Vote.objects.filter(article=article).aggregate(avg=Coalesce(Avg('rate'), 0.0), count=Count('rate'))

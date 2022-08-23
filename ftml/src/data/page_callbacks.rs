@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter, Result};
+use wikidot_normalize::normalize;
 
 use super::PageRef;
 use super::page_info::PartialPageInfo;
@@ -33,6 +34,7 @@ pub trait PageCallbacks: Debug {
     fn get_i18n_message<'a>(&self, message_id: Cow<str>) -> Cow<'static, str>;
     fn get_page_info<'a>(&self, page_refs: &Vec<PageRef<'a>>) -> Vec<PartialPageInfo<'static>>;
     fn evaluate_expression<'a>(&self, expression: Cow<str>) -> ExpressionResult<'static>;
+    fn normalize<'a>(&self, name: Cow<str>) -> Cow<'static, str>;
 }
 
 pub struct NullPageCallbacks {}
@@ -78,6 +80,12 @@ impl PageCallbacks for NullPageCallbacks {
 
     fn evaluate_expression<'a>(&self, _expression: Cow<str>) -> ExpressionResult<'static> {
         ExpressionResult::None
+    }
+
+    fn normalize<'a>(&self, name: Cow<str>) -> Cow<'static, str> {
+        let mut result = name.to_string();
+        normalize(&mut result);
+        Cow::from(result)
     }
 }
 

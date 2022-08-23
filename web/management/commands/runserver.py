@@ -58,7 +58,7 @@ class Command(BaseRunserverCommand):
     # Runs this command but with --internal-run
     def run_child(self, second=False):
         add_args = ['--skip-checks']
-        c = subprocess.Popen([sys.executable] + sys.argv + ['--internal-run', '--noreload'] + add_args, shell=True)
+        c = subprocess.Popen([sys.executable] + sys.argv + ['--internal-run', '--noreload'] + add_args)
         return c
 
     def watch_ftml(self, ftml_release=False):
@@ -140,7 +140,7 @@ class Command(BaseRunserverCommand):
                 current_child = self.run_child(True)
             else:
                 rel_cmdline = ['--release'] if ftml_release else []
-                p = subprocess.Popen(['cargo', 'build'] + rel_cmdline, shell=True, cwd=base_project_dir)
+                p = subprocess.Popen(['cargo', 'build'] + rel_cmdline, cwd=base_project_dir)
                 code = p.wait()
                 if code != 0:
                     print('FTML compilation failed; skipping')

@@ -297,6 +297,16 @@ impl PageCallbacks for PythonCallbacks {
             Err(_) => ExpressionResult::None,
         }
     }
+
+    fn normalize<'a>(&self, name: Cow<str>) -> Cow<'static, str> {
+        let result: PyResult<String> = Python::with_gil(|py| {
+            return self.callbacks.getattr(py, "normalize")?.call(py, (name,), None)?.extract(py);
+        });
+        match result {
+            Ok(result) => Cow::from(result.as_str().to_owned()),
+            Err(_) => Cow::from("?")
+        }
+    }
 }
 
 impl<'t> Includer<'t> for PythonCallbacks {
@@ -370,6 +380,10 @@ impl Callbacks {
 
     pub fn evaluate_expression(&self, _expression: String) -> PyResult<Option<&PyAny>> {
         return Ok(None)
+    }
+
+    pub fn normalize(&self, name: String) -> PyResult<String> {
+        return Ok(name)
     }
 }
 

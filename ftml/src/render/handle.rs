@@ -27,7 +27,6 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::rc::Rc;
 use strum_macros::IntoStaticStr;
-use wikidot_normalize::normalize;
 
 #[derive(Debug)]
 pub struct Handle<'t> {
@@ -144,7 +143,7 @@ impl<'t> BuildSiteUrl for Handle<'t> {
 
         let path = {
             let mut path = str!(path);
-            normalize(&mut path);
+            self.callbacks.normalize(cow!(&mut path));
             path
         };
 
