@@ -43,7 +43,6 @@ def normalize_article_name(full_name: str) -> str:
         'ч': 'c', 'ы': 'i', 'э': 'e', 'ю': 'u', 'я': 'a', 'і': 'i', 'ї': 'i', 'є': 'e'
     }
     full_name = ''.join(translit_map.get(c, c) for c in full_name)
-    print(repr(full_name))
     n = re.sub(r'[^A-Za-z0-9\-_:]+', '-', full_name).strip('-')
     n = re.sub(r':+', ':', n).lower().strip(':')
     return n
