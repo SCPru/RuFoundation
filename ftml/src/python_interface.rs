@@ -220,11 +220,22 @@ impl Debug for PythonCallbacks {
     }
 }
 
+fn log_python_error<T>(res: &PyResult<T>) {
+    match res {
+        Err(error) =>
+            Python::with_gil(|py| {
+                error.print(py)
+            }),
+        _ => {}
+    }
+}
+
 impl PageCallbacks for PythonCallbacks {
     fn module_has_body(&self, module_name: Cow<str>) -> bool {
         let result = Python::with_gil(|py| {
             return self.callbacks.getattr(py, "module_has_body")?.call(py, (module_name,), None)?.extract(py);
         });
+        log_python_error(&result);
         match result {
             Ok(result) => result,
             Err(_) => false
@@ -239,6 +250,7 @@ impl PageCallbacks for PythonCallbacks {
         let result: PyResult<String> = Python::with_gil(|py| {
             return self.callbacks.getattr(py, "render_module")?.call(py, (module_name, py_params, body), None)?.extract(py);
         });
+        log_python_error(&result);
         match result {
             Ok(result) => Cow::from(result.as_str().to_owned()),
             Err(_) => Cow::from("")
@@ -249,6 +261,7 @@ impl PageCallbacks for PythonCallbacks {
         let result: PyResult<String> = Python::with_gil(|py| {
             return self.callbacks.getattr(py, "render_user")?.call(py, (user, avatar), None)?.extract(py);
         });
+        log_python_error(&result);
         match result {
             Ok(result) => Cow::from(result.as_str().to_owned()),
             Err(_) => Cow::from("")
@@ -259,6 +272,7 @@ impl PageCallbacks for PythonCallbacks {
         let result: PyResult<String> = Python::with_gil(|py| {
             return self.callbacks.getattr(py, "get_i18n_message")?.call(py, (message_id,), None)?.extract(py);
         });
+        log_python_error(&result);
         match result {
             Ok(result) => Cow::from(result.as_str().to_owned()),
             Err(_) => Cow::from("?")
@@ -271,6 +285,7 @@ impl PageCallbacks for PythonCallbacks {
             Ok(self.callbacks.getattr(py, "fetch_internal_links")?.call(py, (py_names,), None)?.extract::<Vec<PyRef<PyPartialPageInfo>>>(py)
                 ?.iter().map(|x| x.to_partial_page_info()).collect())
         });
+        log_python_error(&result);
         match result {
             Ok(info) => info,
             Err(_) => vec![],
@@ -293,6 +308,7 @@ impl PageCallbacks for PythonCallbacks {
                 Ok(ExpressionResult::None)
             }
         });
+        log_python_error(&result);
         match result {
             Ok(result) => result,
             Err(_) => ExpressionResult::None,
@@ -303,6 +319,7 @@ impl PageCallbacks for PythonCallbacks {
         let result: PyResult<String> = Python::with_gil(|py| {
             return self.callbacks.getattr(py, "normalize_page_name")?.call(py, (full_name.to_owned(),), None)?.extract(py);
         });
+        log_python_error(&result);
         match result {
             Ok(result) => Cow::from(result.as_str().to_owned()),
             Err(_) => Cow::Owned(full_name.to_string())
@@ -323,6 +340,7 @@ impl<'t> Includer<'t> for PythonCallbacks {
             Ok(self.callbacks.getattr(py, "fetch_includes")?.call(py, (py_includes,), None)?.extract::<Vec<PyRef<PyFetchedPage>>>(py)
                 ?.iter().map(|x| x.to_fetched_page()).collect())
         });
+        log_python_error(&result);
         match result {
             Ok(fetched_pages) => Ok(fetched_pages),
             Err(_) => Err(())
@@ -334,6 +352,7 @@ impl<'t> Includer<'t> for PythonCallbacks {
         let result: PyResult<String> = Python::with_gil(|py| {
             return self.callbacks.getattr(py, "render_include_not_found")?.call(py, (page_ref.to_string(),), None)?.extract(py);
         });
+        log_python_error(&result);
         match result {
             Ok(result) => Ok(Cow::from(result.as_str().to_owned())),
             Err(_) => Err(())
