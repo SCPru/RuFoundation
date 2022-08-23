@@ -21,7 +21,6 @@
 use crate::tree::LinkLocation;
 use std::borrow::Cow;
 use regex::{RegexBuilder, Regex};
-use wikidot_normalize::normalize;
 
 pub const URL_SCHEMES: [&str; 20] = [
     "blob:",
@@ -105,7 +104,6 @@ pub fn normalize_href(url: &str) -> Cow<str> {
         Cow::Borrowed(url)
     } else {
         let mut url = str!(url);
-        normalize(&mut url);
         url.insert(0, '/');
         Cow::Owned(url)
     }
