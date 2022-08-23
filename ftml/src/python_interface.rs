@@ -35,7 +35,7 @@ fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, call
     loop {
         let includer = PythonCallbacks{ callbacks: Box::new(callbacks.clone()) };
         let current_text = included_text.clone();
-        let (l_text, l_included_pages) = include(&current_text, &settings, includer, || panic!("Mismatched includer page count")).unwrap_or((input.to_owned(), vec![]));
+        let (l_text, l_included_pages) = include(&current_text, &settings, includer, || panic!("Bad includer return")).unwrap_or((input.to_owned(), vec![]));
         if l_included_pages.is_empty() {
             break
         }

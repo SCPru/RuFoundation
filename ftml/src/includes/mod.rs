@@ -144,7 +144,6 @@ where
 
         // Ensure the returned page reference matches
         if page_ref != fetched.page_ref {
-            println!("includes: {:#?}, fetched: {:#?}", page_ref, fetched.page_ref);
             return Err(invalid_return());
         }
 

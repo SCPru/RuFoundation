@@ -121,8 +121,8 @@ impl<'t> PageRef<'t> {
                 
                 let (category, name) = match page_raw.find(':') {
                     Some(idx) => {
-                        let category = &s[..idx];
-                        let name = &s[(idx+1)..];
+                        let category = &page_raw[..idx];
+                        let name = &page_raw[(idx+1)..];
                         (category, name)
                     }
                     _ => ("_default", page_raw)
@@ -197,6 +197,9 @@ fn page_ref() {
             println!();
 
             assert_eq!(actual, expected, "Actual parse results don't match expected");
+            if let Ok(expected) = expected {
+                assert_eq!(expected.to_string(), $input, "Encoded PageRef does not match expected");
+            }
         }};
     }
 
@@ -209,7 +212,7 @@ fn page_ref() {
         "deleted:secret:fragment:page",
         PageRef::new2("deleted", "secret:fragment:page"),
     );
-    test!(":scp-wiki:page", PageRef::new2("scp-wiki", "page"));
+    test!(":scp-wiki:page", PageRef::new3("scp-wiki", "_default", "page"));
     test!(
         ":scp-wiki:component:page",
         PageRef::new3("scp-wiki", "component", "page"),
