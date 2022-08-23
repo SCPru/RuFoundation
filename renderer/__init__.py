@@ -7,6 +7,7 @@ from django.utils.safestring import SafeString
 
 import modules
 from system.models import User
+from web import threadvars
 from web.models.articles import ArticleVersion, Article
 from web.models.sites import get_current_site
 from . import expression
@@ -62,8 +63,14 @@ def callbacks_with_context(context):
             return messages.get(message_id, '?')
 
         def render_include_not_found(self, full_name: str) -> str:
-            # this must return Wiki markup because of the stage it runs at.
-            return '[[div class="error-block"]]Вставленная страница "%s" не существует ([[a href="/%s/edit/true" target="_blank"]]создать её сейчас[[/a]])[[/div]]' % (full_name, full_name)
+            from web.controllers import articles
+
+            include_name = articles.normalize_article_name(full_name)
+            if include_name in threadvars.get('include_tree', []):
+                return '[[div class="error-block"]]Вставленная страница "%s" ссылается сама на себя[[/div]]' % full_name
+            else:
+                # this must return Wiki markup because of the stage it runs at.
+                return '[[div class="error-block"]]Вставленная страница "%s" не существует ([[a href="/%s/edit/true" target="_blank"]]создать её сейчас[[/a]])[[/div]]' % (full_name, full_name)
 
         # This function converts magical _default category to explicit _default category
         # This is so that we can later reuse this in the database query that will just concat the category+name for articles
@@ -72,6 +79,8 @@ def callbacks_with_context(context):
             return ('_default:%s' % name).lower() if ':' not in name else name.lower()
 
         def fetch_includes(self, include_refs: list[ftml.IncludeRef]) -> list[ftml.FetchedPage]:
+            from web.controllers import articles
+
             refs_as_dumb = [self._page_name_to_dumb(x.full_name) for x in include_refs]
             included = ArticleVersion.objects\
                 .select_related('article')\
@@ -83,9 +92,17 @@ def callbacks_with_context(context):
             for item in included:
                 included_map[item.full_name] = item.source
             result = []
+            new_includes = []
             for ref in include_refs:
                 ref_dumb = self._page_name_to_dumb(ref.full_name)
-                result.append(ftml.FetchedPage(full_name=ref.full_name, content=included_map.get(ref_dumb, None)))
+                include_name = articles.normalize_article_name(ref_dumb)
+                if include_name in threadvars.get('include_tree', []):
+                    result.append(ftml.FetchedPage(full_name=ref.full_name, content=None))
+                else:
+                    result.append(ftml.FetchedPage(full_name=ref.full_name, content=included_map.get(ref_dumb, None)))
+                    if ref_dumb not in new_includes:
+                        new_includes.append(include_name)
+            threadvars.put('include_tree', threadvars.get('include_tree', []) + new_includes)
             return result
 
         def fetch_internal_links(self, page_refs: list[str]) -> list[ftml.PartialPageInfo]:
@@ -134,20 +151,26 @@ def page_info_from_context(context: RenderContext):
 def single_pass_render(source, context=None) -> str:
     from ftml import ftml
 
-    html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context))
-    return SafeString(html.body)
+    with threadvars.context():
+        initial = [context.source_article.full_name] if context.source_article else []
+        threadvars.put('include_tree', initial)
+        html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context))
+        return SafeString(html.body)
 
 
 def single_pass_render_with_excerpt(source, context=None) -> [str, str, Optional[str]]:
     from ftml import ftml
 
-    html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context))
-    text = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context)).body
-    text = '\n'.join([x.strip() for x in text.split('\n')])
-    text = re.sub(r'\n+', '\n', text)
-    if len(text) > 384:
-        text = text[:384] + '...'
-    return SafeString(html.body), text, None
+    with threadvars.context():
+        initial = [context.source_article.full_name] if context.source_article else []
+        threadvars.put('include_tree', initial)
+        html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context))
+        text = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context)).body
+        text = '\n'.join([x.strip() for x in text.split('\n')])
+        text = re.sub(r'\n+', '\n', text)
+        if len(text) > 384:
+            text = text[:384] + '...'
+        return SafeString(html.body), text, None
 
 
 def single_pass_fetch_backlinks(source, context=None) -> tuple[list[str], list[str]]:

@@ -45,7 +45,10 @@ def normalize_article_name(full_name: str) -> str:
     full_name = ''.join(translit_map.get(c, c) for c in full_name)
     n = re.sub(r'[^A-Za-z0-9\-_:]+', '-', full_name).strip('-')
     n = re.sub(r':+', ':', n).lower().strip(':')
-    return n
+    category, name = get_name(n)
+    if category == '_default':
+        return name
+    return '%s:%s' % (category, name)
 
 
 def get_article(full_name_or_article: _FullNameOrArticle) -> Optional[Article]:

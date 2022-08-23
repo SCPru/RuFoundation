@@ -115,6 +115,7 @@ where
 
     // Ensure it matches up with the request
     if includes.len() != fetched_pages.len() {
+        println!("includes: {:#?}, fetched: {:#?}", includes.len(), fetched_pages.len());
         return Err(invalid_return());
     }
 
