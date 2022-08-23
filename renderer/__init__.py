@@ -9,6 +9,7 @@ import modules
 from system.models import User
 from web.models.articles import ArticleVersion, Article
 from web.models.sites import get_current_site
+from . import expression
 from .parser import RenderContext
 from .utils import render_user_to_html, render_template_from_string
 
@@ -100,6 +101,10 @@ def callbacks_with_context(context):
                 ref_dumb = self._page_name_to_dumb(ref)
                 if ref_dumb in page_map:
                     result.append(ftml.PartialPageInfo(full_name=ref, exists=True, title=page_map[ref_dumb].title))
+            return result
+
+        def evaluate_expression(self, expr: str) -> any:
+            result = expression.evaluate_expression(expr)
             return result
 
     return CallbacksWithContextImpl(context)

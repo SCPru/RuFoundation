@@ -26,7 +26,7 @@ mod page_info;
 mod page_ref;
 
 pub use self::backlinks::Backlinks;
-pub use self::page_callbacks::{PageCallbacks, NullPageCallbacks};
+pub use self::page_callbacks::{PageCallbacks, NullPageCallbacks, ExpressionResult};
 pub use self::page_info::PageInfo;
 pub use self::page_info::PartialPageInfo;
 pub use self::page_ref::{PageRef, PageRefParseError};

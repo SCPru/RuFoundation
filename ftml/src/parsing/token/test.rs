@@ -114,9 +114,14 @@ fn tokens() {
                 span: 0..2,
             },
             ExtractedToken {
-                token: Token::LeftBlockStar,
-                slice: "[[*",
-                span: 2..5,
+                token: Token::LeftBlock,
+                slice: "[[",
+                span: 2..4,
+            },
+            ExtractedToken {
+                token: Token::Other,
+                slice: "*",
+                span: 4..5,
             },
             ExtractedToken {
                 token: Token::Identifier,

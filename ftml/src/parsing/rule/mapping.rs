@@ -36,10 +36,8 @@ lazy_static! {
             // Symbols
             Token::LeftBracket => vec![RULE_LINK_SINGLE, RULE_TEXT],
             Token::RightBracket => vec![RULE_TEXT],
-            Token::LeftBlock => vec![RULE_BLOCK],
+            Token::LeftBlock => vec![RULE_BLOCK, RULE_ANCHOR],
             Token::LeftBlockEnd => vec![],
-            Token::LeftBlockAnchor => vec![RULE_ANCHOR],
-            Token::LeftBlockStar => vec![RULE_BLOCK_STAR],
             Token::RightBlock => vec![],
             Token::LeftMath => vec![RULE_MATH],
             Token::RightMath => vec![],
@@ -94,7 +92,9 @@ lazy_static! {
             Token::Variable => vec![RULE_VARIABLE, RULE_TEXT],
             Token::StringQuote
             | Token::StringQuoteDoubleEscape
-            | Token::StringQuoteEscape => vec![RULE_TEXT],
+            | Token::StringQuoteEscape
+            | Token::Star
+            | Token::Anchor => vec![RULE_TEXT],
 
             // Input boundaries
             Token::LineBreak => vec![RULE_DEFINITION_LIST_SKIP_NEWLINE, RULE_LINE_BREAK],

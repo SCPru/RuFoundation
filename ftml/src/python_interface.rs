@@ -4,8 +4,9 @@ use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
 
 use pyo3::prelude::*;
+use pyo3::types::{PyFloat, PyInt, PyBool, PyString};
 
-use crate::data::{PageRef, PartialPageInfo};
+use crate::data::{PageRef, PartialPageInfo, ExpressionResult};
 use crate::includes::{FetchedPage, IncludeRef, NullIncluder};
 use crate::info::VERSION;
 use crate::prelude::*;
@@ -274,6 +275,28 @@ impl PageCallbacks for PythonCallbacks {
             Err(_) => vec![],
         }
     }
+
+    fn evaluate_expression<'a>(&self, expression: Cow<str>) -> ExpressionResult<'static> {
+        let result: PyResult<ExpressionResult<'static>> = Python::with_gil(|py| {
+            let v: PyObject = self.callbacks.getattr(py, "evaluate_expression")?.call(py, (expression,), None)?;
+            if let Ok(v) = v.cast_as::<PyFloat>(py) {
+                Ok(ExpressionResult::Float(v.value()))
+            } else if let Ok(v) = v.cast_as::<PyInt>(py) {
+                let i: i64 = v.extract()?;
+                Ok(ExpressionResult::Int(i))
+            } else if let Ok(v) = v.cast_as::<PyBool>(py) {
+                Ok(ExpressionResult::Bool(v.is_true()))
+            } else if let Ok(v) = v.cast_as::<PyString>(py) {
+                Ok(ExpressionResult::String(Cow::Owned(v.to_str()?.to_owned())))
+            } else {
+                Ok(ExpressionResult::None)
+            }
+        });
+        match result {
+            Ok(result) => result,
+            Err(_) => ExpressionResult::None,
+        }
+    }
 }
 
 impl<'t> Includer<'t> for PythonCallbacks {
@@ -343,6 +366,10 @@ impl Callbacks {
 
     pub fn fetch_internal_links(&self, page_refs: Vec<String>) -> PyResult<Vec<PyPartialPageInfo>> {
         return Ok(page_refs.iter().map(|x| PyPartialPageInfo{full_name: x.to_owned(), title: None, exists: false}).collect())
+    }
+
+    pub fn evaluate_expression(&self, _expression: String) -> PyResult<Option<&PyAny>> {
+        return Ok(None)
     }
 }
 

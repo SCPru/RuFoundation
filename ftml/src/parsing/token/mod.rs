@@ -73,8 +73,6 @@ pub enum Token {
     RightBracket,
     LeftBlock,
     LeftBlockEnd,
-    LeftBlockAnchor,
-    LeftBlockStar,
     LeftMath,
     RightBlock,
     RightMath,
@@ -91,6 +89,8 @@ pub enum Token {
     Underscore,
     Quote,
     Heading,
+    Star,
+    Anchor,
 
     //
     // Whitespace
@@ -221,8 +221,6 @@ impl Token {
             Rule::right_bracket => Token::RightBracket,
             Rule::left_block => Token::LeftBlock,
             Rule::left_block_end => Token::LeftBlockEnd,
-            Rule::left_block_anchor => Token::LeftBlockAnchor,
-            Rule::left_block_star => Token::LeftBlockStar,
             Rule::left_math => Token::LeftMath,
             Rule::right_block => Token::RightBlock,
             Rule::right_math => Token::RightMath,
@@ -240,6 +238,8 @@ impl Token {
             Rule::equals => Token::Equals,
             Rule::quote => Token::Quote,
             Rule::heading => Token::Heading,
+            Rule::anchor => Token::Anchor,
+            Rule::star => Token::Star,
 
             // Whitespace
             Rule::line_break => Token::LineBreak,

@@ -59,8 +59,6 @@ token = _{
     // Brackets
     left_link |
     left_math |
-    left_block_anchor |
-    left_block_star |
     left_block_end |
     left_block |
     left_bracket |
@@ -71,11 +69,13 @@ token = _{
 
     // Formatting
     bold |
+    star |
     italics |
     underline |
     superscript |
     subscript |
     color |
+    anchor |
     left_monospace |
     right_monospace |
 
@@ -146,8 +146,6 @@ right_comment = @{ "--]" }
 left_bracket = @{ "[" }
 left_block = @{ "[[" }
 left_block_end = @{ "[[/" }
-left_block_anchor = @{ "[[#" }
-left_block_star = @{ "[[*" }
 left_math = @{ "[[$" }
 left_link = @{ "[[[" }
 right_bracket = @{ "]" }
@@ -166,6 +164,8 @@ pipe = @{ "|" }
 equals = @{ "=" }
 colon = @{ ":" }
 underscore = @{ "_" }
+star = @{ "*" }
+anchor = @{ "#" }
 quote = @{ ">" ~ !!(space | NEWLINE | quote) }
 heading = @{ "+"{1,6} ~ ("*" ~ !"*")? }
 

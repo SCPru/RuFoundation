@@ -20,14 +20,12 @@
 
 use super::{ExtractedToken, ParseWarning, Parser, Token, ParseWarningKind};
 
-/// Helper function to assert that the current token matches, then step.
+/// Helper function to check that the current token matches, then step.
 ///
 /// # Returns
 /// The `ExtractedToken` which was checked and stepped over.
 ///
-/// # Panics
-/// Since an assert is used, this function will panic
-/// if the extracted token does not match the one specified.
+/// This is similar to parser.get_token(), but it returns the token rather than string.
 #[inline]
 pub fn check_step<'r, 't>(
     parser: &mut Parser<'r, 't>,
@@ -45,7 +43,6 @@ pub fn check_step<'r, 't>(
 }
 
 #[test]
-#[should_panic]
 fn check_step_fail() {
     use crate::data::PageInfo;
     use crate::settings::{WikitextMode, WikitextSettings};

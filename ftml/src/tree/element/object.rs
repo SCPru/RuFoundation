@@ -283,6 +283,8 @@ pub enum Element<'t> {
     /// A fragment.
     /// 
     /// This allows returning many elements as one.
+    /// Other than being a hack, it's very similar to Element::Elements, but on a different level.
+    /// You should return Elements whenever possible.
     Fragment(Vec<Element<'t>>),
 
     /// A partial element.

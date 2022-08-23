@@ -45,10 +45,10 @@ where
     ) -> Result<(&'t str, bool), ParseWarning> {
         info!("Looking for identifier");
 
+        self.get_optional_token(Token::LeftBlock)?;
+
         if flag_star {
-            self.get_optional_token(Token::LeftBlockStar)?;
-        } else {
-            self.get_optional_token(Token::LeftBlock)?;
+            self.get_optional_token(Token::Star)?;
         }
 
         self.get_optional_space()?;

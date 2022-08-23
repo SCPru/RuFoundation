@@ -29,49 +29,38 @@ pub const RULE_BLOCK: Rule = Rule {
     try_consume_fn: block_regular,
 };
 
-pub const RULE_BLOCK_STAR: Rule = Rule {
-    name: "block-star",
-    position: LineRequirement::Any,
-    try_consume_fn: block_star,
-};
-
 // Rule implementations
 
 fn block_regular<'r, 't>(
     parser: &mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to process a block");
-    parse_block(parser, false)
-}
-
-fn block_star<'r, 't>(parser: &mut Parser<'r, 't>) -> ParseResult<'r, 't, Elements<'t>> {
-    info!("Trying to process a block (with star flag)");
-    parse_block(parser, true)
+    parse_block(parser)
 }
 
 // Block parsing implementation
 
-fn parse_block<'r, 't>(
-    parser: &mut Parser<'r, 't>,
-    flag_star: bool,
-) -> ParseResult<'r, 't, Elements<'t>>
+fn parse_block<'r, 't>(parser: &mut Parser<'r, 't>) -> ParseResult<'r, 't, Elements<'t>>
 where
     'r: 't,
 {
-    info!("Trying to process a block (star {flag_star})");
+    // Check star flag
+    let flag_star = match parser.current().token {
+        Token::Star => {
+            parser.step()?;
+            true
+        },
+        _ => false
+    };
 
-    // Set general rule based on presence of star flag
-    parser.set_rule(if flag_star {
-        RULE_BLOCK_STAR
-    } else {
-        RULE_BLOCK
-    });
+    info!("Trying to process a block (star {flag_star})");
 
     // Get block name
     parser.get_optional_space()?;
 
     let (name, in_head) = parser.get_block_name(flag_star)?;
     debug!("Got block name '{name}' (in head {in_head})");
+    println!("block name {} in_head {}", name, in_head);
 
     let (name, flag_score) = match name.strip_suffix('_') {
         Some(name) => (name, true),

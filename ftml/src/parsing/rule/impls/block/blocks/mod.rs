@@ -73,6 +73,7 @@ mod del;
 mod div;
 mod embed;
 mod equation_ref;
+mod expression;
 mod footnote;
 mod hidden;
 mod html;
@@ -156,3 +157,5 @@ pub use self::target::BLOCK_TARGET;
 pub use self::toc::BLOCK_TABLE_OF_CONTENTS;
 pub use self::underline::BLOCK_UNDERLINE;
 pub use self::user::BLOCK_USER;
+
+pub use self::expression::{BLOCK_IF, BLOCK_EXPR};
