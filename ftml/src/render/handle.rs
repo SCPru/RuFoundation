@@ -118,8 +118,8 @@ impl<'t> Handle<'t> {
                 }
                 LinkLocation::Page(page_ref, _) => {
                     page_title = match self.get_page_title(page_ref) {
-                        Some(title) => title,
-                        None => page_ref.to_string(),
+                        Some(title) if !title.trim().is_empty() => title,
+                        _ => page_ref.to_string(),
                     };
 
                     Cow::from(&page_title)
