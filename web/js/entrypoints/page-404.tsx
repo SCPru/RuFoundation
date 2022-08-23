@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { Component } from 'react';
 import ArticleEditor from '../articles/article-editor';
 
@@ -21,6 +22,8 @@ class Page404 extends Component<Props, State> {
         e.preventDefault();
         e.stopPropagation();
         this.setState({isCreate: true});
+        const { page_id } = this.props;
+        ReactDOM.render(<ArticleEditor pageId={page_id} isNew onClose={this.onCancel} />, document.getElementById("action-area"))
     };
 
     onCancel = () => {
@@ -42,10 +45,6 @@ class Page404 extends Component<Props, State> {
                         </li>
                     </ul>
                 </>
-            )
-        } else {
-            return (
-                <ArticleEditor pageId={page_id} isNew onClose={this.onCancel} />
             )
         }
     }
