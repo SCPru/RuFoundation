@@ -92,9 +92,7 @@ lazy_static! {
             Token::Variable => vec![RULE_VARIABLE, RULE_TEXT],
             Token::StringQuote
             | Token::StringQuoteDoubleEscape
-            | Token::StringQuoteEscape
-            | Token::Star
-            | Token::Anchor => vec![RULE_TEXT],
+            | Token::StringQuoteEscape => vec![RULE_TEXT],
 
             // Input boundaries
             Token::LineBreak => vec![RULE_DEFINITION_LIST_SKIP_NEWLINE, RULE_LINE_BREAK],

@@ -48,7 +48,7 @@ where
         self.get_optional_token(Token::LeftBlock)?;
 
         if flag_star {
-            self.get_optional_token(Token::Star)?;
+            self.get_optional_token(Token::BulletItem)?;
         }
 
         self.get_optional_space()?;
