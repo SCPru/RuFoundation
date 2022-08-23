@@ -62,7 +62,6 @@ where
 
     let (name, in_head) = parser.get_block_name(flag_star)?;
     debug!("Got block name '{name}' (in head {in_head})");
-    println!("block name {} in_head {}", name, in_head);
 
     let (name, flag_score) = match name.strip_suffix('_') {
         Some(name) => (name, true),
