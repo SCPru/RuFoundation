@@ -19,12 +19,12 @@
  */
 
 use super::clone::{option_string_to_owned, string_to_owned};
-use crate::data::PageRef;
+use crate::data::{PageRef, PageCallbacks};
 use crate::settings::WikitextSettings;
 use crate::url::is_url;
 use std::borrow::Cow;
+use std::rc::Rc;
 use strum_macros::EnumIter;
-use wikidot_normalize::normalize;
 
 #[derive(Serialize, Deserialize, Debug, Hash, Clone, PartialEq, Eq)]
 #[serde(untagged)]
@@ -40,12 +40,13 @@ impl<'a> LinkLocation<'a> {
     pub fn parse_interwiki(
         link: Cow<'a, str>,
         settings: &WikitextSettings,
+        page_callbacks: Rc<dyn PageCallbacks>,
     ) -> Option<(Self, LinkType)> {
         // Handle interwiki (starts with "!", like "!wp:Apple")
         match link.as_ref().strip_prefix('!') {
             // Not interwiki, parse as normal
             None => {
-                let interwiki = Self::parse(link);
+                let interwiki = Self::parse(link, page_callbacks);
                 let ltype = interwiki.link_type();
                 Some((interwiki, ltype))
             }
@@ -58,7 +59,7 @@ impl<'a> LinkLocation<'a> {
         }
     }
 
-    pub fn parse(link: Cow<'a, str>) -> Self {
+    pub fn parse(link: Cow<'a, str>, page_callbacks: Rc<dyn PageCallbacks>) -> Self {
         let mut link_str = link.to_string();
 
         // Check for direct URLs or anchor links
@@ -74,7 +75,7 @@ impl<'a> LinkLocation<'a> {
             None => None
         };
 
-        normalize(&mut link_str);
+        link_str = page_callbacks.normalize_page_name(Cow::from(link_str)).to_string();
 
         match PageRef::parse(&link_str) {
             Err(_) => LinkLocation::Url(link),
@@ -100,10 +101,11 @@ impl<'a> LinkLocation<'a> {
 #[test]
 fn test_link_location() {
     macro_rules! check {
-        ($input:expr => $site:expr, $page:expr) => {{
+        ($input:expr => $site:expr, $category:expr, $name:expr) => {{
             let site = $site.map(|site| cow!(site));
-            let page = cow!($page);
-            let expected = LinkLocation::Page(PageRef { site, page }, None);
+            let category = cow!($category);
+            let name = cow!($name);
+            let expected = LinkLocation::Page(PageRef { site, category, name }, None);
 
             check!($input; expected);
         }};
@@ -116,7 +118,8 @@ fn test_link_location() {
         };
 
         ($input:expr; $expected:expr) => {{
-            let actual = LinkLocation::parse(cow!($input));
+            use crate::data::NullPageCallbacks;
+            let actual = LinkLocation::parse(cow!($input), Rc::new(NullPageCallbacks{}));
 
             assert_eq!(
                 actual,
@@ -130,11 +133,11 @@ fn test_link_location() {
     check!("#" => "#");
     check!("#anchor" => "#anchor");
 
-    check!("page" => None, "page");
-    check!("/page" => None, "page");
-    check!("component:theme" => None, "component:theme");
-    check!(":scp-wiki:scp-1000" => Some("scp-wiki"), "scp-1000");
-    check!(":scp-wiki:component:theme" => Some("scp-wiki"), "component:theme");
+    check!("page" => None, "_default", "page");
+    check!("/page" => None, "_default", "page");
+    check!("component:theme" => None, "component", "theme");
+    check!(":scp-wiki:scp-1000" => Some("scp-wiki"), "_default", "scp-1000");
+    check!(":scp-wiki:component:theme" => Some("scp-wiki"), "component", "theme");
 
     check!("http://blog.wikidot.com/" => "http://blog.wikidot.com/");
     check!("https://example.com" => "https://example.com");
@@ -142,7 +145,7 @@ fn test_link_location() {
 
     check!("::page" => "::page");
     check!("::component:theme" => "::component:theme");
-    check!("page:multiple:category" => None, "page:multiple:category");
+    check!("page:multiple:category" => None, "page", "multiple:category");
 }
 
 #[derive(Serialize, Deserialize, Debug, Hash, Clone, PartialEq, Eq)]

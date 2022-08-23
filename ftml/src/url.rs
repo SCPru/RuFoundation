@@ -77,18 +77,14 @@ pub fn is_url(url: &str) -> bool {
     is_known_scheme(url)
 }
 
-pub fn normalize_link<'a>(
-    link: &'a LinkLocation<'a>,
-    helper: &dyn BuildSiteUrl,
-) -> Cow<'a, str> {
+pub fn normalize_link<'a>(link: &'a LinkLocation<'a>) -> Cow<'a, str> {
     match link {
         LinkLocation::Url(url) => normalize_href(url),
         LinkLocation::Page(page_ref, anchor) => {
-            let (site, page) = page_ref.fields();
-
-            let normalized = match site {
-                Some(site) => Cow::Owned(helper.build_url(site, page)),
-                None => normalize_href(page),
+            let normalized = if !page_ref.site().is_some() {
+                Cow::Owned(normalize_href(&page_ref.to_string()).to_string())
+            } else {
+                panic!("Cross-site links are not supported")
             };
 
             match anchor {
@@ -110,6 +106,10 @@ pub fn normalize_href(url: &str) -> Cow<str> {
 }
 
 pub fn validate_href(url: &str, strict: bool) -> bool {
+    // disable cross-site hrefs for now
+    if url.starts_with(':') {
+        return false
+    }
     // this attempts to match an URL that makes sense.
     // if it starts with a scheme, then it's definitely valid and allowed
     if is_known_scheme(url) {
@@ -130,8 +130,4 @@ pub fn validate_href(url: &str, strict: bool) -> bool {
     }
 
     true
-}
-
-pub trait BuildSiteUrl {
-    fn build_url(&self, site: &str, path: &str) -> String;
 }

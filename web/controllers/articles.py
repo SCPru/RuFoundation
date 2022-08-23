@@ -28,8 +28,10 @@ def get_name(full_name: str) -> Tuple[str, str]:
     return '_default', split[0]
 
 
-def normalize_article_name(name: str) -> str:
-    return re.sub(r'[^A-Za-z0-9\-_:]+', '-', name).lower().strip('-')
+def normalize_article_name(full_name: str) -> str:
+    n = re.sub(r'[^A-Za-z0-9\-_:]+', '-', full_name).lower().strip('-')
+    n = re.sub(r':+', ':', n).lower().strip(':')
+    return n
 
 
 def get_article(full_name_or_article: _FullNameOrArticle) -> Optional[Article]:

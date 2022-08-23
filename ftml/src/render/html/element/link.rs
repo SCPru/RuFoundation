@@ -64,9 +64,6 @@ pub fn render_link(
         o_label
     };
 
-    // Add to backlinks
-    ctx.add_link(link);
-
     let url = match link {
         LinkLocation::Page(page_ref, anchor) => {
             Cow::Owned(format!("/{}{}", &page_ref.to_string(), match anchor {

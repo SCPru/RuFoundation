@@ -173,7 +173,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             render_elements(ctx, elements);
 
             if let Some(href) = attributes.get().get("href") {
-                let link = LinkLocation::parse(cow!(href));
+                let link = LinkLocation::parse(cow!(href), ctx.callbacks());
                 let url = get_url_from_link(ctx, &link);
 
                 str_write!(ctx, " [{url}]");
@@ -465,8 +465,8 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
     }
 }
 
-fn get_url_from_link<'a>(ctx: &TextContext, link: &'a LinkLocation<'a>) -> Cow<'a, str> {
-    let url = normalize_link(link, ctx.handle());
+fn get_url_from_link<'a>(_ctx: &TextContext, link: &'a LinkLocation<'a>) -> Cow<'a, str> {
+    let url = normalize_link(link);
 
     // TODO: when we remove inline javascript stuff
     if url.as_ref() == "javascript:;" {

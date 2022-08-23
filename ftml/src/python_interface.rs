@@ -5,6 +5,7 @@ use std::rc::Rc;
 
 use pyo3::prelude::*;
 use pyo3::types::{PyFloat, PyInt, PyBool, PyString};
+use wikidot_normalize::normalize;
 
 use crate::data::{PageRef, PartialPageInfo, ExpressionResult};
 use crate::includes::{FetchedPage, IncludeRef, NullIncluder};
@@ -298,13 +299,13 @@ impl PageCallbacks for PythonCallbacks {
         }
     }
 
-    fn normalize<'a>(&self, name: Cow<str>) -> Cow<'static, str> {
+    fn normalize_page_name<'a>(&self, full_name: Cow<str>) -> Cow<'static, str> {
         let result: PyResult<String> = Python::with_gil(|py| {
-            return self.callbacks.getattr(py, "normalize")?.call(py, (name,), None)?.extract(py);
+            return self.callbacks.getattr(py, "normalize_page_name")?.call(py, (full_name.to_owned(),), None)?.extract(py);
         });
         match result {
             Ok(result) => Cow::from(result.as_str().to_owned()),
-            Err(_) => Cow::from("?")
+            Err(_) => Cow::Owned(full_name.to_string())
         }
     }
 }
@@ -382,8 +383,10 @@ impl Callbacks {
         return Ok(None)
     }
 
-    pub fn normalize(&self, name: String) -> PyResult<String> {
-        return Ok(name)
+    pub fn normalize_page_name(&self, full_name: String) -> PyResult<String> {
+        let mut full_name = full_name;
+        normalize(&mut full_name);
+        return Ok(full_name)
     }
 }
 

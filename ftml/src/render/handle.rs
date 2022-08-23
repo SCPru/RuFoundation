@@ -22,7 +22,6 @@ use crate::data::{PageInfo, PageRef, PartialPageInfo};
 use crate::prelude::PageCallbacks;
 use crate::settings::WikitextSettings;
 use crate::tree::{ImageSource, LinkLabel, LinkLocation};
-use crate::url::BuildSiteUrl;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -107,15 +106,15 @@ impl<'t> Handle<'t> {
     {
         let page_title;
         let label_text = match *label {
-            LinkLabel::Text(ref text) => text,
-            LinkLabel::Url(Some(ref text)) => text,
+            LinkLabel::Text(ref text) => Cow::from(text.as_ref()),
+            LinkLabel::Url(Some(ref text)) => Cow::from(text.as_ref()),
             LinkLabel::Url(None) => match link {
-                LinkLocation::Url(url) => url,
-                LinkLocation::Page(page_ref, _) => page_ref.page(),
+                LinkLocation::Url(url) => Cow::from(url.as_ref()),
+                LinkLocation::Page(page_ref, _) => Cow::from(page_ref.to_string().to_owned()),
             },
             LinkLabel::Page => match link {
                 LinkLocation::Url(url) => {
-                    url.as_ref()
+                    Cow::from(url.as_ref())
                 }
                 LinkLocation::Page(page_ref, _) => {
                     page_title = match self.get_page_title(page_ref) {
@@ -123,32 +122,16 @@ impl<'t> Handle<'t> {
                         None => page_ref.to_string(),
                     };
 
-                    &page_title
+                    Cow::from(&page_title)
                 }
             },
         };
 
-        f(label_text);
+        f(label_text.as_ref());
     }
 
     pub fn get_message(&self, message: &str) -> String {
         self.callbacks.get_i18n_message(Cow::from(message)).as_ref().to_owned()
-    }
-}
-
-impl<'t> BuildSiteUrl for Handle<'t> {
-    fn build_url(&self, site: &str, path: &str) -> String {
-        // TODO make this a parser setting
-        // get url of wikijump instance here
-
-        let path = {
-            let mut path = str!(path);
-            self.callbacks.normalize(cow!(&mut path));
-            path
-        };
-
-        // TODO
-        format!("https://{site}.wikijump.com/{path}")
     }
 }
 

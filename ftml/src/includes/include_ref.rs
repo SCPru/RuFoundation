@@ -74,7 +74,7 @@ impl<'t> From<IncludeRef<'t>> for (PageRef<'t>, VariableMap<'t>) {
 #[test]
 fn to_owned() {
     // Clone PageRef
-    let page_ref_1 = PageRef::page_only("scp-001");
+    let page_ref_1 = PageRef::new1("scp-001");
     let page_ref_2: PageRef<'static> = page_ref_1.to_owned();
     assert_eq!(page_ref_1, page_ref_2);
 

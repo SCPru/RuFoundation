@@ -88,7 +88,7 @@ fn get_page_source(page_ref: &PageRef) -> Option<Cow<'static, str>> {
         return Some(cow!("OFF-SITE INCLUDED PAGE"));
     }
 
-    match page_ref.page() {
+    match page_ref.to_string().as_ref() {
         "fruit" => Some(cow!(FRUIT_PAGE_SOURCE)),
         "component:basic" => Some(cow!(COMPONENT_BASIC_PAGE_SOURCE)),
         "component:fruit" => Some(cow!(COMPONENT_FRUIT_PAGE_SOURCE)),

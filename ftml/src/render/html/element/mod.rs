@@ -118,9 +118,10 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
         Element::Image {
             source,
             link,
+            link_target,
             alignment,
             attributes,
-        } => render_image(ctx, source, link, *alignment, attributes),
+        } => render_image(ctx, source, link, *link_target, *alignment, attributes),
         Element::List {
             ltype,
             items,

@@ -126,6 +126,7 @@ pub enum Element<'t> {
     Image {
         source: ImageSource<'t>,
         link: Option<LinkLocation<'t>>,
+        link_target: Option<AnchorTarget>,
         alignment: Option<FloatAlignment>,
         attributes: AttributeMap<'t>,
     },
@@ -463,11 +464,13 @@ impl Element<'_> {
             Element::Image {
                 source,
                 link,
+                link_target,
                 alignment,
                 attributes,
             } => Element::Image {
                 source: source.to_owned(),
                 link: link.ref_map(|link| link.to_owned()),
+                link_target: *link_target,
                 alignment: *alignment,
                 attributes: attributes.to_owned(),
             },

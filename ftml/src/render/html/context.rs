@@ -29,9 +29,7 @@ use crate::info;
 use crate::next_index::{NextIndex, TableOfContentsIndex};
 use crate::render::Handle;
 use crate::settings::WikitextSettings;
-use crate::tree::{Element, LinkLocation, VariableScopes};
-use crate::url::is_url;
-use std::borrow::Cow;
+use crate::tree::{Element, VariableScopes};
 use std::fmt::{self, Write};
 use std::num::NonZeroUsize;
 use std::rc::Rc;
@@ -219,40 +217,6 @@ impl<'i, 'h, 'e, 't> HtmlContext<'i, 'h, 'e, 't> {
         self.footnotes
             .get(usize::from(index_one) - 1)
             .map(|elements| elements.as_slice())
-    }
-
-    // Backlinks
-    #[inline]
-    pub fn add_link(&mut self, link: &LinkLocation) {
-        // TODO: set to internal link if domain matches site
-        // See https://scuttle.atlassian.net/browse/WJ-24
-
-        match link {
-            LinkLocation::Page(page, _) => {
-                self.backlinks.internal_links.push(page.to_owned());
-            }
-            LinkLocation::Url(link) => {
-                let mut link: &str = link;
-
-                if link == "javascript:;" {
-                    return;
-                }
-
-                // Also support [ links pointing to local pages.
-                // e.g. [/scp-001 SCP-001] in addition to [[[SCP-001]]].
-                if link.starts_with('/') {
-                    link = &link[1..];
-                }
-
-                if is_url(link) {
-                    let link = Cow::Owned(str!(link));
-                    self.backlinks.external_links.push(link);
-                } else {
-                    let page_ref = PageRef::page_only(cow!(link));
-                    self.backlinks.internal_links.push(page_ref.to_owned());
-                }
-            }
-        }
     }
 
     pub fn page_exists(&mut self, page_ref: &PageRef) -> bool {

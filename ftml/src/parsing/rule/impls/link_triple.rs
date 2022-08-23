@@ -109,21 +109,22 @@ fn build_same<'p, 'r, 't>(
     let label = Some(Cow::from(strip_category(url)));
 
     // Parse out link location
-    let (link, ltype) = match LinkLocation::parse_interwiki(cow!(url), parser.settings())
+    let (link, ltype) = match LinkLocation::parse_interwiki(cow!(url), parser.settings(), parser.page_callbacks())
     {
         Some(result) => result,
         None => return Err(parser.make_warn(ParseWarningKind::RuleFailed)),
     };
 
     match &link {
-        LinkLocation::Page(page_ref, _) => {
+        LinkLocation::Page(page_ref, _) if page_ref.site.is_none() => {
             parser.push_internal_link(page_ref.to_owned());
         },
         LinkLocation::Url(url) => {
             if !validate_href(url, true) {
                 return Err(parser.make_warn(ParseWarningKind::RuleFailed));
             }
-        }
+        },
+        _ => return Err(parser.make_warn(ParseWarningKind::CrossSiteRef)),
     }
 
     // Build and return element
@@ -174,7 +175,7 @@ fn build_separate<'p, 'r, 't>(
     };
 
     // Parse out link location
-    let (link, ltype) = match LinkLocation::parse_interwiki(cow!(url), parser.settings())
+    let (link, ltype) = match LinkLocation::parse_interwiki(cow!(url), parser.settings(), parser.page_callbacks())
     {
         Some(result) => result,
         None => return Err(parser.make_warn(ParseWarningKind::RuleFailed)),

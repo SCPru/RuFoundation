@@ -231,6 +231,9 @@ pub enum ParseWarningKind {
 
     /// [[else]] outside of [[if]]
     ElseOutsideIf,
+
+    /// Interwiki PageRef not allowed
+    CrossSiteRef,
 }
 
 impl ParseWarningKind {

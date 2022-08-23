@@ -107,9 +107,9 @@ def callbacks_with_context(context):
             result = expression.evaluate_expression(expr)
             return result
 
-        def normalize(self, name: str) -> str:
+        def normalize_page_name(self, full_name: str) -> str:
             from web.controllers.articles import normalize_article_name
-            return normalize_article_name(name)
+            return normalize_article_name(full_name)
 
     return CallbacksWithContextImpl(context)
 

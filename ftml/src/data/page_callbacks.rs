@@ -34,7 +34,7 @@ pub trait PageCallbacks: Debug {
     fn get_i18n_message<'a>(&self, message_id: Cow<str>) -> Cow<'static, str>;
     fn get_page_info<'a>(&self, page_refs: &Vec<PageRef<'a>>) -> Vec<PartialPageInfo<'static>>;
     fn evaluate_expression<'a>(&self, expression: Cow<str>) -> ExpressionResult<'static>;
-    fn normalize<'a>(&self, name: Cow<str>) -> Cow<'static, str>;
+    fn normalize_page_name<'a>(&self, full_name: Cow<str>) -> Cow<'static, str>;
 }
 
 pub struct NullPageCallbacks {}
@@ -82,8 +82,8 @@ impl PageCallbacks for NullPageCallbacks {
         ExpressionResult::None
     }
 
-    fn normalize<'a>(&self, name: Cow<str>) -> Cow<'static, str> {
-        let mut result = name.to_string();
+    fn normalize_page_name<'a>(&self, full_name: Cow<str>) -> Cow<'static, str> {
+        let mut result = full_name.to_string();
         normalize(&mut result);
         Cow::from(result)
     }

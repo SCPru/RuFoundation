@@ -23,43 +23,51 @@ use std::borrow::Cow;
 use std::fmt::{self, Display};
 
 /// Represents a reference to a page on the wiki, as used by include notation.
-///
-/// It tracks whether it refers to a page on this wiki, or some other,
-/// and what the names of these are.
-///
-/// The Wikidot syntax here allows for two cases:
-/// * `:wiki-name:page` (off-site)
-/// * `page` (on-site)
-///
-/// Additionally "`page`" here may also contain colons, such as `component:some-thing`.
 #[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct PageRef<'t> {
     pub site: Option<Cow<'t, str>>,
-    pub page: Cow<'t, str>,
+    pub category: Cow<'t, str>,
+    pub name: Cow<'t, str>,
 }
 
 impl<'t> PageRef<'t> {
     #[inline]
-    pub fn page_and_site<S1, S2>(site: S1, page: S2) -> Self
+    pub fn new3<S1, S2, S3>(site: S1, category: S2, name: S3) -> Self
+    where
+        S1: Into<Cow<'t, str>>,
+        S2: Into<Cow<'t, str>>,
+        S3: Into<Cow<'t, str>>,
+    {
+        PageRef {
+            site: Some(site.into()),
+            category: category.into(),
+            name: name.into(),
+        }
+    }
+
+    #[inline]
+    pub fn new2<S1, S2>(category: S1, name: S2) -> Self
     where
         S1: Into<Cow<'t, str>>,
         S2: Into<Cow<'t, str>>,
     {
         PageRef {
-            site: Some(site.into()),
-            page: page.into(),
+            site: None,
+            category: category.into(),
+            name: name.into(),
         }
     }
 
     #[inline]
-    pub fn page_only<S>(page: S) -> Self
+    pub fn new1<S>(name: S) -> Self
     where
         S: Into<Cow<'t, str>>,
     {
         PageRef {
             site: None,
-            page: page.into(),
+            category: Cow::from("_default"),
+            name: name.into(),
         }
     }
 
@@ -69,18 +77,23 @@ impl<'t> PageRef<'t> {
     }
 
     #[inline]
-    pub fn page(&self) -> &str {
-        self.page.as_ref()
+    pub fn category(&self) -> &str {
+        self.category.as_ref()
     }
 
     #[inline]
-    pub fn fields(&self) -> (Option<&str>, &str) {
-        (self.site(), self.page())
+    pub fn name(&self) -> &str {
+        self.name.as_ref()
+    }
+
+    #[inline]
+    pub fn fields(&self) -> (Option<&str>, &str, &str) {
+        (self.site(), self.category(), self.name())
     }
 
     /// Like `fields()`, but uses the passed in value as the current site for local references.
-    pub fn fields_or<'a>(&'a self, current_site: &'a str) -> (&'a str, &'a str) {
-        (self.site().unwrap_or(current_site), self.page())
+    pub fn fields_or<'a>(&'a self, current_site: &'a str) -> (&'a str, &'a str, &'a str) {
+        (self.site().unwrap_or(current_site), self.category(), self.name())
     }
 
     pub fn parse(s: &str) -> Result<PageRef<'t>, PageRefParseError> {
@@ -104,16 +117,29 @@ impl<'t> PageRef<'t> {
 
                 // Get site and page slices
                 let site = s[1..idx].trim();
-                let page = s[idx + 1..].trim();
+                let page_raw = s[(idx+1)..].trim();
+                
+                let (category, name) = match page_raw.find(':') {
+                    Some(idx) => {
+                        let category = &s[..idx];
+                        let name = &s[(idx+1)..];
+                        (category, name)
+                    }
+                    _ => ("_default", page_raw)
+                };
 
-                PageRef::page_and_site(site.to_owned(), page.to_owned())
+                PageRef::new3(site.to_owned(), category.to_owned(), name.to_owned())
             }
 
             // On-site page, e.g. "component:thing"
-            Some(_) => PageRef::page_only(s.to_owned()),
+            Some(idx) => {
+                let category = &s[..idx];
+                let name = &s[(idx+1)..];
+                PageRef::new2(category.to_owned(), name.to_owned())
+            }
 
             // On-site page, with no category, e.g. "page"
-            None => PageRef::page_only(s.to_owned()),
+            None => PageRef::new1(s.to_owned()),
         };
 
         Ok(result)
@@ -127,9 +153,10 @@ impl<'t> PageRef<'t> {
         }
 
         let site = self.site.ref_map(|value| owned!(value));
-        let page = owned!(self.page);
+        let category = owned!(self.category);
+        let name = owned!(self.name);
 
-        PageRef { site, page }
+        PageRef { site, category, name }
     }
 }
 
@@ -139,7 +166,11 @@ impl Display for PageRef<'_> {
             write!(f, ":{}:", &site)?;
         }
 
-        write!(f, "{}", &self.page)
+        if self.category() != "_default" {
+            write!(f, "{}:", &self.category())?;
+        }
+
+        write!(f, "{}", &self.name())
     }
 }
 
@@ -172,20 +203,20 @@ fn page_ref() {
     test!("");
     test!(":page");
     test!("::page");
-    test!("page", PageRef::page_only("page"));
-    test!("component:page", PageRef::page_only("component:page"));
+    test!("page", PageRef::new1("page"));
+    test!("component:page", PageRef::new2("component", "page"));
     test!(
         "deleted:secret:fragment:page",
-        PageRef::page_only("deleted:secret:fragment:page"),
+        PageRef::new2("deleted", "secret:fragment:page"),
     );
-    test!(":scp-wiki:page", PageRef::page_and_site("scp-wiki", "page"));
+    test!(":scp-wiki:page", PageRef::new2("scp-wiki", "page"));
     test!(
         ":scp-wiki:component:page",
-        PageRef::page_and_site("scp-wiki", "component:page"),
+        PageRef::new3("scp-wiki", "component", "page"),
     );
     test!(
         ":scp-wiki:deleted:secret:fragment:page",
-        PageRef::page_and_site("scp-wiki", "deleted:secret:fragment:page"),
+        PageRef::new3("scp-wiki", "deleted", "secret:fragment:page"),
     );
 }
 

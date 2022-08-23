@@ -146,6 +146,7 @@ fn isolate_user_ids() {
                     file: cow!("example.png"),
                 },
                 link: None,
+                link_target: None,
                 alignment: None,
                 attributes: AttributeMap::from(btreemap! {
                     cow!("class") => cow!("apple"),
@@ -164,6 +165,7 @@ fn isolate_user_ids() {
                     file: cow!("example.png"),
                 },
                 link: None,
+                link_target: None,
                 alignment: None,
                 attributes: AttributeMap::from(btreemap! {
                     cow!("class") => cow!("u-apple"),

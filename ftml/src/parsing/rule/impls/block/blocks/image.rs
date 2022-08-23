@@ -18,8 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::borrow::Cow;
+
 use super::prelude::*;
-use crate::{tree::{FloatAlignment, ImageSource, LinkLocation}, url::validate_href};
+use crate::{tree::{FloatAlignment, ImageSource, LinkLocation, AnchorTarget}, url::validate_href};
 
 pub const BLOCK_IMAGE: BlockRule = BlockRule {
     name: "block-image",
@@ -44,14 +46,29 @@ fn parse_fn<'r, 't>(
     assert_block_name(&BLOCK_IMAGE, name);
 
     let (source, mut arguments) = parser.get_head_name_map(&BLOCK_IMAGE, in_head)?;
-    let link = match arguments.get("link") {
+    let (link, link_target) = match arguments.get("link") {
         Some(link) => {
-            if !validate_href(&link, false) {
-                return Err(parser.make_warn(ParseWarningKind::InvalidUrl));
+            let mut link_target = None;
+            let mut link_url = link.to_owned();
+            if link_url.starts_with('*') {
+                link_url = Cow::from(link_url[1..].to_owned());
+                link_target = Some(AnchorTarget::NewTab);
             }
-            Some(LinkLocation::parse(link))
+            let location = LinkLocation::parse(link_url, parser.page_callbacks());
+            match &location {
+                LinkLocation::Page(page_ref, _) if page_ref.site.is_none() => {
+                    parser.push_internal_link(page_ref.to_owned());
+                },
+                LinkLocation::Url(url) => {
+                    if !validate_href(url, true) {
+                        return Err(parser.make_warn(ParseWarningKind::RuleFailed));
+                    }
+                },
+                _ => return Err(parser.make_warn(ParseWarningKind::CrossSiteRef)),
+            }
+            (Some(location), link_target)
         }
-        None => None
+        None => (None, None)
     };
     let alignment = FloatAlignment::parse(name);
 
@@ -65,6 +82,7 @@ fn parse_fn<'r, 't>(
     let element = Element::Image {
         source,
         link,
+        link_target,
         alignment,
         attributes: arguments.to_attribute_map(parser.settings()),
     };

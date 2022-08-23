@@ -19,13 +19,14 @@
  */
 
 use super::prelude::*;
-use crate::tree::{AttributeMap, FloatAlignment, ImageSource, LinkLocation, Alignment};
+use crate::tree::{AttributeMap, FloatAlignment, ImageSource, LinkLocation, Alignment, AnchorTarget};
 use crate::url::normalize_link;
 
 pub fn render_image(
     ctx: &mut HtmlContext,
     source: &ImageSource,
     link: &Option<LinkLocation>,
+    link_target: Option<AnchorTarget>,
     alignment: Option<FloatAlignment>,
     attributes: &AttributeMap,
 ) {
@@ -52,7 +53,7 @@ pub fn render_image(
 
     match source_url {
         // Found URL
-        Some(url) => render_image_element(ctx, &url, link, alignment, attributes),
+        Some(url) => render_image_element(ctx, &url, link, link_target, alignment, attributes),
 
         // Missing or error
         None => render_image_missing(ctx),
@@ -63,6 +64,7 @@ fn render_image_element(
     ctx: &mut HtmlContext,
     url: &str,
     link: &Option<LinkLocation>,
+    link_target: Option<AnchorTarget>,
     alignment: Option<FloatAlignment>,
     attributes: &AttributeMap,
 ) {
@@ -79,10 +81,10 @@ fn render_image_element(
     let build_link = |ctx: &mut HtmlContext| {
         match link {
             Some(link) => {
-                let url = normalize_link(link, ctx.handle());
+                let url = normalize_link(link);
                 ctx.html()
                     .a()
-                    .attr(attr!("href" => &url, "target" => "_blank"))
+                    .attr(attr!("href" => &url, "target" => link_target.unwrap_or(AnchorTarget::Same).html_attr(); if link_target.is_some()))
                     .contents(build_image);
             }
             None => build_image(ctx),
