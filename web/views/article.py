@@ -82,6 +82,16 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
         article_name, path_params = self.get_path_params(path)
 
+        encoded_params = ''
+        for param in path_params:
+            encoded_params += '/%s' % param
+            if path_params[param] is not None:
+                encoded_params += '/%s' % path_params[param]
+
+        normalized_article_name = articles.normalize_article_name(article_name)
+        if normalized_article_name != article_name:
+            return {'redirect_to': '/%s%s' % (normalized_article_name, encoded_params)}
+
         article = articles.get_article(article_name)
         title = article.title.strip() if article and article_name != 'main' else None
         breadcrumbs = [{'url': '/' + articles.get_full_name(x), 'title': x.title} for x in
@@ -102,11 +112,6 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         site = get_current_site()
         article_rating, article_votes, article_rating_mode = articles.get_rating(article)
 
-        encoded_params = ''
-        for param in path_params:
-            encoded_params += '/%s' % param
-            if path_params[param] is not None:
-                encoded_params += '/%s' % path_params[param]
         canonical_url = '//%s/%s%s' % (site.domain, article.full_name if article else article_name, encoded_params)
 
         options_config = {
