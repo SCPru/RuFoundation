@@ -1,3 +1,4 @@
+import logging
 import shutil
 from pathlib import Path
 
@@ -15,6 +16,8 @@ import datetime
 import re
 import os.path
 
+import unicodedata
+
 
 _FullNameOrArticle = Optional[Union[str, Article]]
 _FullNameOrCategory = Optional[Union[str, Category]]
@@ -28,10 +31,26 @@ def get_name(full_name: str) -> Tuple[str, str]:
     return '_default', split[0]
 
 
+def strip_accents(s):
+   return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
+
+
 def normalize_article_name(full_name: str) -> str:
-    n = re.sub(r'[^A-Za-z0-9\-_:]+', '-', full_name).lower().strip('-')
-    n = re.sub(r':+', ':', n).lower().strip(':')
-    return n
+    try:
+        full_name = strip_accents(full_name.lower())
+        translit_map = {
+            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ж': 'z',
+            'з': 'z', 'и': 'i', 'й': 'i', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o',
+            'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'c',
+            'ч': 'c', 'ы': 'i', 'э': 'e', 'ю': 'u', 'я': 'a', 'і': 'i', 'ї': 'i', 'є': 'e'
+        }
+        full_name = ''.join(translit_map.get(c, c) for c in full_name)
+        print(repr(full_name))
+        n = re.sub(r'[^A-Za-z0-9\-_:]+', '-', full_name).strip('-')
+        n = re.sub(r':+', ':', n).lower().strip(':')
+        return n
+    except:
+        logging.error('err', exc_info=True)
 
 
 def get_article(full_name_or_article: _FullNameOrArticle) -> Optional[Article]:
