@@ -78,6 +78,6 @@ page_name = _{ (!(" " | "\n" | "\t" | "[" | "|" | "]") ~ ANY)+ }
 // Helpers
 
 identifier = { (ASCII_ALPHANUMERIC | "-" | "_")+ }
-space = _{ (" " | "\n" | "\t")+ }
+space = @{ (" " | "\n" | "\t" | "\xA0")+ }
 
 // vim: set fdm=marker foldlevel=0:
