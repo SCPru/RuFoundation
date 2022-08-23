@@ -225,6 +225,12 @@ pub enum ParseWarningKind {
 
     /// The URL passed here was invalid.
     InvalidUrl,
+
+    /// An [[if]] condition had multiple [[else]] clauses.
+    SecondElse,
+
+    /// [[else]] outside of [[if]]
+    ElseOutsideIf,
 }
 
 impl ParseWarningKind {

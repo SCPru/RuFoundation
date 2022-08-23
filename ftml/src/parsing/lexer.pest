@@ -69,13 +69,11 @@ token = _{
 
     // Formatting
     bold |
-    star |
     italics |
     underline |
     superscript |
     subscript |
     color |
-    anchor |
     left_monospace |
     right_monospace |
 
@@ -102,6 +100,9 @@ token = _{
     heading |
     bullet_item |
     numbered_item |
+
+    star |
+    anchor |
 
     // Whitespace
     paragraph_break |

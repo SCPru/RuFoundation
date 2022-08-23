@@ -44,6 +44,9 @@ pub enum PartialElement<'t> {
     ///
     /// Outputs HTML `<rt>`. See also https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ruby.
     RubyText(RubyText<'t>),
+
+    /// An [[else]] block inside an if/ifexpr.
+    Else,
 }
 
 impl PartialElement<'_> {
@@ -54,6 +57,7 @@ impl PartialElement<'_> {
             PartialElement::TableCell(_) => "TableCell",
             PartialElement::Tab(_) => "Tab",
             PartialElement::RubyText(_) => "RubyText",
+            PartialElement::Else => "Else",
         }
     }
 
@@ -65,6 +69,7 @@ impl PartialElement<'_> {
             PartialElement::TableCell(_) => ParseWarningKind::TableCellOutsideTable,
             PartialElement::Tab(_) => ParseWarningKind::TabOutsideTabView,
             PartialElement::RubyText(_) => ParseWarningKind::RubyTextOutsideRuby,
+            PartialElement::Else => ParseWarningKind::ElseOutsideIf,
         }
     }
 
@@ -81,6 +86,7 @@ impl PartialElement<'_> {
             }
             PartialElement::Tab(tab) => PartialElement::Tab(tab.to_owned()),
             PartialElement::RubyText(text) => PartialElement::RubyText(text.to_owned()),
+            PartialElement::Else => PartialElement::Else,
         }
     }
 }
@@ -97,6 +103,7 @@ pub enum AcceptsPartial {
     TableCell,
     Tab,
     Ruby,
+    Else,
 }
 
 impl AcceptsPartial {
@@ -108,6 +115,7 @@ impl AcceptsPartial {
                 | (AcceptsPartial::TableCell, PartialElement::TableCell(_))
                 | (AcceptsPartial::Tab, PartialElement::Tab(_))
                 | (AcceptsPartial::Ruby, PartialElement::RubyText(_))
+                | (AcceptsPartial::Else, PartialElement::Else)
         )
     }
 }

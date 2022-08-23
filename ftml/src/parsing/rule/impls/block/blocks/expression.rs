@@ -20,7 +20,7 @@
 
 use std::borrow::Cow;
 
-use crate::data::ExpressionResult;
+use crate::{data::ExpressionResult, tree::PartialElement};
 
 use super::prelude::*;
 
@@ -34,6 +34,36 @@ pub const BLOCK_IF: BlockRule = BlockRule {
     parse_fn,
 };
 
+pub const BLOCK_IF_WITH_BODY: BlockRule = BlockRule {
+    name: "block-if-body",
+    accepts_names: &["if"],
+    accepts_star: false,
+    accepts_score: false,
+    accepts_newlines: false,
+    accepts_partial: AcceptsPartial::Else,
+    parse_fn: parse_if_with_body,
+};
+
+pub const BLOCK_IFEXPR_WITH_BODY: BlockRule = BlockRule {
+    name: "block-ifexpr-body",
+    accepts_names: &["ifexpr"],
+    accepts_star: false,
+    accepts_score: false,
+    accepts_newlines: false,
+    accepts_partial: AcceptsPartial::Else,
+    parse_fn: parse_ifexpr_with_body,
+};
+
+pub const BLOCK_IF_ELSE: BlockRule = BlockRule {
+    name: "block-if-else",
+    accepts_names: &["else"],
+    accepts_star: false,
+    accepts_score: false,
+    accepts_newlines: false,
+    accepts_partial: AcceptsPartial::None,
+    parse_fn: parse_if_else,
+};
+
 pub const BLOCK_EXPR: BlockRule = BlockRule {
     name: "block-expr",
     accepts_names: &["#expr"],
@@ -41,7 +71,7 @@ pub const BLOCK_EXPR: BlockRule = BlockRule {
     accepts_score: false,
     accepts_newlines: false,
     accepts_partial: AcceptsPartial::None,
-    parse_fn: parse_expr_fn,
+    parse_fn: parse_expr,
 };
 
 fn parse_fn<'r, 't>(
@@ -110,7 +140,104 @@ fn parse_fn<'r, 't>(
     }
 }
 
-fn parse_expr_fn<'r, 't>(
+fn parse_if_with_body<'r, 't>(
+    parser: &mut Parser<'r, 't>,
+    name: &'t str,
+    flag_star: bool,
+    flag_score: bool,
+    in_head: bool,
+) -> ParseResult<'r, 't, Elements<'t>> {
+    info!("Parsing expression block (name {name}, in-head {in_head}; with body)");
+    assert!(!flag_star, "Expression doesn't allow star flag");
+    assert!(!flag_score, "Expression doesn't allow score flag");
+
+    parse_with_body(parser, name, &BLOCK_IF_WITH_BODY)
+}
+
+fn parse_ifexpr_with_body<'r, 't>(
+    parser: &mut Parser<'r, 't>,
+    name: &'t str,
+    flag_star: bool,
+    flag_score: bool,
+    in_head: bool,
+) -> ParseResult<'r, 't, Elements<'t>> {
+    info!("Parsing expression block (name {name}, in-head {in_head}; with body)");
+    assert!(!flag_star, "Expression doesn't allow star flag");
+    assert!(!flag_score, "Expression doesn't allow score flag");
+
+    parse_with_body(parser, name, &BLOCK_IFEXPR_WITH_BODY)
+}
+
+fn parse_if_else<'r, 't>(
+    _parser: &mut Parser<'r, 't>,
+    name: &'t str,
+    flag_star: bool,
+    flag_score: bool,
+    in_head: bool,
+) -> ParseResult<'r, 't, Elements<'t>> {
+    info!("Parsing else block (name {name}, in-head {in_head})");
+    assert!(!flag_star, "Else doesn't allow star flag");
+    assert!(!flag_score, "Else doesn't allow score flag");
+    assert_block_name(&BLOCK_IF_ELSE, name);
+
+    ok!(true; Element::Partial(PartialElement::Else), vec![])
+}
+
+fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &BlockRule) -> ParseResult<'r, 't, Elements<'t>> {
+    // syntax: [[if|ifexpr condition]]truthy nodes[[else]]falsey nodes[[/if|ifexpr]]
+
+    let condition = collect_text(
+        parser,
+        parser.rule(),
+        &[],
+        &[ParseCondition::current(Token::RightBlock)],
+        &[],
+        None,
+    )?;
+
+    // Get body content, never with paragraphs
+    let (elements, _, _) =
+        parser.get_body_elements(rule, false)?.into();
+
+    // Check for "else" separating truthy and falsey conditions
+    let (truthy, falsey) = match elements.iter().position(|x| matches!(x, Element::Partial(PartialElement::Else))) {
+        Some(idx) => {
+            let truthy = &elements[..idx];
+            let falsey = &elements[(idx+1)..];
+            // make sure there is no second else. if there is, it's an error
+            if falsey.iter().any(|x| matches!(x, Element::Partial(PartialElement::Else))) {
+                return Err(parser.make_warn(ParseWarningKind::SecondElse))
+            }
+            (Vec::from(truthy), Vec::from(falsey))
+        }
+        _ => {
+            (elements, vec![])
+        }
+    };
+
+    println!("truthy: {:#?}, falsey: {:#?}", truthy, falsey);
+
+    // evaluate right away; 
+    match name {
+        "if" => {
+            if evaluate_if(parser, condition) {
+                ok!(true; truthy, vec![])
+            } else {
+                ok!(true; falsey, vec![])
+            }
+        }
+        "ifexpr" => {
+            if evaluate_ifexpr(parser, condition) {
+                ok!(true; truthy, vec![])
+            } else {
+                ok!(true; falsey, vec![])
+            }
+        }
+        _ => unreachable!()
+    }
+}
+
+fn parse_expr<'r, 't>(
     parser: &mut Parser<'r, 't>,
     name: &'t str,
     flag_star: bool,
