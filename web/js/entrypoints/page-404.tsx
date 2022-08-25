@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Component } from 'react';
 import ArticleEditor from '../articles/article-editor';
+import styled from 'styled-components'
 
 
 interface Props {
@@ -15,15 +16,18 @@ interface State {
 
 class Page404 extends Component<Props, State> {
     state = {
-        isCreate: false
+        isCreate: false,
+        bodyRef: null
     };
 
     onCreate = (e) => {
         e.preventDefault();
         e.stopPropagation();
         this.setState({isCreate: true});
-        const { page_id } = this.props;
-        ReactDOM.render(<ArticleEditor pageId={page_id} isNew onClose={this.onCancel} />, document.getElementById("action-area"))
+        setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 0);
+        (window as any)._openNewEditor(() => {
+            this.setState({isCreate: false});
+        });
     };
 
     onCancel = () => {

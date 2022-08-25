@@ -5,7 +5,7 @@ import styled from "styled-components";
 import WikidotModal from "../util/wikidot-modal";
 import sleep from "../util/async-sleep";
 import {makePreview} from "../api/preview";
-import {showPreviewMessage} from "../util/wikidot-message";
+import {removeMessage, showPreviewMessage} from "../util/wikidot-message"
 import {createArticle, fetchArticle, updateArticle} from "../api/articles";
 
 
@@ -14,6 +14,8 @@ interface Props {
     pathParams?: { [key: string]: string }
     isNew?: boolean
     onClose?: () => void
+    previewTitleElement?: HTMLElement | (() => HTMLElement)
+    previewBodyElement?: HTMLElement | (() => HTMLElement)
 }
 
 interface State {
@@ -25,11 +27,14 @@ interface State {
     savingSuccess?: boolean
     error?: string
     fatalError?: boolean
+    previewOriginalTitle?: string
+    previewOriginalTitleDisplay?: string
+    previewOriginalBody?: string
 }
 
 
 function guessTitle(pageId) {
-    const pageIdSplit = pageId.split(':', 1);
+    const pageIdSplit = pageId.split(':', 2);
     if (pageIdSplit.length === 2)
         pageId = pageIdSplit[1];
     else pageId = pageIdSplit[0];
@@ -54,6 +59,14 @@ function guessTitle(pageId) {
         result += char;
     }
     return result;
+}
+
+
+function getElement(e: HTMLElement | (() => HTMLElement)) {
+    if (typeof(e) === 'function') {
+        return e();
+    }
+    return e;
 }
 
 
@@ -91,7 +104,10 @@ class ArticleEditor extends Component<Props, State> {
             source: '',
             comment: '',
             loading: true,
-            saving: false
+            saving: false,
+            previewOriginalTitle: getElement(props.previewTitleElement)?.innerText,
+            previewOriginalTitleDisplay: getElement(props.previewTitleElement)?.style?.display,
+            previewOriginalBody: getElement(props.previewBodyElement)?.innerHTML
         }
     }
 
@@ -144,6 +160,7 @@ class ArticleEditor extends Component<Props, State> {
     };
 
     onPreview = () => {
+        const { previewTitleElement, previewBodyElement } = this.props;
         const data = {
             pageId: this.props.pageId,
             title: this.state.title,
@@ -152,8 +169,9 @@ class ArticleEditor extends Component<Props, State> {
         };
         makePreview(data).then(function (resp) {
             showPreviewMessage();
-            document.getElementById("page-title").innerText = resp.title;
-            document.getElementById("page-content").innerHTML = resp.content;
+            getElement(previewTitleElement).innerText = resp.title;
+            getElement(previewTitleElement).style.display = '';
+            getElement(previewBodyElement).innerHTML = resp.content;
         });
     };
 
@@ -161,6 +179,16 @@ class ArticleEditor extends Component<Props, State> {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
+        }
+        removeMessage();
+        const { previewTitleElement, previewBodyElement } = this.props;
+        const { previewOriginalTitle, previewOriginalTitleDisplay, previewOriginalBody } = this.state;
+        if (typeof(previewOriginalTitle) === 'string') {
+            getElement(previewTitleElement).innerText = previewOriginalTitle;
+            getElement(previewTitleElement).style.display = previewOriginalTitleDisplay;
+        }
+        if (typeof(previewOriginalBody) === 'string') {
+            getElement(previewBodyElement).innerHTML = previewOriginalBody;
         }
         if (this.props.onClose)
             this.props.onClose()

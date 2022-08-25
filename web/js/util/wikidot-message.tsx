@@ -40,17 +40,20 @@ class WikidotMessage extends Component<Props> {
 
     render() {
         const { children, buttons, background } = this.props;
-        // @ts-ignore
+
         return (
             <Styles>
                 <div className="w-message" style={{ background: background }}>
                     { children }
                     <br/>
                     { buttons.map((button, i) =>
-                            <a key={i} onClick={(e) => this.handleCallback(e, button.onClick)}>
+                        <React.Fragment key={i}>
+                            <a onClick={(e) => this.handleCallback(e, button.onClick)}>
                                 {button.title}
                             </a>
-                    ).reduce((prev, curr) => [prev, " | ", curr]) }
+                            {(i !== buttons.length-1) && ' | '}
+                        </React.Fragment>
+                    ) }
                 </div>
             </Styles>
         )
@@ -67,7 +70,7 @@ function addMessage(message: JSX.Element) {
 }
 
 
-function removeMessage() {
+export function removeMessage() {
     const node = getMessageContainer();
     ReactDOM.unmountComponentAtNode(node);
 }

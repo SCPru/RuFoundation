@@ -67,7 +67,7 @@ def callbacks_with_context(context):
 
             include_name = articles.normalize_article_name(full_name)
             if include_name in threadvars.get('include_err', []):
-                return '[[div class="error-block"]]Вставленная страница "%s" ссылается сама на себя[[/div]]' % full_name
+                return '[[div class="error-block"]]Вставленная страница "%s" вызывает бесконечный цикл включений[[/div]]' % full_name
             else:
                 # this must return Wiki markup because of the stage it runs at.
                 return '[[div class="error-block"]]Вставленная страница "%s" не существует ([[a href="/%s/edit/true" target="_blank"]]создать её сейчас[[/a]])[[/div]]' % (full_name, full_name)
@@ -97,11 +97,12 @@ def callbacks_with_context(context):
                 ref_dumb = self._page_name_to_dumb(ref.full_name)
                 include_name = articles.normalize_article_name(ref_dumb)
                 if include_name in threadvars.get('include_tree', []):
+                    print(repr(threadvars.get('include_tree', [])))
                     threadvars.put('include_err', threadvars.get('include_err', []) + [include_name])
                     result.append(ftml.FetchedPage(full_name=ref.full_name, content=None))
                 else:
                     result.append(ftml.FetchedPage(full_name=ref.full_name, content=included_map.get(ref_dumb, None)))
-                    if ref_dumb not in new_includes:
+                    if include_name not in new_includes:
                         new_includes.append(include_name)
             threadvars.put('include_tree', threadvars.get('include_tree', []) + new_includes)
             return result
@@ -153,8 +154,8 @@ def single_pass_render(source, context=None) -> str:
     from ftml import ftml
 
     with threadvars.context():
-        initial = [context.source_article.full_name] if context.source_article else []
-        threadvars.put('include_tree', initial)
+        threadvars.put('include_tree', [])
+        threadvars.put('include_err', [])
         html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context))
         return SafeString(html.body)
 
@@ -163,8 +164,7 @@ def single_pass_render_with_excerpt(source, context=None) -> [str, str, Optional
     from ftml import ftml
 
     with threadvars.context():
-        initial = [context.source_article.full_name] if context.source_article else []
-        threadvars.put('include_tree', initial)
+        threadvars.put('include_tree', [])
         threadvars.put('include_err', [])
         html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context))
         text = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context)).body

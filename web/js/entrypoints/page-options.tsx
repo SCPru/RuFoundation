@@ -33,14 +33,26 @@ interface Props {
 interface State {
     subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'lock' | 'rename' | 'files' | 'delete' | 'backlinks' | null
     extOptions: boolean
+    isNewEditor: boolean
+    onCancelNewEditor?: () => void
 }
 
 
 class PageOptions extends Component<Props, State> {
-    state = {
-        subView: null,
-        extOptions: false
-    };
+    constructor(props) {
+        super(props)
+        this.state = {
+            subView: null,
+            extOptions: false,
+            isNewEditor: false
+        };
+    }
+
+    componentDidMount() {
+        (window as any)._openNewEditor = (func?: () => void) => {
+            this.setState({ isNewEditor: true, onCancelNewEditor: func })
+        };
+    }
 
     onEdit = (e) => {
         e.preventDefault();
@@ -70,7 +82,11 @@ class PageOptions extends Component<Props, State> {
     };
 
     onCancelSubView = () => {
-        this.setState({ subView: null });
+        const { isNewEditor, onCancelNewEditor } = this.state;
+        if (isNewEditor && onCancelNewEditor) {
+            onCancelNewEditor();
+        }
+        this.setState({ subView: null, isNewEditor: false });
     };
 
     onHistory = (e) => {
@@ -164,8 +180,19 @@ class PageOptions extends Component<Props, State> {
     }
 
     render() {
-        const { optionsEnabled, editable, lockable, rating, canRate } = this.props;
-        const { extOptions } = this.state;
+        const { optionsEnabled, editable, lockable, canRate, pageId, pathParams } = this.props;
+        const { extOptions, isNewEditor } = this.state;
+
+        if (isNewEditor) {
+            return (
+                <ArticleEditor pageId={pageId}
+                               isNew
+                               pathParams={pathParams}
+                               onClose={this.onCancelSubView}
+                               previewTitleElement={document.getElementById('page-title')}
+                               previewBodyElement={document.getElementById('page-content')} />
+            )
+        }
 
         if (!optionsEnabled) {
             return null
@@ -205,7 +232,11 @@ class PageOptions extends Component<Props, State> {
 
         switch (subView) {
             case 'edit':
-                return <ArticleEditor pageId={pageId} pathParams={pathParams} onClose={this.onCancelSubView} />;
+                return <ArticleEditor pageId={pageId}
+                                      pathParams={pathParams}
+                                      onClose={this.onCancelSubView}
+                                      previewTitleElement={document.getElementById('page-title')}
+                                      previewBodyElement={document.getElementById('page-content')} />;
 
             case 'rating':
                 return <ArticleRating pageId={pageId} rating={rating} onClose={this.onCancelSubView} />;

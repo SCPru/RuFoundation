@@ -51,11 +51,9 @@
                         </div>
                         <div id="main-content">
                             <div id="action-area-top"></div>
-                            {% if title %}
-                                <div id="page-title">
-                                    {{ title }}
-                                </div>
-                            {% endif %}
+                            <div id="page-title" style="{%  if not title %}display: none{% endif %}">
+                                {{ title }}
+                            </div>
                             {% if breadcrumbs|length > 1 %}
                                 <div id="breadcrumbs">
                                 {% for article in breadcrumbs %}
