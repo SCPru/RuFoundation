@@ -7,24 +7,6 @@ from .models.files import File
 from .models.sites import Site
 
 
-class ArticleForm(forms.ModelForm):
-    class Meta:
-        model = Article
-        widgets = {
-            'category': forms.TextInput,
-            'name': forms.TextInput,
-            'title': forms.TextInput
-        }
-        fields = '__all__'
-
-
-@admin.register(Article)
-class ArticleAdmin(GuardedModelAdmin):
-    form = ArticleForm
-    search_fields = ["name", "title"]
-    list_filter = ['site__domain', 'category']
-
-
 class TagForm(forms.ModelForm):
     class Meta:
         model = Tag
@@ -38,18 +20,6 @@ class TagForm(forms.ModelForm):
 class TagAdmin(admin.ModelAdmin):
     form = TagForm
     list_filter = ['site__domain']
-
-
-@admin.register(Vote)
-class VoteAdmin(admin.ModelAdmin):
-    list_display = ['article', 'user', 'rate']
-    list_filter = ['site__domain', 'article', 'user']
-
-    exclude = ['article', 'user', 'rate']
-    readonly_fields = ['article', 'user', 'rate']
-
-    def has_add_permission(self, request):
-        return False
 
 
 class SettingsForm(forms.ModelForm):
@@ -106,10 +76,4 @@ class SiteForm(forms.ModelForm):
 class SiteAdmin(GuardedModelAdmin):
     form = SiteForm
     inlines = [SettingsAdmin]
-
-
-@admin.register(ArticleVersion, ArticleLogEntry, File)
-class BaseAdmin(admin.ModelAdmin):
-    list_filter = ['site__domain']
-
 
