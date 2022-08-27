@@ -33,7 +33,10 @@ def callbacks_with_context(context):
 
         def render_module(self, module_name: str, params: dict[str, str], body: str) -> str:
             params_for_module = {key.lower(): value for (key, value) in params.items()}
-            return modules.render_module(module_name, self.context, params_for_module, content=body)
+            try:
+                return modules.render_module(module_name, self.context, params_for_module, content=body)
+            except modules.ModuleError as e:
+                return self.render_template('<div class="error-block"><p>{{error}}</p></div>', error=e.message)
 
         def render_user(self, user: str, avatar: bool) -> str:
             try:
