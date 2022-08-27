@@ -332,7 +332,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
             q = q[f_offset:f_offset + f_limit]
         except:
             q = q[f_offset:]
-        total_pages = len(q)
+        total_pages = q.count()
         if allow_pagination:
             try:
                 f_per_page = int(params.get('perpage', '20'))
@@ -453,6 +453,8 @@ def render(context: RenderContext, params, content=None):
 
         output = SafeString()
         common_context = RenderContext(context.article, context.article, context.path_params, context.user)
+        common_context.title = context.title
+        common_context.status = context.status
 
         if separate:
             if prepend:
@@ -461,9 +463,13 @@ def render(context: RenderContext, params, content=None):
                 page_index += 1
                 page_content = page_to_listpages_vars(page, content, page_index, total_pages)
                 cc = RenderContext(page, page, context.path_params, context.user)
+                cc.title = context.title
+                cc.status = context.status
                 output += renderer.single_pass_render(page_content+'\n', cc)
                 if cc.redirect_to:
                     common_context.redirect_to = cc.redirect_to
+                context.title = cc.title
+                context.status = cc.status
             if append:
                 output += renderer.single_pass_render(append, common_context)
         else:
@@ -479,6 +485,8 @@ def render(context: RenderContext, params, content=None):
 
         if common_context.redirect_to:
             context.redirect_to = common_context.redirect_to
+        context.title = common_context.title
+        context.status = common_context.status
 
         if wrapper:
             if context.article:

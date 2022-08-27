@@ -11,4 +11,6 @@ class RenderContext(object):
         self.source_article = source_article
         self.path_params = path_params
         self.user = user or AnonymousUser()
+        self.title = article.title if article else ''
+        self.status = 200
         self.redirect_to = None

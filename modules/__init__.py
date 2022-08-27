@@ -82,6 +82,8 @@ def render_module(name, context, params, content=None):
             return render(context, params, content)
         else:
             return render(context, params)
+    except ModuleError as e:
+        raise
     except:
         logging.error('Module failed: %s, Params = %s, Path = %s, Error:', name, params, context.path_params if context else None, exc_info=True)
         raise ModuleError('Ошибка обработки модуля \'%s\'' % name)

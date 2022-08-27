@@ -13,12 +13,15 @@ class ForumSection(SiteLimitedModel):
         verbose_name_plural = "Категории форума"
 
     name = models.TextField(verbose_name="Название")
-    description = models.TextField(verbose_name="Описание")
-    order = models.IntegerField(verbose_name="Порядок сортировки", default=0)
+    description = models.TextField(verbose_name="Описание", blank=True)
+    order = models.IntegerField(verbose_name="Порядок сортировки", default=0, blank=True)
     # this is hidden for anyone unless they click "show hidden"
     is_hidden = models.BooleanField(verbose_name="Скрытая категория", default=False)
     # this is displayed for moderators and admins but completely hidden for users
     is_hidden_for_users = models.BooleanField(verbose_name="Видима только модераторам", default=False)
+
+    def __str__(self):
+        return self.name
 
 
 class ForumCategory(SiteLimitedModel):
@@ -27,10 +30,13 @@ class ForumCategory(SiteLimitedModel):
         verbose_name_plural = "Разделы форума"
 
     name = models.TextField(verbose_name="Название")
-    description = models.TextField(verbose_name="Описание")
-    order = models.IntegerField(verbose_name="Порядок сортировки", default=0)
+    description = models.TextField(verbose_name="Описание", blank=True)
+    order = models.IntegerField(verbose_name="Порядок сортировки", default=0, blank=True)
     section = models.ForeignKey(to=ForumSection, on_delete=models.DO_NOTHING, verbose_name="Категория")  # to-do: review later
     is_for_comments = models.BooleanField(verbose_name="Отображать комментарии к статьям в этом разделе", default=False)
+
+    def __str__(self):
+        return self.name
 
 
 class ForumThread(SiteLimitedModel):
@@ -51,7 +57,7 @@ class ForumThread(SiteLimitedModel):
         ]
 
     name = models.TextField(verbose_name="Название")
-    description = models.TextField(verbose_name="Описание")
+    description = models.TextField(verbose_name="Описание", blank=True)
     category = models.ForeignKey(to=ForumCategory, on_delete=models.DO_NOTHING, null=True, verbose_name="Раздел (если это тема)")  # to-do: review later
     article = models.ForeignKey(to=Article, on_delete=models.CASCADE, null=True, verbose_name="Статья (если это комментарии)")
     author = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, verbose_name="Автор")
@@ -62,12 +68,13 @@ class ForumPost(SiteLimitedModel):
         verbose_name = "Сообщение форума"
         verbose_name_plural = "Сообщения форума"
 
-    name = models.TextField(verbose_name="Название")
+    name = models.TextField(verbose_name="Название", blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
     deleted_at = models.DateTimeField(verbose_name="Время удаления")
     author = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, verbose_name="Автор")
     reply_to = models.ForeignKey(to='ForumPost', on_delete=models.SET_NULL, null=True, verbose_name="Ответ на комментарий")
+    thread = models.ForeignKey(to=ForumThread, on_delete=models.CASCADE, verbose_name="Тема")
 
 
 class ForumPostVersion(SiteLimitedModel):
