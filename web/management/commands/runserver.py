@@ -58,7 +58,8 @@ class Command(BaseRunserverCommand):
     # Runs this command but with --internal-run
     def run_child(self, second=False):
         add_args = ['--skip-checks']
-        c = subprocess.Popen([sys.executable] + sys.argv + ['--internal-run', '--noreload'] + add_args)
+        # with shell=False it does NOT interrupt as intended
+        c = subprocess.Popen([sys.executable] + sys.argv + ['--internal-run', '--noreload'] + add_args, shell=True)
         return c
 
     def watch_ftml(self, ftml_release=False):

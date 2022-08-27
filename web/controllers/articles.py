@@ -565,7 +565,7 @@ def rename_file_in_article(full_name_or_article: _FullNameOrArticle, file: File,
 # Check if name is allowed for creation
 # Pretty much this blocks six 100% special paths, everything else is OK
 def is_full_name_allowed(article_name: str) -> bool:
-    reserved = ['-', '_', 'api', 'forum', 'local--files', 'local--code']
+    reserved = ['-', '_', 'api', 'local--files', 'local--code']
     if article_name in reserved:
         return False
     if len(article_name) > 128:

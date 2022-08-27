@@ -25,8 +25,6 @@ def get_all_modules():
         return _all_modules
     package = sys.modules[__name__]
     for importer, modname, ispkg in pkgutil.iter_modules(package.__path__):
-        if ispkg:
-            continue
         try:
             fullname = 'modules.%s' % modname
             if fullname in sys.modules:
