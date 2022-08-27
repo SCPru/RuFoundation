@@ -24,6 +24,7 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
             {'model': system.models.User},
         )),
         ('Статьи', (
+            {'model': web.models.sites.Site},
             {'model': web.models.articles.Category},
         ))
     )

@@ -28,7 +28,7 @@ class Tag(SiteLimitedModel):
 class Category(SiteLimitedModel):
     class Meta:
         verbose_name = "Настройки категории"
-        verbose_name_plural = "Настройки категории"
+        verbose_name_plural = "Настройки категорий"
 
         constraints = [models.UniqueConstraint(fields=['name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['name'])]
