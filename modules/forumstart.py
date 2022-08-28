@@ -38,7 +38,7 @@ def render(context: RenderContext, params):
         """
         <div class="forum-start-box">
         {% for section in sections %}
-            <div class="forum-group">
+            <div class="forum-group" style="width: 98%">
                 <div class="head">
                     <div class="title">{{ section.name }}</div>
                     <div class="description">{{ section.description }}</div>
@@ -48,8 +48,8 @@ def render(context: RenderContext, params):
                     <tbody>
                     <tr class="head">
                         <td>Название категории</td>
-                        <td>Темы</td>
-                        <td>Сообщения</td>
+                        <td>Тем</td>
+                        <td>Сообщений</td>
                         <td>Последнее сообщение</td>
                     </tr>
                     {% for category in section.categories %}

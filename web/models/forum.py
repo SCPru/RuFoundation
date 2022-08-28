@@ -58,6 +58,9 @@ class ForumThread(SiteLimitedModel):
 
     name = models.TextField(verbose_name="Название")
     description = models.TextField(verbose_name="Описание", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
+    deleted_at = models.DateTimeField(verbose_name="Время удаления", null=True)
     category = models.ForeignKey(to=ForumCategory, on_delete=models.DO_NOTHING, null=True, verbose_name="Раздел (если это тема)")  # to-do: review later
     article = models.ForeignKey(to=Article, on_delete=models.CASCADE, null=True, verbose_name="Статья (если это комментарии)")
     author = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, verbose_name="Автор")
@@ -72,7 +75,7 @@ class ForumPost(SiteLimitedModel):
     name = models.TextField(verbose_name="Название", blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
-    deleted_at = models.DateTimeField(verbose_name="Время удаления")
+    deleted_at = models.DateTimeField(verbose_name="Время удаления", null=True)
     author = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, verbose_name="Автор")
     reply_to = models.ForeignKey(to='ForumPost', on_delete=models.SET_NULL, null=True, verbose_name="Ответ на комментарий")
     thread = models.ForeignKey(to=ForumThread, on_delete=models.CASCADE, verbose_name="Тема")

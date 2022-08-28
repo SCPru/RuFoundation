@@ -31,7 +31,8 @@ def render(context: RenderContext, params):
 
     canonical_url = '/forum/c-%d/%s' % (category.id, articles.normalize_article_name(category.name))
 
-    editor_options = {
+    editor_config = {
+        'type': 'new_thread',
         'categoryId': category.id,
         'user': render_user_to_json(context.user),
         'cancelUrl': canonical_url
@@ -57,12 +58,12 @@ def render(context: RenderContext, params):
             </div>
         </div>
         <!-- lets fucking hope no one attempted to style the forum page -->
-        <div class="w-forum-post-editor" data-options="{{ editor_options }}"></div>
+        <div id="w-forum-new-thread" data-config="{{ editor_config }}"></div>
         """,
         breadcrumb='%s / %s' % (category.section.name, category.name),
         description=category.description,
         num_threads=num_threads,
         num_posts=num_posts,
         canonical_url=canonical_url,
-        editor_options=json.dumps(editor_options)
+        editor_config=json.dumps(editor_config)
     )
