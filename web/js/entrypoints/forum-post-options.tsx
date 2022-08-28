@@ -1,9 +1,17 @@
 import * as React from 'react';
 import { Component } from 'react';
+import * as ReactDOM from 'react-dom';
 import {UserData} from '../api/user';
 import ForumPostEditor, {ForumPostPreviewData, ForumPostSubmissionData} from '../forum/forum-post-editor';
-import {createForumPost, ForumNewPostRequest, ForumUpdatePostRequest, updateForumPost} from '../api/forum'
+import {
+    createForumPost,
+    deleteForumPost,
+    ForumNewPostRequest,
+    ForumUpdatePostRequest,
+    updateForumPost
+} from '../api/forum'
 import ForumPostPreview from '../forum/forum-post-preview';
+import WikidotModal from '../util/wikidot-modal'
 
 
 interface Props {
@@ -24,7 +32,8 @@ interface State {
     replyPreview?: ForumPostPreviewData
     open: boolean
     originalPreviewTitle?: string
-    originalPreviewContent?: string
+    originalPreviewContent?: string,
+    deleteError?: string
 }
 
 
@@ -47,7 +56,7 @@ class ForumPostOptions extends Component<Props, State> {
             // something bad happened
             return
         }
-        const longPost = this.refSelf.parentNode.parentNode;
+        const longPost = this.refSelf.parentNode;
         this.refPreviewTitle = longPost.querySelector('.head .title');
         this.refPreviewContent = longPost.querySelector('.content');
         this.setState({ originalPreviewTitle: this.refPreviewTitle.textContent, originalPreviewContent: this.refPreviewContent.innerHTML });
@@ -123,29 +132,60 @@ class ForumPostOptions extends Component<Props, State> {
         this.setState({ isEditing: true });
     };
 
-    onDelete = (e) => {
-
+    onDelete = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const { postId } = this.props;
+        try {
+            await deleteForumPost(postId);
+        } catch (e) {
+            this.setState({ deleteError: e.error || 'Ошибка связи с сервером' })
+            return
+        }
+        // successful deletion. reflect the changes (drop the current post / tree)
+        // first, unmount self. this makes sure any editors are taken care of
+        const post = this.refSelf.parentElement.parentElement; // should point to class .post
+        ReactDOM.unmountComponentAtNode(this.refSelf);
+        const parent = post.parentElement;
+        parent.removeChild(post);
+        if (parent.classList.contains('post-container') && parent.parentElement.classList.contains('post-container')) {
+            // check if parent element has no children anymore
+            if (!parent.firstElementChild) {
+                parent.parentNode.removeChild(parent);
+            }
+        }
     };
 
-    onToggle = () => {
+    onToggle = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         const { open } = this.state;
         this.setState({ open: !open });
     };
 
+    onCloseError = () => {
+        this.setState({deleteError: undefined});
+    };
+
     render() {
         const { canReply, canEdit, canDelete, user, threadName, postName, postId } = this.props;
-        const { open, isReplying, isEditing, replyPreview } = this.state;
+        const { open, isReplying, isEditing, replyPreview, deleteError } = this.state;
         return (
             <>
-                <div style={{ display: 'none' }} ref={r=>this.refSelf=r} />
-                {canReply && <strong><a href="javascript:;" onClick={this.onReply}>Ответить</a></strong>}
+                <div style={{ display: 'none' }} ref={r=>this.refSelf=r?.parentElement} />
+                { deleteError && (
+                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]}>
+                        <strong>Ошибка:</strong> {deleteError}
+                    </WikidotModal>
+                ) }
+                {canReply && <strong><a href="#" onClick={this.onReply}>Ответить</a></strong>}
                 {' '}
-                {canEdit && canDelete && <a href="javascript:;" onClick={this.onToggle}>Опции</a>}
+                {canEdit && canDelete && <a href="#" onClick={this.onToggle}>Опции</a>}
                 {open && (
                     <div className="options">
-                        {canEdit && <a href="javascript:;" onClick={this.onEdit}>Редактировать</a>}
+                        {canEdit && <a href="#" onClick={this.onEdit}>Редактировать</a>}
                         {' '}
-                        {canDelete && <a href="javascript:;" onClick={this.onDelete}>Удалить</a>}
+                        {canDelete && <a href="#" onClick={this.onDelete}>Удалить</a>}
                     </div>
                 )}
                 {isReplying && (

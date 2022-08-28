@@ -82,3 +82,21 @@ def api_update(context, params):
         'source': source,
         'content': content
     }
+
+
+def api_delete(context, params):
+    post_id = params.get('postId', -1)
+
+    post = ForumPost.objects.filter(id=post_id)
+    if not post:
+        raise ModuleError('Сообщение "%d" не существует', post_id)
+    post = post[0]
+
+    if not permissions.check(context.user, 'delete', post):
+        raise ModuleError('Недостаточно прав для удаления сообщения')
+
+    post.delete()
+
+    return {
+        'status': 'ok'
+    }

@@ -41,6 +41,10 @@ export interface ForumUpdatePostRequest {
     source: string
 }
 
+export interface ForumDeletePostRequest {
+    postId: number
+}
+
 export async function createForumThread(request: ForumNewThreadRequest) {
     return await callModule<ForumNewThreadResponse>({module: 'forumnewthread', method: 'submit', params: request});
 }
@@ -62,4 +66,11 @@ export async function fetchForumPost(postId: number) {
 
 export async function updateForumPost(request: ForumUpdatePostRequest) {
     return await callModule<ForumFetchPostResponse>({module: 'forumpost', method: 'update', params: request})
+}
+
+export async function deleteForumPost(postId: number) {
+    const request: ForumDeletePostRequest = {
+        postId
+    }
+    await callModule({module: 'forumpost', method: 'delete', params: request});
 }
