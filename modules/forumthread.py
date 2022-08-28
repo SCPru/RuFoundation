@@ -109,6 +109,9 @@ def render(context: RenderContext, params):
         context.status = 404
         raise ModuleError('Тема "%s" не найдена' % t)
 
+    if not permissions.check(context.user, 'view', thread):
+        raise ModuleError('Недостаточно прав для просмотра темы')
+
     category = thread.category
     if not category:
         # find first category that matches

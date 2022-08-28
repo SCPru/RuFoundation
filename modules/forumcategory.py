@@ -7,7 +7,7 @@ from renderer.templates import apply_template
 import renderer
 import re
 
-from web.controllers import articles
+from web.controllers import articles, permissions
 from web.models.forum import ForumCategory, ForumThread, ForumSection, ForumPost
 
 
@@ -29,6 +29,9 @@ def render(context: RenderContext, params):
     if category is None:
         context.status = 404
         raise ModuleError('Категория "%s" не найдена' % c)
+
+    if not permissions.check(context.user, 'view', category):
+        raise ModuleError('Недостаточно прав для просмотра раздела')
 
     sort_by = context.path_params.get('sort')
 

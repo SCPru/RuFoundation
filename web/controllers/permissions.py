@@ -10,7 +10,7 @@ def check(user, action, obj):
         case (User(is_superuser=True) | User(is_staff=True), _, _):
             return True
 
-        case (AnonymousUser(), perm, _) if perm != 'view':
+        case (AnonymousUser(), perm, _) if perm != 'view' and perm != 'view-comments':
             return False
 
         case (_, perm, Article(locked=True)) if perm != 'view':
@@ -31,11 +31,17 @@ def check(user, action, obj):
         case (_, 'comment', Article(category=category)):
             return _get_or_default_category(category).users_can_comment
 
+        case (_, 'view-comments', Article(category=category)):
+            return _get_or_default_category(category).users_can_comment
+
         case (_, 'delete', Article(category=category)):
             return _get_or_default_category(category).users_can_delete
 
         case (_, 'view', ForumSection(is_hidden_for_users=True)):
             return False
+
+        case (_, 'view', ForumSection()):
+            return True
 
         case (_, 'view', ForumCategory(section=section)):
             return check(user, 'view', section)

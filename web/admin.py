@@ -78,7 +78,12 @@ class SiteAdmin(GuardedModelAdmin):
     inlines = [SettingsAdmin]
 
 
-@admin.register(ForumSection, ForumCategory)
-class BaseAdmin(admin.ModelAdmin):
+@admin.register(ForumSection)
+class ForumSectionAdmin(admin.ModelAdmin):
     list_filter = ['site__domain']
 
+
+@admin.register(ForumCategory)
+class ForumCategoryAdmin(admin.ModelAdmin):
+    list_filter = ['site__domain', 'section']
+    list_display = ['name', 'section']

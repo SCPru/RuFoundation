@@ -1,6 +1,6 @@
 from modules import ModuleError
 from renderer import RenderContext, render_template_from_string
-from web.controllers import articles
+from web.controllers import articles, permissions
 from web.models.forum import ForumCategory, ForumThread, ForumSection, ForumPost
 
 
@@ -11,14 +11,23 @@ def has_content():
 def render(context: RenderContext, params):
     context.title = 'Разделы форума'
 
+    hidden = context.path_params.get('hidden', 'hide')
+
     categories = ForumCategory.objects.all().order_by('order')
     sections = ForumSection.objects.all().order_by('order')
 
+    if hidden != 'show':
+        sections = sections.filter(is_hidden=False)
+
     items = []
     for section in sections:
+        if not permissions.check(context.user, 'view', section):
+            continue
         item = {'name': section.name, 'description': section.description, 'categories': []}
         for category in categories:
             if category.section_id != section.id:
+                continue
+            if not permissions.check(context.user, 'view', category):
                 continue
             citem = {
                 'name': category.name,
@@ -32,7 +41,8 @@ def render(context: RenderContext, params):
                 citem['threads'] = ForumThread.objects.filter(category=category).count()
                 citem['posts'] = ForumPost.objects.filter(thread__category=category).count()
             item['categories'].append(citem)
-        items.append(item)
+        if item['categories']:
+            items.append(item)
 
     return render_template_from_string(
         """
@@ -69,6 +79,14 @@ def render(context: RenderContext, params):
             </div>
         {% endfor %}
         </div>
+        <p style="text-align: right">
+            {% if hidden == 'show' %}
+                <a href="/forum/start">Скрыть скрытые</a>
+            {% else %}
+                <a href="/forum/start/hidden/show">Показать скрытые</a>
+            {% endif %}
+        </p>
         """,
-        sections=items
+        sections=items,
+        hidden=hidden
     )
