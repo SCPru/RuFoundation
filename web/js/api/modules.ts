@@ -3,7 +3,7 @@ import {wFetch} from "../util/fetch-util";
 
 export interface ModuleRequest {
     module: string
-    pageId: string
+    pageId?: string
     method: string
     pathParams?: Record<string, any>
     params?: Record<string, any>

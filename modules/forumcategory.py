@@ -131,7 +131,7 @@ def render(context: RenderContext, params):
             <tbody>
             <tr class="head">
                 <td>Название темы</td>
-                <td>Дата создания</td>
+                <td>Создано</td>
                 <td>Сообщений</td>
                 <td>Последнее сообщение</td>
             </tr>
@@ -144,7 +144,7 @@ def render(context: RenderContext, params):
                         <div class="description">{{ thread.description }}</div>
                     </td>
                     <td class="started">
-                        от: {{ thread.created_by }}
+                        Автор: {{ thread.created_by }}
                         <br>
                         {{ thread.created_at }}
                     </td>
@@ -153,7 +153,7 @@ def render(context: RenderContext, params):
                     </td>
                     <td class="last">
                         {% if thread.last_post_url %}
-                        от: {{ thread.last_post_user }}
+                        Автор: {{ thread.last_post_user }}
                         <br>
                         <a href="{{ thread.last_post_url }}">Перейти</a>
                         {% endif %}

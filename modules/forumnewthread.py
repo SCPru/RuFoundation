@@ -84,7 +84,7 @@ def api_preview(context, params):
 
 
 def api_submit(context, params):
-    title = (params.get('title') or '').strip()
+    title = (params.get('name') or '').strip()
     description = (params.get('description') or '').strip()[:1000]
     source = (params.get('source') or '').strip()
 
