@@ -3,20 +3,16 @@ import { Component } from 'react';
 import Loader from "../util/loader";
 import styled from "styled-components";
 import WikidotModal from "../util/wikidot-modal";
-import sleep from "../util/async-sleep";
-import {makePreview} from "../api/preview";
-import {removeMessage, showPreviewMessage} from "../util/wikidot-message"
-import {createArticle, fetchArticle, updateArticle} from "../api/articles";
-import {previewForumPost} from '../api/forum'
+import {fetchForumPost, previewForumPost} from '../api/forum'
 
 
-export interface ForumPostPreview {
+export interface ForumPostPreviewData {
     name: string
     description: string
     content: string
 }
 
-export interface ForumPostSubmission {
+export interface ForumPostSubmissionData {
     name: string
     description: string
     source: string
@@ -25,8 +21,8 @@ export interface ForumPostSubmission {
 interface Props {
     initialTitle?: string
     isThread?: boolean
-    onSubmit?: (input: ForumPostSubmission) => Promise<void>
-    onPreview?: (result: ForumPostPreview) => void
+    onSubmit?: (input: ForumPostSubmissionData) => Promise<void>
+    onPreview?: (result: ForumPostPreviewData) => void
     onClose?: () => void
     isNew?: boolean
     postId?: number
@@ -84,11 +80,14 @@ class ForumPostEditor extends Component<Props, State> {
 
     async componentDidMount() {
         const { isNew, postId } = this.props;
+        (window as any)._closePostEditor = () => {
+            this.onCancel(undefined);
+        };
         if (!isNew) {
             this.setState({ loading: true });
             try {
-                //const data = await fetchArticle(pageId);
-                //this.setState({ loading: false, source: data.source, title: data.title });
+                const data = await fetchForumPost(postId);
+                this.setState({ loading: false, source: data.source, name: data.name });
             } catch (e) {
                 this.setState({ loading: false, fatalError: true, error: e.error || 'Ошибка связи с сервером' });
             }
@@ -97,11 +96,15 @@ class ForumPostEditor extends Component<Props, State> {
         }
     }
 
+    componentWillUnmount() {
+        (window as any)._closePostEditor = undefined;
+    }
+
     onSubmit = async () => {
         const { onSubmit } = this.props;
         if (onSubmit) {
             const { name, description, source } = this.state;
-            const input: ForumPostSubmission = {
+            const input: ForumPostSubmissionData = {
                 name: name, description, source
             };
             this.setState({ saving: true, error: null, savingSuccess: false });
@@ -119,7 +122,7 @@ class ForumPostEditor extends Component<Props, State> {
         if (onPreview) {
             const {name, description, source} = this.state;
             const {result: rendered} = await previewForumPost(source);
-            const input: ForumPostPreview = {
+            const input: ForumPostPreviewData = {
                 name: name, description,
                 content: rendered
             }

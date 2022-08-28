@@ -35,7 +35,6 @@ def render(context: RenderContext, params):
     canonical_url = '/forum/c-%d/%s' % (category.id, articles.normalize_article_name(category.name))
 
     editor_config = {
-        'type': 'new_thread',
         'categoryId': category.id,
         'user': render_user_to_json(context.user),
         'cancelUrl': canonical_url
@@ -61,7 +60,7 @@ def render(context: RenderContext, params):
             </div>
         </div>
         <!-- lets fucking hope no one attempted to style the forum page -->
-        <div id="w-forum-new-thread" data-config="{{ editor_config }}"></div>
+        <div class="w-forum-new-thread" data-config="{{ editor_config }}"></div>
         """,
         breadcrumb='%s / %s' % (category.section.name, category.name),
         description=category.description,
@@ -74,13 +73,6 @@ def render(context: RenderContext, params):
 
 def allow_api():
     return True
-
-
-def api_preview(context, params):
-    if 'source' not in params:
-        raise ModuleError('Исходный код не указан')
-
-    return {'result': single_pass_render(params['source'], RenderContext(None, None, {}, context.user))}
 
 
 def api_submit(context, params):

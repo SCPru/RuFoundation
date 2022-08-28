@@ -362,10 +362,10 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
         around_pages = 2
         left_from = 1
         left_to = left_from + 1
-        if left_to > pagination_total_pages:
-            left_to = pagination_total_pages
         if pagination_page < (around_pages * 2 + 1):
             left_to = around_pages + 1
+        if left_to > pagination_total_pages - 1:
+            left_to = pagination_total_pages - 1
         right_to = pagination_total_pages
         right_from = max(left_to + 1, right_to - 1)
         if pagination_page > (right_to - (around_pages * 2 + 1)):
@@ -381,9 +381,9 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
                 {% endif %}
                 {% for p in left_pages %}
                     {% if page == p %}
-                        <span class="target current">{{p}}</span>
+                        <span class="1 target current">{{p}}</span>
                     {% else %}
-                        <span class="target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
+                        <span class="1 target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
                     {% endif %}
                 {% endfor %}
                 {% if show_left_dots %}
@@ -391,9 +391,9 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
                 {% endif %}
                 {% for p in center_pages %}
                     {% if page == p %}
-                        <span class="target current">{{p}}</span>
+                        <span class="2 target current">{{p}}</span>
                     {% else %}
-                        <span class="target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
+                        <span class="2 target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
                     {% endif %}
                 {% endfor %}
                 {% if show_right_dots %}
@@ -401,9 +401,9 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
                 {% endif %}
                 {% for p in right_pages %}
                     {% if page == p %}
-                        <span class="target current">{{p}}</span>
+                        <span class="3 target current">{{p}}</span>
                     {% else %}
-                        <span class="target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
+                        <span class="3 target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
                     {% endif %}
                 {% endfor %}
                 {% if show_next_page %}

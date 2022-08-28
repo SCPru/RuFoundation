@@ -1,5 +1,5 @@
 from modules import ModuleError
-from modules.listpages import render_pagination
+from modules.listpages import render_pagination, render_date
 from renderer import RenderContext, render_template_from_string, render_user_to_html
 import math
 from renderer.templates import apply_template
@@ -84,7 +84,7 @@ def render(context: RenderContext, params):
             'name': thread.name,
             'description': thread.description,
             'created_by': render_user_to_html(thread.author),
-            'created_at': thread.created_at.strftime('%H:%M %d.%m.%Y'),
+            'created_at': render_date(thread.created_at),
             'post_count': post_count,
             'url': url,
             'last_post_url': last_post_url,
@@ -172,5 +172,5 @@ def render(context: RenderContext, params):
         canonical_url=canonical_url,
         short_url=short_url,
         threads=render_threads,
-        pagination=render_pagination(short_url, page, max_page) if page != max_page else ''
+        pagination=render_pagination(short_url, page, max_page) if max_page != 1 else ''
     )
