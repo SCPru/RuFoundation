@@ -75,13 +75,13 @@ def render(context: RenderContext, params):
         post_count = posts.count()
         last_post_url = ''
         last_post_user = None
-        url = '/forum/t-%d/%s' % (thread.id, articles.normalize_article_name(thread.name))
+        url = '/forum/t-%d/%s' % (thread.id, articles.normalize_article_name(thread.name if thread.category_id else thread.article.display_name))
         if post_count:
             last_post = posts[post_count-1]  # do not use -1 to avoid checking count twice
             last_post_url = '%s#post-%d' % (url, last_post.id)
             last_post_user = render_user_to_html(last_post.author)
         render_threads.append({
-            'name': thread.name,
+            'name': thread.name if thread.category_id else thread.article.display_name,
             'description': thread.description,
             'created_by': render_user_to_html(thread.author),
             'created_at': render_date(thread.created_at),

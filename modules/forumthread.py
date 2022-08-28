@@ -44,7 +44,7 @@ def get_post_info(context, thread, posts):
             'rendered_replies': None,
             'options_config': json.dumps({
                 'threadId': thread.id,
-                'threadName': thread.name,
+                'threadName': thread.name if thread.category_id else thread.article.display_name,
                 'postId': post.id,
                 'postName': post.name,
                 'hasRevisions': post.created_at != post.updated_at,
@@ -109,7 +109,17 @@ def render(context: RenderContext, params):
         context.status = 404
         raise ModuleError('Тема "%s" не найдена' % t)
 
-    category_url = '/forum/c-%d/%s' % (thread.category.id, articles.normalize_article_name(thread.category.name))
+    category = thread.category
+    if not category:
+        # find first category that matches
+        for c in ForumCategory.objects.filter(is_for_comments=True):
+            if permissions.check(context.user, 'view', c):
+                category = c
+                break
+
+    name = thread.name if thread.category_id else thread.article.display_name
+
+    category_url = '/forum/c-%d/%s' % (category.id, articles.normalize_article_name(category.name))
     short_url = '/forum/t-%d' % thread.id
 
     # get threads
@@ -136,7 +146,7 @@ def render(context: RenderContext, params):
 
     new_post_config = {
         'threadId': thread.id,
-        'threadName': thread.name,
+        'threadName': name,
         'user': render_user_to_json(context.user),
     }
 
@@ -145,10 +155,12 @@ def render(context: RenderContext, params):
         <div class="forum-thread-box">
             <div class="forum-breadcrumbs">
                 <a href="/forum/start">Форум</a>
+                {% if category %}
                 &raquo;
-                <a href="{{ category_url }}">{{ thread.category.section.name }} / {{ thread.category.name }}</a>
+                <a href="{{ category_url }}">{{ category.section.name }} / {{ category.name }}</a>
+                {% endif %}
                 &raquo;
-                {{ thread.name }}
+                {{ name }}
             </div>
             <div class="description-block well">
                 <div class="statistics">
@@ -158,7 +170,9 @@ def render(context: RenderContext, params):
                     <br>
                     Сообщений: {{ total_posts }}
                 </div>
-                {% if thread.description %}
+                {% if thread.article %}
+                    Это обсуждение страницы <a href="/{{ thread.article.full_name }}">{{ thread.article.display_name }}</a> 
+                {% elif thread.description %}
                     <div class="head">
                         Краткое описание:
                     </div>
@@ -178,6 +192,8 @@ def render(context: RenderContext, params):
         </div>
         """,
         category_url=category_url,
+        category=category,
+        name=name,
         thread=thread,
         created_by=render_user_to_html(thread.author),
         created_at=render_date(thread.created_at),

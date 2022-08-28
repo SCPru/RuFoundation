@@ -17,6 +17,7 @@ import os.path
 
 import unicodedata
 
+from web.models.forum import ForumThread, ForumPost
 
 _FullNameOrArticle = Optional[Union[str, Article]]
 _FullNameOrCategory = Optional[Union[str, Category]]
@@ -408,6 +409,17 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user
             meta={'added_tags': added_tags, 'removed_tags': removed_tags}
         )
         add_log_entry(article, log)
+
+
+# Get article comment info
+# This may actually create a thread if it does not exist yet
+def get_comment_info(full_name_or_article: _FullNameOrArticle) -> (int, int):
+    article = get_article(full_name_or_article)
+    if not article:
+        return 0, 0
+    thread, _ = ForumThread.objects.get_or_create(article=article)
+    post_count = ForumPost.objects.filter(thread=thread).count()
+    return thread.id, post_count
 
 
 # Get article rating

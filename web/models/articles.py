@@ -89,6 +89,10 @@ class Article(SiteLimitedModel):
             return f"{self.category}:{self.name}"
         return self.name
 
+    @property
+    def display_name(self) -> str:
+        return self.title.strip() or self.full_name
+
     def __str__(self) -> str:
         return f"{self.title} ({self.full_name})"
 

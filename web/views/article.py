@@ -131,6 +131,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         site = get_current_site()
         article_rating, article_votes, article_rating_mode = articles.get_rating(article)
 
+        comment_thread_id, comment_count = articles.get_comment_info(article)
+
         canonical_url = '//%s/%s%s' % (site.domain, article.full_name if article else article_name, encoded_params)
 
         options_config = {
@@ -143,6 +145,9 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'ratingVotes': article_votes,
             'pathParams': path_params,
             'canRate': permissions.check(self.request.user, "rate", article),
+            'canComment': permissions.check(self.request.user, "comment", article),
+            'commentThread': '/forum/t-%d/%s' % (comment_thread_id, articles.normalize_article_name(article.display_name)),
+            'commentCount': comment_count,
             'canDelete': permissions.check(self.request.user, "delete", article),
         }
 
