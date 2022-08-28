@@ -76,12 +76,14 @@ def render(context: RenderContext, params):
     for thread in threads:
         posts = ForumPost.objects.filter(thread=thread).order_by('created_at')
         post_count = posts.count()
-        last_post_url = ''
+        last_post_url = None
         last_post_user = None
+        last_post_date = None
         url = '/forum/t-%d/%s' % (thread.id, articles.normalize_article_name(thread.name if thread.category_id else thread.article.display_name))
         if post_count:
             last_post = posts[post_count-1]  # do not use -1 to avoid checking count twice
             last_post_url = '%s#post-%d' % (url, last_post.id)
+            last_post_date = render_date(last_post.created_at)
             last_post_user = render_user_to_html(last_post.author)
         render_threads.append({
             'name': thread.name if thread.category_id else thread.article.display_name,
@@ -91,6 +93,7 @@ def render(context: RenderContext, params):
             'post_count': post_count,
             'url': url,
             'last_post_url': last_post_url,
+            'last_post_date': last_post_date,
             'last_post_user': last_post_user,
         })
 
@@ -157,6 +160,8 @@ def render(context: RenderContext, params):
                     <td class="last">
                         {% if thread.last_post_url %}
                         Автор: {{ thread.last_post_user }}
+                        <br>
+                        {{ thread.last_post_date }}
                         <br>
                         <a href="{{ thread.last_post_url }}">Перейти</a>
                         {% endif %}
