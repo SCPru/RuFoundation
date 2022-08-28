@@ -801,7 +801,7 @@ sup {
 }
  
 #side-bar .collapsible-block-folded {
-    background: url('https://scp-wiki.wdfiles.com/local--files/nav:side/expand.png') 0 2px no-repeat;
+    background: url('/local--files/nav:side/expand.png') 0 2px no-repeat;
 }
  
 #side-bar .collapsible-block-link {
@@ -984,7 +984,7 @@ div.sexy-box div.image-container img {
  
 .content-panel .panel-body {
     padding: 5px 10px;
-    background: #fff9f0 url('https://scp-wiki.wdfiles.com/local--files/component:theme/panel-bg-gradient-reverse.png') bottom repeat-x;
+    background: #fff9f0 url('/local--files/component:theme/panel-bg-gradient-reverse.png') bottom repeat-x;
 }
  
 .content-panel .panel-footer {
