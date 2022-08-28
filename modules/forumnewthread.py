@@ -1,10 +1,10 @@
 from modules import ModuleError
-from renderer import RenderContext, render_template_from_string
+from renderer import RenderContext, render_template_from_string, single_pass_render
 import json
 
 from renderer.utils import render_user_to_json
-from web.controllers import articles
-from web.models.forum import ForumCategory, ForumThread, ForumPost
+from web.controllers import articles, permissions
+from web.models.forum import ForumCategory, ForumThread, ForumPost, ForumPostVersion
 
 
 def has_content():
@@ -25,6 +25,9 @@ def render(context: RenderContext, params):
     if category is None:
         context.status = 404
         raise ModuleError('Категория "%s" не найдена' % c)
+
+    if not permissions.check(context.user, 'create', ForumThread(category=category)):
+        raise ModuleError('Недостаточно прав для создания темы')
 
     num_threads = ForumThread.objects.filter(category=category).count()
     num_posts = ForumPost.objects.filter(thread__category=category).count()
@@ -67,3 +70,52 @@ def render(context: RenderContext, params):
         canonical_url=canonical_url,
         editor_config=json.dumps(editor_config)
     )
+
+
+def allow_api():
+    return True
+
+
+def api_preview(context, params):
+    if 'source' not in params:
+        raise ModuleError('Исходный код не указан')
+
+    return {'result': single_pass_render(params['source'], RenderContext(None, None, {}, context.user))}
+
+
+def api_submit(context, params):
+    title = (params.get('title') or '').strip()
+    description = (params.get('description') or '').strip()[:1000]
+    source = (params.get('source') or '').strip()
+
+    if not title:
+        raise ModuleError('Не указано название темы')
+
+    if not source:
+        raise ModuleError('Не указан текст первого сообщения')
+
+    c = params.get('categoryId')
+    try:
+        c = int(c)
+        category = ForumCategory.objects.filter(id=c)
+        category = category[0] if category else None
+    except:
+        category = None
+
+    if category is None:
+        context.status = 404
+        raise ModuleError('Категория не найдена или не указана')
+
+    if not permissions.check(context.user, 'create', ForumThread(category=category)):
+        raise ModuleError('Недостаточно прав для создания темы')
+
+    thread = ForumThread(category=category, name=title, description=description, author=context.user)
+    thread.save()
+
+    first_post = ForumPost(thread=thread, author=context.user, name=title)
+    first_post.save()
+
+    first_post_content = ForumPostVersion(post=first_post, source=source)
+    first_post_content.save()
+
+    return {'url': '/forum/t-%d/%s' % (thread.id, articles.normalize_article_name(title))}

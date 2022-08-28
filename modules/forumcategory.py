@@ -75,7 +75,7 @@ def render(context: RenderContext, params):
         post_count = posts.count()
         last_post_url = ''
         last_post_user = None
-        url = '/forum/t-%d/%s' % (thread.id, articles.normalize_full_name(thread.name))
+        url = '/forum/t-%d/%s' % (thread.id, articles.normalize_article_name(thread.name))
         if post_count:
             last_post = posts[post_count-1]  # do not use -1 to avoid checking count twice
             last_post_url = '%s#post-%d' % (url, last_post.id)

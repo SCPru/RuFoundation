@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import Loader from "../util/loader";
-import {callModule} from "../api/modules";
+import {callModule, ModuleRenderResponse} from "../api/modules"
 import {showErrorModal} from "../util/wikidot-modal";
 
 
@@ -44,7 +44,7 @@ export function makeListPages(node: HTMLElement) {
         ReactDOM.render(<Loader size={80} borderSize={8} />, loaderInto);
         //
         try {
-            const { result: rendered } = await callModule({
+            const { result: rendered } = await callModule<ModuleRenderResponse>({
                 module: 'listpages',
                 pageId: lpPageId,
                 method: 'render',
