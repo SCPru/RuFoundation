@@ -119,7 +119,7 @@ def render(context: RenderContext, params):
 
     name = thread.name if thread.category_id else thread.article.display_name
 
-    category_url = '/forum/c-%d/%s' % (category.id, articles.normalize_article_name(category.name))
+    category_url = '/forum/c-%d/%s' % (category.id, articles.normalize_article_name(category.name)) if category else ''
     short_url = '/forum/t-%d' % thread.id
 
     # get threads
