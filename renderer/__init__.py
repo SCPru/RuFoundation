@@ -170,6 +170,8 @@ def single_pass_render_with_excerpt(source, context=None) -> [str, str, Optional
         threadvars.put('include_tree', [])
         threadvars.put('include_err', [])
         html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context))
+        threadvars.put('include_tree', [])
+        threadvars.put('include_err', [])
         text = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context)).body
         text = '\n'.join([x.strip() for x in text.split('\n')])
         text = re.sub(r'\n+', '\n', text)

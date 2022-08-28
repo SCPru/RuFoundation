@@ -800,31 +800,6 @@ sup {
     color: #666;
 }
  
-#side-bar .collapsible-block-folded {
-    background: url('https://scp-wiki.wdfiles.com/local--files/nav:side/expand.png') 0 2px no-repeat;
-}
- 
-#side-bar .collapsible-block-link {
-    margin-left: 15px;
-    font-weight: bold;
-}
- 
-#side-bar .collapsible-block-unfolded-link {
-    border-bottom: solid 1px #600;
-}
- 
-#side-bar .collapsible-block-unfolded-link .collapsible-block-link {
-    margin-top: 10px;
-    margin-bottom: 5px;
-    font-size: 8pt;
-    color: #600;
-}
- 
-#side-bar .collapsible-block-unfolded-link .collapsible-block-link:hover {
-    color: #b01;
-    text-decoration: none;
-}
- 
 #side-bar ul {
     list-style-type: none;
     padding: 0 5px 0;
@@ -984,7 +959,7 @@ div.sexy-box div.image-container img {
  
 .content-panel .panel-body {
     padding: 5px 10px;
-    background: #fff9f0 url('https://scp-wiki.wdfiles.com/local--files/component:theme/panel-bg-gradient-reverse.png') bottom repeat-x;
+    background: #fff9f0 url('/-/static/images/scp-bg-reverse.png') bottom repeat-x;
 }
  
 .content-panel .panel-footer {
