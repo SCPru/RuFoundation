@@ -5,13 +5,15 @@ import {UserData} from '../api/user';
 import ForumPostEditor, {ForumPostPreviewData, ForumPostSubmissionData} from '../forum/forum-post-editor';
 import {
     createForumPost,
-    deleteForumPost,
-    ForumNewPostRequest,
+    deleteForumPost, fetchForumPost, fetchForumPostVersions,
+    ForumNewPostRequest, ForumPostVersion,
     ForumUpdatePostRequest,
     updateForumPost
 } from '../api/forum'
 import ForumPostPreview from '../forum/forum-post-preview';
 import WikidotModal from '../util/wikidot-modal'
+import formatDate from '../util/date-format'
+import UserView from '../util/user-view'
 
 
 interface Props {
@@ -23,6 +25,9 @@ interface Props {
     canReply?: boolean
     canEdit?: boolean
     canDelete?: boolean
+    hasRevisions?: boolean
+    lastRevisionDate?: string
+    lastRevisionAuthor?: UserData
 }
 
 
@@ -32,8 +37,14 @@ interface State {
     replyPreview?: ForumPostPreviewData
     open: boolean
     originalPreviewTitle?: string
-    originalPreviewContent?: string,
+    originalPreviewContent?: string
     deleteError?: string
+    revisionsOpen: boolean
+    hasRevisions?: boolean
+    lastRevisionDate?: string
+    lastRevisionAuthor?: UserData
+    currentRevision?: string
+    revisions?: Array<ForumPostVersion>
 }
 
 
@@ -42,12 +53,17 @@ class ForumPostOptions extends Component<Props, State> {
     refPreviewTitle: HTMLElement = null;
     refPreviewContent: HTMLElement = null;
 
-    constructor(props) {
+    constructor(props: Props) {
         super(props);
         this.state = {
             isEditing: false,
             isReplying: false,
-            open: false
+            open: false,
+            revisionsOpen: false,
+            currentRevision: undefined,
+            hasRevisions: props.hasRevisions,
+            lastRevisionDate: props.lastRevisionDate,
+            lastRevisionAuthor: props.lastRevisionAuthor
         };
     }
 
@@ -120,6 +136,7 @@ class ForumPostOptions extends Component<Props, State> {
     onEditPreview = (input: ForumPostPreviewData) => {
         this.refPreviewTitle.textContent = input.name;
         this.refPreviewContent.innerHTML = input.content;
+        this.setState({ revisionsOpen: false, currentRevision: undefined });
     };
 
     onEdit = (e) => {
@@ -167,11 +184,72 @@ class ForumPostOptions extends Component<Props, State> {
         this.setState({deleteError: undefined});
     };
 
+    onOpenRevisions = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            const {postId} = this.props;
+            const revisions = await fetchForumPostVersions(postId);
+            this.setState({ revisionsOpen: true, revisions: revisions.versions });
+        } catch (e) {
+            this.setState({ revisionsOpen: false, deleteError: e.error || 'Ошибка связи с сервером' });
+        }
+
+    }
+
+    onCloseRevisions = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const { originalPreviewTitle, originalPreviewContent, currentRevision } = this.state;
+        if (currentRevision) {
+            this.refPreviewTitle.textContent = originalPreviewTitle;
+            this.refPreviewContent.innerHTML = originalPreviewContent;
+        }
+        this.setState({ revisionsOpen: false, currentRevision: undefined });
+    }
+
+    onShowRevision = async (e, date) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const { postId } = this.props;
+        const data = await fetchForumPost(postId, date);
+        this.setState({ currentRevision: date });
+        this.refPreviewTitle.textContent = data.name;
+        this.refPreviewContent.innerHTML = data.content;
+    }
+
     render() {
         const { canReply, canEdit, canDelete, user, threadName, postName, postId } = this.props;
-        const { open, isReplying, isEditing, replyPreview, deleteError } = this.state;
+        const {
+            open, isReplying, isEditing, replyPreview, deleteError,
+            lastRevisionAuthor, lastRevisionDate, hasRevisions, revisionsOpen, revisions, currentRevision
+        } = this.state;
         return (
             <>
+                {(hasRevisions && lastRevisionDate && lastRevisionAuthor && !revisionsOpen) && (
+                    <div className="changes" style={{ display: 'block' }}>
+                        Последнее редактирование <span className="odate" style={{ display: 'inline' }}>{formatDate(new Date(lastRevisionDate))}</span>
+                        {' '}от <UserView data={lastRevisionAuthor} hideAvatar />
+                        {' '}<a href="#" onClick={this.onOpenRevisions}><i className="icon-plus" /> Показать ещё</a>
+                    </div>
+                )}
+                {revisionsOpen && (
+                    <div className="revisions" style={{ display: 'block' }}>
+                        <a href="#" onClick={this.onCloseRevisions}>- Скрыть</a>
+                        <div className="title">Версии сообщения</div>
+                        <table className="table">
+                        <tbody>
+                        {(revisions||[]).map((rev, i) => (
+                            <tr className={(currentRevision===rev.createdAt||(i===0&&!currentRevision))?'active':''} key={i}>
+                                <td><UserView data={rev.author} hideAvatar /></td>
+                                <td>{formatDate(new Date(rev.createdAt))}</td>
+                                <td><a href="#" onClick={(e) => this.onShowRevision(e, rev.createdAt)}>Показать правки</a></td>
+                            </tr>
+                        ))}
+                        </tbody>
+                        </table>
+                    </div>
+                )}
                 <div style={{ display: 'none' }} ref={r=>this.refSelf=r?.parentElement} />
                 { deleteError && (
                     <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]}>

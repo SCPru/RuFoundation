@@ -23,7 +23,7 @@ def get_post_contents(posts):
     post_contents = ForumPostVersion.objects.order_by('post_id', '-created_at').distinct('post_id').filter(post_id__in=post_ids)
     ret = {}
     for content in post_contents:
-        ret[content.post_id] = content.source
+        ret[content.post_id] = (content.source, content.author)
     return ret
 
 
@@ -39,7 +39,7 @@ def get_post_info(context, thread, posts):
             'author': render_user_to_html(post.author),
             'created_at': render_date(post.created_at),
             'updated_at': render_date(post.updated_at),
-            'content': renderer.single_pass_render(post_contents[post.id], RenderContext(None, None, {}, context.user)),
+            'content': renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user)),
             'replies': get_post_info(context, thread, replies),
             'rendered_replies': None,
             'options_config': json.dumps({
@@ -47,6 +47,9 @@ def get_post_info(context, thread, posts):
                 'threadName': thread.name,
                 'postId': post.id,
                 'postName': post.name,
+                'hasRevisions': post.created_at != post.updated_at,
+                'lastRevisionDate': post.updated_at.isoformat(),
+                'lastRevisionAuthor': render_user_to_json(post_contents.get(post.id, ('', None))[1]),
                 'user': render_user_to_json(context.user),
                 'canReply': permissions.check(context.user, 'create', ForumPost(thread=thread)),
                 'canEdit': permissions.check(context.user, 'edit', post),

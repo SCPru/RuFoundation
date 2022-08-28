@@ -107,7 +107,7 @@ def api_submit(context, params):
     first_post = ForumPost(thread=thread, author=context.user, name=title)
     first_post.save()
 
-    first_post_content = ForumPostVersion(post=first_post, source=source)
+    first_post_content = ForumPostVersion(post=first_post, source=source, author=context.user)
     first_post_content.save()
 
     return {'url': '/forum/t-%d/%s' % (thread.id, articles.normalize_article_name(title))}

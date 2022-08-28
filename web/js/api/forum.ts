@@ -1,6 +1,5 @@
 import {callModule, ModuleRenderResponse} from "./modules"
 import {UserData} from "./user";
-import {ModuleRateVotesResponse, RatingMode} from './rate'
 
 export interface ForumNewThreadRequest {
     categoryId: number
@@ -26,10 +25,13 @@ export interface ForumNewPostResponse {
 
 export interface ForumFetchPostRequest {
     postId: number
+    atDate?: string
 }
 
 export interface ForumFetchPostResponse {
     postId: number
+    createdAt: string
+    updatedAt: string
     name: string
     source: string
     content: string
@@ -45,6 +47,19 @@ export interface ForumDeletePostRequest {
     postId: number
 }
 
+export interface ForumFetchPostVersionsRequest {
+    postId: number
+}
+
+export interface ForumPostVersion {
+    createdAt: string
+    author: UserData
+}
+
+export interface ForumFetchPostVersionsResponse {
+    versions: Array<ForumPostVersion>
+}
+
 export async function createForumThread(request: ForumNewThreadRequest) {
     return await callModule<ForumNewThreadResponse>({module: 'forumnewthread', method: 'submit', params: request});
 }
@@ -57,9 +72,10 @@ export async function createForumPost(request: ForumNewPostRequest) {
     return await callModule<ForumNewPostResponse>({module: 'forumnewpost', method: 'submit', params: request});
 }
 
-export async function fetchForumPost(postId: number) {
+export async function fetchForumPost(postId: number, atDate?: string) {
     const request: ForumFetchPostRequest = {
-        postId
+        postId,
+        atDate
     }
     return await callModule<ForumFetchPostResponse>({module: 'forumpost', method: 'fetch', params: request});
 }
@@ -73,4 +89,11 @@ export async function deleteForumPost(postId: number) {
         postId
     }
     await callModule({module: 'forumpost', method: 'delete', params: request});
+}
+
+export async function fetchForumPostVersions(postId: number) {
+    const request: ForumFetchPostVersionsRequest = {
+        postId
+    }
+    return await callModule<ForumFetchPostVersionsResponse>({module: 'forumpost', method: 'fetchversions', params: request});
 }

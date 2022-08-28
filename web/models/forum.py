@@ -88,3 +88,4 @@ class ForumPostVersion(SiteLimitedModel):
     post = models.ForeignKey(to=ForumPost, on_delete=models.CASCADE, verbose_name="Сообщение")
     source = models.TextField(verbose_name="Текст сообщения")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
+    author = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, verbose_name="Автор правки")
