@@ -145,8 +145,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'ratingVotes': article_votes,
             'pathParams': path_params,
             'canRate': permissions.check(self.request.user, "rate", article),
-            'canComment': permissions.check(self.request.user, "comment", article),
-            'commentThread': '/forum/t-%d/%s' % (comment_thread_id, articles.normalize_article_name(article.display_name)),
+            'canComment': permissions.check(self.request.user, "comment", article) if article else False,
+            'commentThread': '/forum/t-%d/%s' % (comment_thread_id, articles.normalize_article_name(article.display_name)) if article else None,
             'commentCount': comment_count,
             'canDelete': permissions.check(self.request.user, "delete", article),
         }
