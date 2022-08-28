@@ -61,6 +61,7 @@ class ForumThread(SiteLimitedModel):
     category = models.ForeignKey(to=ForumCategory, on_delete=models.DO_NOTHING, null=True, verbose_name="Раздел (если это тема)")  # to-do: review later
     article = models.ForeignKey(to=Article, on_delete=models.CASCADE, null=True, verbose_name="Статья (если это комментарии)")
     author = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, verbose_name="Автор")
+    is_pinned = models.BooleanField(verbose_name="Пришпилено", default=False)
 
 
 class ForumPost(SiteLimitedModel):

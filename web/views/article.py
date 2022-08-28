@@ -15,6 +15,8 @@ import json
 
 from web.models.sites import get_current_site
 
+import re
+
 
 class ArticleView(TemplateResponseMixin, ContextMixin, View):
     template_name = "page.html"
@@ -82,6 +84,21 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
     def get_context_data(self, **kwargs):
         path = kwargs["path"]
+
+        # wikidot hack: rewrite forum URLs to forum:start, forum:category, forum:thread
+        # why do they need to support templates here?
+
+        match re.match(r'^forum/start(.*)$', path):
+            case re.Match() as match:
+                path = 'forum:start' + match[1]
+
+        match re.match(r'^forum/c-(\d+)(.*)$', path):
+            case re.Match() as match:
+                path = 'forum:category/c/' + match[1] + match[2]
+
+        match re.match(r'^forum/t-(\d+)(.*)$', path):
+            case re.Match() as match:
+                path = 'forum:thread/t/' + match[1] + match[2]
 
         article_name, path_params = self.get_path_params(path)
 
