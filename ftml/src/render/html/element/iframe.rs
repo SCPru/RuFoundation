@@ -54,6 +54,9 @@ pub fn render_html(ctx: &mut HtmlContext, contents: &str) {
         doFrame();
     }})();
     </script>
+    <style>
+      body {{ margin: 0; }}
+    </style>
     "#);
 
     ctx.html()
