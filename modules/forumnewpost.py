@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from modules import ModuleError
 from renderer import RenderContext, render_template_from_string, single_pass_render
 import json
@@ -59,5 +61,8 @@ def api_submit(context, params):
 
     first_post_content = ForumPostVersion(post=post, source=source, author=context.user)
     first_post_content.save()
+
+    thread.updated_at = datetime.now()
+    thread.save()
 
     return {'url': '/forum/t-%d/%s#post-%d' % (thread.id, articles.normalize_article_name(thread.name), post.id)}
