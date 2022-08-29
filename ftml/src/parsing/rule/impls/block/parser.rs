@@ -24,6 +24,7 @@ use crate::parsing::collect::{collect_text, collect_text_keep};
 use crate::parsing::condition::ParseCondition;
 use crate::parsing::consume::consume;
 use crate::parsing::rule::impls::prelude::check_step;
+use crate::parsing::strip::{strip_newlines, strip_whitespace};
 use crate::parsing::{
     gather_paragraphs, parse_string, ExtractedToken, ParseResult, ParseWarning,
     ParseWarningKind, Parser, Token
@@ -251,6 +252,9 @@ where
         loop {
             let result = self.verify_end_block(first, block_rule);
             if result.is_some() {
+                // This is normally used for _ blocks. We should strip all leading/trailing whitespace and newlines from the content.
+                strip_whitespace(&mut all_elements);
+                strip_newlines(&mut all_elements);
                 return ok!(paragraph_safe; all_elements, all_exceptions);
             }
 

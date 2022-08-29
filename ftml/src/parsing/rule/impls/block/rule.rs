@@ -95,5 +95,13 @@ where
     // and terminating the block (the ']]' token),
     // then processing the body (if any) and tail block.
     let parser = &mut ParserWrap::new(parser, block.accepts_partial);
-    (block.parse_fn)(parser, name, flag_star, flag_score, in_head)
+    let result = (block.parse_fn)(parser, name, flag_star, flag_score, in_head)?;
+
+    // If this is an underline block, skip whitespace to next element. This is what Wikidot does.
+    // This allows not creating <br> after each <div>
+    if flag_score {
+        parser.get_optional_spaces_any()?;
+    }
+
+    Ok(result)
 }
