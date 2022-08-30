@@ -13,6 +13,7 @@ Note: this is what I tested with, your mileage may differ.
 - Windows 10
 - NodeJS v17.3.0
 - Python 3.10.1
+- Rust 1.63
 
 ## How to launch
 
