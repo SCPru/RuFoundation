@@ -86,7 +86,7 @@ def api_submit(context, params):
     if not source:
         raise ModuleError('Не указан текст первого сообщения')
 
-    c = params.get('categoryId')
+    c = params.get('categoryid')
     try:
         c = int(c)
         category = ForumCategory.objects.filter(id=c)

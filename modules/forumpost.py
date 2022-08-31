@@ -17,7 +17,7 @@ def allow_api():
 
 
 def api_fetch(context, params):
-    post_id = params.get('postId', -1)
+    post_id = params.get('postid', -1)
 
     post = ForumPost.objects.filter(id=post_id)
     if not post:
@@ -28,7 +28,7 @@ def api_fetch(context, params):
         raise ModuleError('Недостаточно прав для просмотра сообщения')
 
     q = ForumPostVersion.objects.filter(post=post).order_by('-created_at')
-    max_date = params.get('atDate')
+    max_date = params.get('atdate')
     if max_date is not None:
         q = q.filter(created_at__lte=datetime.fromisoformat(max_date))
 
@@ -51,7 +51,7 @@ def api_fetch(context, params):
 
 
 def api_update(context, params):
-    post_id = params.get('postId', -1)
+    post_id = params.get('postid', -1)
     title = (params.get('name') or '').strip()
     source = (params.get('source') or '').strip()
 
@@ -92,7 +92,7 @@ def api_update(context, params):
 
 
 def api_delete(context, params):
-    post_id = params.get('postId', -1)
+    post_id = params.get('postid', -1)
 
     post = ForumPost.objects.filter(id=post_id)
     if not post:
@@ -110,7 +110,7 @@ def api_delete(context, params):
 
 
 def api_fetchversions(context, params):
-    post_id = params.get('postId', -1)
+    post_id = params.get('postid', -1)
 
     post = ForumPost.objects.filter(id=post_id)
     if not post:

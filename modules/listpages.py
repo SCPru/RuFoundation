@@ -452,9 +452,7 @@ def render(context: RenderContext, params, content=None):
             pages = reversed(pages)
 
         output = SafeString()
-        common_context = RenderContext(context.article, context.article, context.path_params, context.user)
-        common_context.title = context.title
-        common_context.status = context.status
+        common_context = context.clone_with(source_article=context.article)
 
         if separate:
             if prepend:
@@ -462,14 +460,9 @@ def render(context: RenderContext, params, content=None):
             for page in pages:
                 page_index += 1
                 page_content = page_to_listpages_vars(page, content, page_index, total_pages)
-                cc = RenderContext(page, page, context.path_params, context.user)
-                cc.title = context.title
-                cc.status = context.status
+                cc = common_context.clone_with(article=page, source_article=page)
                 output += renderer.single_pass_render(page_content+'\n', cc)
-                if cc.redirect_to:
-                    common_context.redirect_to = cc.redirect_to
-                context.title = cc.title
-                context.status = cc.status
+                common_context.merge(cc)
             if append:
                 output += renderer.single_pass_render(append, common_context)
         else:
@@ -483,10 +476,7 @@ def render(context: RenderContext, params, content=None):
             source += append
             output += renderer.single_pass_render(source, common_context)
 
-        if common_context.redirect_to:
-            context.redirect_to = common_context.redirect_to
-        context.title = common_context.title
-        context.status = common_context.status
+        context.merge(common_context)
 
         if wrapper:
             if context.article:

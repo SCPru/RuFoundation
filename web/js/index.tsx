@@ -14,6 +14,7 @@ import {makeTOC} from "./articles/toc";
 import ForumNewThread from "./entrypoints/forum-new-thread";
 import ForumNewPost from './entrypoints/forum-new-post'
 import ForumPostOptions from './entrypoints/forum-post-options'
+import {makeForumThread} from './forum/thread-pagination'
 
 
 function renderTo(where: HTMLElement, what: any) {
@@ -49,6 +50,8 @@ window.addEventListener('DOMContentLoaded', () => {
             makeTOC(node);
         } else if (node.classList.contains('w-forum-post-options')) {
             renderTo(node, <ForumPostOptions {...JSON.parse(node.dataset.config)} />);
+        } else if (node.classList.contains('w-forum-thread')) {
+            makeForumThread(node);
         }
     };
 

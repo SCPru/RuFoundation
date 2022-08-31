@@ -57,7 +57,8 @@ export function makeListPages(node: HTMLElement) {
             loaderInto.style.display = 'none';
             const tmp = document.createElement('div');
             tmp.innerHTML = rendered;
-            node.parentNode.replaceChild(tmp.firstElementChild, node);
+            const newNode = tmp.firstElementChild;
+            node.parentNode.replaceChild(newNode, node);
         } catch (e) {
             ReactDOM.unmountComponentAtNode(loaderInto);
             loaderInto.innerHTML = '';

@@ -27,12 +27,12 @@ def api_preview(context, params):
 def api_submit(context, params):
     title = (params.get('name') or '').strip()
     source = (params.get('source') or '').strip()
-    reply_to_id = (params.get('replyTo') or -1)
+    reply_to_id = (params.get('replyto') or -1)
 
     if not source:
         raise ModuleError('Не указан текст сообщения')
 
-    t = params.get('threadId')
+    t = params.get('threadid')
     try:
         t = int(t)
         thread = ForumThread.objects.filter(id=t)

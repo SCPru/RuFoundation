@@ -97,6 +97,8 @@ def render_posts(post_info):
 def render(context: RenderContext, params):
     context.title = 'Форум'
 
+    content_only = params.get('contentonly', 'no') == 'yes'
+
     t = context.path_params.get('t')
     try:
         t = int(t)
@@ -125,20 +127,45 @@ def render(context: RenderContext, params):
     category_url = '/forum/c-%d/%s' % (category.id, articles.normalize_article_name(category.name)) if category else ''
     short_url = '/forum/t-%d' % thread.id
 
-    # get threads
-    page = 1
-    try:
-        page = int(context.path_params.get('p'))
-    except:
-        pass
-    if page < 1:
-        page = 1
-
     per_page = 10
 
     q = ForumPost.objects.filter(thread=thread, reply_to__isnull=True)
 
     total = q.count()
+
+    # get threads
+    page = 1
+    try:
+        page = int(context.path_params.get('p'))
+    except:
+        # if page is not specified, but post is specified, attempt to guess page number from post id
+        try:
+            post_id = int(context.path_params.get('post'))
+            # if this is a reply, we need to get all the way up to the parent to know what page it is
+            post = ForumPost.objects.filter(id=post_id)
+            post = post[0] if post else None
+            while post:
+                if post.thread_id != thread.id:
+                    post_id = None
+                    break
+                if not post.reply_to:
+                    break
+                post = post.reply_to
+                post_id = post.id
+            # we now have root post ID.
+            # now just get the list of IDs and make a page out of this.
+            # not optimized but works for now
+            all_posts = list(q.values('id'))
+            for i in range(len(all_posts)):
+                if all_posts[i]['id'] == post_id:
+                    page = int((i / per_page) + 1)
+                    break
+        except:
+            if context.path_params.get('post') is not None:
+                raise
+            pass
+    if page < 1:
+        page = 1
 
     max_page = max(1, int(math.ceil(total / per_page)))
     if page > max_page:
@@ -146,6 +173,8 @@ def render(context: RenderContext, params):
 
     posts = q[(page-1)*per_page:page*per_page]
     post_info = get_post_info(context, thread, posts)
+
+    context.path_params['p'] = str(page)
 
     new_post_config = {
         'threadId': thread.id,
@@ -155,6 +184,7 @@ def render(context: RenderContext, params):
 
     return render_template_from_string(
         """
+        {% if not content_only %}
         <div class="forum-thread-box">
             <div class="forum-breadcrumbs">
                 <a href="/forum/start">Форум</a>
@@ -182,14 +212,18 @@ def render(context: RenderContext, params):
                     {{ thread.description }}
                 {% endif %}
             </div>
-            <div class="thread-container" id="thread-container">
+            {% endif %}
+            <div class="thread-container w-forum-thread"
+                 id="thread-container"
+                 data-forum-thread-path-params="{{ data_path_params }}"
+                 data-forum-thread-params="{{ data_params }}">
                 <div id="thread-container-posts">
                     {{ pagination }}
                     {{ posts }}
                     {{ pagination }}
                 </div>
             </div>
-            {% if can_reply %}
+            {% if can_reply and not content_only %}
                 <div class="w-forum-new-post" data-config="{{ new_post_config }}"></div>
             {% endif %}
         </div>
@@ -204,5 +238,8 @@ def render(context: RenderContext, params):
         pagination=render_pagination(short_url, page, max_page) if max_page != 1 else '',
         new_post_config=json.dumps(new_post_config),
         posts=render_posts(post_info),
-        can_reply=permissions.check(context.user, 'create', ForumPost(thread=thread))
+        can_reply=permissions.check(context.user, 'create', ForumPost(thread=thread)),
+        content_only=content_only,
+        data_path_params=json.dumps(context.path_params),
+        data_params=json.dumps(params),
     )
