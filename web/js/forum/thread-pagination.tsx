@@ -94,7 +94,7 @@ export function makeForumThread(node: HTMLElement) {
                 const fNewPathParams = JSON.parse(newNode.dataset.forumThreadPathParams);
                 newUrl = `/forum/t-${fNewPathParams.t}`
                 for (const k in fNewPathParams) {
-                    if (k === 'p' || k === 't' || fNewPathParams[k] === null) {
+                    if (k === 'p' || k === 't' || k === 'post' || fNewPathParams[k] === null) {
                         continue
                     }
                     newUrl += `/${encodeURIComponent(k)}/${encodeURIComponent(fNewPathParams[k])}`
