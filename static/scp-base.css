@@ -735,7 +735,7 @@ sup {
     overscroll-behavior: none;
 }
  
-#side-bar .side-block {
+.side-block {
     padding: 10px;
     border: 1px solid #600;
     border-radius: 10px;
@@ -744,11 +744,11 @@ sup {
     margin-bottom: 15px;
 }
  
-#side-bar .side-block.media {
+.side-block.media {
     background: #e5e5ff;
 }
  
-#side-bar .side-block.resources {
+.side-block.resources {
     background: #fff0f0;
 }
  
