@@ -743,6 +743,12 @@ sup {
     background: #fff;
     margin-bottom: 15px;
 }
+
+#interwiki .side-block {
+    width: 217px;
+    margin-left: 5px;
+    box-sizing: border-box;
+}
  
 #side-bar .side-block.media, #interwiki .side-block.media {
     background: #e5e5ff;
