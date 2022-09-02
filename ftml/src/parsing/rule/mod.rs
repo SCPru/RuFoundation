@@ -70,6 +70,8 @@ impl Rule {
         let mut sub_parser = parser.clone_with_rule(self);
         let result = (self.try_consume_fn)(&mut sub_parser);
 
+        parser.update_flags(&sub_parser);
+
         if let Ok(ref output) = result {
             // First, ensure there aren't any partial elements in the result.
             output.check_partials(parser)?;

@@ -84,6 +84,7 @@ fn parse_definition_list<'p, 'r, 't>(
                     }
                 }
                 Err(warn) => {
+                    parser.update_flags(sub_parser);
                     warn!("Failed to get the next definition list item, ending iteration: {warn:?}");
                     break;
                 }
