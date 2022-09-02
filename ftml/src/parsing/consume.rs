@@ -118,7 +118,7 @@ pub fn consume<'p, 'r, 't>(
     let mut is_partial_error = false;
     // If we've hit the recursion limit, just bail
     // If the error was caused by presence of unexpected partials, do not cache it; this partial might be valid in other context
-    if let Some(ParseException::Warning(warning)) = all_exceptions.last() {
+    if let Some(ParseException::Warning(warning)) = all_exceptions.first() {
         match warning.kind() {
             ParseWarningKind::RecursionDepthExceeded => {
                 error!("Found recursion depth error, failing");
