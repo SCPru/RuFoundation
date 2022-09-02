@@ -117,19 +117,25 @@ pub fn consume<'p, 'r, 't>(
 
     let mut is_partial_error = false;
     // If we've hit the recursion limit, just bail
+    if let Some(ParseException::Warning(error)) = all_exceptions.last() {
+        if error.kind() == ParseWarningKind::RecursionDepthExceeded {
+            error!("Found recursion depth error, failing");
+            return Err(error.clone());
+        }
+    }
+
     // If the error was caused by presence of unexpected partials, do not cache it; this partial might be valid in other context
-    if let Some(ParseException::Warning(warning)) = all_exceptions.first() {
-        match warning.kind() {
-            ParseWarningKind::RecursionDepthExceeded => {
-                error!("Found recursion depth error, failing");
-                return Err(warning.clone());
-            }
+    if let Some(ParseException::Warning(error)) = all_exceptions.first() {
+        // These errors are caused by contextual checks for element nesting.
+        // We cannot reliably cache them because in a different context they might be valid
+        match error.kind() {
             ParseWarningKind::ListItemOutsideList
             |ParseWarningKind::TableRowOutsideTable
             |ParseWarningKind::TableCellOutsideTable
             |ParseWarningKind::TabOutsideTabView
+            |ParseWarningKind::FootnotesNested
             |ParseWarningKind::RubyTextOutsideRuby => {
-                is_partial_error = true;
+                is_partial_error = true
             }
             _ => {}
         }

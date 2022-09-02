@@ -65,6 +65,11 @@ pub fn collect_container<'p, 'r, 't>(
     )?
     .into();
 
+    // Empty container is invalid
+    if elements.is_empty() {
+        return Err(parser.make_warn(ParseWarningKind::EmptyInlineContainer));
+    }
+
     // Package into a container
     ok!(
         paragraph_safe && container_type.paragraph_safe();
