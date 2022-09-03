@@ -62,9 +62,9 @@ def render(context: RenderContext, params):
         q = q.filter(category=category)
 
     if sort_by != 'start':
-        q = q.order_by('-updated_at')
+        q = q.order_by('-is_pinned', '-updated_at')
     else:
-        q = q.order_by('-created_at')
+        q = q.order_by('-is_pinned', '-created_at')
     total = q.count()
 
     max_page = max(1, int(math.ceil(total / per_page)))
@@ -95,6 +95,8 @@ def render(context: RenderContext, params):
             'last_post_url': last_post_url,
             'last_post_date': last_post_date,
             'last_post_user': last_post_user,
+            'is_pinned': thread.is_pinned,
+            'is_locked': thread.is_locked,
         })
 
     return render_template_from_string(
@@ -145,6 +147,9 @@ def render(context: RenderContext, params):
                 <tr>
                     <td class="name">
                         <div class="title">
+                            {% if thread.is_pinned %}
+                            Закреплено: 
+                            {% endif %}
                             <a href="{{ thread.url }}">{{ thread.name }}</a>
                         </div>
                         <div class="description">{{ thread.description }}</div>

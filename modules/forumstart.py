@@ -14,8 +14,8 @@ def render(context: RenderContext, params):
 
     hidden = context.path_params.get('hidden', 'hide')
 
-    categories = ForumCategory.objects.all().order_by('order')
-    sections = ForumSection.objects.all().order_by('order')
+    categories = ForumCategory.objects.all().order_by('order', 'id')
+    sections = ForumSection.objects.all().order_by('order', 'id')
 
     if hidden != 'show':
         sections = sections.filter(is_hidden=False)

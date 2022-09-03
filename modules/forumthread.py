@@ -182,6 +182,37 @@ def render(context: RenderContext, params):
         'user': render_user_to_json(context.user),
     }
 
+    categories = []
+    raw_categories = ForumCategory.objects.all().order_by('order', 'id')
+    raw_sections = ForumSection.objects.all().order_by('order', 'id')
+    for s in raw_sections:
+        if not permissions.check(context.user, 'view', s):
+            continue
+        cs = []
+        for c in raw_categories:
+            if c.section_id != s.id:
+                continue
+            if not permissions.check(context.user, 'view', c):
+                continue
+            cs.append({'name': '\u00a0\u00a0'+c.name, 'canMove': not c.is_for_comments, 'id': c.id})
+        if cs:
+            categories.append({'name': s.name, 'canMove': False, 'id': None})
+            categories += cs
+
+    thread_options_config = {
+        'threadId': thread.id,
+        'threadName': name,
+        'threadDescription': thread.description,
+        'canEdit': thread.article_id is None and permissions.check(context.user, 'edit', thread),
+        'canPin': thread.article_id is None and permissions.check(context.user, 'pin', thread),
+        'canLock': permissions.check(context.user, 'lock', thread),
+        'canMove': thread.article_id is None and permissions.check(context.user, 'move', thread),
+        'isLocked': thread.is_locked,
+        'isPinned': thread.is_pinned,
+        'moveTo': categories,
+        'categoryId': thread.category_id,
+    }
+
     return render_template_from_string(
         """
         {% if not content_only %}
@@ -212,6 +243,7 @@ def render(context: RenderContext, params):
                     {{ thread.description }}
                 {% endif %}
             </div>
+            <div class="options w-forum-thread-options page-options-bottom" data-config="{{ thread_options_config }}"></div>
             {% endif %}
             <div class="thread-container w-forum-thread"
                  id="thread-container"
@@ -242,4 +274,74 @@ def render(context: RenderContext, params):
         content_only=content_only,
         data_path_params=json.dumps(context.path_params),
         data_params=json.dumps(params),
+        thread_options_config=json.dumps(thread_options_config)
     )
+
+
+def allow_api():
+    return True
+
+
+def api_update(context, params):
+    if 'name' in params:
+        if not (params['name'] or '').strip():
+            raise ModuleError('Название темы не указано')
+
+    if 'description' in params:
+        params['description'] = params['description'] or ''
+
+    t = params.get('threadid')
+    try:
+        t = int(t)
+        thread = ForumThread.objects.filter(id=t)
+        thread = thread[0] if thread else None
+    except:
+        thread = None
+
+    if thread is None:
+        context.status = 404
+        raise ModuleError('Тема не найдена или не указана')
+
+    if 'name' in params or 'description' in params:
+        if not permissions.check(context.user, 'edit', thread):
+            raise ModuleError('Недостаточно прав для редактирования темы')
+        if 'name' in params:
+            thread.name = params['name']
+        if 'description' in params:
+            thread.description = params['description']
+
+    if 'islocked' in params:
+        if not permissions.check(context.user, 'lock', thread):
+            raise ModuleError('Недостаточно прав для блокировки темы')
+        thread.is_locked = bool(params['islocked'])
+
+    if 'ispinned' in params:
+        if not permissions.check(context.user, 'pin', thread):
+            raise ModuleError('Недостаточно прав для прикрепления темы')
+        thread.is_pinned = bool(params['ispinned'])
+
+    if 'categoryid' in params:
+        if not permissions.check(context.user, 'move', thread):
+            raise ModuleError('Недостаточно прав для перемещения темы')
+        try:
+            c = int(params['categoryid'])
+            category = ForumCategory.objects.filter(id=c)
+            category = category[0] if category else None
+            if not permissions.check(context.user, 'view', category):
+                raise ModuleError('Недостаточно прав для просмотра целевого раздела')
+        except:
+            category = None
+        if category is None:
+            raise ModuleError('Целевой раздел не существует')
+        thread.category = category
+
+    thread.save()
+
+    return {
+        'threadId': thread.id,
+        'name': thread.name,
+        'description': thread.description,
+        'isLocked': thread.is_locked,
+        'isPinned': thread.is_pinned,
+        'categoryId': thread.category_id
+    }

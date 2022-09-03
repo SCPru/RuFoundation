@@ -64,7 +64,7 @@ class ForumNewPost extends Component<Props, State> {
         const { open, preview } = this.state;
         return (!open) ? (
             <div className="new-post">
-                <a href="javascript:;" onClick={this.onOpen}>Новое сообщение</a>
+                <a href="#" onClick={this.onOpen}>Новое сообщение</a>
             </div>
         ) : (
             <>

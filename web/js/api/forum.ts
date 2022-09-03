@@ -60,6 +60,24 @@ export interface ForumFetchPostVersionsResponse {
     versions: Array<ForumPostVersion>
 }
 
+export interface ForumUpdateThreadRequest {
+    threadId: number
+    name?: string
+    description?: string
+    isLocked?: boolean
+    isPinned?: boolean
+    categoryId?: number
+}
+
+export interface ForumUpdateThreadResponse {
+    threadId: number
+    name: string
+    description: string
+    isLocked: boolean
+    isPinned: boolean
+    categoryId: number
+}
+
 export async function createForumThread(request: ForumNewThreadRequest) {
     return await callModule<ForumNewThreadResponse>({module: 'forumnewthread', method: 'submit', params: request});
 }
@@ -96,4 +114,8 @@ export async function fetchForumPostVersions(postId: number) {
         postId
     }
     return await callModule<ForumFetchPostVersionsResponse>({module: 'forumpost', method: 'fetchversions', params: request});
+}
+
+export async function updateForumThread(request: ForumUpdateThreadRequest) {
+    return await callModule<ForumUpdateThreadResponse>({module: 'forumthread', method: 'update', params: request});
 }

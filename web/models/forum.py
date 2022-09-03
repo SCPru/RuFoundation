@@ -59,7 +59,7 @@ class ForumThread(SiteLimitedModel):
     name = models.TextField(verbose_name="Название")
     description = models.TextField(verbose_name="Описание", blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
+    updated_at = models.DateTimeField(auto_now_add=True, verbose_name="Время изменения")
     category = models.ForeignKey(to=ForumCategory, on_delete=models.DO_NOTHING, null=True, verbose_name="Раздел (если это тема)")  # to-do: review later
     article = models.ForeignKey(to=Article, on_delete=models.CASCADE, null=True, verbose_name="Статья (если это комментарии)")
     author = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, verbose_name="Автор")

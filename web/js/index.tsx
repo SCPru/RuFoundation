@@ -15,6 +15,7 @@ import ForumNewThread from "./entrypoints/forum-new-thread";
 import ForumNewPost from './entrypoints/forum-new-post'
 import ForumPostOptions from './entrypoints/forum-post-options'
 import {makeForumThread} from './forum/thread-pagination'
+import ForumThreadOptions from './entrypoints/forum-thread-options'
 
 
 function renderTo(where: HTMLElement, what: any) {
@@ -30,6 +31,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('#login-status').forEach((node: HTMLElement) => renderTo(node, <PageLoginStatus {...JSON.parse(node.dataset.config)} />));
     document.querySelectorAll('.w-forum-new-thread').forEach((node: HTMLElement) => renderTo(node, <ForumNewThread {...JSON.parse(node.dataset.config)} />));
     document.querySelectorAll('.w-forum-new-post').forEach((node: HTMLElement) => renderTo(node, <ForumNewPost {...JSON.parse(node.dataset.config)} />));
+    document.querySelectorAll('.w-forum-thread-options').forEach((node: HTMLElement) => renderTo(node, <ForumThreadOptions {...JSON.parse(node.dataset.config)} />));
 
     makePasswordToggle();
 
