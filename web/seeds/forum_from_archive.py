@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from django import db
 from py7zr import py7zr
 
+from scpdev import settings
 from .from_archive import run_in_threads, get_or_create_user, init_users
 from .. import threadvars
 from ..models.forum import ForumSection, ForumCategory, ForumThread, ForumPost, ForumPostVersion
@@ -134,12 +135,20 @@ def run(base_path):
                         rev_created_at = datetime.fromtimestamp(rev['stamp'], tz=timezone.utc)
                         source_in_file = '%d/%d.html' % (post['id'], rev['id'])
                         source = html_to_source(post_contents.get(source_in_file, io.BytesIO()).read().decode('utf-8'))
+
+                        for k, v in settings.ARTICLE_IMPORT_REPLACE_CONFIG.items():
+                            source = source.replace(k, v)
+
                         r = ForumPostVersion(post=p, author=rev_user, source=source)
                         r.save()
                         ForumPostVersion.objects.filter(id=r.id).update(created_at=rev_created_at)
                 else:
                     source_in_file = '%d/latest.html' % post['id']
                     source = html_to_source(post_contents.get(source_in_file, io.BytesIO()).read().decode('utf-8'))
+
+                    for k, v in settings.ARTICLE_IMPORT_REPLACE_CONFIG.items():
+                        source = source.replace(k, v)
+
                     r = ForumPostVersion(post=p, author=user, source=source)
                     r.save()
                     ForumPostVersion.objects.filter(id=r.id).update(created_at=created_at)

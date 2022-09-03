@@ -39,7 +39,7 @@ def get_post_info(context, thread, posts):
             'author': render_user_to_html(post.author),
             'created_at': render_date(post.created_at),
             'updated_at': render_date(post.updated_at),
-            'content': renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user)),
+            'content': renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user), 'message'),
             'replies': get_post_info(context, thread, replies),
             'rendered_replies': None,
             'options_config': json.dumps({
