@@ -437,6 +437,7 @@ impl<'r, 't> Parser<'r, 't> {
             self.update(&parser);
             Some(last)
         } else {
+            self.update_flags(&parser);
             None
         }
     }
@@ -466,12 +467,20 @@ impl<'r, 't> Parser<'r, 't> {
     }
 
     #[inline]
-    pub fn update(&mut self, parser: &Parser<'r, 't>) {
+    pub fn update_flags(&mut self, parser: &Parser<'r, 't>) {
         // Flags
+        self.has_footnote_block |= parser.has_footnote_block;
+        self.has_toc_block |= parser.has_toc_block;
+    }
+
+    #[inline]
+    pub fn update(&mut self, parser: &Parser<'r, 't>) {
+        // Global flags
+        self.update_flags(parser);
+
+        // Flags that depend on current state
         self.accepts_partial = parser.accepts_partial;
         self.in_footnote = parser.in_footnote;
-        self.has_footnote_block = parser.has_footnote_block;
-        self.has_toc_block = parser.has_toc_block;
         self.start_of_line = parser.start_of_line;
 
         // Token pointers

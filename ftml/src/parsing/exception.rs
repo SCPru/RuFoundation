@@ -234,6 +234,9 @@ pub enum ParseWarningKind {
 
     /// Interwiki PageRef not allowed
     CrossSiteRef,
+
+    /// This is used to skip syntax like ******* or ________
+    EmptyInlineContainer,
 }
 
 impl ParseWarningKind {

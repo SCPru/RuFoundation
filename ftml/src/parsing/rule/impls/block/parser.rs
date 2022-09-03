@@ -379,9 +379,8 @@ where
         let mut last_token;
         check_step(self, Token::StringQuote, kind)?;
         loop {
-            let read = self.step()?;
-            last_token = read;
-            match read.token {
+            last_token = self.current();
+            match last_token.token {
                 Token::StringQuote => {
                     self.step()?;
                     break
@@ -389,6 +388,7 @@ where
                 Token::InputEnd => return Err(self.make_warn(kind)),
                 _ => {}
             }
+            self.step()?;
         }
         return Ok(self.full_text().slice(first_token, last_token))
     }
