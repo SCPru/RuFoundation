@@ -376,6 +376,7 @@ def element_to_source(el):
             if node.name == 'dt':
                 dd = node.find_next('dd')
                 src += ': %s : %s\n' % (node.text.replace('\n', ' '), dd.text.replace('\n', ' '))
+        return src
     else:
         print('thread = %d' % threadvars.get('threadid'))
         raise ValueError(repr(el))
