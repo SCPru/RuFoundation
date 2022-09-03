@@ -38,7 +38,7 @@ def render(context: RenderContext, params):
     num_threads = ForumThread.objects.filter(category=category).count()
     num_posts = ForumPost.objects.filter(thread__category=category).count()
 
-    context.title = category.name
+    context.title += ' — ' + category.name
 
     canonical_url = '/forum/c-%d/%s' % (category.id, articles.normalize_article_name(category.name))
     short_url = '/forum/c-%d' % category.id
