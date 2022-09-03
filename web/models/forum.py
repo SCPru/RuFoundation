@@ -74,7 +74,7 @@ class ForumPost(SiteLimitedModel):
 
     name = models.TextField(verbose_name="Название", blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
+    updated_at = models.DateTimeField(auto_now_add=True, verbose_name="Время изменения")
     author = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, verbose_name="Автор")
     reply_to = models.ForeignKey(to='ForumPost', on_delete=models.SET_NULL, null=True, verbose_name="Ответ на комментарий")
     thread = models.ForeignKey(to=ForumThread, on_delete=models.CASCADE, verbose_name="Тема")

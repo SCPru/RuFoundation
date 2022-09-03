@@ -72,11 +72,11 @@ def api_update(context, params):
     if source != prev_source:
         new_version = ForumPostVersion(post=post, source=source, author=context.user)
         new_version.save()
+        post.updated_at = datetime.now()
 
     if title != post.name:
         post.name = title
 
-    post.updated_at = datetime.now()
     post.save()
 
     content = single_pass_render(source, RenderContext(None, None, {}, context.user))
