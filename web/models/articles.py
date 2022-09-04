@@ -58,7 +58,7 @@ class Article(SiteLimitedModel):
         verbose_name_plural = "Статьи"
 
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
-        indexes = [models.Index(fields=['category', 'name'])]
+        indexes = [models.Index(fields=['category', 'name']), models.Index(fields=['created_at']), models.Index(fields=['updated_at'])]
 
     category = models.TextField(default="_default", verbose_name="Категория")
     name = models.TextField(verbose_name="Имя")
@@ -146,6 +146,7 @@ class Vote(SiteLimitedModel):
         verbose_name_plural = "Оценки"
 
         constraints = [models.UniqueConstraint(fields=['article', 'user'], name='%(app_label)s_%(class)s_unique')]
+        indexes = [models.Index(fields=['article'])]
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья", related_name='votes')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, verbose_name="Пользователь")

@@ -12,7 +12,7 @@ from web.controllers import articles
 import re
 from web.models.articles import Article, Vote, ArticleVersion
 from web.models.settings import Settings
-from django.db.models import Q, Value as V, F, Count, Sum, Avg
+from django.db.models import Q, Value as V, F, Count, Sum, Avg, CharField
 from django.db.models.functions import Concat, Random, Coalesce
 from web import threadvars
 import json
@@ -312,7 +312,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
             'name': F('name'),
             'title': F('title'),
             'updated_at': F('updated_at'),
-            'fullname': Concat('category', V(':'), 'name'),
+            'fullname': Concat('category', V(':'), 'name', output_field=CharField()),
             'rating': F('rating'),
             'random': Random(),
         }
