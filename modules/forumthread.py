@@ -27,12 +27,12 @@ def get_post_contents(posts):
     return ret
 
 
-def get_post_info(context, thread, posts, replies=True):
+def get_post_info(context, thread, posts, show_replies=True):
     post_contents = get_post_contents(posts)
     post_info = []
 
     for post in posts:
-        replies = ForumPost.objects.filter(reply_to=post) if replies else []
+        replies = ForumPost.objects.filter(reply_to=post) if show_replies else []
         render_post = {
             'id': post.id,
             'name': post.name,
@@ -40,7 +40,7 @@ def get_post_info(context, thread, posts, replies=True):
             'created_at': render_date(post.created_at),
             'updated_at': render_date(post.updated_at),
             'content': renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user), 'message'),
-            'replies': get_post_info(context, thread, replies),
+            'replies': get_post_info(context, thread, replies, show_replies),
             'rendered_replies': None,
             'options_config': json.dumps({
                 'threadId': thread.id,

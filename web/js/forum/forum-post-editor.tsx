@@ -100,7 +100,11 @@ class ForumPostEditor extends Component<Props, State> {
         (window as any)._closePostEditor = undefined;
     }
 
-    onSubmit = async () => {
+    onSubmit = async (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         const { onSubmit } = this.props;
         if (onSubmit) {
             const { name, description, source } = this.state;
@@ -117,7 +121,11 @@ class ForumPostEditor extends Component<Props, State> {
         }
     };
 
-    onPreview = async () => {
+    onPreview = async (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         const { onPreview } = this.props;
         if (onPreview) {
             const {name, description, source} = this.state;
