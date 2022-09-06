@@ -32,7 +32,7 @@ def get_post_info(context, thread, posts, show_replies=True):
     post_info = []
 
     for post in posts:
-        replies = ForumPost.objects.filter(reply_to=post) if show_replies else []
+        replies = ForumPost.objects.filter(reply_to=post).order_by('created_at') if show_replies else []
         render_post = {
             'id': post.id,
             'name': post.name,
@@ -131,7 +131,7 @@ def render(context: RenderContext, params):
 
     per_page = 10
 
-    q = ForumPost.objects.filter(thread=thread, reply_to__isnull=True)
+    q = ForumPost.objects.filter(thread=thread, reply_to__isnull=True).order_by('created_at')
 
     total = q.count()
 
