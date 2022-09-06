@@ -48,7 +48,7 @@ def check(user, action, obj):
 
         # check for visibility of article comments
         case (_, 'view', ForumThread(category=None, article=article)):
-            return check(user, 'comment', article)
+            return check(user, 'view', article)
 
         # check for visibility of forum threads
         case (_, 'view', ForumThread(article=None, category=category)):
@@ -67,6 +67,9 @@ def check(user, action, obj):
         # These should not be checked often -- it's going to be quite heavy due to nesting
         case (_, 'create', ForumPost(thread=ForumThread(is_locked=True))):
             return False
+
+        case (_, 'create', ForumPost(thread=ForumThread(article=article))) if article:
+            return check(user, 'comment', article)
 
         case (_, 'create', ForumPost(thread=thread)):
             # Can see thread and thread is not locked = can post
