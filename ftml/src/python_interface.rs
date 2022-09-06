@@ -22,9 +22,9 @@ fn page_refs_to_owned(refs: &Vec<PageRef>) -> Vec<PageRef<'static>> {
     refs.iter().map(|x| x.to_owned()).collect()
 }
 
-fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, callbacks: Py<PyAny>) -> (R::Output, Vec<String>, Vec<String>)
+fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, callbacks: Py<PyAny>, mode: WikitextMode) -> (R::Output, Vec<String>, Vec<String>)
 {
-    let mut settings = WikitextSettings::from_mode(WikitextMode::Page);
+    let mut settings = WikitextSettings::from_mode(mode);
     settings.use_include_compatibility = true;
 
     let page_callbacks = Rc::new(PythonCallbacks{ callbacks: Box::new(callbacks.clone()) });
@@ -409,9 +409,17 @@ impl Callbacks {
     }
 }
 
+fn mode_to_wikitext_mode(mode: String) -> WikitextMode {
+    match mode.as_str() {
+        "article" => WikitextMode::Page,
+        "message" => WikitextMode::ForumPost,
+        _ => WikitextMode::Page
+    }
+}
+
 #[pyfunction]
-fn render_html(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<PyRenderResult> {
-    let (html_output, included_pages, linked_pages) = render(&mut source.to_string(), &HtmlRender, page_info.to_page_info(), callbacks);
+fn render_html(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo, mode: String) -> PyResult<PyRenderResult> {
+    let (html_output, included_pages, linked_pages) = render(&mut source.to_string(), &HtmlRender, page_info.to_page_info(), callbacks, mode_to_wikitext_mode(mode));
 
     Ok(PyRenderResult{
         body: html_output.body,
@@ -422,8 +430,8 @@ fn render_html(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> 
 
 
 #[pyfunction]
-fn render_text(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<PyRenderResult> {
-    let (text_output, included_pages, linked_pages) = render(&mut source.to_string(), &TextRender, page_info.to_page_info(), callbacks);
+fn render_text(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo, mode: String) -> PyResult<PyRenderResult> {
+    let (text_output, included_pages, linked_pages) = render(&mut source.to_string(), &TextRender, page_info.to_page_info(), callbacks, mode_to_wikitext_mode(mode));
 
     Ok(PyRenderResult{
         body: text_output,
@@ -433,8 +441,8 @@ fn render_text(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> 
 }
 
 #[pyfunction]
-fn collect_backlinks(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo) -> PyResult<PyRenderResult> {
-    let mut settings = WikitextSettings::from_mode(WikitextMode::Page);
+fn collect_backlinks(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo, mode: String) -> PyResult<PyRenderResult> {
+    let mut settings = WikitextSettings::from_mode(mode_to_wikitext_mode(mode));
     settings.use_include_compatibility = true;
 
     let page_callbacks = Rc::new(PythonCallbacks{ callbacks: Box::new(callbacks.clone()) });

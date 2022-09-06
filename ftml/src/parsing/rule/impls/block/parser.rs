@@ -386,6 +386,7 @@ where
                     break
                 }
                 Token::InputEnd => return Err(self.make_warn(kind)),
+                Token::LineBreak | Token::ParagraphBreak => return Err(self.make_warn(kind)),
                 _ => {}
             }
             self.step()?;

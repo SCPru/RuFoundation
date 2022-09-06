@@ -17,6 +17,7 @@ import os.path
 
 import unicodedata
 
+from web.models.forum import ForumThread, ForumPost
 
 _FullNameOrArticle = Optional[Union[str, Article]]
 _FullNameOrCategory = Optional[Union[str, Category]]
@@ -40,7 +41,8 @@ def normalize_article_name(full_name: str) -> str:
         'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ж': 'z',
         'з': 'z', 'и': 'i', 'й': 'i', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o',
         'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'c',
-        'ч': 'c', 'ы': 'i', 'э': 'e', 'ю': 'u', 'я': 'a', 'і': 'i', 'ї': 'i', 'є': 'e'
+        'ч': 'c', 'ы': 'i', 'э': 'e', 'ю': 'u', 'я': 'a', 'і': 'i', 'ї': 'i', 'є': 'e',
+        'ь': '', 'ъ': ''
     }
     full_name = ''.join(translit_map.get(c, c) for c in full_name)
     n = re.sub(r'[^A-Za-z0-9\-_:]+', '-', full_name).strip('-')
@@ -409,6 +411,17 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user
         add_log_entry(article, log)
 
 
+# Get article comment info
+# This may actually create a thread if it does not exist yet
+def get_comment_info(full_name_or_article: _FullNameOrArticle) -> (int, int):
+    article = get_article(full_name_or_article)
+    if not article:
+        return 0, 0
+    thread, _ = ForumThread.objects.get_or_create(article=article)
+    post_count = ForumPost.objects.filter(thread=thread).count()
+    return thread.id, post_count
+
+
 # Get article rating
 def get_rating(full_name_or_article: _FullNameOrArticle) -> (int | float, int, Settings.RatingMode):
     article = get_article(full_name_or_article)
@@ -565,7 +578,7 @@ def rename_file_in_article(full_name_or_article: _FullNameOrArticle, file: File,
 # Check if name is allowed for creation
 # Pretty much this blocks six 100% special paths, everything else is OK
 def is_full_name_allowed(article_name: str) -> bool:
-    reserved = ['-', '_', 'api', 'local--files', 'local--code']
+    reserved = ['-', '_', 'api', 'forum', 'local--files', 'local--code']
     if article_name in reserved:
         return False
     if len(article_name) > 128:

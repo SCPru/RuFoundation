@@ -332,7 +332,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
             q = q[f_offset:f_offset + f_limit]
         except:
             q = q[f_offset:]
-        total_pages = len(q)
+        total_pages = q.count()
         if allow_pagination:
             try:
                 f_per_page = int(params.get('perpage', '20'))
@@ -362,10 +362,10 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
         around_pages = 2
         left_from = 1
         left_to = left_from + 1
-        if left_to > pagination_total_pages:
-            left_to = pagination_total_pages
         if pagination_page < (around_pages * 2 + 1):
             left_to = around_pages + 1
+        if left_to > pagination_total_pages - 1:
+            left_to = pagination_total_pages - 1
         right_to = pagination_total_pages
         right_from = max(left_to + 1, right_to - 1)
         if pagination_page > (right_to - (around_pages * 2 + 1)):
@@ -377,13 +377,13 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
             <div class="pager">
                 <span class="pager-no">страница&nbsp;{{page}}&nbsp;из&nbsp;{{total_pages}}</span>
                 {% if show_prev_page %}
-                    <span class="target"><a href="{{base_path}}/p/{{prev_page}}" data-pagination-target="{{prev_page}}">&laquo;&nbsp;предыдущая</a></span>
+                    <span class="target"><a href="{%if base_path%}{{base_path}}/p/{{prev_page}}{% else %}#{%endif%}" data-pagination-target="{{prev_page}}">&laquo;&nbsp;предыдущая</a></span>
                 {% endif %}
                 {% for p in left_pages %}
                     {% if page == p %}
-                        <span class="target current">{{p}}</span>
+                        <span class="1 target current">{{p}}</span>
                     {% else %}
-                        <span class="target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
+                        <span class="1 target"><a href="{%if base_path%}{{base_path}}/p/{{p}}{% else %}#{%endif%}" data-pagination-target="{{p}}">{{p}}</a></span>
                     {% endif %}
                 {% endfor %}
                 {% if show_left_dots %}
@@ -391,9 +391,9 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
                 {% endif %}
                 {% for p in center_pages %}
                     {% if page == p %}
-                        <span class="target current">{{p}}</span>
+                        <span class="2 target current">{{p}}</span>
                     {% else %}
-                        <span class="target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
+                        <span class="2 target"><a href="{%if base_path%}{{base_path}}/p/{{p}}{% else %}#{%endif%}" data-pagination-target="{{p}}">{{p}}</a></span>
                     {% endif %}
                 {% endfor %}
                 {% if show_right_dots %}
@@ -401,13 +401,13 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
                 {% endif %}
                 {% for p in right_pages %}
                     {% if page == p %}
-                        <span class="target current">{{p}}</span>
+                        <span class="3 target current">{{p}}</span>
                     {% else %}
-                        <span class="target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
+                        <span class="3 target"><a href="{%if base_path%}{{base_path}}/p/{{p}}{% else %}#{%endif%}" data-pagination-target="{{p}}">{{p}}</a></span>
                     {% endif %}
                 {% endfor %}
                 {% if show_next_page %}
-                    <span class="target"><a href="{{base_path}}/p/{{next_page}}" data-pagination-target="{{next_page}}">следующая&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="{%if base_path%}{{base_path}}/p/{{next_page}}{% else %}#{%endif%}" data-pagination-target="{{next_page}}">следующая&nbsp;&raquo;</a></span>
                 {% endif %}
             </div>
             """,
@@ -452,7 +452,7 @@ def render(context: RenderContext, params, content=None):
             pages = reversed(pages)
 
         output = SafeString()
-        common_context = RenderContext(context.article, context.article, context.path_params, context.user)
+        common_context = context.clone_with(source_article=context.article)
 
         if separate:
             if prepend:
@@ -460,10 +460,9 @@ def render(context: RenderContext, params, content=None):
             for page in pages:
                 page_index += 1
                 page_content = page_to_listpages_vars(page, content, page_index, total_pages)
-                cc = RenderContext(page, page, context.path_params, context.user)
+                cc = common_context.clone_with(article=page, source_article=page)
                 output += renderer.single_pass_render(page_content+'\n', cc)
-                if cc.redirect_to:
-                    common_context.redirect_to = cc.redirect_to
+                common_context.merge(cc)
             if append:
                 output += renderer.single_pass_render(append, common_context)
         else:
@@ -477,8 +476,7 @@ def render(context: RenderContext, params, content=None):
             source += append
             output += renderer.single_pass_render(source, common_context)
 
-        if common_context.redirect_to:
-            context.redirect_to = common_context.redirect_to
+        context.merge(common_context)
 
         if wrapper:
             if context.article:

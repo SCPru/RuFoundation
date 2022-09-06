@@ -20,6 +20,9 @@ class ModuleView(APIView):
         page_id = data.get('pageId', None)
         content = data.get('content', None)
         method = data.get('method', None)
+        # downcase keys
+        params = {key.lower(): value for (key, value) in params.items()}
+        path_params = {key.lower(): value for (key, value) in path_params.items()}
         # load page
         article = articles.get_article(page_id)
         context = RenderContext(article, article, path_params, request.user)

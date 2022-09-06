@@ -15,6 +15,8 @@ import json
 
 from web.models.sites import get_current_site
 
+import re
+
 
 class ArticleView(TemplateResponseMixin, ContextMixin, View):
     template_name = "page.html"
@@ -49,7 +51,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             return single_pass_render(articles.get_latest_source(nav), RenderContext(article, nav, path_params, self.request.user))
         return ""
 
-    def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str], str, Optional[str]]:
+    def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str], str, Optional[str], str]:
         excerpt = ''
         image = None
         if article is not None:
@@ -57,6 +59,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 context = {'page_id': fullname}
                 content = render_to_string(self.template_403, context)
                 redirect_to = None
+                title = ''
                 status = 403
             else:
                 source = articles.get_latest_source(article)
@@ -68,17 +71,34 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 context = RenderContext(article, article, path_params, self.request.user)
                 content, excerpt, image = single_pass_render_with_excerpt(source, context)
                 redirect_to = context.redirect_to
-                status = 200
+                title = context.title
+                status = context.status
         else:
             name, category = articles.get_name(fullname)
             context = {'page_id': fullname, 'allow_create': articles.is_full_name_allowed(fullname) and permissions.check(self.request.user, "create", Article(name=name, category=category))}
             content = render_to_string(self.template_404, context)
             redirect_to = None
+            title = ''
             status = 404
-        return content, status, redirect_to, excerpt, image
+        return content, status, redirect_to, excerpt, image, title
 
     def get_context_data(self, **kwargs):
         path = kwargs["path"]
+
+        # wikidot hack: rewrite forum URLs to forum:start, forum:category, forum:thread
+        # why do they need to support templates here?
+
+        match re.match(r'^forum/start(.*)$', path):
+            case re.Match() as match:
+                path = 'forum:start' + match[1]
+
+        match re.match(r'^forum/c-(\d+)(.*)$', path):
+            case re.Match() as match:
+                path = 'forum:category/c/' + match[1] + match[2]
+
+        match re.match(r'^forum/t-(\d+)(.*)$', path):
+            case re.Match() as match:
+                path = 'forum:thread/t/' + match[1] + match[2]
 
         article_name, path_params = self.get_path_params(path)
 
@@ -93,7 +113,6 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             return {'redirect_to': '/%s%s' % (normalized_article_name, encoded_params)}
 
         article = articles.get_article(article_name)
-        title = article.title.strip() if article and article_name != 'main' else None
         breadcrumbs = [{'url': '/' + articles.get_full_name(x), 'title': x.title} for x in
                        articles.get_breadcrumbs(article)]
 
@@ -101,7 +120,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         nav_top = self._render_nav("nav:top", article, path_params)
         nav_side = self._render_nav("nav:side", article, path_params)
 
-        content, status, redirect_to, excerpt, image = self.render(article_name, article, path_params)
+        content, status, redirect_to, excerpt, image, title = self.render(article_name, article, path_params)
 
         context = super(ArticleView, self).get_context_data(**kwargs)
 
@@ -111,6 +130,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
         site = get_current_site()
         article_rating, article_votes, article_rating_mode = articles.get_rating(article)
+
+        comment_thread_id, comment_count = articles.get_comment_info(article)
 
         canonical_url = '//%s/%s%s' % (site.domain, article.full_name if article else article_name, encoded_params)
 
@@ -124,6 +145,9 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'ratingVotes': article_votes,
             'pathParams': path_params,
             'canRate': permissions.check(self.request.user, "rate", article),
+            'canComment': permissions.check(self.request.user, "view-comments", article) if article else False,
+            'commentThread': '/forum/t-%d/%s' % (comment_thread_id, articles.normalize_article_name(article.display_name)) if article else None,
+            'commentCount': comment_count,
             'canDelete': permissions.check(self.request.user, "delete", article),
         }
 

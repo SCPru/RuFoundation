@@ -3,7 +3,7 @@ from django.contrib import admin
 from django import forms
 
 from .models.articles import *
-from .models.files import File
+from .models.forum import *
 from .models.sites import Site
 
 
@@ -77,3 +77,13 @@ class SiteAdmin(GuardedModelAdmin):
     form = SiteForm
     inlines = [SettingsAdmin]
 
+
+@admin.register(ForumSection)
+class ForumSectionAdmin(admin.ModelAdmin):
+    list_filter = ['site__domain']
+
+
+@admin.register(ForumCategory)
+class ForumCategoryAdmin(admin.ModelAdmin):
+    list_filter = ['site__domain', 'section']
+    list_display = ['name', 'section']

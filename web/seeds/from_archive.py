@@ -80,6 +80,8 @@ def normalize_username(name: str) -> str:
 
 @transaction.atomic
 def get_or_create_user(user_name_or_id, user_data, user_data_by_un):
+    if user_name_or_id is None:
+        return None
     with get_or_create_user_lock:
         if type(user_name_or_id) == str:
             user_attrs = user_data_by_un.get(user_name_or_id, None)
@@ -96,7 +98,7 @@ def get_or_create_user(user_name_or_id, user_data, user_data_by_un):
         else:
             raise TypeError('Invalid parameter for Wikidot user: %s' % repr(user_name_or_id))
         # for w/e reason this causes issues in threading.
-        existing = list(User.objects.filter(type=User.UserType.Wikidot, wikidot_username__iexact=user_name))
+        existing = list(User.objects.filter(wikidot_username__iexact=user_name))
         try:
             if not existing:
                 with transaction.atomic():
@@ -105,8 +107,24 @@ def get_or_create_user(user_name_or_id, user_data, user_data_by_un):
                 return new_user
             return existing[0]
         except IntegrityError:
-            existing = list(User.objects.filter(type=User.UserType.Wikidot, wikidot_username__iexact=user_name))
+            existing = list(User.objects.filter(wikidot_username__iexact=user_name))
             return existing[0]
+
+
+def init_users(base_path):
+    allfiles = os.listdir('%s/_users' % base_path)
+    g_users = {}
+    g_users_by_username = {}
+    for f in allfiles:
+        if f == 'pending.json':
+            continue
+        with codecs.open('%s/_users/%s' % (base_path, f), 'r', encoding='utf-8') as fp:
+            user_bucket = json.load(fp)
+            for k in user_bucket:
+                g_users[k] = user_bucket[k]
+                g_users_by_username[user_bucket[k]['username']] = user_bucket[k]
+
+    return g_users, g_users_by_username
 
 
 def run(base_path):
@@ -120,17 +138,7 @@ def run(base_path):
     t_lock = threading.RLock()
     pages = maybe_load_pages_meta(base_path)
 
-    allfiles = os.listdir('%s/_users' % base_path)
-    g_users = {}
-    g_users_by_username = {}
-    for f in allfiles:
-        if f == 'pending.json':
-            continue
-        with codecs.open('%s/_users/%s' % (base_path, f), 'r', encoding='utf-8') as fp:
-            user_bucket = json.load(fp)
-            for k in user_bucket:
-                g_users[k] = user_bucket[k]
-                g_users_by_username[user_bucket[k]['username']] = user_bucket[k]
+    g_users, g_users_by_username = init_users(base_path)
 
     total_pages = len(pages)
 

@@ -59,7 +59,10 @@ pub fn parse_string(input: &str) -> Cow<str> {
                 'r' => '\r',
                 'n' => '\n',
                 't' => '\t',
-                _ => panic!("Invalid escape sequence: '\\{ch}'"),
+                ch => {
+                    output.push('\\');
+                    ch
+                }
             };
 
             output.push(replacement);

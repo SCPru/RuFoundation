@@ -1,13 +1,12 @@
-import {callModule} from "../api/modules";
 import {showErrorModal} from "../util/wikidot-modal";
-import {ModuleRateResponse} from "../api/rate";
+import {ModuleRateResponse, ratePage} from "../api/rate"
 import {sprintf} from 'sprintf-js'
 
 async function onClick(e: MouseEvent, pageId: string, vote: number): Promise<ModuleRateResponse> {
     e.preventDefault();
     e.stopPropagation();
     try {
-        return await callModule<ModuleRateResponse>({module: 'rate', method: 'rate', pageId, params: {value: vote}});
+        return await ratePage({pageId, value: vote});
     } catch (e) {
         showErrorModal(e.error || 'Ошибка связи с сервером');
         throw e;

@@ -27,6 +27,10 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
             {'model': web.models.sites.Site},
             {'model': web.models.articles.Category},
             {'model': web.models.articles.Tag},
+        )),
+        ('Форум', (
+            {'model': web.models.forum.ForumSection},
+            {'model': web.models.forum.ForumCategory},
         ))
     )
 

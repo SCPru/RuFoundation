@@ -125,6 +125,9 @@ lazy_static! {
             "value",
             "width",
             "wrap",
+            // deprecated iframe attributes
+            "scrolling",
+            "frameborder",
         ]
     };
 

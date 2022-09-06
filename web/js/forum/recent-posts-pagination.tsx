@@ -5,19 +5,17 @@ import {callModule, ModuleRenderResponse} from "../api/modules"
 import {showErrorModal} from "../util/wikidot-modal";
 
 
-export function makeListPages(node: HTMLElement) {
+export function makeRecentPosts(node: HTMLElement) {
 
     // hack: mark node as already processed because it was
-    if ((node as any)._listpages) {
+    if ((node as any)._recentposts) {
         return
     }
-    (node as any)._listpages = true;
+    (node as any)._recentposts = true;
     // end hack
 
-    const lpBasePathParams = JSON.parse(node.dataset.listPagesPathParams);
-    const lpBaseParams = JSON.parse(node.dataset.listPagesParams);
-    const lpBaseContent = JSON.parse(node.dataset.listPagesContent);
-    const lpPageId = node.dataset.listPagesPageId;
+    const rpBasePathParams = JSON.parse(node.dataset.recentPostsPathParams);
+    const rpBaseParams = JSON.parse(node.dataset.recentPostsParams);
 
     // display loader when needed.
     const loaderInto = document.createElement('div');
@@ -35,22 +33,24 @@ export function makeListPages(node: HTMLElement) {
     });
     node.appendChild(loaderInto);
 
+    let category = 'all';
+
     //
-    const switchPage = async (e: MouseEvent, page: string) => {
-        e.preventDefault();
-        e.stopPropagation();
+    const switchPage = async (e: MouseEvent, page: string, category: string) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         loaderInto.style.display = 'flex';
         // because our loader is React, we should display it like this.
         ReactDOM.render(<Loader size={80} borderSize={8} />, loaderInto);
         //
         try {
             const { result: rendered } = await callModule<ModuleRenderResponse>({
-                module: 'listpages',
-                pageId: lpPageId,
+                module: 'recentposts',
                 method: 'render',
-                pathParams: Object.assign(lpBasePathParams, {p: page}),
-                params: lpBaseParams,
-                content: lpBaseContent
+                pathParams: Object.assign(rpBasePathParams, {p: page, c: category}),
+                params: rpBaseParams,
             });
             ReactDOM.unmountComponentAtNode(loaderInto);
             loaderInto.innerHTML = '';
@@ -68,9 +68,16 @@ export function makeListPages(node: HTMLElement) {
     };
 
     // handle page switch
-    const pagers = node.querySelectorAll(':scope > .pager');
+    const pagers = node.querySelectorAll(':scope > div > .thread-container > .pager');
     pagers.forEach(pager => pager.querySelectorAll('*[data-pagination-target]').forEach((node: HTMLElement) => {
-        node.addEventListener('click', (e) => switchPage(e, node.dataset.paginationTarget));
+        node.addEventListener('click', (e) => switchPage(e, node.dataset.paginationTarget, category));
     }));
+
+    // handle category change
+    node.querySelector('.form input.btn')?.addEventListener('click', () => {
+        const value = (node.querySelector('.form select') as HTMLSelectElement).value;
+        category = value;
+        switchPage(null, "1", value);
+    });
 
 }
