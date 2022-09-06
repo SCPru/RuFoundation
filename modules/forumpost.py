@@ -72,7 +72,7 @@ def api_update(context, params):
     if source != prev_source:
         new_version = ForumPostVersion(post=post, source=source, author=context.user)
         new_version.save()
-        post.updated_at = datetime.now()
+        post.updated_at = datetime.utcnow()
 
     if title != post.name:
         post.name = title

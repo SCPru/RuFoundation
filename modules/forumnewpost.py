@@ -1,12 +1,10 @@
 from datetime import datetime
 
 from modules import ModuleError
-from renderer import RenderContext, render_template_from_string, single_pass_render
-import json
+from renderer import RenderContext, single_pass_render
 
-from renderer.utils import render_user_to_json
 from web.controllers import articles, permissions
-from web.models.forum import ForumCategory, ForumThread, ForumPost, ForumPostVersion
+from web.models.forum import ForumThread, ForumPost, ForumPostVersion
 
 
 def has_content():
@@ -57,12 +55,13 @@ def api_submit(context, params):
         raise ModuleError('Недостаточно прав для создания сообщения')
 
     post = ForumPost(thread=thread, author=context.user, name=title, reply_to=reply_to)
+    post.updated_at = datetime.utcnow()
     post.save()
 
     first_post_content = ForumPostVersion(post=post, source=source, author=context.user)
     first_post_content.save()
 
-    thread.updated_at = datetime.now()
+    thread.updated_at = datetime.utcnow()
     thread.save()
 
     return {'url': '/forum/t-%d/%s#post-%d' % (thread.id, articles.normalize_article_name(thread.name), post.id)}

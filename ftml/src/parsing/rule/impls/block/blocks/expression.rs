@@ -215,8 +215,6 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
         }
     };
 
-    println!("truthy: {:#?}, falsey: {:#?}", truthy, falsey);
-
     // evaluate right away; 
     match name {
         "if" => {
