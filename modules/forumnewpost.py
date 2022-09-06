@@ -55,7 +55,8 @@ def api_submit(context, params):
         raise ModuleError('Недостаточно прав для создания сообщения')
 
     post = ForumPost(thread=thread, author=context.user, name=title, reply_to=reply_to)
-    post.updated_at = datetime.now(timezone.utc)
+    post.save()
+    post.updated_at = post.created_at
     post.save()
 
     first_post_content = ForumPostVersion(post=post, source=source, author=context.user)
