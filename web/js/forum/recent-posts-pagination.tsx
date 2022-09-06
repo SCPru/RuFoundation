@@ -33,10 +33,8 @@ export function makeRecentPosts(node: HTMLElement) {
     });
     node.appendChild(loaderInto);
 
-    let category = 'all';
-
     //
-    const switchPage = async (e: MouseEvent, page: string, category: string) => {
+    const switchPage = async (e: MouseEvent, page: string, addParams: {}) => {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
@@ -49,7 +47,7 @@ export function makeRecentPosts(node: HTMLElement) {
             const { result: rendered } = await callModule<ModuleRenderResponse>({
                 module: 'recentposts',
                 method: 'render',
-                pathParams: Object.assign(rpBasePathParams, {p: page, c: category}),
+                pathParams: Object.assign(rpBasePathParams, {p: page}, addParams),
                 params: rpBaseParams,
             });
             ReactDOM.unmountComponentAtNode(loaderInto);
@@ -70,14 +68,13 @@ export function makeRecentPosts(node: HTMLElement) {
     // handle page switch
     const pagers = node.querySelectorAll(':scope > div > .thread-container > .pager');
     pagers.forEach(pager => pager.querySelectorAll('*[data-pagination-target]').forEach((node: HTMLElement) => {
-        node.addEventListener('click', (e) => switchPage(e, node.dataset.paginationTarget, category));
+        node.addEventListener('click', (e) => switchPage(e, node.dataset.paginationTarget, {}));
     }));
 
     // handle category change
     node.querySelector('.form input.btn')?.addEventListener('click', () => {
         const value = (node.querySelector('.form select') as HTMLSelectElement).value;
-        category = value;
-        switchPage(null, "1", value);
+        switchPage(null, "1", {c: value});
     });
 
 }
