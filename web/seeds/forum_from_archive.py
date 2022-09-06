@@ -12,8 +12,9 @@ from django import db
 from py7zr import py7zr
 
 from scpdev import settings
-from .from_archive import run_in_threads, get_or_create_user, init_users
+from .from_archive import run_in_threads, get_or_create_user, init_users, maybe_load_pages_meta
 from .. import threadvars
+from ..models.articles import Article, ArticleLogEntry
 from ..models.forum import ForumSection, ForumCategory, ForumThread, ForumPost, ForumPostVersion
 
 
@@ -49,12 +50,31 @@ def post_highest_timestamp(posts):
 def run(base_path):
     g_users, g_users_by_username = init_users(base_path)
 
+    logging.info('Loading pages...')
+    pages = maybe_load_pages_meta(base_path)
+    comment_thread_map = {}
+    for page in pages:
+        if 'forum_thread' in page:
+            comment_thread_map[page['forum_thread']] = page['name']
+
+    logging.info('Loading existing pages...')
+    articles = Article.objects.all()
+    renames = ArticleLogEntry.objects.filter(type=ArticleLogEntry.LogEntryType.Name).order_by('-created_at')
+    page_name_map = {}
+    for article in articles:
+        page_renames = [x for x in renames if x.article_id == article.id]
+        name = article.full_name
+        if page_renames:
+            name = page_renames[-1].meta['prev_name']
+        page_name_map[name] = article
+
     logging.info('Loading categories...')
     categories = {}
     for category_file in os.listdir('%s/meta/forum/category' % base_path):
         with codecs.open('%s/meta/forum/category/%s' % (base_path, category_file), encoding='utf-8') as f:
             category = json.load(f)
             category['threads'] = []
+            category['isForComments'] = False
             category['local'] = None
             categories[category['id']] = category
 
@@ -74,6 +94,8 @@ def run(base_path):
                 thread = json.load(f)
                 category['threads'].append(thread)
                 thread['categoryId'] = category_id
+                if thread['id'] in comment_thread_map:
+                    category['isForComments'] = True
                 threads.append(thread)
                 total_threads += 1
                 total_posts += count_posts(thread['posts'])
@@ -88,18 +110,47 @@ def run(base_path):
 
     # generate categories
     for _, category in categories.items():
-        c = ForumCategory(id=category['id'], name=category['title'], description=category['description'], section=section)
+        c = ForumCategory(id=category['id'], name=category['title'], description=category['description'], section=section, is_for_comments=category['isForComments'])
         c.save()
         category['local'] = c
+
+    orphan_category = None
+    orphan_category_lock = threading.RLock()
 
     def convert_threads(work):
         nonlocal done_threads
         nonlocal done_posts
         nonlocal t
+        nonlocal orphan_category
 
         for thread in work:
             user = get_or_create_user(thread['startedUser'], g_users, g_users_by_username)
-            th = ForumThread(id=thread['id'], category=categories[thread['categoryId']]['local'], name=thread['title'], description=thread['description'], author=user, is_pinned=thread['sticky'])
+
+            category = categories[thread['categoryId']]['local']
+            article = None
+
+            is_orphan = False
+
+            if thread['id'] in comment_thread_map:
+                category = None
+                article = page_name_map.get(comment_thread_map[thread['id']])
+                if article is None:
+                    logging.warning('Warn: comment thread %d for nonexistent article %s', thread['id'], comment_thread_map[thread['id']])
+                    is_orphan = True
+
+            if category and category.is_for_comments:
+                logging.warning('Warn: attempt to put thread %d in a comment category, but it\'s not a comment thread', thread['id'])
+                is_orphan = True
+
+            if is_orphan:
+                with orphan_category_lock:
+                    if not orphan_category:
+                        orphan_category = ForumCategory(name='Orphan threads', description='Comment threads that could not be reliably assigned to an article', section=section)
+                        orphan_category.save()
+                category = orphan_category
+                article = None
+
+            th = ForumThread(id=thread['id'], category=category, article=article, name=thread['title'], description=thread['description'], author=user, is_pinned=thread['sticky'])
             th.save()
             created_at = datetime.fromtimestamp(thread['started'], tz=timezone.utc)
             # updated_at is the highest post creation timestamp
@@ -108,7 +159,7 @@ def run(base_path):
 
             post_data_7z = '%s/forum/%d/%d.7z' % (base_path, thread['categoryId'], thread['id'])
 
-            if os.path.exists(post_data_7z):
+            if thread['posts']:
                 with py7zr.SevenZipFile(post_data_7z) as z:
                     all_file_names = post_filenames(thread['posts'])
                     post_contents = z.read(all_file_names)
@@ -134,7 +185,7 @@ def run(base_path):
                         rev_user = get_or_create_user(rev['author'], g_users, g_users_by_username)
                         rev_created_at = datetime.fromtimestamp(rev['stamp'], tz=timezone.utc)
                         source_in_file = '%d/%d.html' % (post['id'], rev['id'])
-                        source = html_to_source(post_contents.get(source_in_file, io.BytesIO()).read().decode('utf-8'))
+                        source = html_to_source(post_contents[source_in_file].read().decode('utf-8'))
 
                         for k, v in settings.ARTICLE_IMPORT_REPLACE_CONFIG.items():
                             source = source.replace(k, v)
@@ -144,7 +195,7 @@ def run(base_path):
                         ForumPostVersion.objects.filter(id=r.id).update(created_at=rev_created_at)
                 else:
                     source_in_file = '%d/latest.html' % post['id']
-                    source = html_to_source(post_contents.get(source_in_file, io.BytesIO()).read().decode('utf-8'))
+                    source = html_to_source(post_contents[source_in_file].read().decode('utf-8'))
 
                     for k, v in settings.ARTICLE_IMPORT_REPLACE_CONFIG.items():
                         source = source.replace(k, v)
@@ -265,6 +316,11 @@ def element_to_source(el):
         src = el["src"]
         return '[[iframe %s%s]]' % (src, attrs_to_source(el, ['src']))
     elif el.name == 'span':
+        if 'class' in el.attrs and 'printuser' in el['class']:
+            with_avatar = 'avatarhover' in el['class']
+            # <a href="http://wikidot.com/user:info/<user_name>">
+            user_name = el.find('a')['href'].split('/')[-1]
+            return '[[%suser %s]]' % ('*' if with_avatar else '', user_name)
         if 'class' in el.attrs and 'math-inline' in el['class']:
             content = el.text.strip('$').strip()
             return '[[$ %s $]]' % content
@@ -309,9 +365,13 @@ def element_to_source(el):
             return src
         elif 'code' in el['class']:
             # detect [[code]]
-            if el.pre is not None:
-                code = el.pre.code
-                return '[[code]]\n%s\n[[code]]\n' % code
+            if el.pre is not None and el.pre.code is not None:
+                code = el.pre.code.text
+                return '[[code]]\n%s\n[[/code]]\n' % code
+            sub_el = el.find('div', class_='hl-main')
+            if sub_el and sub_el.pre:
+                code = sub_el.pre.text
+                return '[[code]]\n%s\n[[/code]]\n' % code
             return '[[div%s]]\n%s[[/div]]\n' % (attrs_to_source(el), elements_to_source(el))
         elif 'footnotes-footer' in el['class']:
             title = el.find('div', class_='title').text.replace('\n', ' ').strip()

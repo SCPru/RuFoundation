@@ -46,10 +46,10 @@ export function makeForumThread(node: HTMLElement) {
 
     const setupPageSwitch = () => {
         // handle page switch
-        const pager = node.querySelector('.pager');
-        pager?.querySelectorAll('*[data-pagination-target]').forEach((node: HTMLElement) => {
+        const pagers = node.querySelectorAll(':scope > div > .pager');
+        pagers.forEach(pager => pager.querySelectorAll('*[data-pagination-target]').forEach((node: HTMLElement) => {
             node.addEventListener('click', (e) => switchPage(e, {page: node.dataset.paginationTarget}));
-        });
+        }));
         //
         node.appendChild(loaderInto);
     };

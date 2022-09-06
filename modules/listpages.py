@@ -377,13 +377,13 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
             <div class="pager">
                 <span class="pager-no">страница&nbsp;{{page}}&nbsp;из&nbsp;{{total_pages}}</span>
                 {% if show_prev_page %}
-                    <span class="target"><a href="{{base_path}}/p/{{prev_page}}" data-pagination-target="{{prev_page}}">&laquo;&nbsp;предыдущая</a></span>
+                    <span class="target"><a href="{%if base_path%}{{base_path}}/p/{{prev_page}}{% else %}#{%endif%}" data-pagination-target="{{prev_page}}">&laquo;&nbsp;предыдущая</a></span>
                 {% endif %}
                 {% for p in left_pages %}
                     {% if page == p %}
                         <span class="1 target current">{{p}}</span>
                     {% else %}
-                        <span class="1 target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
+                        <span class="1 target"><a href="{%if base_path%}{{base_path}}/p/{{p}}{% else %}#{%endif%}" data-pagination-target="{{p}}">{{p}}</a></span>
                     {% endif %}
                 {% endfor %}
                 {% if show_left_dots %}
@@ -393,7 +393,7 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
                     {% if page == p %}
                         <span class="2 target current">{{p}}</span>
                     {% else %}
-                        <span class="2 target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
+                        <span class="2 target"><a href="{%if base_path%}{{base_path}}/p/{{p}}{% else %}#{%endif%}" data-pagination-target="{{p}}">{{p}}</a></span>
                     {% endif %}
                 {% endfor %}
                 {% if show_right_dots %}
@@ -403,11 +403,11 @@ def render_pagination(base_path, pagination_page, pagination_total_pages):
                     {% if page == p %}
                         <span class="3 target current">{{p}}</span>
                     {% else %}
-                        <span class="3 target"><a href="{{base_path}}/p/{{p}}" data-pagination-target="{{p}}">{{p}}</a></span>
+                        <span class="3 target"><a href="{%if base_path%}{{base_path}}/p/{{p}}{% else %}#{%endif%}" data-pagination-target="{{p}}">{{p}}</a></span>
                     {% endif %}
                 {% endfor %}
                 {% if show_next_page %}
-                    <span class="target"><a href="{{base_path}}/p/{{next_page}}" data-pagination-target="{{next_page}}">следующая&nbsp;&raquo;</a></span>
+                    <span class="target"><a href="{%if base_path%}{{base_path}}/p/{{next_page}}{% else %}#{%endif%}" data-pagination-target="{{next_page}}">следующая&nbsp;&raquo;</a></span>
                 {% endif %}
             </div>
             """,

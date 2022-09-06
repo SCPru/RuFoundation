@@ -27,12 +27,12 @@ def get_post_contents(posts):
     return ret
 
 
-def get_post_info(context, thread, posts):
+def get_post_info(context, thread, posts, replies=True):
     post_contents = get_post_contents(posts)
     post_info = []
 
     for post in posts:
-        replies = ForumPost.objects.filter(reply_to=post)
+        replies = ForumPost.objects.filter(reply_to=post) if replies else []
         render_post = {
             'id': post.id,
             'name': post.name,

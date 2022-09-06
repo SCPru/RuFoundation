@@ -16,6 +16,8 @@ import ForumNewPost from './entrypoints/forum-new-post'
 import ForumPostOptions from './entrypoints/forum-post-options'
 import {makeForumThread} from './forum/thread-pagination'
 import ForumThreadOptions from './entrypoints/forum-thread-options'
+import {makeRecentPosts} from './forum/recent-posts-pagination'
+import {makeSiteChanges} from './articles/site-changes'
 
 
 function renderTo(where: HTMLElement, what: any) {
@@ -54,6 +56,10 @@ window.addEventListener('DOMContentLoaded', () => {
             renderTo(node, <ForumPostOptions {...JSON.parse(node.dataset.config)} />);
         } else if (node.classList.contains('w-forum-thread')) {
             makeForumThread(node);
+        } else if (node.classList.contains('w-forum-recent-posts')) {
+            makeRecentPosts(node);
+        } else if (node.classList.contains('w-site-changes')) {
+            makeSiteChanges(node);
         }
     };
 

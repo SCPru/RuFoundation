@@ -131,9 +131,11 @@ def render(context: RenderContext, params):
                     {% endif %}
                 </div>
             </div>
-            <div class="new-post">
-                <a href="/forum:new-thread/c/{{ category.id }}">Создать тему</a>
-            </div>
+            {% if not category.is_for_comments %}
+                <div class="new-post">
+                    <a href="/forum:new-thread/c/{{ category.id }}">Создать тему</a>
+                </div>
+            {% endif %}
             {{ pagination }}
             <table class="table" style="width: 98%">
             <tbody>
