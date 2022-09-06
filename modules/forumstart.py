@@ -52,7 +52,6 @@ def render(context: RenderContext, params):
                 citem['last_post_date'] = None
                 citem['last_post_url'] = None
                 citem['last_post_user'] = None
-            print(repr(citem))
             item['categories'].append(citem)
         if item['categories']:
             items.append(item)
