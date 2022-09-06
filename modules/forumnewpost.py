@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from modules import ModuleError
 from renderer import RenderContext, single_pass_render
@@ -55,13 +55,13 @@ def api_submit(context, params):
         raise ModuleError('Недостаточно прав для создания сообщения')
 
     post = ForumPost(thread=thread, author=context.user, name=title, reply_to=reply_to)
-    post.updated_at = datetime.utcnow()
+    post.updated_at = datetime.now(timezone.utc)
     post.save()
 
     first_post_content = ForumPostVersion(post=post, source=source, author=context.user)
     first_post_content.save()
 
-    thread.updated_at = datetime.utcnow()
+    thread.updated_at = datetime.now(timezone.utc)
     thread.save()
 
     return {'url': '/forum/t-%d/%s#post-%d' % (thread.id, articles.normalize_article_name(thread.name), post.id)}

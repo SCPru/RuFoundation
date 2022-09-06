@@ -526,7 +526,7 @@ def delete_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fil
             os.unlink(file.local_media_path)
         file.delete()
     else:
-        file.deleted_at = datetime.datetime.now()
+        file.deleted_at = datetime.datetime.now(datetime.timezone.utc)
         file.deleted_by = user
         file.save()
         log = ArticleLogEntry(

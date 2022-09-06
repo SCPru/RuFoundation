@@ -1,7 +1,7 @@
 from modules import ModuleError
 from renderer import RenderContext, single_pass_render
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from renderer.utils import render_user_to_json
 from web.controllers import permissions
@@ -72,7 +72,7 @@ def api_update(context, params):
     if source != prev_source:
         new_version = ForumPostVersion(post=post, source=source, author=context.user)
         new_version.save()
-        post.updated_at = datetime.utcnow()
+        post.updated_at = datetime.now(timezone.utc)
 
     if title != post.name:
         post.name = title
