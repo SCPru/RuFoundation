@@ -43,7 +43,7 @@ def get_post_info(context, posts, category_for_comments):
             } if category_for_comments else None,
             'thread': {
                 'id': post.thread.id,
-                'name': post.thread.name,
+                'name': post.thread.name if post.thread.category_id else post.thread.article.display_name,
                 'url': thread_url
             }
         }
