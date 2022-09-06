@@ -19,3 +19,4 @@ ftml/target
 ftml/pkg
 ftml/*.pyd
 ftml/*.so
+venv

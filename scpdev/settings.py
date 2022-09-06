@@ -150,7 +150,7 @@ STATIC_URL = "/-/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "static_dist"
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 MEDIA_HOST = os.environ.get('MEDIA_HOST', None)
 MEDIA_URL = "local--files/"
