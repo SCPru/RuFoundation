@@ -264,7 +264,7 @@ fn parse_expr<'r, 't>(
 
 fn evaluate_if<'r, 't>(_parser: &mut Parser<'r, 't>, expr: &str) -> bool {
     let expr = expr.trim().to_ascii_lowercase();
-    !(expr == "false" || expr == "null" || (expr.starts_with("{$") && expr.ends_with('}')))
+    !(expr == "false" || expr == "null" || (expr.starts_with("{$") && expr.ends_with('}')) || (expr.starts_with("%%") && expr.ends_with("%%")))
 }
 
 fn evaluate_ifexpr<'r, 't>(parser: &mut Parser<'t, 't>, expr: &str) -> bool {
