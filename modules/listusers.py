@@ -1,5 +1,5 @@
 import renderer
-import re
+from django.conf import settings
 
 from renderer.templates import apply_template
 
@@ -18,7 +18,8 @@ def render(context, params, content=None):
         tpl_vars = {
             'number': str(context.user.id),
             'title': context.user.username,
-            'name': context.user.username
+            'name': context.user.username,
+            'avatar': context.user.get_avatar(settings.DEFAULT_AVATAR)
         }
 
     template = apply_template((content or '').strip(), tpl_vars)
