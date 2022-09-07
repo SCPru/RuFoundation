@@ -13,7 +13,9 @@ def render(context, params, content=None):
     if not context.user.is_authenticated:
         if params.get('always', 'no') != 'yes':
             return ''
-        tpl_vars = {}
+        tpl_vars = {
+            'avatar': settings.DEFAULT_AVATAR
+        }
     else:
         tpl_vars = {
             'number': str(context.user.id),
