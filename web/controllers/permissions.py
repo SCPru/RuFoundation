@@ -81,9 +81,6 @@ def check(user, action, obj):
         case (user, 'edit', ForumPost(author=author)) if author == user:
             return True
 
-        case (user, 'delete', ForumPost(author=author)) if author == user:
-            return True
-
         case (_, _, _):
             return False
 
