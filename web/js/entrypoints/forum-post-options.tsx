@@ -258,7 +258,7 @@ class ForumPostOptions extends Component<Props, State> {
                 ) }
                 {canReply && <strong><a href="#" onClick={this.onReply}>Ответить</a></strong>}
                 {' '}
-                {canEdit && canDelete && <a href="#" onClick={this.onToggle}>Опции</a>}
+                {(canEdit || canDelete) && <a href="#" onClick={this.onToggle}>Опции</a>}
                 {open && (
                     <div className="options">
                         {canEdit && <a href="#" onClick={this.onEdit}>Редактировать</a>}
