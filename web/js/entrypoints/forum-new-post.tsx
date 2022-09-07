@@ -49,9 +49,6 @@ class ForumNewPost extends Component<Props, State> {
             source: input.source
         };
         const { url } = await createForumPost(request);
-        window.onhashchange = () => {
-            window.location.reload();
-        };
         window.location.href = url;
     };
 
