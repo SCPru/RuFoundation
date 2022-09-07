@@ -38,7 +38,7 @@ def api_fetch(context, params):
     else:
         source = version[0].source
 
-    content = single_pass_render(source, RenderContext(None, None, {}, context.user))
+    content = single_pass_render(source, RenderContext(None, None, {}, context.user), 'message')
 
     return {
         'postId': post.id,
@@ -79,7 +79,7 @@ def api_update(context, params):
 
     post.save()
 
-    content = single_pass_render(source, RenderContext(None, None, {}, context.user))
+    content = single_pass_render(source, RenderContext(None, None, {}, context.user), 'message')
 
     return {
         'postId': post.id,

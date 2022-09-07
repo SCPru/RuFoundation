@@ -19,7 +19,7 @@ def api_preview(context, params):
     if 'source' not in params:
         raise ModuleError('Исходный код не указан')
 
-    return {'result': single_pass_render(params['source'], RenderContext(None, None, {}, context.user))}
+    return {'result': single_pass_render(params['source'], RenderContext(None, None, {}, context.user), 'message')}
 
 
 def api_submit(context, params):
