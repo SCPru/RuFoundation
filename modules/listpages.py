@@ -24,10 +24,10 @@ def has_content():
     return True
 
 
-def render_date(date):
+def render_date(date, format='%H:%M %d.%m.%Y'):
     if not date:
         return 'n/a'
-    return date.strftime('%H:%M %d.%m.%Y')
+    return render_template_from_string('<span class="odate w-date" style="display: inline" data-timestamp="{{ timestamp }}" data-format="{{ format }}">{{ serverside }}</span>', timestamp=int(date.timestamp()*1000), format=format, serverside=date.strftime(format))
 
 
 def render_var(var, page_vars, page):

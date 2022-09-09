@@ -75,7 +75,7 @@ def render_posts(post_info):
                             {{ post.name }}
                         </div>
                         <div class="info">
-                            {{ post.author }} <span class="odate" style="display: inline">{{ post.created_at }}</span>
+                            {{ post.author }} {{ post.created_at }}
                         </div>
                     </div>
                     <div class="content">
@@ -232,7 +232,7 @@ def render(context: RenderContext, params):
                 <div class="statistics">
                     Создатель: {{ created_by }}
                     <br>
-                    Дата: <span class="odate" style="display: inline">{{ created_at }}</span>
+                    Дата: {{ created_at }}
                     <br>
                     Сообщений: {{ total_posts }}
                 </div>

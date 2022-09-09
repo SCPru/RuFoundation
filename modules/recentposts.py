@@ -166,7 +166,7 @@ def render(context: RenderContext, params):
                                         <a href="{{ post.url }}">{{ post.name }}</a>
                                     </div>
                                     <div class="info">
-                                        {{ post.author }} <span class="odate" style="display: inline">{{ post.created_at }}</span>
+                                        {{ post.author }} {{ post.created_at }}
                                         <br>
                                         в дискуссии
                                         {% if post.category %}

@@ -296,9 +296,7 @@ def render(context: RenderContext, params):
                             </span>
                         </td>
                         <td class="mod-date">
-                            <span class="odate" style="display: inline">
-                                {{ entry.date }}
-                            </span>
+                            {{ entry.date }}
                         </td>
                         <td class="revision-no">
                             (рев. {{ entry.rev_number }}) 

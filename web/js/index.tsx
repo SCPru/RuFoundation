@@ -18,6 +18,7 @@ import {makeForumThread} from './forum/thread-pagination'
 import ForumThreadOptions from './entrypoints/forum-thread-options'
 import {makeRecentPosts} from './forum/recent-posts-pagination'
 import {makeSiteChanges} from './articles/site-changes'
+import {makeDate} from './articles/date'
 
 
 function renderTo(where: HTMLElement, what: any) {
@@ -60,6 +61,8 @@ window.addEventListener('DOMContentLoaded', () => {
             makeRecentPosts(node);
         } else if (node.classList.contains('w-site-changes')) {
             makeSiteChanges(node);
+        } else if (node.classList.contains('w-date')) {
+            makeDate(node);
         }
     };
 
