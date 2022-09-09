@@ -107,6 +107,7 @@ class ForumPostEditor extends Component<Props, State> {
         }
         const { onSubmit } = this.props;
         if (onSubmit) {
+            const { initialTitle } = this.props;
             const { name, description, source } = this.state;
             const input: ForumPostSubmissionData = {
                 name: name, description, source
@@ -114,7 +115,7 @@ class ForumPostEditor extends Component<Props, State> {
             this.setState({ saving: true, error: null, savingSuccess: false });
             try {
                 await onSubmit(input);
-                this.setState({ saving: false, error: null, savingSuccess: false });
+                this.setState({ saving: false, error: null, savingSuccess: false, source: '', name: initialTitle });
             } catch (e) {
                 this.setState({ loading: false, saving: false, fatalError: false, error: e.message || e.error || 'Ошибка связи с сервером' });
             }

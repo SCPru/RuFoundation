@@ -50,6 +50,7 @@ class ForumNewPost extends Component<Props, State> {
         };
         const { url } = await createForumPost(request);
         window.location.href = url;
+        this.setState({ open: false });
     };
 
     onPreview = (input: ForumPostPreviewData) => {
