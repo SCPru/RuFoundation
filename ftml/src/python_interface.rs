@@ -34,9 +34,11 @@ fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, call
     let mut included_pages = vec![];
     loop {
         let includer = PythonCallbacks{ callbacks: Box::new(callbacks.clone()) };
-        let current_text = included_text.clone();
+        let mut current_text = included_text.clone();
+        preprocess(&mut current_text);
         let (l_text, l_included_pages) = include(&current_text, &settings, includer, || panic!("Bad includer return")).unwrap_or((input.to_owned(), vec![]));
         if l_included_pages.is_empty() {
+            included_text = current_text;
             break
         }
         included_text = l_text.clone();
@@ -44,7 +46,6 @@ fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, call
     }
 
     let text = &mut included_text.clone();
-    preprocess(text);
     let tokens = tokenize(text);
     let (tree, _warnings) = parse(&tokens, &page_info, page_callbacks.clone(), &settings).into();
     let output = renderer.render(&tree, &page_info, page_callbacks, &settings);
