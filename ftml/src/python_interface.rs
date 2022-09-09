@@ -34,15 +34,14 @@ fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, call
     let mut included_pages = vec![];
     loop {
         let includer = PythonCallbacks{ callbacks: Box::new(callbacks.clone()) };
-        let mut current_text = included_text.clone();
+        let mut current_text = included_text;
         preprocess(&mut current_text);
-        let (l_text, l_included_pages) = include(&current_text, &settings, includer, || panic!("Bad includer return")).unwrap_or((input.to_owned(), vec![]));
+        let (l_text, l_included_pages) = include(&current_text, &settings, includer, || panic!("Bad includer return")).unwrap_or((current_text.to_owned(), vec![]));
+        included_text = l_text;
+        included_pages.append(&mut page_refs_to_owned(&l_included_pages));
         if l_included_pages.is_empty() {
-            included_text = current_text;
             break
         }
-        included_text = l_text.clone();
-        included_pages.append(&mut page_refs_to_owned(&l_included_pages));
     }
 
     let text = &mut included_text.clone();
