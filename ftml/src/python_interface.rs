@@ -449,11 +449,12 @@ fn collect_backlinks(source: String, callbacks: Py<PyAny>, page_info: &PyPageInf
     let page_callbacks = Rc::new(PythonCallbacks{ callbacks: Box::new(callbacks.clone()) });
 
     let includer = NullIncluder{};
-    
-    let (included_text, included_pages) = include(&source, &settings, includer, || panic!("Mismatched includer page count")).unwrap_or((source.to_owned(), vec![]));
+
+    let text = &mut source.clone();
+    preprocess(text);
+    let (included_text, included_pages) = include(&text, &settings, includer, || panic!("Mismatched includer page count")).unwrap_or((source.to_owned(), vec![]));
 
     let text = &mut included_text.clone();
-    preprocess(text);
     let tokens = tokenize(text);
     let page_info = page_info.to_page_info();
     let (tree, _warnings) = parse(&tokens, &page_info, page_callbacks.clone(), &settings).into();
