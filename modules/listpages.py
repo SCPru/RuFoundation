@@ -211,7 +211,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
                 else:
                     user = User.objects.filter(username__iexact=f_created_by.strip())
                 user = user[0] if user else None
-            if user is None:
+            if not user or not user.is_authenticated:
                 q = q.filter(id=-1)  # invalid
             else:
                 q = q.filter(author=user)
