@@ -19,7 +19,7 @@ class ForumPostPreview extends Component<Props> {
         const previewDate = new Date();
         return (
             <>
-                <h2>Предпросмотр:</h2>
+                { isThread && <h2>Предпросмотр:</h2> }
                 <div className="forum-thread-box">
                     { isThread && <div className="description-block well">
                         { preview.description && <div className="head">Краткое описание:</div> }
@@ -33,6 +33,7 @@ class ForumPostPreview extends Component<Props> {
                     <div id="thread-container" className="thread-container">
                         <div id="thread-container-posts">
                             <div className="post-container">
+                                { !isThread && <h2>Предпросмотр ответа:</h2> }
                                 <div className="post">
                                     <div className="long">
                                         <div className="head">

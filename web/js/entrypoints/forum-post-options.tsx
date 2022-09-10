@@ -34,7 +34,6 @@ interface Props {
 interface State {
     isEditing: boolean
     isReplying: boolean
-    replyPreview?: ForumPostPreviewData
     open: boolean
     originalPreviewTitle?: string
     originalPreviewContent?: string
@@ -52,6 +51,7 @@ class ForumPostOptions extends Component<Props, State> {
     refSelf: HTMLElement = null;
     refPreviewTitle: HTMLElement = null;
     refPreviewContent: HTMLElement = null;
+    refReplyPreview: HTMLElement = null;
 
     constructor(props: Props) {
         super(props);
@@ -75,11 +75,22 @@ class ForumPostOptions extends Component<Props, State> {
         const longPost = this.refSelf.parentNode;
         this.refPreviewTitle = longPost.querySelector('.head .title');
         this.refPreviewContent = longPost.querySelector('.content');
+        let refReplyPreview: HTMLElement = longPost.querySelector('.w-reply-preview');
+        if (!refReplyPreview) {
+            refReplyPreview = document.createElement('div');
+            refReplyPreview.className = 'w-reply-preview';
+            this.refSelf.parentNode.insertBefore(refReplyPreview, this.refSelf);
+        }
+        this.refReplyPreview = refReplyPreview;
         this.setState({ originalPreviewTitle: this.refPreviewTitle.textContent, originalPreviewContent: this.refPreviewContent.innerHTML });
     }
 
     onReplyClose = () => {
         this.setState({ isReplying: false });
+        if (this.refReplyPreview.firstChild) {
+            ReactDOM.unmountComponentAtNode(this.refReplyPreview);
+            this.refReplyPreview.innerHTML = '';
+        }
     };
 
     onReplySubmit = async (input: ForumPostSubmissionData) => {
@@ -99,7 +110,8 @@ class ForumPostOptions extends Component<Props, State> {
     };
 
     onReplyPreview = (input: ForumPostPreviewData) => {
-        this.setState({ replyPreview: input });
+        const { user } = this.props;
+        ReactDOM.render(<ForumPostPreview preview={input} user={user}/>, this.refReplyPreview);
     };
 
     onReply = (e) => {
@@ -219,11 +231,12 @@ class ForumPostOptions extends Component<Props, State> {
     }
 
     render() {
-        const { canReply, canEdit, canDelete, user, threadName, postName, postId } = this.props;
+        const { canReply, canEdit, canDelete, threadName, postName, postId } = this.props;
         const {
-            open, isReplying, isEditing, replyPreview, deleteError,
+            open, isReplying, isEditing, deleteError,
             lastRevisionAuthor, lastRevisionDate, hasRevisions, revisionsOpen, revisions, currentRevision
         } = this.state;
+
         return (
             <>
                 {(hasRevisions && lastRevisionDate && lastRevisionAuthor && !revisionsOpen) && (
@@ -268,9 +281,6 @@ class ForumPostOptions extends Component<Props, State> {
                 )}
                 {isReplying && (
                     <div className="post-container">
-                        {replyPreview && (
-                            <ForumPostPreview preview={replyPreview} user={user} />
-                        )}
                         <ForumPostEditor isNew
                                          onClose={this.onReplyClose}
                                          onSubmit={this.onReplySubmit}
