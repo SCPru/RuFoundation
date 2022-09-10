@@ -309,6 +309,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
         f_sort = params.get('order', 'created_at desc').split(' ')
         allowed_sort_columns = {
             'created_at': F('created_at'),
+            'created_by': F('author'),
             'name': F('name'),
             'title': F('title'),
             'updated_at': F('updated_at'),
