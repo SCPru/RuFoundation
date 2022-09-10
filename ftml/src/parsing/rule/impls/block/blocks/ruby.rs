@@ -70,7 +70,7 @@ fn parse_block<'r, 't>(
     let arguments = parser.get_head_map(&BLOCK_RUBY, in_head)?;
 
     let (mut elements, exceptions, paragraph_safe) =
-        parser.get_body_elements(&BLOCK_RUBY, false)?.into();
+        parser.get_body_elements(&BLOCK_RUBY, name, false)?.into();
 
     // Convert ruby partials to elements
     for element in &mut elements {
@@ -138,7 +138,7 @@ fn parse_text<'r, 't>(
     let arguments = parser.get_head_map(&BLOCK_RT, in_head)?;
 
     let (mut elements, exceptions, paragraph_safe) =
-        parser.get_body_elements(&BLOCK_RT, false)?.into();
+        parser.get_body_elements(&BLOCK_RT, name, false)?.into();
 
     // Remove leading and trailing whitespace
     strip_whitespace(&mut elements);

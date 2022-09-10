@@ -50,7 +50,7 @@ fn parse_fn<'r, 't>(
     // Get body content, based on whether we want paragraphs or not.
     // Discard paragraph_safe, since divs never are.
     let (elements, exceptions, _) = parser
-        .get_body_elements(&BLOCK_DIV, wrap_paragraphs)?
+        .get_body_elements(&BLOCK_DIV, name, wrap_paragraphs)?
         .into();
 
     // Build element and return

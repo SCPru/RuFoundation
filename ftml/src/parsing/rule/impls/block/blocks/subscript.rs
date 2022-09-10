@@ -46,7 +46,7 @@ fn parse_fn<'r, 't>(
 
     // Get body content, without paragraphs
     let (elements, exceptions, paragraph_safe) =
-        parser.get_body_elements(&BLOCK_SUBSCRIPT, false)?.into();
+        parser.get_body_elements(&BLOCK_SUBSCRIPT, name, false)?.into();
 
     let element = Element::Container(Container::new(
         ContainerType::Subscript,

@@ -112,6 +112,7 @@ where
         &mut self,
         first_iteration: bool,
         block_rule: &BlockRule,
+        closing_name: &str,
     ) -> Option<&'r ExtractedToken<'t>> {
         self.save_evaluate_fn(|parser| {
             // Check that the end block is on a new line, if required
@@ -132,13 +133,7 @@ where
             let name = name.strip_suffix('_').unwrap_or(name);
 
             // Check if it's valid
-            for end_block_name in block_rule.accepts_names {
-                if name.eq_ignore_ascii_case(end_block_name) {
-                    return Ok(true);
-                }
-            }
-
-            Ok(false)
+            Ok(name.eq_ignore_ascii_case(closing_name))
         })
     }
 
@@ -150,6 +145,7 @@ where
     fn get_body_generic<F>(
         &mut self,
         block_rule: &BlockRule,
+        closing_name: &str,
         mut process: F,
     ) -> Result<(&'r ExtractedToken<'t>, &'r ExtractedToken<'t>), ParseWarning>
     where
@@ -168,7 +164,7 @@ where
         let start = self.current();
 
         loop {
-            let at_end_block = self.verify_end_block(first, block_rule);
+            let at_end_block = self.verify_end_block(first, block_rule, closing_name);
 
             // If there's a match, return the last body token
             if let Some(end) = at_end_block {
@@ -195,11 +191,12 @@ where
     pub fn get_body_text(
         &mut self,
         block_rule: &BlockRule,
+        closing_name: &str,
     ) -> Result<&'t str, ParseWarning> {
         info!("Getting block body as text (rule {})", block_rule.name);
 
         // State variables for collecting span
-        let (start, end) = self.get_body_generic(block_rule, |_| Ok(()))?;
+        let (start, end) = self.get_body_generic(block_rule, closing_name, |_| Ok(()))?;
         let slice = self.full_text().slice_partial(start, end);
         Ok(slice)
     }
@@ -208,6 +205,7 @@ where
     pub fn get_body_elements(
         &mut self,
         block_rule: &BlockRule,
+        closing_name: &str,
         as_paragraphs: bool,
     ) -> ParseResult<'r, 't, Vec<Element<'t>>> {
         info!(
@@ -216,15 +214,16 @@ where
         );
 
         if as_paragraphs {
-            self.get_body_elements_paragraphs(block_rule)
+            self.get_body_elements_paragraphs(block_rule, closing_name)
         } else {
-            self.get_body_elements_no_paragraphs(block_rule)
+            self.get_body_elements_no_paragraphs(block_rule, closing_name)
         }
     }
 
     fn get_body_elements_paragraphs(
         &mut self,
         block_rule: &BlockRule,
+        closing_name: &str,
     ) -> ParseResult<'r, 't, Vec<Element<'t>>> {
         let mut first = true;
 
@@ -232,7 +231,7 @@ where
             self,
             self.rule(),
             Some(move |parser: &mut Parser<'r, 't>| {
-                let result = parser.verify_end_block(first, block_rule);
+                let result = parser.verify_end_block(first, block_rule, closing_name);
                 first = false;
 
                 Ok(result.is_some())
@@ -243,6 +242,7 @@ where
     fn get_body_elements_no_paragraphs(
         &mut self,
         block_rule: &BlockRule,
+        closing_name: &str,
     ) -> ParseResult<'r, 't, Vec<Element<'t>>> {
         let mut all_elements = Vec::new();
         let mut all_exceptions = Vec::new();
@@ -250,7 +250,7 @@ where
         let mut first = true;
 
         loop {
-            let result = self.verify_end_block(first, block_rule);
+            let result = self.verify_end_block(first, block_rule, closing_name);
             if result.is_some() {
                 // This is normally used for _ blocks. We should strip all leading/trailing whitespace and newlines from the content.
                 strip_whitespace(&mut all_elements);

@@ -197,7 +197,7 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
 
     // Get body content, never with paragraphs
     let (elements, _, _) =
-        parser.get_body_elements(rule, false)?.into();
+        parser.get_body_elements(rule, name, false)?.into();
 
     // Check for "else" separating truthy and falsey conditions
     let (truthy, falsey) = match elements.iter().position(|x| matches!(x, Element::Partial(PartialElement::Else))) {

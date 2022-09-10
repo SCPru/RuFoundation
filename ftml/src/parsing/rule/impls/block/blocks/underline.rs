@@ -18,8 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::tree::AcceptsPartial;
-
 use super::prelude::*;
 
 pub const BLOCK_UNDERLINE: BlockRule = BlockRule {
@@ -48,7 +46,7 @@ fn parse_fn<'r, 't>(
 
     // Get body content, without paragraphs
     let (elements, exceptions, paragraph_safe) =
-        parser.get_body_elements(&BLOCK_UNDERLINE, false)?.into();
+        parser.get_body_elements(&BLOCK_UNDERLINE, name, false)?.into();
 
     let element = Element::Container(Container::new(
         ContainerType::Underline,

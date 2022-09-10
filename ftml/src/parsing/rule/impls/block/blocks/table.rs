@@ -102,7 +102,7 @@ where
     let attributes = arguments.to_attribute_map(parser.settings());
 
     // Get body elements
-    let (elements, exceptions, _) = parser.get_body_elements(block_rule, false)?.into();
+    let (elements, exceptions, _) = parser.get_body_elements(block_rule, name, false)?.into();
 
     // Return result
     Ok(ParsedBlock {

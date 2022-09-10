@@ -53,7 +53,7 @@ fn parse_fn<'r, 't>(
 
     // Get body content, never with paragraphs
     let (elements, mut exceptions, paragraph_safe) =
-        parser.get_body_elements(&BLOCK_IFTAGS, false)?.into();
+        parser.get_body_elements(&BLOCK_IFTAGS, name, false)?.into();
 
     debug!(
         "IfTags conditions parsed (conditions length {}, elements length {})",

@@ -45,7 +45,7 @@ fn parse_fn<'r, 't>(
     let mut arguments = parser.get_head_map(&BLOCK_CODE, in_head)?;
     let language = arguments.get("type");
 
-    let code = parser.get_body_text(&BLOCK_CODE)?;
+    let code = parser.get_body_text(&BLOCK_CODE, name)?;
     let element = Element::Code {
         contents: cow!(code),
         language,

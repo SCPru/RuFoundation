@@ -46,7 +46,7 @@ fn parse_fn<'r, 't>(
 
     // Get body content, without paragraphs
     let (elements, exceptions, paragraph_safe) =
-        parser.get_body_elements(&BLOCK_ITALICS, false)?.into();
+        parser.get_body_elements(&BLOCK_ITALICS, name, false)?.into();
 
     let element = Element::Container(Container::new(
         ContainerType::Italics,

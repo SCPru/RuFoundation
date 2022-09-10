@@ -42,11 +42,13 @@ fn parse_fn<'r, 't>(
     assert!(!flag_score, "User doesn't allow score flag");
     assert_block_name(&BLOCK_MATH, name);
 
+    let block_name = name;
+
     let name = parser.get_head_value(&BLOCK_MATH, in_head, |_, value| {
         Ok(value.map(|s| cow!(s.trim())))
     })?;
 
-    let latex_source = parser.get_body_text(&BLOCK_MATH)?.trim();
+    let latex_source = parser.get_body_text(&BLOCK_MATH, block_name)?.trim();
     if latex_source.is_empty() {
         return Err(parser.make_warn(ParseWarningKind::RuleFailed));
     }

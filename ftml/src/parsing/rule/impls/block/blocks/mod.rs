@@ -50,6 +50,11 @@ mod prelude {
 
     #[inline]
     pub fn assert_block_name(block_rule: &BlockRule, actual_name: &str) {
+        let actual_name = if actual_name.contains(':') {
+            actual_name.split_once(':').unwrap().0
+        } else {
+            actual_name
+        };
         assert_generic_name(block_rule.accepts_names, actual_name, "block")
     }
 }

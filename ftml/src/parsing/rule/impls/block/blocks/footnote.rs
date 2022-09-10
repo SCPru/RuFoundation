@@ -73,7 +73,7 @@ fn parse_footnote_ref<'r, 't>(
     // However, if there's only one, then we strip it
     // and make it inline.
     let (mut elements, exceptions, _) =
-        parser.get_body_elements(&BLOCK_FOOTNOTE, true)?.into();
+        parser.get_body_elements(&BLOCK_FOOTNOTE, name, true)?.into();
 
     if elements.len() == 1 {
         match elements.pop().unwrap() {

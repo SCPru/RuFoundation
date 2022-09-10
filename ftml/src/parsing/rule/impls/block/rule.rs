@@ -68,6 +68,13 @@ where
         None => (name, false),
     };
 
+    let (full_name, name) = if name.contains(':') {
+        let (short_name, _) = name.split_once(':').unwrap();
+        (name, short_name)
+    } else {
+        (name, name)
+    };
+
     // Get the block rule for this name
     let block = match get_block_rule_with_name(name) {
         Some(block) => block,
@@ -95,7 +102,7 @@ where
     // and terminating the block (the ']]' token),
     // then processing the body (if any) and tail block.
     let parser = &mut ParserWrap::new(parser, block.accepts_partial);
-    let result = (block.parse_fn)(parser, name, flag_star, flag_score, in_head)?;
+    let result = (block.parse_fn)(parser, full_name, flag_star, flag_score, in_head)?;
 
     // If this is an underline block, skip whitespace to next element. This is what Wikidot does.
     // This allows not creating <br> after each <div>

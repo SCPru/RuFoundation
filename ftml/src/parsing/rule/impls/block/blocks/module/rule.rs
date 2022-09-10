@@ -52,7 +52,7 @@ fn parse_fn<'r, 't>(
     let body: Cow<'t, str>;
 
     if module_has_body {
-        body = Cow::from(parser.get_body_text(&BLOCK_MODULE)?);
+        body = Cow::from(parser.get_body_text(&BLOCK_MODULE, name)?);
     } else {
         body = Cow::from("");
     }

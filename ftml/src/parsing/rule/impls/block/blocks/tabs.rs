@@ -56,7 +56,7 @@ fn parse_tabview<'r, 't>(
     parser.get_head_none(&BLOCK_TABVIEW, in_head)?;
 
     let (elements, exceptions, _) =
-        parser.get_body_elements(&BLOCK_TABVIEW, false)?.into();
+        parser.get_body_elements(&BLOCK_TABVIEW, name, false)?.into();
 
     // Build element and return
     let mut tabs = Vec::new();
@@ -110,7 +110,7 @@ fn parse_tab<'r, 't>(
         cow!(raw_label)
     };
 
-    let (elements, exceptions, _) = parser.get_body_elements(&BLOCK_TAB, true)?.into();
+    let (elements, exceptions, _) = parser.get_body_elements(&BLOCK_TAB, name, true)?.into();
 
     // Build element and return
     let element = Element::Partial(PartialElement::Tab(Tab {

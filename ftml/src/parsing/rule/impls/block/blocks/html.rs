@@ -43,7 +43,7 @@ fn parse_fn<'r, 't>(
     assert_block_name(&BLOCK_HTML, name);
 
     parser.get_head_none(&BLOCK_HTML, in_head)?;
-    let html = parser.get_body_text(&BLOCK_HTML)?;
+    let html = parser.get_body_text(&BLOCK_HTML, name)?;
     let element = Element::Html {
         contents: cow!(html),
     };

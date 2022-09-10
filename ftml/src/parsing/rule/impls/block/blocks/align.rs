@@ -80,7 +80,7 @@ pub fn parse_alignment_block<'r, 't>(
     parser.get_head_none(block_rule, in_head)?;
 
     // Get body content, with paragraphs
-    let (elements, exceptions, _) = parser.get_body_elements(block_rule, true)?.into();
+    let (elements, exceptions, _) = parser.get_body_elements(block_rule, name, true)?.into();
 
     let mut attributes = AttributeMap::new();
 

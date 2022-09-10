@@ -121,7 +121,7 @@ fn parse_list_block<'r, 't>(
 
     // Get body and convert into list form.
     let (mut elements, exceptions, _) =
-        parser.get_body_elements(block_rule, false)?.into();
+        parser.get_body_elements(block_rule, name, false)?.into();
 
     let items = {
         let mut items = Vec::new();
@@ -205,7 +205,7 @@ fn parse_list_item<'r, 't>(
 
     // Get body elements
     let (mut elements, exceptions, _) =
-        parser.get_body_elements(&BLOCK_LI, false)?.into();
+        parser.get_body_elements(&BLOCK_LI, name, false)?.into();
 
     // Strip whitespace. This is required for testing for "single contained item"
     strip_whitespace(&mut elements);

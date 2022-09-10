@@ -52,7 +52,7 @@ fn parse_fn<'r, 't>(
 
     // Get body content, without paragraphs
     let (elements, exceptions, paragraph_safe) =
-        parser.get_body_elements(&BLOCK_SIZE, false)?.into();
+        parser.get_body_elements(&BLOCK_SIZE, name, false)?.into();
 
     let attributes = {
         let mut map = AttributeMap::new();
