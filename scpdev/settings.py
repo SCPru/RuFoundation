@@ -29,6 +29,8 @@ DEBUG = os.environ.get('DEBUG', 'true') == 'true'
 
 ALLOWED_HOSTS = ['*']
 
+SILENCED_SYSTEM_CHECKS = ['templates.E003']
+
 
 # Application definition
 
