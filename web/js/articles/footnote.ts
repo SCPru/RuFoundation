@@ -66,13 +66,15 @@ export function makeFootnote(node: HTMLElement) {
         // add explicit max width
         const maxWidth = document.getElementById('content-wrap').getBoundingClientRect().width;
 
-        footnoteHovertip.style.maxWidth = `${maxWidth}px`;
+        footnoteHovertip.style.maxWidth = `min(100vw, ${maxWidth}px)`;
         footnoteHovertip.style.left = '0';
         footnoteHovertip.style.top = '0';
         const r = footnoteHovertip.getBoundingClientRect();
-        const centeredX = x - r.width / 2;
-        if (centeredX + r.width / 2 > window.innerWidth) {
+        const centeredX = x - r.width / 2 + 4;
+        if (centeredX + r.width > window.innerWidth) {
             x = Math.max(0, window.innerWidth - r.width);
+        } else if (centeredX < 0) {
+            x = 0;
         } else {
             x = centeredX;
         }
