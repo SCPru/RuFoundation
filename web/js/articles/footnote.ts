@@ -57,13 +57,30 @@ export function makeFootnote(node: HTMLElement) {
 
     const enableAndPosition = (x, y) => {
         footnoteHovertip.style.display = 'block';
-        footnoteHovertip.style.left = `${x}px`;
-        footnoteHovertip.style.top = `${y}px`;
         footnoteHeading.textContent = shouldBeHeading;
         footnoteContent.innerHTML = shouldBeContent.innerHTML;
+        position(x, y);
     };
 
     const position = (x, y) => {
+        // add explicit max width
+        const maxWidth = document.getElementById('content-wrap').getBoundingClientRect().width;
+
+        footnoteHovertip.style.maxWidth = `${maxWidth}px`;
+        footnoteHovertip.style.left = '0';
+        footnoteHovertip.style.top = '0';
+        const r = footnoteHovertip.getBoundingClientRect();
+        const centeredX = x - r.width / 2;
+        if (centeredX + r.width / 2 > window.innerWidth) {
+            x = Math.max(0, window.innerWidth - r.width);
+        } else {
+            x = centeredX;
+        }
+        if (y + r.height + 8 > window.innerHeight && y - 8 > r.height) {
+            y = Math.max(0, y - r.height - 8);
+        } else {
+            y += 8;
+        }
         footnoteHovertip.style.left = `${x}px`;
         footnoteHovertip.style.top = `${y}px`;
     };
@@ -75,18 +92,15 @@ export function makeFootnote(node: HTMLElement) {
     };
 
     node.addEventListener('mouseover', (e) => {
-        console.log('show');
-        enableAndPosition(e.clientX+8, e.clientY+8);
+        enableAndPosition(e.clientX, e.clientY);
     });
 
     node.addEventListener('mouseout', () => {
-        console.log('hide');
         disable();
     });
 
     node.addEventListener('mousemove', (e) => {
-        console.log('move');
-        position(e.clientX+8, e.clientY+8);
+        position(e.clientX, e.clientY);
     });
 
 }
