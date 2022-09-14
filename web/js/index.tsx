@@ -19,6 +19,7 @@ import ForumThreadOptions from './entrypoints/forum-thread-options'
 import {makeRecentPosts} from './forum/recent-posts-pagination'
 import {makeSiteChanges} from './articles/site-changes'
 import {makeDate} from './articles/date'
+import {makeFootnote} from './articles/footnote'
 
 
 function renderTo(where: HTMLElement, what: any) {
@@ -63,6 +64,8 @@ window.addEventListener('DOMContentLoaded', () => {
             makeSiteChanges(node);
         } else if (node.classList.contains('w-date')) {
             makeDate(node);
+        } else if (node.classList.contains('w-footnoteref')) {
+            makeFootnote(node);
         }
     };
 
