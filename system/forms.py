@@ -21,5 +21,11 @@ class InviteForm(forms.Form):
 class CreateAccountForm(forms.Form):
     username = forms.CharField(label="Имя пользователя", required=True, validators=[RegexValidator(r'^[A-Za-z0-9_-]+$', 'Некорректное имя пользователя')])
     password = forms.CharField(label="Пароль", widget=forms.PasswordInput(), required=True)
+    password2 = forms.CharField(label="Повторите пароль", widget=forms.PasswordInput(), required=True)
 
-
+    def clean_password2(self):
+        cd = self.cleaned_data
+        if cd['password'] != cd['password2']:
+            raise forms.ValidationError('Пароли не совпадают')
+        return cd['password2']
+        
