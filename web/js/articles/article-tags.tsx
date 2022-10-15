@@ -149,7 +149,7 @@ class ArticleTags extends Component<Props, State> {
                                 Теги:
                             </td>
                             <td>
-                                <input type="text" name="tags" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-tags-input" defaultValue={tags} disabled={loading||saving}/>
+                                <input type="text" name="tags" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-tags-input" value={tags} disabled={loading||saving}/>
                                 <div className="sub">
                                     Список тегов через пробел.
                                 </div>

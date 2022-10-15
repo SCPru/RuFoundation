@@ -2,7 +2,7 @@ import shutil
 from pathlib import Path
 
 from django.contrib.auth.models import AbstractUser as _UserType
-from django.db.models import QuerySet, Sum, Avg, Count, Max, TextField, Value, IntegerField
+from django.db.models import QuerySet, Sum, Avg, Count, Max, TextField, Value, IntegerField, Q
 from django.db.models.functions import Coalesce, Concat, Lower
 
 import renderer
@@ -394,14 +394,15 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user
         if tag not in tags:
             article.tags.remove(tag)
             removed_tags.append(tag.name)
-            if not tag.articles:
-                tag.delete()
 
     for tag in tags:
         if tag not in article_tags:
             # possibly create the tag here
             article.tags.add(tag)
             added_tags.append(tag.name)
+
+    # garbage collect tags if anything was removed
+    Tag.objects.annotate(num_articles=Count('articles')).filter(num_articles=0).delete()
 
     if (removed_tags or added_tags) and log:
         log = ArticleLogEntry(
