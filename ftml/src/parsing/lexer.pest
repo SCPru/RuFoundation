@@ -79,7 +79,6 @@ token = _{
 
     // Tables
     table_column_title |
-    table_column_left |
     table_column_right |
     table_column_center |
     table_column |
@@ -190,7 +189,6 @@ numbered_item = @{ "#" ~ !"#" }
 // Tables {{{
 
 table_column = @{ "||" }
-table_column_left = @{ "||<" }
 table_column_right = @{ "||>" }
 table_column_center = @{ "||=" }
 table_column_title = @{ "||~" }
