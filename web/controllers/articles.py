@@ -345,8 +345,10 @@ def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _F
 def get_breadcrumbs(full_name_or_article: _FullNameOrArticle) -> Sequence[Article]:
     article = get_article(full_name_or_article)
     output = []
-    while article:
+    breadcrumb_ids = []
+    while article and article.id not in breadcrumb_ids:
         output.append(article)
+        breadcrumb_ids.append(article.id)
         article = article.parent
     return list(reversed(output))
 
