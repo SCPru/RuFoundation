@@ -346,7 +346,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
             except:
                 f_page = 1
             if f_page != 1:
-                page_index += f_page * f_per_page
+                page_index += (f_page - 1) * f_per_page
             q = q[(f_page - 1) * f_per_page:f_page * f_per_page]
             pagination_page = f_page
             pagination_total_pages = int(math.ceil(total_pages / f_per_page))
