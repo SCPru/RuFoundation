@@ -21,9 +21,9 @@
 use chrono::prelude::*;
 
 // Default format strings, for each variant.
-const DEFAULT_DATE_FORMAT: &str = "%B %d, %Y";
-const DEFAULT_DATETIME_FORMAT: &str = "%B %d, %Y %H:%M:%S";
-const DEFAULT_DATETIME_TZ_FORMAT: &str = "%B %d, %Y %H:%M:%S %Z";
+const DEFAULT_DATE_FORMAT: &str = "%d.%m.%Y";
+const DEFAULT_DATETIME_FORMAT: &str = "%H:%M %d.%m.%Y";
+const DEFAULT_DATETIME_TZ_FORMAT: &str = "%H:%M %d.%m.%Y %Z";
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case", untagged)]

@@ -2,6 +2,20 @@ function padString(paddingValue, str) {
     return String(paddingValue + str).slice(-paddingValue.length);
 }
 
+function formatDaysAgo(days) {
+    const localizedDaysAgo = ['день', 'дня', 'дней'];
+
+    days = Math.ceil(days)
+
+    if ((days % 10) === 1) {
+        return `${days} ${localizedDaysAgo[0]}`
+    } else if ((days % 10) >= 2 && (days % 10) <= 4) {
+        return `${days} ${localizedDaysAgo[1]}`
+    } else {
+        return `${days} ${localizedDaysAgo[2]}`
+    }
+}
+
 export default function formatDate(date: Date, format: string = '%H:%M %d.%m.%Y') {
     const localizedMonthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Мая', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
     const localizedDayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -50,6 +64,7 @@ export default function formatDate(date: Date, format: string = '%H:%M %d.%m.%Y'
     // %R = %H:%M
     // %S = секунда, 0-59, с нулями
     // %s = timestamp
+    // %O = N дней назад
 
     var s = format;
     s = s.replace(/%h/g, '%b')
@@ -73,6 +88,7 @@ export default function formatDate(date: Date, format: string = '%H:%M %d.%m.%Y'
         .replace(/%p/g, isPM?'PM':'AM')
         .replace(/%P/g, isPM?'pm':'am')
         .replace(/%S/g, padString('00', date.getSeconds()))
-        .replace(/%s/g, String(Math.floor(date.getTime()/1000)));
+        .replace(/%s/g, String(Math.floor(date.getTime()/1000)))
+        .replace(/%O/g, formatDaysAgo((new Date().getTime()-date.getTime()) / 1000 / 86400));
     return s;
 }

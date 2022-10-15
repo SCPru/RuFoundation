@@ -22,7 +22,7 @@
 
 use super::TextContext;
 use crate::tree::{
-    ContainerType, DefinitionListItem, Element, LinkLocation, ListItem, ListType, Tab,
+    ContainerType, DefinitionListItem, Element, LinkLocation, ListItem, ListType, Tab, Date
 };
 use crate::url::normalize_link;
 use std::borrow::Cow;
@@ -381,7 +381,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
         }
         Element::User { name, .. } => ctx.push_str(name),
         Element::Date { value, format, .. } => {
-            str_write!(ctx, "{}", value.format(format.as_ref()));
+            str_write!(ctx, "{}", value.format(Some((*value).default_format_string())));
         }
         Element::Color { elements, .. } => render_elements(ctx, elements),
         Element::Code { contents, language } => {

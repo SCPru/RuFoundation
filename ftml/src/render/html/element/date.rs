@@ -28,26 +28,25 @@ pub fn render_date(
     hover: bool,
 ) {
     // Get attribute values
-    let timestamp = str!(date.timestamp());
-    let delta = str!(date.time_since());
+    let timestamp = str!(date.timestamp() * 1000);
+
     let (space, hover_class) = if hover {
-        (" ", "wj-date-hover")
+        (" ", "w-odate-hover")
     } else {
         ("", "")
     };
 
     // Format datetime
-    let formatted_datetime = str!(date.format(date_format));
+    let formatted_datetime = str!(date.format(Some(date.default_format_string())));
 
     // Build HTML elements
     ctx.html()
         .span()
         .attr(attr!(
-            "class" => "wj-date" space hover_class,
+            "class" => "odate w-date" space hover_class,
             "data-format" => date_format.unwrap_or_else(|| date.default_format_string()),
-            "data-iso" => &date.to_rfc3339(),
             "data-timestamp" => &timestamp,
-            "data-delta" => &delta,
+            "style" => "display: inline"
         ))
         .inner(formatted_datetime);
 }
