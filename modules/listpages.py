@@ -9,8 +9,7 @@ from renderer.utils import render_user_to_text, render_template_from_string
 from renderer.parser import RenderContext
 from system.models import User
 from web.controllers import articles
-import re
-from web.models.articles import Article, Vote, ArticleVersion
+from web.models.articles import Article, Vote, ArticleLogEntry
 from web.models.settings import Settings
 from django.db.models import Q, Value as V, F, Count, Sum, Avg, CharField
 from django.db.models.functions import Concat, Random, Coalesce
@@ -59,7 +58,7 @@ def page_to_listpages_vars(page: Article, template, index, total):
         'content': '[[include %s]]' % (articles.get_full_name(page)),
         'rating': articles.get_formatted_rating(page),
         'rating_votes': str(len(Vote.objects.filter(article=page))),
-        'revisions': str(len(ArticleVersion.objects.filter(article=page))),
+        'revisions': str(len(ArticleLogEntry.objects.filter(article=page))),
         'index': str(index),
         'total': str(total),
         'created_by': render_user_to_text(page.author),
