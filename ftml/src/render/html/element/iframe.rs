@@ -43,8 +43,7 @@ pub fn render_html(ctx: &mut HtmlContext, contents: &str) {
         function doFrame() {{
             const body = document.body;
             const html = document.documentElement;
-            const height = Math.max(body && body.scrollHeight, body && body.offsetHeight,
-                html.clientHeight, html.scrollHeight, html.offsetHeight, body && body.getBoundingClientRect().height);
+            const height = Math.max(body && body.scrollHeight, body && body.offsetHeight, html.offsetHeight, body && body.getBoundingClientRect().height);
             window.requestAnimationFrame(doFrame);
             if (lastHeight !== height) {{
                 parent.postMessage({{type: 'iframe-change-height', payload: {{ height, id: '{id}' }} }}, '*');
