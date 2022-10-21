@@ -38,6 +38,11 @@ pub struct WikitextSettings {
     /// * Button
     pub enable_page_syntax: bool,
 
+    /// Whether blocks are permitted.
+    /// 
+    /// This currently refers to any block elements. Very restrictive mode.
+    pub enable_block_elements: bool,
+
     /// Whether a literal `[[include]]` is permitted.
     ///
     /// If this is true, then `[[include]]` is treated as an alias
@@ -95,6 +100,7 @@ impl WikitextSettings {
             WikitextMode::Page => WikitextSettings {
                 mode,
                 enable_page_syntax: true,
+                enable_block_elements: true,
                 use_include_compatibility: false,
                 use_true_ids: true,
                 isolate_user_ids: true,
@@ -104,6 +110,7 @@ impl WikitextSettings {
             WikitextMode::Draft => WikitextSettings {
                 mode,
                 enable_page_syntax: true,
+                enable_block_elements: true,
                 use_include_compatibility: false,
                 use_true_ids: false,
                 isolate_user_ids: true,
@@ -113,15 +120,27 @@ impl WikitextSettings {
             WikitextMode::ForumPost | WikitextMode::DirectMessage => WikitextSettings {
                 mode,
                 enable_page_syntax: false,
+                enable_block_elements: true,
                 use_include_compatibility: false,
                 use_true_ids: false,
                 isolate_user_ids: true,
                 allow_local_paths: false,
                 interwiki,
             },
+            WikitextMode::Inline => WikitextSettings {
+                mode,
+                enable_page_syntax: false,
+                enable_block_elements: false,
+                use_include_compatibility: false,
+                use_true_ids: false,
+                isolate_user_ids: true,
+                allow_local_paths: true,
+                interwiki,
+            },
             WikitextMode::List => WikitextSettings {
                 mode,
                 enable_page_syntax: true,
+                enable_block_elements: true,
                 use_include_compatibility: false,
                 use_true_ids: false,
                 isolate_user_ids: true,
@@ -152,6 +171,9 @@ pub enum WikitextMode {
 
     /// Processing for the contents of a direct message, sent to a user.
     DirectMessage,
+
+    /// Processing for chat messages, profile, or some other inline content.
+    Inline,
 
     /// Processing for modules or other contexts such as `ListPages`.
     List,

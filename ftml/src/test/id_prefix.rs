@@ -57,6 +57,7 @@ fn isolate_user_ids() {
     let settings = WikitextSettings {
         mode: WikitextMode::Page,
         enable_page_syntax: true,
+        enable_block_elements: true,
         use_true_ids: true,
         use_include_compatibility: false,
         isolate_user_ids: true,

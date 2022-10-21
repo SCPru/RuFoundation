@@ -34,6 +34,10 @@ pub const RULE_BLOCK: Rule = Rule {
 fn block_regular<'r, 't>(
     parser: &mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
+    if !parser.settings().enable_block_elements {
+        return Err(parser.make_warn(ParseWarningKind::NoRulesMatch))
+    }
+
     info!("Trying to process a block");
     parse_block(parser)
 }

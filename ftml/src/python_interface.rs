@@ -413,6 +413,7 @@ fn mode_to_wikitext_mode(mode: String) -> WikitextMode {
     match mode.as_str() {
         "article" => WikitextMode::Page,
         "message" => WikitextMode::ForumPost,
+        "inline" => WikitextMode::Inline,
         _ => WikitextMode::Page
     }
 }
