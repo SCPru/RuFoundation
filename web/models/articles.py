@@ -132,6 +132,7 @@ class ArticleLogEntry(SiteLimitedModel):
         FileDeleted = 'file_deleted'
         FileRenamed = 'file_renamed'
         Wikidot = 'wikidot'
+        Revert = 'revert'
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Пользователь")

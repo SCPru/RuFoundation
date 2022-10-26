@@ -205,32 +205,44 @@ class ArticleHistory extends Component<Props, State> {
     }
 
     renderFlags(entry: ArticleLogEntry) {
-        switch (entry.type) {
-            case 'new':
-                return <span className="spantip" title="создана новая страница">N</span>;
+        const renderType = (type) => {
+            switch (type) {
+                case 'new':
+                    return <span className="spantip" title="создана новая страница">N</span>;
 
-            case 'title':
-                return <span className="spantip" title="изменился заголовок">T</span>;
+                case 'title':
+                    return <span className="spantip" title="изменился заголовок">T</span>;
 
-            case 'source':
-                return <span className="spantip" title="изменился текст статьи">S</span>;
+                case 'source':
+                    return <span className="spantip" title="изменился текст статьи">S</span>;
 
-            case 'tags':
-                return <span className="spantip" title="метки изменились">A</span>;
+                case 'tags':
+                    return <span className="spantip" title="метки изменились">A</span>;
 
-            case 'name':
-                return <span className="spantip" title="страница переименована/удалена">R</span>;
+                case 'name':
+                    return <span className="spantip" title="страница переименована/удалена">R</span>;
 
-            case 'parent':
-                return <span className="spantip" title="изменилась родительская страница">M</span>;
+                case 'parent':
+                    return <span className="spantip" title="изменилась родительская страница">M</span>;
 
-            case 'file_added':
-            case 'file_deleted':
-            case 'file_renamed':
-                return <span className="spantip" title="действия с файлом/вложением">F</span>
+                case 'file_added':
+                    return <span className="spantip" title="файл добавлен">F</span>
 
-            case 'wikidot':
-                return <span className="spantip" title="правка, портированная с Wikidot">W</span>
+                case 'file_deleted':
+                    return <span className="spantip" title="файл удалён">F</span>
+
+                case 'file_renamed':
+                    return <span className="spantip" title="файл переименован">F</span>
+
+                case 'wikidot':
+                    return <span className="spantip" title="правка, портированная с Wikidot">W</span>
+            }
+        }
+
+        if (entry.meta.subtypes) {
+            return entry.meta.subtypes.map(x => <React.Fragment key={x}>{renderType(x)}</React.Fragment>)
+        } else {
+            return renderType(entry.type)
         }
     }
 
@@ -296,6 +308,9 @@ class ArticleHistory extends Component<Props, State> {
 
             case 'file_renamed':
                 return <>Переименован файл: "<em>{entry.meta.prev_name}</em>" в "<em>{entry.meta.name}</em>"</>;
+
+            case 'revert':
+                return <>Откат страницы к версии №{entry.meta.rev_number}</>
         }
     }
 

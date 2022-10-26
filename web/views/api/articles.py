@@ -172,29 +172,35 @@ class FetchOrRevertLogView(APIView):
         if not ("revNumber" in data and isinstance(data["revNumber"], int)):
             raise APIError('Некорректный номер ревизии', 400)
 
-        raise APIError('Откат правок в данный момент отключен', 409)
+        articles.revert_article_version(article, data["revNumber"], request.user)
+        version = articles.get_latest_version(article)
+        articles.refresh_article_links(version)
 
-        # articles.revert_article_version(article, data["revNumber"], request.user)
-        # version = articles.get_latest_version(article)
-        # articles.refresh_article_links(version)
-
-        # return self.render_json(200, {"pageId": article.full_name})
+        return self.render_json(200, {"pageId": article.full_name})
 
 
 class FetchVersionView(APIView):
+    @staticmethod
+    def get_version_from_meta(meta):
+        if 'source' in meta:
+            return articles.get_version(meta['source']['version_id'])
+        elif "version_id" in meta:
+            return articles.get_version(meta["version_id"])
+        else:
+            return None
+
     def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
         entry = articles.get_log_entry(full_name, request.GET.get('revNum'))
         if not entry:
             raise APIError('Версии с данным идентификатором не существует', 404)
 
-        version = None
-        if "version_id" in entry.meta:
-            version = articles.get_version(entry.meta["version_id"])
-        else:
+        version = self.get_version_from_meta(entry.meta)
+        if not version:
             log_entries = list(articles.get_log_entries(full_name))
             for old_entry in log_entries[log_entries.index(entry):]:
-                if "version_id" in old_entry.meta:
-                    version = articles.get_version(old_entry.meta["version_id"])
+                version = self.get_version_from_meta(old_entry.meta)
+                if version:
+                    break
 
         if version:
             if version.rendered:

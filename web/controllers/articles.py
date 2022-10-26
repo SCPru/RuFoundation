@@ -131,41 +131,232 @@ def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int,
 # Revert all revisions to specific revision
 def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number: int, user: Optional[_UserType] = None):
     article = get_article(full_name_or_article)
-    latest = get_latest_log_entry(article)
 
-    rev_number += 1
-    if latest.rev_number > rev_number:
-        for entry in get_log_entries(article):
-            if entry.type == ArticleLogEntry.LogEntryType.Source:
-                create_article_version(article, get_version(entry.meta['version_id']).source, user)
-            elif entry.type == ArticleLogEntry.LogEntryType.Title:
-                update_title(article, entry.meta["prev_title"], user)
-            elif entry.type == ArticleLogEntry.LogEntryType.Name:
-                if not get_article(entry.meta["prev_name"]):
-                    update_full_name(article, entry.meta["prev_name"], user)
-            elif entry.type == ArticleLogEntry.LogEntryType.Tags:
-                tags = list(get_tags(article))
-                for tag in entry.meta["added_tags"]:
-                    if tag in tags:
-                        tags.remove(tag)
-                for tag in entry.meta["removed_tags"]:
-                    tags.append(tag)
-                set_tags(article, tags, user)
-            elif entry.type == ArticleLogEntry.LogEntryType.New:
-                update_title(article, entry.meta["title"], user)
-                create_article_version(article, get_version(entry.meta['version_id']).source, user)
-                break
-            elif entry.type == ArticleLogEntry.LogEntryType.Parent:
-                set_parent(article, entry.meta["prev_parent"], user)
-            elif entry.type == ArticleLogEntry.LogEntryType.FileAdded:
-                delete_file_from_article(article, get_file_in_article(article, entry.meta["name"]), user)
-            elif entry.type == ArticleLogEntry.LogEntryType.FileDeleted:
-                restore_file_from_article(article, get_file_in_article(article, entry.meta["name"], allow_deleted=True), user)
-            elif entry.type == ArticleLogEntry.LogEntryType.FileRenamed:
-                rename_file_in_article(article, get_file_in_article(article, entry.meta["name"]), entry.meta["prev_name"], user)
+    new_props = {}
 
-            if entry.rev_number == rev_number:
-                break
+    for entry in get_log_entries(article):
+        if entry.rev_number <= rev_number:
+            break
+
+        if entry.type == ArticleLogEntry.LogEntryType.Source:
+            new_props['source'] = get_previous_version(entry.meta['version_id']).source
+        elif entry.type == ArticleLogEntry.LogEntryType.Title:
+            new_props['title'] = entry.meta['prev_title']
+        elif entry.type == ArticleLogEntry.LogEntryType.Name:
+            new_props['name'] = entry.meta['prev_name']
+        elif entry.type == ArticleLogEntry.LogEntryType.Tags:
+            if 'added_tags' not in new_props:
+                new_props['added_tags'] = []
+            if 'removed_tags' not in new_props:
+                new_props['removed_tags'] = []
+            # logic: tags that were removed are now added
+            #        tags that were added are now removed
+            for tag in entry.meta['added_tags']:
+                try:
+                    new_props['added_tags'].remove(tag)
+                except ValueError:
+                    pass
+                new_props['removed_tags'].append(tag)
+            for tag in entry.meta['removed_tags']:
+                try:
+                    new_props['removed_tags'].remove(tag)
+                except ValueError:
+                    pass
+                new_props['added_tags'].append(tag)
+        elif entry.type == ArticleLogEntry.LogEntryType.New:
+            # 'new' cannot be reverted. moreover, we should not reach this point at all.
+            # but if we did, just stop
+            break
+        elif entry.type == ArticleLogEntry.LogEntryType.Parent:
+            new_props['parent'] = entry.meta['prev_parent_id']
+        elif entry.type == ArticleLogEntry.LogEntryType.FileAdded:
+            if 'files_deleted' not in new_props:
+                new_props['files_deleted'] = {}
+            if 'files_restored' not in new_props:
+                new_props['files_restored'] = {}
+            new_props['files_deleted'][entry.meta['id']] = True
+            new_props['files_restored'][entry.meta['id']] = False
+        elif entry.type == ArticleLogEntry.LogEntryType.FileDeleted:
+            if 'files_restored' not in new_props:
+                new_props['files_restored'] = {}
+            if 'files_deleted' not in new_props:
+                new_props['files_deleted'] = {}
+            new_props['files_restored'][entry.meta['id']] = True
+            new_props['files_deleted'][entry.meta['id']] = False
+        elif entry.type == ArticleLogEntry.LogEntryType.FileRenamed:
+            if 'files_renamed' not in new_props:
+                new_props['files_renamed'] = {}
+            new_props['files_renamed'][entry.meta['id']] = entry.meta['prev_name']
+        elif entry.type == ArticleLogEntry.LogEntryType.Wikidot:
+            # this is a fake revision type.
+            pass
+        elif entry.type == ArticleLogEntry.LogEntryType.Revert:
+            if 'source' in entry.meta:
+                new_props['source'] = get_previous_version(entry.meta['source']['version_id']).source
+            if 'title' in entry.meta:
+                new_props['title'] = entry.meta['title']['prev_title']
+            if 'name' in entry.meta:
+                new_props['name'] = entry.meta['name']['prev_name']
+            if 'parent' in entry.meta:
+                new_props['parent'] = entry.meta['parent']['prev_parent_id']
+            if 'tags' in entry.meta:
+                if 'added_tags' not in new_props:
+                    new_props['added_tags'] = []
+                if 'removed_tags' not in new_props:
+                    new_props['removed_tags'] = []
+                # logic: tags that were removed are now added
+                #        tags that were added are now removed
+                for tag in entry.meta['tags']['added']:
+                    try:
+                        new_props['added_tags'].remove(tag)
+                    except ValueError:
+                        pass
+                    new_props['removed_tags'].append(tag)
+                for tag in entry.meta['tags']['removed']:
+                    try:
+                        new_props['removed_tags'].remove(tag)
+                    except ValueError:
+                        pass
+                    new_props['added_tags'].append(tag)
+            if 'files' in entry.meta:
+                if 'files_restored' not in new_props:
+                    new_props['files_restored'] = {}
+                if 'files_deleted' not in new_props:
+                    new_props['files_deleted'] = {}
+                if 'files_renamed' not in new_props:
+                    new_props['files_renamed'] = {}
+                for f in entry.meta['files']['added']:
+                    new_props['files_deleted'][f['id']] = True
+                    new_props['files_restored'][f['id']] = False
+                for f in entry.meta['files']['deleted']:
+                    new_props['files_restored'][f['id']] = True
+                    new_props['files_deleted'][f['id']] = False
+                for f in entry.meta['files']['renamed']:
+                    new_props['files_renamed'][f['id']] = f['prev_name']
+
+    subtypes = []
+
+    meta = {}
+
+    files_added_meta = []
+    files_deleted_meta = []
+    files_renamed_meta = []
+
+    for f_id, new_name in new_props.get('files_renamed', {}).items():
+        try:
+            file = File.objects.get(id=f_id)
+            files_renamed_meta.append({'id': f_id, 'name': new_name, 'prev_name': file.name})
+            file.name = new_name
+            file.save()
+        except File.DoesNotExist:
+            continue
+
+    for f_id, deleted in new_props.get('files_deleted', {}).items():
+        if not deleted:
+            continue
+        try:
+            file = File.objects.get(id=f_id)
+            if not file.deleted_at:
+                files_deleted_meta.append({'id': f_id, 'name': file.name})
+                file.deleted_at = datetime.datetime.now()
+                file.deleted_by = user
+                file.save()
+        except File.DoesNotExist:
+            continue
+
+    for f_id, restored in new_props.get('files_restored', {}).items():
+        if not restored:
+            continue
+        try:
+            file = File.objects.get(id=f_id)
+            if file.deleted_at:
+                files_added_meta.append({'id': f_id, 'name': file.name})
+                file.deleted_at = None
+                file.deleted_by = None
+                file.save()
+        except File.DoesNotExist:
+            continue
+
+    if files_added_meta or files_deleted_meta or files_renamed_meta:
+        if files_added_meta:
+            subtypes.append(ArticleLogEntry.LogEntryType.FileAdded)
+        if files_deleted_meta:
+            subtypes.append(ArticleLogEntry.LogEntryType.FileDeleted)
+        if files_renamed_meta:
+            subtypes.append(ArticleLogEntry.LogEntryType.FileRenamed)
+        meta['files'] = {
+            'added': files_added_meta,
+            'deleted': files_deleted_meta,
+            'renamed': files_renamed_meta
+        }
+
+    tags_added_meta = []
+    tags_removed_meta = []
+
+    tags = list(get_tags(article))
+    for tag in new_props.get('removed_tags', []):
+        try:
+            tags.remove(tag)
+            tags_removed_meta.append(tag)
+        except ValueError:
+            pass
+    for tag in new_props.get('added_tags', []):
+        tags.append(tag)
+        tags_added_meta.append(tag)
+    set_tags(article, tags, user, False)
+
+    if tags_added_meta or tags_removed_meta:
+        subtypes.append(ArticleLogEntry.LogEntryType.Tags)
+        meta['tags'] = {
+            'added': tags_added_meta,
+            'removed': tags_removed_meta
+        }
+
+    if 'source' in new_props:
+        subtypes.append(ArticleLogEntry.LogEntryType.Source)
+        version = ArticleVersion(
+            article=article,
+            source=new_props['source'],
+            rendered=None
+        )
+        version.save()
+        meta['source'] = {'version_id': version.id}
+
+    if 'title' in new_props:
+        subtypes.append(ArticleLogEntry.LogEntryType.Title)
+        meta['title'] = {'prev_title': article.title, 'title': new_props['title']}
+        article.title = new_props['title']
+        article.save()
+
+    if 'name' in new_props:
+        subtypes.append(ArticleLogEntry.LogEntryType.Name)
+        meta['name'] = {'prev_name': article.name, 'name': new_props['name']}
+        update_full_name(article, new_props['name'], user, False)
+
+    if 'parent' in new_props:
+        subtypes.append(ArticleLogEntry.LogEntryType.Parent)
+        parent = Article.objects.get(id=new_props['parent'])
+        meta['parent'] = {
+            'parent': get_full_name(parent),
+            'parent_id': new_props['parent'],
+            'prev_parent': get_full_name(article.parent),
+            'prev_parent_id': article.parent.id if article.parent else None
+        }
+        article.parent = parent
+        article.save()
+
+    meta['rev_number'] = rev_number
+    meta['subtypes'] = subtypes
+
+    log = ArticleLogEntry(
+        article=article,
+        user=user,
+        type=ArticleLogEntry.LogEntryType.Revert,
+        meta=meta,
+        comment=''
+    )
+
+    add_log_entry(article, log)
 
 
 # Creates new article version for specified article
@@ -227,7 +418,7 @@ def refresh_article_links(article_version: ArticleVersion):
 
 
 # Updates name of article
-def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: str, user: Optional[_UserType] = None):
+def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: str, user: Optional[_UserType] = None, log: bool = False):
     article = get_article(full_name_or_article)
     prev_full_name = get_full_name(full_name_or_article)
 
@@ -240,13 +431,14 @@ def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: st
     ExternalLink.objects.filter(link_from__iexact=new_full_name).delete()  # this should not happen, but just to be sure
     ExternalLink.objects.filter(link_from__iexact=prev_full_name).update(link_from=new_full_name)
 
-    log = ArticleLogEntry(
-        article=article,
-        user=user,
-        type=ArticleLogEntry.LogEntryType.Name,
-        meta={'name': new_full_name, 'prev_name': prev_full_name}
-    )
-    add_log_entry(article, log)
+    if log:
+        log = ArticleLogEntry(
+            article=article,
+            user=user,
+            type=ArticleLogEntry.LogEntryType.Name,
+            meta={'name': new_full_name, 'prev_name': prev_full_name}
+        )
+        add_log_entry(article, log)
 
 
 # Updates title of article
@@ -292,6 +484,18 @@ def get_log_entry(full_name_or_article: _FullNameOrArticle, rev_number: int) -> 
 def get_version(version_id: int) -> Optional[ArticleVersion]:
     try:
         return ArticleVersion.objects.get(id=version_id)
+    except ArticleVersion.DoesNotExist:
+        pass
+
+
+# Get previous version of article relative to specified
+def get_previous_version(version_id: int) -> Optional[ArticleVersion]:
+    try:
+        version = ArticleVersion.objects.get(id=version_id)
+        prev_version = ArticleVersion.objects.filter(article_id=version.article_id, created_at__lt=version.created_at).order_by('-created_at')[:1]
+        if not prev_version:
+            return None
+        return prev_version[0]
     except ArticleVersion.DoesNotExist:
         pass
 

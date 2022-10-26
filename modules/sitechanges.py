@@ -1,4 +1,6 @@
 import json
+from functools import reduce
+import operator
 
 from django.db.models import Q
 
@@ -66,7 +68,7 @@ def log_entry_type_name(entry: ArticleLogEntry.LogEntryType) -> (str, str):
         ArticleLogEntry.LogEntryType.FileRenamed: ('F', 'файл переименован'),
         ArticleLogEntry.LogEntryType.Wikidot: ('W', 'правка, портированная с Wikidot')
     }
-    return mapping.get(entry, '?')
+    return mapping.get(entry, ('?', '?'))
 
 
 def log_entry_default_comment(entry: ArticleLogEntry) -> str:
@@ -107,6 +109,9 @@ def log_entry_default_comment(entry: ArticleLogEntry) -> str:
     if entry.type == ArticleLogEntry.LogEntryType.FileAdded:
         return 'Переименован файл: "%s" в "%s"' % (entry.meta['prev_name'], entry.meta['name'])
 
+    if entry.type == ArticleLogEntry.LogEntryType.Revert:
+        return 'Откат страницы к версии №%d' % (entry.meta['rev_number'])
+
     return ''
 
 
@@ -130,7 +135,7 @@ def render(context: RenderContext, params):
     q = ArticleLogEntry.objects.all()
 
     if filter_types:
-        q = q.filter(type__in=filter_types)
+        q = q.filter(Q(type__in=filter_types) | reduce(operator.or_, (Q(meta__subtypes__contains=x) for x in filter_types)))
 
     if category != '*':
         q = q.filter(article__category=category)
@@ -146,11 +151,17 @@ def render(context: RenderContext, params):
     raw_entries = q[(page - 1) * per_page:page * per_page]
     entries = []
     for entry in raw_entries:
-        t, desc = log_entry_type_name(entry.type)
+        types = []
+        if 'subtypes' in entry.meta:
+            for subtype in entry.meta['subtypes']:
+                t, desc = log_entry_type_name(subtype)
+                types.append({'id': t, 'desc': desc})
+        else:
+            t, desc = log_entry_type_name(entry.type)
+            types.append({'id': t, 'desc': desc})
         entries.append({
             'rev_number': entry.rev_number,
-            'type': t,
-            'type_description': desc,
+            'types': types,
             'comment': log_entry_default_comment(entry),
             'author': render_user_to_html(entry.user),
             'date': render_date(entry.created_at),
@@ -291,9 +302,7 @@ def render(context: RenderContext, params):
                             </a>
                         </td>
                         <td class="flags">
-                            <span class="spantip" title="{{ entry.type_description }}">
-                                {{ entry.type }}
-                            </span>
+                            {% for t in entry.types %}<span class="spantip" title="{{ t.desc }}">{{ t.id }}</span>{% endfor %}
                         </td>
                         <td class="mod-date">
                             {{ entry.date }}
