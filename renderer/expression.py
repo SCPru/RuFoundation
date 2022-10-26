@@ -39,6 +39,10 @@ def _eval_ast(node):
             if len(args) != 1:
                 raise ValueError(args)
             return abs(args[0])
+        elif id == 'round':
+            if len(args) != 1:
+                raise ValueError(args)
+            return round(args[0])
         else:
             raise ValueError(id)
     else:
