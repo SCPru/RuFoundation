@@ -35,13 +35,13 @@ def render_var(var, page_vars, page):
     if var.startswith('created_at|'):
         format = var[11:].strip()
         try:
-            return page.created_at.strftime(format)
+            return '[[date %s format="%s"]]' % (int(page.created_at.timestamp()), format)
         except:
             return page_vars['created_at']
     if var.startswith('updated_at|'):
         format = var[11:].strip()
         try:
-            return page.updated_at.strftime(format)
+            return '[[date %s format="%s"]]' % (int(page.updated_at.timestamp()), format)
         except:
             return page_vars['updated_at']
     return None
@@ -69,8 +69,8 @@ def page_to_listpages_vars(page: Article, template, index, total):
         # tags, tags_linked, tags_linked|link_prefix = not yet
         # _tags, _tags_linked, _tags_linked|link_prefix = not yet
         # form_data{name}, form_raw{name}, form_label{name}, form_hint{name} = never ever
-        'created_at': render_date(page.created_at),
-        'updated_at': render_date(page.updated_at),
+        'created_at': '[[date %d]]' % int(page.created_at.timestamp()),
+        'updated_at': '[[date %d]]' % int(page.updated_at.timestamp()),
         # created_by, created_by_unix, created_by_id, created_by_linked = not yet
         # updated_by, updated_by_unix, updated_by_id, updated_by_linked = not yet
         # commented_at, commented_by, commented_by_unix, commented_by_id, commented_by_linked = not yet
