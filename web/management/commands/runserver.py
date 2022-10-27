@@ -101,11 +101,11 @@ class Command(BaseRunserverCommand):
 
             def filenames(self):
                 if platform.system() == 'Windows':
-                    filename = 'ftml.dll'
+                    filename = ('ftml.dll',)
                     new_filename = 'ftml.pyd'
                 else:
-                    filename = 'ftml.so'
-                    new_filename = filename
+                    filename = ('ftml.so', 'libftml.so')
+                    new_filename = filename[0]
                 return filename, new_filename
 
             def updated(self, filename):
@@ -150,29 +150,32 @@ class Command(BaseRunserverCommand):
                     continue
                 filename, new_filename = w.filenames()
                 target_dir = '/target/release/' if ftml_release else '/target/debug/'
-                if os.path.exists(base_project_dir + target_dir + filename):
-                    # Kill child
-                    if current_child:
-                        print('Interrupting child process...')
-                        # KILL everything in the child tree
-                        # Otherwise we have hanging processes that prevent us from copying into PYD/so
-                        parent = psutil.Process(current_child.pid)
-                        for child in parent.children(recursive=True):
-                            child.kill()
-                        current_child.wait()
-                    print('Copying FTML library')
-                    copied = False
-                    for i in range(30):
-                        try:
-                            shutil.copy(base_project_dir + target_dir + filename, base_project_dir + '/' + new_filename)
-                            copied = True
-                            break
-                        except PermissionError:
-                            print('Could not replace FTML library, retrying...')
-                        time.sleep(1)
-                    if not copied:
-                        print('Fatal: could not unlock FTML dynamic library, reloading is not possible. Is this the only instance running?')
-                        return
-                    # Create another instance of runserver
-                    print('Reloading...')
-                    current_child = self.run_child(True)
+                for file in filename:
+                    if os.path.exists(base_project_dir + target_dir + file):
+                        # Kill child
+                        print(current_child)
+                        if current_child:
+                            print('Interrupting child process...')
+                            # KILL everything in the child tree
+                            # Otherwise we have hanging processes that prevent us from copying into PYD/so
+                            parent = psutil.Process(current_child.pid)
+                            for child in parent.children(recursive=True):
+                                child.kill()
+                            _safe_kill(current_child)
+                        print('Copying FTML library')
+                        copied = False
+                        for i in range(30):
+                            try:
+                                shutil.copy(base_project_dir + target_dir + file, base_project_dir + '/' + new_filename)
+                                copied = True
+                                break
+                            except PermissionError:
+                                print('Could not replace FTML library, retrying...')
+                            time.sleep(1)
+                        if not copied:
+                            print('Fatal: could not unlock FTML dynamic library, reloading is not possible. Is this the only instance running?')
+                            return
+                        # Create another instance of runserver
+                        print('Reloading...')
+                        current_child = self.run_child(True)
+                        break
