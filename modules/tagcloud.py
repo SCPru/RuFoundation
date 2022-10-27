@@ -107,8 +107,11 @@ def render(context, params):
     for tag in q:
         tags[tag.name] = tag.num_articles
 
-    min_num = min(tags.values())
-    max_num = max(tags.values())
+    if tags.values():
+        min_num = min(tags.values())
+        max_num = max(tags.values())
+    else:
+        min_num = max_num = 0
 
     tags_sorted_by_name = sorted(tags.keys())
 
