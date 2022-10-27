@@ -19,6 +19,7 @@ _ALREADY_WATCHING_RUST = False
 
 _SHELL = platform.system() == "Windows"
 
+
 def _safe_kill(p):
     try:
         p.terminate()
