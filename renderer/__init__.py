@@ -133,6 +133,18 @@ def callbacks_with_context(context):
             from web.controllers.articles import normalize_article_name
             return normalize_article_name(full_name)
 
+        def render_code(self, code: str, language: str) -> str:
+            if language:
+                from pygments import highlight
+                from pygments.lexers import get_lexer_by_name
+                from pygments.formatters import HtmlFormatter
+
+                lexer = get_lexer_by_name(language.lower(), stripall=True)
+                formatter = HtmlFormatter(cssclass="w-code")
+                return f"<style>{formatter.get_style_defs('.w-code')}</style>{highlight(code, lexer, formatter)}"
+            return code
+
+
     return CallbacksWithContextImpl(context)
 
 

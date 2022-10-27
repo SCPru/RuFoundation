@@ -19,6 +19,7 @@
  */
 
 use super::prelude::*;
+use std::borrow::Cow;
 
 pub fn render_wikitext_raw(ctx: &mut HtmlContext, text: &str) {
     info!("Escaping raw string '{text}'");
@@ -64,6 +65,13 @@ pub fn render_code(ctx: &mut HtmlContext, language: Option<&str>, contents: &str
         class
     };
 
+    let lang = match language {
+        Some(lang) => {lang}
+        None => {""}
+    };
+
+    let rendered = ctx.callbacks().render_code(Cow::from(contents), Cow::from(lang));
+
     ctx.html()
         .div()
         .attr(attr!("class" => &class))
@@ -72,9 +80,7 @@ pub fn render_code(ctx: &mut HtmlContext, language: Option<&str>, contents: &str
                 .div()
                 .attr(attr!("class" => "hl-main"))
                 .contents(|ctx| {
-                    ctx.html()
-                        .pre()
-                        .inner(contents);
+                    str_write!(ctx.buffer(), "{}", rendered);
                 });
         });
 }

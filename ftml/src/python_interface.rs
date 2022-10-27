@@ -325,6 +325,17 @@ impl PageCallbacks for PythonCallbacks {
             Err(_) => Cow::Owned(full_name.to_string())
         }
     }
+
+    fn render_code<'a>(&self, code: Cow<str>, language: Cow<str>) -> Cow<'static, str> {
+        let result: PyResult<String> = Python::with_gil(|py| {
+            return self.callbacks.getattr(py, "render_code")?.call(py, (code.to_owned(),  language.to_owned()), None)?.extract(py);
+        });
+        log_python_error(&result);
+        match result {
+            Ok(result) => Cow::from(result.as_str().to_owned()),
+            Err(_) => Cow::Owned(code.to_string())
+        }
+    }
 }
 
 impl<'t> Includer<'t> for PythonCallbacks {
@@ -406,6 +417,10 @@ impl Callbacks {
         let mut full_name = full_name;
         normalize(&mut full_name);
         return Ok(full_name)
+    }
+
+    pub fn render_code(&self, code: String, language: String) -> PyResult<String> {
+        return Ok(code)
     }
 }
 
