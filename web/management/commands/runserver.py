@@ -17,6 +17,7 @@ import time
 _ALREADY_WATCHING = False
 _ALREADY_WATCHING_RUST = False
 
+_SHELL = platform.system() == "Windows"
 
 def _safe_kill(p):
     try:
@@ -51,7 +52,7 @@ class Command(BaseRunserverCommand):
             return
         print('Will watch JS '+repr(self))
         base_project_dir = os.path.dirname(__file__) + '/../..'
-        p = subprocess.Popen(['yarn', 'run', 'watch'], shell=True, cwd=base_project_dir+'/js')
+        p = subprocess.Popen(['yarn', 'run', 'watch'], shell=_SHELL, cwd=base_project_dir+'/js')
         atexit.register(lambda: _safe_kill(p))
         _ALREADY_WATCHING = True
 
@@ -59,7 +60,7 @@ class Command(BaseRunserverCommand):
     def run_child(self, second=False):
         add_args = ['--skip-checks']
         # with shell=False it does NOT interrupt as intended
-        c = subprocess.Popen([sys.executable] + sys.argv + ['--internal-run', '--noreload'] + add_args, shell=True)
+        c = subprocess.Popen([sys.executable] + sys.argv + ['--internal-run', '--noreload'] + add_args, shell=_SHELL)
         return c
 
     def watch_ftml(self, ftml_release=False):
