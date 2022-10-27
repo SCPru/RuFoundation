@@ -138,7 +138,7 @@ class Command(BaseRunserverCommand):
                 parent = psutil.Process(current_child.pid)
                 for child in parent.children(recursive=True):
                     child.kill()
-                current_child.wait()
+                _safe_kill(current_child)
                 print('Reloading...')
                 current_child = self.run_child(True)
             else:
@@ -153,7 +153,6 @@ class Command(BaseRunserverCommand):
                 for file in filename:
                     if os.path.exists(base_project_dir + target_dir + file):
                         # Kill child
-                        print(current_child)
                         if current_child:
                             print('Interrupting child process...')
                             # KILL everything in the child tree
