@@ -75,7 +75,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 status = context.status
         else:
             name, category = articles.get_name(fullname)
-            context = {'page_id': fullname, 'allow_create': articles.is_full_name_allowed(fullname) and permissions.check(self.request.user, "create", Article(name=name, category=category))}
+            options = {'page_id': fullname, 'pathParams': path_params}
+            context = {'options': json.dumps(options), 'allow_create': articles.is_full_name_allowed(fullname) and permissions.check(self.request.user, "create", Article(name=name, category=category))}
             content = render_to_string(self.template_404, context)
             redirect_to = None
             title = ''
