@@ -11,7 +11,7 @@ from system.models import User
 from web.controllers import articles
 from web.models.articles import Article, Vote, ArticleLogEntry
 from web.models.settings import Settings
-from django.db.models import Q, Value as V, F, Count, Sum, Avg, CharField
+from django.db.models import Q, Value as V, F, Count, Sum, Avg, CharField, IntegerField
 from django.db.models.functions import Concat, Random, Coalesce
 from web import threadvars
 import json
@@ -48,6 +48,8 @@ def render_var(var, page_vars, page):
 
 
 def page_to_listpages_vars(page: Article, template, index, total):
+    updated_by = articles.get_latest_log_entry(page).user
+    tags = articles.get_tags(page)
     page_vars = {
         'name': page.name,
         'category': page.category,
@@ -63,16 +65,17 @@ def page_to_listpages_vars(page: Article, template, index, total):
         'total': str(total),
         'created_by': render_user_to_text(page.author),
         'created_by_linked': ('[[*user %s]]' % page.author.username) if page.author and 'username' in page.author.__dict__ else render_user_to_text(page.author),
+        'updated_by': render_user_to_text(updated_by),
+        'updated_by_linked': ('[[*user %s]]' % updated_by.username) if page.author and 'username' in page.author.__dict__ else render_user_to_text(updated_by),
         # content{n} = content sections are not supported yet
         # preview and preview(n) = first characters of the page are not supported yet
         # summary = wtf is this?
-        # tags, tags_linked, tags_linked|link_prefix = not yet
+        'tags': ', '.join(tags),
+        'tags_linked': ', '.join(f'[/system:page-tags/tag/{tag} {tag}]' for tag in tags),
         # _tags, _tags_linked, _tags_linked|link_prefix = not yet
         # form_data{name}, form_raw{name}, form_label{name}, form_hint{name} = never ever
         'created_at': '[[date %d]]' % int(page.created_at.timestamp()),
-        'updated_at': '[[date %d]]' % int(page.updated_at.timestamp()),
-        # created_by, created_by_unix, created_by_id, created_by_linked = not yet
-        # updated_by, updated_by_unix, updated_by_id, updated_by_linked = not yet
+        'updated_at': '[[date %d]]' % int(page.updated_at.timestamp()),\
         # commented_at, commented_by, commented_by_unix, commented_by_id, commented_by_linked = not yet
     }
     if page.parent:

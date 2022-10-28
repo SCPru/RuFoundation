@@ -119,7 +119,7 @@ def render(context, params):
     render_tags = []
 
     for k in tags_sorted_by_name:
-        value = float(tags[k] - min_num) / (max_num - min_num)
+        value = float(tags[k] - min_num) / (max_num - min_num) if max_num - min_num else 0
         render_tags.append({
             'name': k,
             'color': interpolate_color(min_color, max_color, value),
