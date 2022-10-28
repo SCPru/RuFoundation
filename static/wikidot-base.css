@@ -582,7 +582,7 @@ pre{
 	border: 1px dashed #DDD;
 	background-color: #F7F7F7;
 	font-family: 'Andale Mono', 'Courier New', Courier, monospace;
-	padding: 0 1em;
+	padding: 1em;
 	margin: 0.4em 0;
 	overflow: auto;
 }

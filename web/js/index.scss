@@ -1,4 +1,5 @@
 @import 'css/system';
+@import 'node_modules/highlight.js/styles/github.css';
 
 .rimg img, .limg img, .cimg img, .img img, .scp-image-block img {
   // compatibility patch for some unobvious stuff that started working differently after moving away from XHTML
@@ -135,4 +136,8 @@
     margin-left: 8px;
     margin-right: 8px;
   }
+}
+
+.w-code {
+  white-space: pre !important;
 }

@@ -20,6 +20,7 @@ import {makeRecentPosts} from './forum/recent-posts-pagination'
 import {makeSiteChanges} from './articles/site-changes'
 import {makeDate} from './articles/date'
 import {makeFootnote} from './articles/footnote'
+import {makeCodeBlock} from "./articles/codeblock";
 
 
 function renderTo(where: HTMLElement, what: any) {
@@ -66,6 +67,8 @@ window.addEventListener('DOMContentLoaded', () => {
             makeDate(node);
         } else if (node.classList.contains('w-footnoteref')) {
             makeFootnote(node);
+        } else if (node.classList.contains('w-code')) {
+            makeCodeBlock(node);
         }
     };
 
