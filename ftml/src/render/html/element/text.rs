@@ -59,7 +59,7 @@ pub fn render_code(ctx: &mut HtmlContext, language: Option<&str>, contents: &str
     );
 
     let class = {
-        let mut class = format!("code w-code w-code-{}", language.unwrap_or("none"));
+        let mut class = format!("code w-code language-{}", language.unwrap_or("none"));
         class.make_ascii_lowercase();
         class
     };

@@ -13,6 +13,7 @@
     "@types/styled-components": "^5.1.25",
     "esbuild": "^0.14.34",
     "esbuild-sass-plugin": "^2.2.6",
+    "highlight.js": "^11.6.0",
     "react": "17.x",
     "react-dom": "17",
     "react-is": "^18.0.0",
