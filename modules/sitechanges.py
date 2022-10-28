@@ -106,7 +106,7 @@ def log_entry_default_comment(entry: ArticleLogEntry) -> str:
     if entry.type == ArticleLogEntry.LogEntryType.FileDeleted:
         return 'Удалён файл: "%s"' % entry.meta['name']
 
-    if entry.type == ArticleLogEntry.LogEntryType.FileAdded:
+    if entry.type == ArticleLogEntry.LogEntryType.FileRenamed:
         return 'Переименован файл: "%s" в "%s"' % (entry.meta['prev_name'], entry.meta['name'])
 
     if entry.type == ArticleLogEntry.LogEntryType.Revert:
