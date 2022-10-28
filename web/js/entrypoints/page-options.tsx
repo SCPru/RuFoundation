@@ -52,9 +52,17 @@ class PageOptions extends Component<Props, State> {
     }
 
     componentDidMount() {
+        const { pathParams, optionsEnabled } = this.props;
         (window as any)._openNewEditor = (func?: () => void) => {
-            this.setState({ isNewEditor: true, onCancelNewEditor: func })
+            setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 0);
+            if (optionsEnabled) {
+                this.setState({subView: 'edit', onCancelNewEditor: func});
+            } else {
+                this.setState({ isNewEditor: true, onCancelNewEditor: func });
+            }
         };
+        if (pathParams["edit"])
+            (window as any)._openNewEditor();
     }
 
     onEdit = (e) => {

@@ -127,7 +127,7 @@ class ArticleEditor extends Component<Props, State> {
     }
 
     onSubmit = async () => {
-        const { isNew, pageId } = this.props;
+        const { isNew, pageId, pathParams } = this.props;
         this.setState({ saving: true, error: null, savingSuccess: false });
         const input = {
             pageId: this.props.pageId,
@@ -152,7 +152,11 @@ class ArticleEditor extends Component<Props, State> {
                 await sleep(1000);
                 this.setState({ savingSuccess: false });
                 window.scrollTo(window.scrollX, 0);
-                window.location.reload();
+                if (pathParams["edit"]) {
+                    window.location.href = `/${pageId}`;
+                } else {
+                    window.location.reload();
+                }
             } catch (e) {
                 this.setState({ saving: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
             }

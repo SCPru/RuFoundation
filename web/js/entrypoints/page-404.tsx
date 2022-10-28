@@ -4,6 +4,7 @@ import { Component } from 'react';
 
 interface Props {
     pageId?: string
+    pathParams?: { [key: string]: string }
 }
 
 interface State {
@@ -12,16 +13,17 @@ interface State {
 
 
 class Page404 extends Component<Props, State> {
-    state = {
-        isCreate: false,
-        bodyRef: null
-    };
+    constructor(props) {
+        super(props)
+        this.state = {
+            isCreate: !!this.props.pathParams['edit'],
+        };
+    }
 
     onCreate = (e) => {
         e.preventDefault();
         e.stopPropagation();
         this.setState({isCreate: true});
-        setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 0);
         (window as any)._openNewEditor(() => {
             this.setState({isCreate: false});
         });
@@ -43,6 +45,8 @@ class Page404 extends Component<Props, State> {
                     </ul>
                 </>
             )
+        } else {
+            return <></>
         }
     }
 }
