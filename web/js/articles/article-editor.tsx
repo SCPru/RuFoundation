@@ -152,7 +152,7 @@ class ArticleEditor extends Component<Props, State> {
                 await sleep(1000);
                 this.setState({ savingSuccess: false });
                 window.scrollTo(window.scrollX, 0);
-                window.location.reload();
+                window.location.href = `/${pageId}`;
             } catch (e) {
                 this.setState({ saving: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
             }
