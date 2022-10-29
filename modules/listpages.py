@@ -305,7 +305,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
                 rating_func = Coalesce(Sum('votes__rate'), 0)
             elif obj_settings.rating_mode == Settings.RatingMode.Stars:
                 rating_func = Coalesce(Avg('votes__rate'), 0.0)
-        q = q.annotate(rating=rating_func)
+        q = q.annotate(rating=rating_func, num_votes=Count('votes'))
         # end annotate
         # sorting
         f_sort = params.get('order', 'created_at desc').split(' ')
@@ -317,6 +317,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
             'updated_at': F('updated_at'),
             'fullname': Concat('category', V(':'), 'name', output_field=CharField()),
             'rating': F('rating'),
+            'votes': F('num_votes'),
             'random': Random(),
         }
         if f_sort[0] not in allowed_sort_columns:
