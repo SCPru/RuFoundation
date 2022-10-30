@@ -418,7 +418,7 @@ def refresh_article_links(article_version: ArticleVersion):
 
 
 # Updates name of article
-def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: str, user: Optional[_UserType] = None, log: bool = False):
+def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: str, user: Optional[_UserType] = None, log: bool = True):
     article = get_article(full_name_or_article)
     prev_full_name = get_full_name(full_name_or_article)
 
