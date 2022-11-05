@@ -440,7 +440,6 @@ class ArticleFiles extends Component<Props, State> {
                                     <th>Имя файла</th>
                                     <th>Тип файла</th>
                                     <th>Размер</th>
-                                    <th>Автор</th>
                                     <th />
                                 </tr>
                                 </thead>
@@ -448,14 +447,13 @@ class ArticleFiles extends Component<Props, State> {
                                 {files.map((file, i) => {
                                     return (
                                         <React.Fragment key={i}>
-                                            <tr>
+                                            <tr id={`file-row-${i}`}> {/* BHL has CSS selector that says tr[id*="file-row"] */}
                                                 <td><a href={`/local--files/${pageId}/${encodeURIComponent(file.name)}`} target="_blank">{file.name}</a></td>
                                                 <td>{file.mimeType}</td>
                                                 <td>{this.formatSize(file.size)}</td>
-                                                <td><UserView data={file.author} /></td>
                                                 <td><a className="btn btn-primary btn-sm btn-small" href="#" onClick={e=>this.onOptions(e, i)}>Опции</a></td>
                                             </tr>
-                                            {(optionsIndex===i)?<tr className="highlight">
+                                            {(optionsIndex===i)?<tr className="highlight" id={`file-options-${i}`}> {/* same reasoning for ID as above */}
                                                 <td/>
                                                 <td/>
                                                 <td/>

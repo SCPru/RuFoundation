@@ -170,24 +170,24 @@ class ArticleHistory extends Component<Props, State> {
                             </tr>
                             { entries.map(entry => {
                                 return (
-                                    <tr key={entry.revNumber}>
+                                    <tr key={entry.revNumber} id={`revision-row-${entry.revNumber}`}> {/* BHL has CSS selector that says tr[id*="evision-row"] */}
                                         <td>
                                             {entry.revNumber}.
                                         </td>
-                                        <td>&nbsp;</td>
+                                        <td style={{ width: '5em' }}>&nbsp;</td>
                                         <td>
                                             {this.renderFlags(entry)}
                                         </td>
-                                        <td>
+                                        <td className="optionstd" style={{ width: '5em' }}>
                                             {this.renderActions(entry)}
                                         </td>
-                                        <td>
+                                        <td style={{ width: '15em' }}>
                                             {this.renderUser(entry)}
                                         </td>
-                                        <td>
+                                        <td style={{ padding: '0 0.5em', width: '7em' }}>
                                             {this.renderDate(entry)}
                                         </td>
-                                        <td>
+                                        <td style={{ fontSize: '90%' }}>
                                             {this.renderComment(entry)}
                                         </td>
                                     </tr>
@@ -251,9 +251,9 @@ class ArticleHistory extends Component<Props, State> {
             return null;
         }
         return <>
-            <button className={"action"} onClick={() => this.displayArticleVersion(entry)} title="Просмотр изменений страницы">V</button>
-            <button className={"action"} onClick={() => this.displayVersionSource(entry)} title="Просмотр источника изменений">S</button>
-            {this.state.entryCount !== (entry.revNumber+1) && <button className={"action"} onClick={() => this.revertArticleVersion(entry)} title="Вернуться к правке">R</button>}
+            <a href="#" onClick={(e) => this.displayArticleVersion(e, entry)} title="Просмотр изменений страницы">V</a>
+            <a href="#" onClick={(e) => this.displayVersionSource(e, entry)} title="Просмотр источника изменений">S</a>
+            {this.state.entryCount !== (entry.revNumber+1) && <a href="#" onClick={(e) => this.revertArticleVersion(e, entry)} title="Вернуться к правке">R</a>}
         </>;
     }
 
@@ -314,7 +314,10 @@ class ArticleHistory extends Component<Props, State> {
         }
     }
 
-    displayArticleVersion (entry: ArticleLogEntry) {
+    displayArticleVersion (e: React.MouseEvent, entry: ArticleLogEntry) {
+        e.preventDefault();
+        e.stopPropagation();
+
         const { pageId, pathParams } = this.props;
         fetchArticleVersion(pageId, entry.revNumber, pathParams).then(function (resp) {
             showVersionMessage(entry.revNumber, new Date(entry.createdAt), entry.user, pageId);
@@ -322,7 +325,10 @@ class ArticleHistory extends Component<Props, State> {
         })
     }
 
-    displayVersionSource (entry: ArticleLogEntry) {
+    displayVersionSource (e: React.MouseEvent, entry: ArticleLogEntry) {
+        e.preventDefault();
+        e.stopPropagation();
+
         const { pageId, pathParams } = this.props;
         let onClose = this.hideSubArea;
         let show = this.showSubArea;
@@ -340,7 +346,10 @@ class ArticleHistory extends Component<Props, State> {
         this.setState({subarea: null})
     }
 
-    revertArticleVersion (entry: ArticleLogEntry) {
+    revertArticleVersion (e: React.MouseEvent, entry: ArticleLogEntry) {
+        e.preventDefault();
+        e.stopPropagation();
+
         const {pageId} = this.props;
         showRevertModal(pageId, entry);
     }

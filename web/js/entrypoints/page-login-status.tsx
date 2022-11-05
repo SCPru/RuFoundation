@@ -53,7 +53,7 @@ class PageLoginStatus extends Component<Props, State> {
         if (user.type === 'anonymous') {
             return (
                 <>
-                    <a href="/system:join">Создать учётную запись</a> или <a href="/-/login">Вход</a>
+                    <a className="login-status-create-account btn" href="/system:join">Создать учётную запись</a> или <a className="login-status-sign-in btn btn-primary" href="/-/login">Вход</a>
                 </>
             );
         } else {
@@ -67,11 +67,11 @@ class PageLoginStatus extends Component<Props, State> {
                     </span>{
                     (user.admin || user.staff) && (
                         <>
-                            {' '}| <a id="w-admin-link" href={`/-/admin`}>
+                            {'\u00a0'}|{'\u00a0'}<a id="w-admin-link" href={`/-/admin`}>
                             Админ-панель
                         </a>
                         </>
-                    )} | <a id="my-account" href={`/-/users/${user.id}-${user.username}`}>
+                    )}{'\u00a0|\u00a0'}<a id="my-account" href={`/-/users/${user.id}-${user.username}`}>
                         Мой профиль
                     </a>
                     <a id="account-topbutton" href="#" onClick={this.toggleMenu}>▼</a>
