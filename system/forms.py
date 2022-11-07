@@ -28,4 +28,9 @@ class CreateAccountForm(forms.Form):
         if cd['password'] != cd['password2']:
             raise forms.ValidationError('Пароли не совпадают')
         return cd['password2']
-        
+
+
+class CreateBotForm(forms.Form):
+    username = forms.CharField(label="Ник бота", required=True, validators=[
+        RegexValidator(r'^[A-Za-z0-9_-]+$', 'Некорректное имя пользователя')])
+

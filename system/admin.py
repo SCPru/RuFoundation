@@ -5,6 +5,7 @@ from django.urls import path
 from django import forms
 
 from .views.signup import InviteView
+from .views.bot import CreateBotView
 from .models import User
 
 
@@ -12,7 +13,7 @@ class AdvancedUserChangeForm(UserChangeForm):
     class Meta:
         widgets = {
             'username': forms.TextInput(attrs={'class': 'vTextField'}),
-            'wikidot_username': forms.TextInput(attrs={'class': 'vTextField'}),
+            'wikidot_username': forms.TextInput(attrs={'class': 'vTextField'})
         }
 
 
@@ -22,16 +23,18 @@ class AdvancedUserAdmin(UserAdmin):
 
     list_display = ['username_or_wd', 'email']
     search_fields = ['username', 'wikidot_username', 'email']
+    readonly_fields = ["api_key"]
 
     fieldsets = UserAdmin.fieldsets
     fieldsets[1][1]["fields"] += ("bio", "avatar")
-    fieldsets[0][1]["fields"] += ("type", "wikidot_username")
+    fieldsets[0][1]["fields"] += ("type", "wikidot_username", "api_key")
 
     inlines = []
 
     def get_urls(self):
         urls = super(AdvancedUserAdmin, self).get_urls()
         urls.insert(0, path("invite/", InviteView.as_view()))
+        urls.insert(0, path("newbot/", CreateBotView.as_view()))
         urls.insert(0, path("<id>/activate/", InviteView.as_view()))
         return urls
 
