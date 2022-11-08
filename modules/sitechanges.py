@@ -175,6 +175,8 @@ def render(context: RenderContext, params):
     type_filter = []
     type_filter_empty = not filter_types
     for t in all_types:
+        if t == ArticleLogEntry.LogEntryType.Revert:
+            continue
         desc = log_entry_type_name(ArticleLogEntry.LogEntryType(t))[1]
         type_filter.append({
             'name': desc,
