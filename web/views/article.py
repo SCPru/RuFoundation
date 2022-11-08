@@ -108,7 +108,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         for param in path_params:
             encoded_params += '/%s' % param
             if path_params[param] is not None:
-                encoded_params += '/%s' % path_params[param]
+                encoded_params += '/%s' % urllib.parse.quote(path_params[param], safe='')
 
         normalized_article_name = articles.normalize_article_name(article_name)
         if normalized_article_name != article_name:
