@@ -7,6 +7,8 @@ import os
 import shutil
 import subprocess
 import atexit
+
+from django.core.servers.basehttp import WSGIServer, WSGIRequestHandler
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import platform
@@ -32,7 +34,21 @@ def _safe_kill(p):
         pass
 
 
+class WSGIRequestHandlerWithRawURL(WSGIRequestHandler):
+    def get_environ(self):
+        env_base = super().get_environ()
+        env_base['RAW_PATH'] = self.path
+        return env_base
+
+
+class WSGIServerWithRawURL(WSGIServer):
+    def __init__(self, address, _handler, **kwargs):
+        super().__init__(address, WSGIRequestHandlerWithRawURL, **kwargs)
+
+
 class Command(BaseRunserverCommand):
+    server_cls = WSGIServerWithRawURL
+
     def add_arguments(self, parser):
         super().add_arguments(parser)
         parser.add_argument('--watch', action='store_true', dest='watch', help='Runs JS build in development mode')

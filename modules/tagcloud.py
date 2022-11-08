@@ -1,4 +1,5 @@
 import re
+import urllib.parse
 
 from django.db.models import Count, Q
 
@@ -124,7 +125,7 @@ def render(context, params):
             'name': k,
             'color': interpolate_color(min_color, max_color, value),
             'size': interpolate_font_size(min_size, max_size, value),
-            'link': '/%s/tag/%s' % (target, k)
+            'link': '/%s/tag/%s' % (target, urllib.parse.quote(k, safe=''))
         })
 
     return render_template_from_string(

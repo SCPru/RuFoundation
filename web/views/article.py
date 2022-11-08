@@ -1,6 +1,7 @@
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 from django.template.loader import render_to_string
 from django.http import HttpResponseRedirect
+import urllib.parse
 
 from renderer.templates import apply_template
 from renderer.utils import render_user_to_json
@@ -28,7 +29,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
     @staticmethod
     def get_path_params(path: str) -> tuple[str, dict[str, str]]:
-        path = path.split('/')
+        path = [urllib.parse.unquote(x) for x in path.split('/')]
         article_name = path[0]
         if not article_name:
             article_name = 'main'
@@ -152,6 +153,14 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'canDelete': permissions.check(self.request.user, "delete", article),
         }
 
+        tags = []
+        for tag_name in articles.get_tags(article):
+            if tag_name.startswith('_'):
+                continue
+            tags.append({'link': '/system:page-tags/tag/%s#pages' % urllib.parse.quote(tag_name, safe=''), 'name': tag_name})
+
+        print(repr(tags))
+
         context.update({
             'site_name': site.title,
             'site_headline': site.headline,
@@ -168,7 +177,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
             'title': title,
             'content': content,
-            'tags': [x for x in articles.get_tags(article) if not x.startswith('_')],
+            'tags': tags,
             'breadcrumbs': breadcrumbs,
 
             'login_status_config': json.dumps(login_status_config),
@@ -181,7 +190,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         return context
 
     def get(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
+        path = request.META['RAW_PATH'][1:]
+        context = self.get_context_data(path=path)
         if context['redirect_to']:
             return HttpResponseRedirect(context['redirect_to'])
         return self.render_to_response(context, status=context['status'])

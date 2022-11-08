@@ -72,7 +72,7 @@
                             <div class="page-tags">
                                 <span>
                                     {% for tag in tags %}
-                                        <a href="/system:page-tags/tag/{{ tag }}#pages">{{ tag }}</a>
+                                        <a href="{{ tag.link }}">{{ tag.name }}</a>
                                     {% endfor %}
                                 </span>
                             </div>
