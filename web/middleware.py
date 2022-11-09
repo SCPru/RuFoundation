@@ -4,6 +4,26 @@ from django.http import HttpResponseRedirect
 from web.models.sites import Site
 from web import threadvars
 import django.middleware.csrf
+import urllib.parse
+
+
+class FixRawPathMiddleware(object):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # normalize meta.
+        # if we do not have RAW_PATH, but have RAW_URI, get path from RAW_URI.
+        # if we do not have both, put at least regular path there (wrong, but won't crash)
+
+        if 'RAW_PATH' not in request.META:
+            if 'RAW_URI' in request.META:
+                parsed = urllib.parse.urlparse(request.META['RAW_URI'])
+                request.META['RAW_PATH'] = parsed.path
+            else:
+                request.META['RAW_PATH'] = request.path
+
+        return self.get_response(request)
 
 
 # This class redirects the user if they are trying to access media file using non-media host and the other way around.

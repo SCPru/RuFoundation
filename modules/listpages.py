@@ -80,11 +80,11 @@ def page_to_listpages_vars(page: Article, template, index, total):
         # preview and preview(n) = first characters of the page are not supported yet
         # summary = wtf is this?
         'tags': ', '.join(tags),
-        'tags_linked': ', '.join(f'[/system:page-tags/tag/{tag} {tag}]' for tag in tags),
+        'tags_linked': ', '.join(('[/system:page-tags/tag/%s %s]' % (urllib.parse.quote(tag, safe=''), tag)) for tag in tags),
         # _tags, _tags_linked, _tags_linked|link_prefix = not yet
         # form_data{name}, form_raw{name}, form_label{name}, form_hint{name} = never ever
         'created_at': '[[date %d]]' % int(page.created_at.timestamp()),
-        'updated_at': '[[date %d]]' % int(page.updated_at.timestamp()),\
+        'updated_at': '[[date %d]]' % int(page.updated_at.timestamp()),
         # commented_at, commented_by, commented_by_unix, commented_by_id, commented_by_linked = not yet
     }
     if page.parent:
