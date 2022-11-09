@@ -277,6 +277,19 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                         raise ValueError(op)
                 except:
                     q = q.filter(id=-1)  # invalid
+
+        # annotate each article with rating
+        rating_func = F('id')
+        if q:
+            first_obj = q[0]
+            obj_settings = first_obj.get_settings()
+            if obj_settings.rating_mode == Settings.RatingMode.UpDown:
+                rating_func = Coalesce(Sum('votes__rate'), 0)
+            elif obj_settings.rating_mode == Settings.RatingMode.Stars:
+                rating_func = Coalesce(Avg('votes__rate'), 0.0)
+        q = q.annotate(rating=rating_func, num_votes=Count('votes'))
+        # end annotate
+
         f_rating = params.get('rating')
         if f_rating:
             if f_rating.strip() == '=':
@@ -309,17 +322,6 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                         raise ValueError(op)
                 except:
                     q = q.filter(id=-1)
-        # annotate each article with rating
-        rating_func = F('id')
-        if q:
-            first_obj = q[0]
-            obj_settings = first_obj.get_settings()
-            if obj_settings.rating_mode == Settings.RatingMode.UpDown:
-                rating_func = Coalesce(Sum('votes__rate'), 0)
-            elif obj_settings.rating_mode == Settings.RatingMode.Stars:
-                rating_func = Coalesce(Avg('votes__rate'), 0.0)
-        q = q.annotate(rating=rating_func, num_votes=Count('votes'))
-        # end annotate
         # sorting
         f_sort = params.get('order', 'created_at desc').split(' ')
         allowed_sort_columns = {
