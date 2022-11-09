@@ -10,7 +10,7 @@ def has_content():
 
 
 def render(context, params, content=None):
-    total = str(len(query_pages(context, params, False)[0]))
+    total = str(len(query_pages(context.article, params, context.user, context.path_params, False)[0]))
 
     tpl_vars = {
         'total': total,

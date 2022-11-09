@@ -23,6 +23,15 @@ def has_content():
     return True
 
 
+def allow_api():
+    return True
+
+
+def api_get(context, _params):
+    print(_params)
+    return {"pages": [page.full_name for page in query_pages(context.article, _params, context.user, context.path_params, False)[0]]}
+
+
 def render_date(date, format='%H:%M %d.%m.%Y'):
     if not date:
         return 'n/a'
@@ -95,7 +104,10 @@ def split_arg_operator(arg, allowed, default):
     return default, arg
 
 
-def query_pages(context: RenderContext, params, allow_pagination=True):
+def query_pages(article, params, viewer=None, path_params=None, allow_pagination=True):
+    if path_params is None:
+        path_params = {}
+
     # legacy param aliases
     if 'created_at' not in params and 'date' in params:
         params['created_at'] = params['date']
@@ -107,8 +119,8 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
     # if either name, range, or fullname is '.', then we always select the current page.
     if params.get('name') == '.' or params.get('range') == '.' or params.get('fullname') == '.':
         pages = []
-        if context.article:
-            pages.append(context.article)
+        if article:
+            pages.append(article)
         pagination_total_pages = 1
         total_pages = 1
     elif params.get('fullname'):
@@ -133,7 +145,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
         if f_name != '*':
             f_name = f_name.replace('%', '*').lower()
             if f_name == '=':
-                q = q.filter(name=context.article.name)
+                q = q.filter(name=article.name)
             elif '*' in f_name:
                 up_to = f_name.index('*')
                 q = q.filter(name__startswith=f_name[:up_to])
@@ -145,10 +157,10 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
             if f_tags == '-':
                 q = q.filter(tags__isnull=True)
             elif f_tags == '=':
-                tags = articles.get_tags(context.article)
+                tags = articles.get_tags(article)
                 q = q.filter(tags__name__in=tags)
             elif f_tags == '==':
-                tags = articles.get_tags(context.article)
+                tags = articles.get_tags(article)
                 q = q.filter(tags__name__in=tags).annotate(num_tags=Count('tags')).filter(num_tags=len(tags))
             else:
                 f_tags = [x.strip() for x in f_tags.split(' ') if x.strip()]
@@ -172,7 +184,8 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
         if f_category != '*':
             f_category = f_category.replace(',', ' ').lower()
             if f_category == '.':
-                q = q.filter(category=context.article.category)
+                if article:
+                    q = q.filter(category=article.category)
             else:
                 categories = []
                 not_allowed = []
@@ -180,7 +193,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
                     if not category:
                         continue
                     if category == '.':
-                        category = context.article.category
+                        category = article.category
                     if category[0] == '-':
                         not_allowed.append(category[1:])
                     else:
@@ -194,18 +207,18 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
             if f_parent == '-':
                 q = q.filter(parent=None)
             elif f_parent == '=':
-                q = q.filter(parent=context.article.parent)
+                q = q.filter(parent=article.parent)
             elif f_parent == '-=':
-                q = q.filter(~Q(parent=context.article.parent))
+                q = q.filter(~Q(parent=article.parent))
             elif f_parent == '.':
-                q = q.filter(parent=context.article)
+                q = q.filter(parent=article)
             else:
                 article = articles.get_article(f_parent)
                 q = q.filter(parent=article)
         f_created_by = params.get('created_by')
         if f_created_by:
             if f_created_by == '.':
-                user = context.user
+                user = viewer
             else:
                 f_created_by = f_created_by.strip()
                 if f_created_by.startswith('wd:'):
@@ -220,8 +233,8 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
         f_created_at = params.get('created_at')
         if f_created_at:
             if f_created_at.strip() == '=':
-                if context.article:
-                    day_start = context.article.created_at.replace(hour=0, minute=0, second=0, microsecond=0)
+                if article:
+                    day_start = article.created_at.replace(hour=0, minute=0, second=0, microsecond=0)
                     day_end = day_start.replace(hour=23, minute=59, second=59, microsecond=0)
                     q = q.filter(created_at__gte=day_start, created_at__lte=day_end)
                 else:
@@ -267,10 +280,10 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
         f_rating = params.get('rating')
         if f_rating:
             if f_rating.strip() == '=':
-                if context.article is None:
+                if article is None:
                     q = q.filter(id=-1)
                 else:
-                    current_rating, votes, mode = articles.get_rating(context.article)
+                    current_rating, votes, mode = articles.get_rating(article)
                     q = q.filter(rating=current_rating)
             else:
                 op, f_rating = split_arg_operator(f_rating, ['>', '<', '=', '>=', '<=', '<>'], '=')
@@ -343,7 +356,7 @@ def query_pages(context: RenderContext, params, allow_pagination=True):
             except:
                 f_per_page = 20
             try:
-                f_page = int(context.path_params.get('p', '1'))
+                f_page = int(path_params.get('p', '1'))
                 if f_page < 1:
                     f_page = 1
             except:
@@ -449,7 +462,7 @@ def render(context: RenderContext, params, content=None):
         separate = params.get('separate', 'yes') == 'yes'
         wrapper = params.get('wrapper', 'yes') == 'yes'
 
-        pages, page_index, pagination_page, pagination_total_pages, total_pages = query_pages(context, params)
+        pages, page_index, pagination_page, pagination_total_pages, total_pages = query_pages(context.article, params, context.user, context.path_params)
 
         pages = list(pages)
         if params.get('reverse', 'no') == 'yes':
