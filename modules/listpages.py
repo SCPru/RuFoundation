@@ -28,7 +28,6 @@ def allow_api():
 
 
 def api_get(context, _params):
-    print(_params)
     return {"pages": [page.full_name for page in query_pages(context.article, _params, context.user, context.path_params, False)[0]]}
 
 
@@ -299,7 +298,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                     current_rating, votes, mode = articles.get_rating(article)
                     q = q.filter(rating=current_rating)
             else:
-                op, f_rating = split_arg_operator(f_rating, ['>', '<', '=', '>=', '<=', '<>'], '=')
+                op, f_rating = split_arg_operator(f_rating, ['>=', '<=', '<>', '>', '<', '='], '=')
                 f_rating = f_rating.strip()
                 try:
                     try:
