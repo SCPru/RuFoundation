@@ -284,6 +284,12 @@ def allow_api():
     return True
 
 
+def api_for_article(context, _params):
+    if not context.article:
+        raise ModuleError('Страница не указана')
+    return {"threadId": articles.get_comment_info(context.article)[0]}
+
+
 def api_update(context, params):
     if 'name' in params:
         if not (params['name'] or '').strip():

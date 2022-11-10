@@ -140,10 +140,11 @@ class FetchOrRevertLogView(APIView):
         try:
             c_from = int(request.GET.get('from', '0'))
             c_to = int(request.GET.get('to', '25'))
+            get_all = request.GET.get('all') == True
         except ValueError:
             raise APIError('Некорректное указание ограничений списка', 400)
 
-        log_entries, total_count = articles.get_log_entries_paged(full_name, c_from, c_to)
+        log_entries, total_count = articles.get_log_entries_paged(full_name, c_from, c_to, get_all)
 
         output = []
         for entry in log_entries:
@@ -206,10 +207,11 @@ class FetchVersionView(APIView):
             if version.rendered:
                 rendered = version.rendered
             else:
-                context = RenderContext(version.article, version.article, json.loads(request.GET.get('pathParams', "{}")), self.request.user)
+                context = RenderContext(version.article, version.article,
+                                        json.loads(request.GET.get('pathParams', "{}")), self.request.user)
                 rendered = single_pass_render(version.source, context)
 
-            return self.render_json(200, {'source': version.source, "rendered":  rendered})
+            return self.render_json(200, {'source': version.source, "rendered": rendered})
         raise APIError('Версии с данным идентификатором не существует', 404)
 
 
@@ -219,7 +221,8 @@ class FetchExternalLinks(APIView):
         if not article:
             raise APIError('Страница не найдена', 404)
 
-        links_children = [{'id': x.full_name, 'title': x.title, 'exists': True} for x in Article.objects.filter(parent=article)]
+        links_children = [{'id': x.full_name, 'title': x.title, 'exists': True} for x in
+                          Article.objects.filter(parent=article)]
 
         links_all = ExternalLink.objects.filter(link_to=full_name)
 
@@ -230,7 +233,8 @@ class FetchExternalLinks(APIView):
 
         for link in links_all:
             article = articles_dict.get(link.link_from.lower())
-            article_record = {'id': article.full_name, 'title': article.title, 'exists': True} if article else {'id': link.link_from.lower(), 'title': link.link_from.lower(), 'exists': False}
+            article_record = {'id': article.full_name, 'title': article.title, 'exists': True} if article else {
+                'id': link.link_from.lower(), 'title': link.link_from.lower(), 'exists': False}
             if link.link_type == ExternalLink.Type.Include:
                 links_include.append(article_record)
             elif link.link_type == ExternalLink.Type.Link:

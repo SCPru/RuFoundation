@@ -122,10 +122,12 @@ def get_latest_log_entry(full_name_or_article: _FullNameOrArticle) -> Optional[A
 
 
 # Gets list of log entries from article, sorted, with specified bounds
-def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int, c_to: int) -> Tuple[QuerySet[ArticleLogEntry], int]:
+def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int, c_to: int, get_all: bool = False) -> Tuple[QuerySet[ArticleLogEntry], int]:
     log_entries = get_log_entries(full_name_or_article)
     total_count = len(log_entries)
-    return log_entries[c_from:c_to], total_count
+    if not get_all:
+        log_entries = log_entries[c_from:c_to]
+    return log_entries, total_count
 
 
 # Revert all revisions to specific revision
