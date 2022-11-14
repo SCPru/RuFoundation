@@ -62,10 +62,12 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             k = param[10:].lower()
             if k in path_params:
                 return json.dumps(path_params[k])
+            return json.dumps('%%' + param + '%%')
         elif param.startswith('path_url|'):
             k = param[9:].lower()
             if k in path_params:
                 return urllib.parse.quote(path_params[k], safe='')
+            return urllib.parse.quote('%%' + param + '%%', safe='')
         return '%%' + param + '%%'
 
     def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str], str, Optional[str], str]:
