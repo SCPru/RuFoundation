@@ -43,6 +43,14 @@ def _eval_ast(node):
             if len(args) != 1:
                 raise ValueError(args)
             return round(args[0])
+        elif id == 'lower':
+            if len(args) != 1 or not isinstance(args[0], str):
+                raise ValueError(args)
+            return args[0].lower()
+        elif id == 'upper':
+            if len(args) != 1 or not isinstance(args[0], str):
+                raise ValueError(args)
+            return args[0].upper()
         else:
             raise ValueError(id)
     else:

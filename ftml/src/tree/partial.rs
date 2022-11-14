@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{ListItem, RubyText, Tab, TableCell, TableRow};
+use super::{ListItem, RubyText, Tab, TableCell, TableRow, FormInput};
 use crate::parsing::ParseWarningKind;
 
 /// Part of an element, as returned by a rule.

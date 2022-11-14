@@ -22,7 +22,7 @@
 
 use super::TextContext;
 use crate::tree::{
-    ContainerType, DefinitionListItem, Element, LinkLocation, ListItem, ListType, Tab, Date
+    ContainerType, DefinitionListItem, Element, LinkLocation, ListItem, ListType, Tab, FormInput
 };
 use crate::url::normalize_link;
 use std::borrow::Cow;
@@ -71,6 +71,13 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                     (false, None)
                 }
 
+                // Wrap form with [[form]] and [[/form]]
+                ContainerType::Form => {
+                    ctx.push_str("[[form]]");
+
+                    (true, None)
+                }
+
                 // Inline or miscellaneous container.
                 _ => (false, None),
             };
@@ -88,8 +95,16 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             render_elements(ctx, container.elements());
 
             // Wrap any ruby text with parentheses
-            if container.ctype() == ContainerType::RubyText {
-                ctx.push(')');
+            match container.ctype() {
+                ContainerType::RubyText => {
+                    ctx.push(')');
+                }
+
+                ContainerType::Form => {
+                    ctx.push_str("[[/form]]");
+                }
+
+                _ => {}
             }
 
             if add_newlines {
@@ -328,6 +343,16 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                 ctx.push_str(&hide_text);
                 ctx.add_newline();
             }
+        }
+        Element::FormInput(FormInput{ attributes }) => {
+            info!("Rendering form input");
+
+            ctx.push_str(&format!("[[input"));
+            for (k, v) in attributes.get().iter() {
+                ctx.push_str(&format!(" {k}=\"{v}\""));
+            }
+            ctx.push_str("]]");
+            ctx.add_newline();
         }
         Element::TableOfContents { .. } => {
             info!("Rendering table of contents");

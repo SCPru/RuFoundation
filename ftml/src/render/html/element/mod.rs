@@ -26,6 +26,7 @@ mod date;
 mod definition_list;
 mod embed;
 mod footnotes;
+mod form;
 mod iframe;
 mod image;
 mod include;
@@ -54,6 +55,7 @@ use self::date::render_date;
 use self::definition_list::render_definition_list;
 use self::embed::render_embed;
 use self::footnotes::{render_footnote, render_footnote_block};
+use self::form::render_form_input;
 use self::iframe::{render_html, render_iframe};
 use self::image::render_image;
 use self::include::{render_include, render_variable};
@@ -100,6 +102,7 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
         Element::Variable(name) => render_variable(ctx, name),
         Element::Email(email) => render_email(ctx, email),
         Element::Table(table) => render_table(ctx, table),
+        Element::FormInput(input) => render_form_input(ctx, input),
         Element::TabView(tabs) => render_tabview(ctx, tabs),
         Element::Anchor {
             elements,

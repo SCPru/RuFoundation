@@ -110,6 +110,7 @@ pub enum ContainerType {
     Ruby,
     RubyText,
     Paragraph,
+    Form,
     Align(Alignment),
     Header(Heading),
 }
@@ -143,6 +144,7 @@ impl ContainerType {
             ContainerType::RubyText => HtmlTag::new("rt"),
             ContainerType::Paragraph => HtmlTag::new("p"),
             ContainerType::Align(_) => HtmlTag::new("div"),
+            ContainerType::Form => HtmlTag::new("form"),
             ContainerType::Header(heading) => heading.html_tag(indexer),
         }
     }
@@ -173,6 +175,7 @@ impl ContainerType {
             ContainerType::RubyText => true,
             ContainerType::Paragraph => false,
             ContainerType::Align(_) => false,
+            ContainerType::Form => false,
             ContainerType::Header(_) => false,
         }
     }

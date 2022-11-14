@@ -21,6 +21,7 @@ import {makeSiteChanges} from './articles/site-changes'
 import {makeDate} from './articles/date'
 import {makeFootnote} from './articles/footnote'
 import {makeCodeBlock} from "./articles/codeblock";
+import {makeRefForm} from './articles/ref-form'
 
 
 function renderTo(where: HTMLElement, what: any) {
@@ -69,6 +70,8 @@ window.addEventListener('DOMContentLoaded', () => {
             makeFootnote(node);
         } else if (node.classList.contains('w-code')) {
             makeCodeBlock(node);
+        } else if (node.classList.contains('w-ref-form')) {
+            makeRefForm(node);
         }
     };
 
