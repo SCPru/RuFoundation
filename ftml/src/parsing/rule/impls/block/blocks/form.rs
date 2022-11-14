@@ -41,7 +41,7 @@ fn parse_form<'r, 't>(
                 target
             }
         },
-        None => parser.page_info().full_name(),
+        None => Cow::from(""),
     };
 
     let mut attributes = arguments.to_attribute_map(parser.settings());

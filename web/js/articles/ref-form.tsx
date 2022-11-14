@@ -11,6 +11,10 @@ export function makeRefForm(node: HTMLElement) {
         e.preventDefault();
         e.stopPropagation();
 
+        if (!node.dataset.targetPage) {
+            return;
+        }
+
         // find all inputs within the form. convert to path params, send.
         let target = `/${node.dataset.targetPage}`
 
