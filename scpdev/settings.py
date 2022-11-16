@@ -262,3 +262,8 @@ LOGGING = {
         'level': os.environ.get('LOGLEVEL', 'INFO'),
     },
 }
+
+
+JAZZMIN_SETTINGS = {
+    "user_avatar": "avatar",
+}
