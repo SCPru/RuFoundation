@@ -52,6 +52,24 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             return single_pass_render(articles.get_latest_source(nav), RenderContext(article, nav, path_params, self.request.user))
         return ""
 
+    @staticmethod
+    def get_page_path_params(path_params: dict[str, str], param: str):
+        if param.startswith('path|'):
+            k = param[5:].lower()
+            if k in path_params:
+                return path_params[k]
+        elif param.startswith('path_expr|'):
+            k = param[10:].lower()
+            if k in path_params:
+                return json.dumps(path_params[k])
+            return json.dumps('%%' + param + '%%')
+        elif param.startswith('path_url|'):
+            k = param[9:].lower()
+            if k in path_params:
+                return urllib.parse.quote(path_params[k], safe='')
+            return urllib.parse.quote('%%' + param + '%%', safe='')
+        return '%%' + param + '%%'
+
     def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str], str, Optional[str], str]:
         excerpt = ''
         image = None
@@ -64,6 +82,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 status = 403
             else:
                 source = articles.get_latest_source(article)
+                source = apply_template(source, lambda param: self.get_page_path_params(path_params, param))
+
                 if article.name != '_template':
                     template = articles.get_article('%s:_template' % article.category)
                     if template:

@@ -39,6 +39,12 @@
                     <div id="header">
                         <h1><a href="/"><span>{{ site_name }}</span></a></h1>
                         <h2><span>{{ site_headline }}</span></h2>
+                        <div id="search-top-box" class="form-search">
+                            <form id="search-top-box-form" class="w-ref-form" data-target-page="search:site">
+                                <input id="search-top-box-input" class="text search-query" type="text" name="q" placeholder="Поиск на этом сайте">
+                                <input class="button btn" type="submit" value="Искать">
+                            </form>
+                        </div>
                         <div id="top-bar">
                             {{ nav_top }}
                         </div>

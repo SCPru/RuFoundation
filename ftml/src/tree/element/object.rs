@@ -27,7 +27,7 @@ use crate::data::PageRef;
 use crate::tree::{
     Alignment, AnchorTarget, AttributeMap, ClearFloat, Container, Date,
     DefinitionListItem, Embed, FloatAlignment, ImageSource, LinkLabel, LinkLocation,
-    LinkType, ListItem, ListType, Module, PartialElement, Tab, Table, VariableMap,
+    LinkType, ListItem, ListType, Module, PartialElement, Tab, Table, VariableMap, FormInput
 };
 use crate::tree::clone::*;
 
@@ -82,6 +82,9 @@ pub enum Element<'t> {
 
     /// An element representing an HTML table.
     Table(Table<'t>),
+
+    /// An element representing an HTML form.
+    FormInput(FormInput<'t>),
 
     /// An element representing a tabview.
     TabView(Vec<Tab<'t>>),
@@ -327,6 +330,7 @@ impl Element<'_> {
             Element::Variable(_) => "Variable",
             Element::Email(_) => "Email",
             Element::Table(_) => "Table",
+            Element::FormInput(_) => "FormInput",
             Element::TabView(_) => "TabView",
             Element::Anchor { .. } => "Anchor",
             Element::AnchorName(_) => "AnchorName",
@@ -380,6 +384,7 @@ impl Element<'_> {
             | Element::Variable(_)
             | Element::Email(_) => true,
             Element::Table(_) => false,
+            Element::FormInput(_) => true,
             Element::TabView(_) => false,
             Element::Anchor { .. } | Element::AnchorName(_) | Element::Link { .. } => {
                 true
@@ -428,6 +433,7 @@ impl Element<'_> {
             Element::Variable(name) => Element::Variable(string_to_owned(name)),
             Element::Email(email) => Element::Email(string_to_owned(email)),
             Element::Table(table) => Element::Table(table.to_owned()),
+            Element::FormInput(input) => Element::FormInput(input.to_owned()),
             Element::TabView(tabs) => {
                 Element::TabView(tabs.iter().map(|tab| tab.to_owned()).collect())
             }
