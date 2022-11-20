@@ -50,7 +50,9 @@ def serve_static(request, dir_path, document_root=None, show_indexes=False):
                     dir_path_split[0] = article.media_name
     dir_path = '/'.join([partial_quote(x) for x in dir_path_split])
 
-    return django.views.static.serve(request, dir_path, document_root=document_root, show_indexes=show_indexes)
+    response = django.views.static.serve(request, dir_path, document_root=document_root, show_indexes=show_indexes)
+    response['Content-Disposition'] = "inline"
+    return response
 
 
 urlpatterns = [
