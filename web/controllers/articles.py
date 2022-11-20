@@ -99,12 +99,14 @@ def add_log_entry(full_name_or_article: _FullNameOrArticle, log_entry: ArticleLo
     current_log = ArticleLogEntry.objects.select_related('article')\
                                          .select_for_update()\
                                          .filter(article=article)
-    len(current_log)
     max_rev_number = current_log.aggregate(max=Max('rev_number')).get('max')
     if max_rev_number is None:
         max_rev_number = -1
     log_entry.rev_number = max_rev_number + 1
     log_entry.save()
+
+    article.updated_at = log_entry.created_at
+    article.save()
 
 
 # Gets all log entries of article, sorted

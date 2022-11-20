@@ -72,7 +72,7 @@ class Article(SiteLimitedModel):
     locked = models.BooleanField(default=False, verbose_name="Страница защищена")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
+    updated_at = models.DateTimeField(auto_now_add=True, verbose_name="Время изменения")
 
     media_name = models.TextField(verbose_name="Название папки с файлами в ФС-хранилище", unique=True, default=uuid4)
 
