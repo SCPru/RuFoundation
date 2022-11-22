@@ -179,7 +179,6 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 continue
             tags.append({'link': '/system:page-tags/tag/%s#pages' % urllib.parse.quote(tag_name, safe=''), 'name': tag_name})
 
-        print(repr(tags))
 
         context.update({
             'site_name': site.title,

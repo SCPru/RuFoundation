@@ -97,7 +97,7 @@ fn parse_tab<'r, 't>(
     let mut raw_label =
         parser.get_head_value(&BLOCK_TAB, in_head, |parser, value| match value {
             Some(name) => Ok(name),
-            None => Err(parser.make_warn(ParseWarningKind::BlockMissingArguments)),
+            None => Ok("untitled"),
         })?;
 
     raw_label = raw_label.trim();
