@@ -21,4 +21,16 @@ def days_since(value, arg=None):
     today = datetime.now(tzinfo).date()
     delta = value - today
 
-    return abs(delta.days)
+    if abs(delta.days) % 10 == 1:
+        day_str = "день"
+    elif abs(delta.days) % 10 in range(2, 5):
+        day_str = "дня"
+    else:
+        day_str = "дней"
+
+    if delta.days < 1:
+        fa_str = "назад"
+    else:
+        fa_str = "после сегодня"
+
+    return "%s %s %s" % (abs(delta.days), day_str, fa_str)
