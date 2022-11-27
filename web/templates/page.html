@@ -1,4 +1,4 @@
-{% load md5url %}
+{% load md5url days %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -83,7 +83,10 @@
                                 </span>
                             </div>
                             <div id="page-info-break"></div>
-                            <div id="page-options-container" data-config="{{ options_config }}"></div>
+                            {% if updated_at %}
+                                <div id="page-info">версия страницы: {{ rev_number }}, Последняя правка: <span class="odate" style="display: inline">{{ updated_at|date:"d N Y, H:i" }} ({{ updated_at|days_since }} дней назад)</span></div>
+                            {% endif %}
+                            <div id="page-options-container" data-config="{{ options_config }}">zz</div>
                             <div id="action-area"></div>
                         </div>
                     </div>

@@ -1,3 +1,5 @@
+import datetime
+
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 from django.template.loader import render_to_string
 from django.http import HttpResponseRedirect
@@ -11,7 +13,7 @@ from web.controllers import articles, permissions
 from renderer import single_pass_render, single_pass_render_with_excerpt
 from renderer.parser import RenderContext
 
-from typing import Optional
+from typing import Optional, Tuple
 import json
 
 from web.models.sites import get_current_site
@@ -70,9 +72,11 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             return urllib.parse.quote('%%' + param + '%%', safe='')
         return '%%' + param + '%%'
 
-    def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> tuple[str, int, Optional[str], str, Optional[str], str]:
+    def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> Tuple[str, int, Optional[str], str, Optional[str], str, int, Optional[datetime.datetime]]:
         excerpt = ''
         image = None
+        rev_number = 0
+        updated_at = None
         if article is not None:
             if not permissions.check(self.request.user, 'view', article):
                 context = {'page_id': fullname}
@@ -94,6 +98,9 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 redirect_to = context.redirect_to
                 title = context.title
                 status = context.status
+
+                rev_number = articles.get_latest_log_entry(article).rev_number
+                updated_at = article.updated_at
         else:
             name, category = articles.get_name(fullname)
             options = {'page_id': fullname, 'pathParams': path_params}
@@ -102,7 +109,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             redirect_to = None
             title = ''
             status = 404
-        return content, status, redirect_to, excerpt, image, title
+        return content, status, redirect_to, excerpt, image, title, rev_number, updated_at
 
     def get_context_data(self, **kwargs):
         path = kwargs["path"]
@@ -142,7 +149,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         nav_top = self._render_nav("nav:top", article, path_params)
         nav_side = self._render_nav("nav:side", article, path_params)
 
-        content, status, redirect_to, excerpt, image, title = self.render(article_name, article, path_params)
+        content, status, redirect_to, excerpt, image, title, rev_number, updated_at = self.render(article_name, article, path_params)
 
         context = super(ArticleView, self).get_context_data(**kwargs)
 
@@ -198,6 +205,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'content': content,
             'tags': tags,
             'breadcrumbs': breadcrumbs,
+            'rev_number': rev_number,
+            'updated_at': updated_at,
 
             'login_status_config': json.dumps(login_status_config),
             'options_config': json.dumps(options_config),
