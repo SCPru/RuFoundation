@@ -321,6 +321,39 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                         raise ValueError(op)
                 except:
                     q = q.filter(id=-1)
+
+        f_votes = params.get('votes')
+        if f_votes:
+            if f_votes.strip() == '=':
+                if article is None:
+                    q = q.filter(id=-1)
+                else:
+                    current_rating, votes, mode = articles.get_rating(article)
+                    q = q.filter(num_votes=votes)
+            else:
+                op, f_votes = split_arg_operator(f_votes, ['>=', '<=', '<>', '>', '<', '='], '=')
+                f_votes = f_votes.strip()
+                try:
+                    try:
+                        i_votes = int(f_votes)
+                    except ValueError:
+                        i_votes = float(f_votes)
+                    if op == '=':
+                        q = q.filter(num_votes=i_votes)
+                    elif op == '<>':
+                        q = q.filter(~Q(num_votes=i_votes))
+                    elif op == '<':
+                        q = q.filter(num_votes__lt=i_votes)
+                    elif op == '>':
+                        q = q.filter(num_votes__gt=i_votes)
+                    elif op == '<=':
+                        q = q.filter(num_votes__lte=i_votes)
+                    elif op == '>=':
+                        q = q.filter(num_votes__gte=i_votes)
+                    else:
+                        raise ValueError(op)
+                except:
+                    q = q.filter(id=-1)
         # sorting
         f_sort = params.get('order', 'created_at desc').split(' ')
         allowed_sort_columns = {
