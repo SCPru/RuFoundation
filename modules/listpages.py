@@ -239,7 +239,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                 else:
                     q = q.filter(id=-1)  # invalid
             else:
-                op, f_created_at = split_arg_operator(f_created_at, ['>', '<', '=', '>=', '<=', '<>'], '=')
+                op, f_created_at = split_arg_operator(f_created_at, ['>=', '<=', '<>', '>', '<', '='], '=')
                 f_created_at = f_created_at.strip()
                 try:
                     dd = f_created_at.split('-')
