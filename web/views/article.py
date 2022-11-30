@@ -12,6 +12,7 @@ from web.controllers import articles, permissions
 
 from renderer import single_pass_render, single_pass_render_with_excerpt
 from renderer.parser import RenderContext
+from modules.listpages import page_to_listpages_vars
 
 from typing import Optional, Tuple
 import json
@@ -92,7 +93,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                     template = articles.get_article('%s:_template' % article.category)
                     if template:
                         template_source = articles.get_latest_source(template)
-                        source = apply_template(template_source, {'content': source})
+                        source = page_to_listpages_vars(article, template_source, index=1, total=1)
                 context = RenderContext(article, article, path_params, self.request.user)
                 content, excerpt, image = single_pass_render_with_excerpt(source, context)
                 redirect_to = context.redirect_to
