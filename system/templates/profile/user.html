@@ -22,6 +22,7 @@
 {% block content %}
     <div class="profile-form">
         {% if object.type == 'wikidot' %}<p><b>Важно:</b> Пользователь мигрирован с платформы Wikidot и не является активным.<br><br></p>{% endif %}
+        {% if object.type == 'bot' %}<p><b>Важно:</b> Пользователь является ботом.<br><br></p>{% endif %}
         {% if object.first_name %}<p><b>Имя:</b> {{ object.first_name }}</p>{% endif %}
         {% if object.last_name %}<p><b>Фамилия:</b> {{ object.last_name }}</p>{% endif %}
         {% if object.bio %}<p><b>Описание:</b> {{ bio_rendered }}</p>{% endif %}
