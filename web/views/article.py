@@ -181,12 +181,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'canDelete': permissions.check(self.request.user, "delete", article),
         }
 
-        tags = []
-        for tag_name in articles.get_tags(article):
-            if tag_name.startswith('_'):
-                continue
-            tags.append({'link': '/system:page-tags/tag/%s#pages' % urllib.parse.quote(tag_name, safe=''), 'name': tag_name})
-
+        tags_categories = articles.get_tags_categories(article)
 
         context.update({
             'site_name': site.title,
@@ -204,7 +199,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
             'title': title,
             'content': content,
-            'tags': tags,
+            'tags_categories': tags_categories,
             'breadcrumbs': breadcrumbs,
             'rev_number': rev_number,
             'updated_at': updated_at,

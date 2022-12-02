@@ -61,7 +61,7 @@ class ArticleTags extends Component<Props, State> {
     }
 
     static tagStringToTags(tagString: string): Array<string> {
-        return tagString.split(' ').map(x => x.trim()).filter(x => !!x);
+        return tagString.split(/[\n ]/).map(x => x.trim()).filter(x => !!x);
     }
 
     async componentDidMount() {
@@ -149,7 +149,7 @@ class ArticleTags extends Component<Props, State> {
                                 Теги:
                             </td>
                             <td>
-                                <input type="text" name="tags" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-tags-input" value={tags} disabled={loading||saving}/>
+                                <textarea name="tags" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-tags-input" value={tags} disabled={loading||saving}></textarea>
                                 <div className="sub">
                                     Список тегов через пробел.
                                 </div>

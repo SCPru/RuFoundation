@@ -4,6 +4,7 @@ from django.db.models import Count, Q
 
 from renderer.utils import render_template_from_string
 from . import ModuleError
+from web.controllers.articles import get_tag
 from web.models.articles import Tag
 
 
@@ -14,9 +15,11 @@ def render(context, params):
     if 'tag' not in params:
         return ''
 
+    tag = get_tag(params["tag"])
+
     # find articles by tag
     try:
-        articles = Tag.objects.get(name__iexact=params['tag']).articles.order_by('title')
+        articles = tag.articles.order_by('title')
     except Tag.DoesNotExist:
         return ''
 
@@ -25,7 +28,7 @@ def render(context, params):
     return render_template_from_string(
         """
         <a name="pages"></a>
-        <h2>Список страниц, помеченных тегом <em>{{ tag }}</em>:</h2>
+        <h2>Список страниц, помеченных тегом <em>{{ tag.name }}</em>{% if not tag.category.is_default %} из категории <em>{{ tag.category.name }}</em>{% endif %}:</h2>
         <div id="tagged-pages-list" class="pages-list">
             {% for article in articles %}
                 <div class="pages-list-item">
@@ -36,6 +39,6 @@ def render(context, params):
             {% endfor %}
         </div>
         """,
-        tag=params['tag'],
+        tag=tag,
         articles=articles
     )

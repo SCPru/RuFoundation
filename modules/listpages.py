@@ -11,7 +11,7 @@ from system.models import User
 from web.controllers import articles
 from web.models.articles import Article, Vote, ArticleLogEntry
 from web.models.settings import Settings
-from django.db.models import Q, Value as V, F, Count, Sum, Avg, CharField, IntegerField
+from django.db.models import Q, Value as V, F, Count, Sum, Avg, CharField, IntegerField, FloatField
 from django.db.models.functions import Concat, Random, Coalesce
 from web import threadvars
 import json
@@ -163,22 +163,26 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                 q = q.filter(tags__name__in=tags).annotate(num_tags=Count('tags')).filter(num_tags=len(tags))
             else:
                 f_tags = [x.strip() for x in f_tags.split(' ') if x.strip()]
-                required_tags = []
-                not_allowed_tags = []
-                required_one = []
                 for tag in f_tags:
                     if tag[0] == '-':
-                        not_allowed_tags.append(tag[1:])
+                        category, name = articles.get_name(tag[1:])
+                        print(category, name)
+                        if category == "_default":
+                            q = q.exclude(tags__name=name)
+                        else:
+                            q = q.exclude(tags__name=name, tags__category__slug=category)
                     elif tag[0] == '+':
-                        required_tags.append(tag[1:])
+                        category, name = articles.get_name(tag[1:])
+                        if category == "_default":
+                            q = q.filter(tags__name=name)
+                        else:
+                            q = q.filter(tags__name=name, tags__category__slug=category)
                     else:
-                        required_one.append(tag)
-                if required_one:
-                    q = q.filter(tags__name__in=required_one)
-                for tag in required_tags:
-                    q = q.filter(tags__name__in=[tag])
-                if not_allowed_tags:
-                    q = q.filter(~Q(tags__name__in=not_allowed_tags))
+                        category, name = articles.get_name(tag)
+                        if category == "_default":
+                            q = q.filter(tags__name=name)
+                        else:
+                            q = q.filter(tags__name=name, tags__category__slug=category)
         f_category = params.get('category', '.')
         if f_category != '*':
             f_category = f_category.replace(',', ' ').lower()

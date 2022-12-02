@@ -7,17 +7,50 @@ from .sites import SiteLimitedModel
 from .settings import Settings
 
 
+class TagsCategory(SiteLimitedModel):
+    class Meta:
+        verbose_name = "Категория тегов"
+        verbose_name_plural = "Категории тегов"
+
+        constraints = [models.UniqueConstraint(fields=['slug'], name='%(app_label)s_%(class)s_unique')]
+        indexes = [models.Index(fields=['name'])]
+
+    name = models.TextField(verbose_name="Полное название")
+    description = models.TextField(blank=True, verbose_name="Описание")
+    priority = models.PositiveIntegerField(null=True, blank=True, unique=True, verbose_name="Порядковый номер")
+    slug = models.TextField(verbose_name="Наименование", unique=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.slug})"
+
+    @property
+    def is_default(self) -> bool:
+        return self.slug == "_default"
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.name = self.slug
+        return super(TagsCategory, self).save(*args, **kwargs)
+
+
 class Tag(SiteLimitedModel):
     class Meta:
         verbose_name = "Тег"
         verbose_name_plural = "Теги"
 
-        constraints = [models.UniqueConstraint(fields=['name'], name='%(app_label)s_%(class)s_unique')]
-        indexes = [models.Index(fields=['name'])]
+        constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
+        indexes = [models.Index(fields=['category', 'name'])]
 
-    name = models.TextField(verbose_name="Название", unique=True)
+    category = models.ForeignKey(TagsCategory, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Категория")
+    name = models.TextField(verbose_name="Название")
 
     def __str__(self):
+        return self.name
+
+    @property
+    def full_name(self) -> str:
+        if self.category and not self.category.is_default:
+            return f"{self.category.slug}:{self.name}"
         return self.name
 
     def save(self, *args, **kwargs):

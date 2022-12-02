@@ -8,7 +8,7 @@ from django.utils.safestring import SafeString
 import modules
 from system.models import User
 from web import threadvars
-from web.models.articles import ArticleVersion, Article
+from web.models.articles import ArticleVersion, Article, Tag
 from web.models.sites import get_current_site
 from . import expression
 from .parser import RenderContext
@@ -141,6 +141,17 @@ def page_info_from_context(context: RenderContext):
     from ftml import ftml
 
     site = get_current_site()
+
+    if context.article:
+        raw_tags = context.article.tags.all()
+        tags = []
+        for tag in raw_tags:
+            tags.append(tag.full_name)
+            if not tag.category.is_default:
+                tags.append(tag.name)
+    else:
+        tags = []
+
     return ftml.PageInfo(
         # This is a bit hacky; we just know that "page" and "category" are only used for image URL generation.
         # TODO: fix PageInfo struct to use proper fields
@@ -149,7 +160,7 @@ def page_info_from_context(context: RenderContext):
         site=site.slug,
         domain=site.domain,
         media_domain=site.media_domain,
-        tags=articles.get_tags(context.article) if context.article else []
+        tags=tags
     )
 
 
