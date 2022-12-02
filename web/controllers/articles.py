@@ -10,7 +10,7 @@ from renderer import RenderContext
 from web.models.articles import *
 from web.models.files import *
 
-from typing import Optional, Union, Sequence, Tuple
+from typing import Optional, Union, Sequence, Tuple, Dict
 import datetime
 import re
 import os.path
@@ -21,6 +21,7 @@ from web.models.forum import ForumThread, ForumPost
 
 _FullNameOrArticle = Optional[Union[str, Article]]
 _FullNameOrCategory = Optional[Union[str, Category]]
+_FullNameOrTag = Optional[Union[str, Tag]]
 
 
 # Returns (category, name) from a full name
@@ -581,19 +582,41 @@ def is_tag_name_allowed(name: str) -> bool:
     return ' ' not in name
 
 
+def get_tag(full_name_or_tag: _FullNameOrTag) -> Optional[Tag]:
+    if full_name_or_tag is None:
+        return None
+    if type(full_name_or_tag) == str:
+        full_name_or_tag = full_name_or_tag.lower()
+        category_name, name = get_name(full_name_or_tag)
+        category, _ = TagsCategory.objects.get_or_create(slug=category_name)
+        tag, _ = Tag.objects.get_or_create(category=category, name=name)
+        return tag
+    if not isinstance(full_name_or_tag, Tag):
+        raise ValueError('Expected str or Tag')
+    return full_name_or_tag
+
+
 # Get tags from article
 def get_tags(full_name_or_article: _FullNameOrArticle) -> Sequence[str]:
     article = get_article(full_name_or_article)
     if article:
-        return sorted([x.name.lower() for x in article.tags.all()])
+        return sorted([x.full_name.lower() for x in article.tags.prefetch_related("category")])
     return []
+
+
+def get_tags_categories(full_name_or_article: _FullNameOrArticle) -> Dict[TagsCategory, Sequence[Tag]]:
+    article = get_article(full_name_or_article)
+    if article:
+        tags = article.tags.prefetch_related("category")
+        return dict(sorted({category: list(tags.filter(category=category)) for category in set(TagsCategory.objects.prefetch_related("tag_set").filter(tag__articles=article))}.items(), key=lambda x: x[0].priority if x[0].priority is not None else tags.count()))
+    return {}
 
 
 # Set tags for article
 def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user: Optional[_UserType] = None, log: bool = True):
     article = get_article(full_name_or_article)
     article_tags = article.tags.all()
-    tags = [Tag.objects.get_or_create(name=x.lower())[0] for x in tags if is_tag_name_allowed(x)]
+    tags = [get_tag(x) for x in tags if is_tag_name_allowed(x)]
 
     removed_tags = []
     added_tags = []
@@ -611,6 +634,7 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user
 
     # garbage collect tags if anything was removed
     Tag.objects.annotate(num_articles=Count('articles')).filter(num_articles=0).delete()
+    TagsCategory.objects.annotate(num_tags=Count('tag')).filter(num_tags=0).delete()
 
     if (removed_tags or added_tags) and log:
         log = ArticleLogEntry(

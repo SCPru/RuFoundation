@@ -5,7 +5,7 @@ from django.db.models import Count, Q
 
 from renderer.utils import render_template_from_string
 from . import ModuleError
-from web.models.articles import Tag
+from web.models.articles import Tag, TagsCategory
 
 
 def parse_font_size(size):
@@ -100,41 +100,80 @@ def render(context, params):
 
     target = params.get('target', 'system:page-tags')
 
-    q = Tag.objects.filter(~Q(name__startswith='_')).annotate(num_articles=Count('articles')).order_by('-num_articles')
+    tags = Tag.objects.prefetch_related("category").filter(~Q(name__startswith='_')).annotate(num_articles=Count('articles')).order_by('-num_articles')
     if limit is not None:
-        q = q[:limit]
+        tags = tags[:limit]
 
-    tags = {}
-    for tag in q:
-        tags[tag.name] = tag.num_articles
-
-    values = tags.values()
+    values = tags.values_list('num_articles', flat=True)
     if values:
         min_num = min(values)
         max_num = max(values)
     else:
         min_num = max_num = 0
 
-    tags_sorted_by_name = sorted(tags.keys())
+    tags = sorted(tags, key=lambda x: x.name)
+
+    if params.get("categories", "no") == "yes":
+        render_tags = {}
+
+        for category in TagsCategory.objects.filter(id__in=map(lambda x: x.category.id, tags)).order_by("priority"):
+            render_tags[category] = []
+
+        for tag in tags:
+            value = float(tag.num_articles - min_num) / (max_num - min_num) if max_num - min_num else 0
+            render_tags[tag.category].append({
+                'name': tag.name,
+                'color': interpolate_color(min_color, max_color, value),
+                'size': interpolate_font_size(min_size, max_size, value),
+                'link': '/%s/tag/%s' % (target, urllib.parse.quote(tag.full_name, safe=''))
+            })
+
+        return render_template_from_string(
+            """
+            <div class="pages-tag-cloud-box">
+                {% for category, tags in categories.items %}
+                    <div class="w-collapsible collapsible-block">
+                        <div class="collapsible-block-folded" style="display: none;">
+                            <h2 class="collapsible-block-link"><a href="javascript:;">+ {{ category.name }}{% if not category.is_default %} ({{ category.slug }}){% endif %}</a></h2>
+                        </div>
+                        <div class="collapsible-block-unfolded" style="display: block;">
+                            <div class="collapsible-block-unfolded-link">
+                                <h2 class="collapsible-block-link"><a href="javascript:;">- {{ category.name }}{% if not category.is_default %} ({{ category.slug }}){% endif %}</a></h2>
+                            </div>
+                            <div class="collapsible-block-content">
+                                {% if category.description %}<h4>{{ category.description }}</h4>{% endif %}
+                                <hr style="margin: auto">
+                                {% for tag in tags %}
+                                    <a class="tag" href="{{ tag.link }}" style="font-size: {{ tag.size }}; color: {{ tag.color }}">{{ tag.name }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                {% endfor %}
+            </div>
+            """,
+            categories=render_tags
+        )
 
     render_tags = []
 
-    for k in tags_sorted_by_name:
-        value = float(tags[k] - min_num) / (max_num - min_num) if max_num - min_num else 0
+    for tag in tags:
+        value = float(tag.num_articles - min_num) / (max_num - min_num) if max_num - min_num else 0
         render_tags.append({
-            'name': k,
+            'name': tag.full_name,
             'color': interpolate_color(min_color, max_color, value),
             'size': interpolate_font_size(min_size, max_size, value),
-            'link': '/%s/tag/%s' % (target, urllib.parse.quote(k, safe=''))
+            'link': '/%s/tag/%s' % (target, urllib.parse.quote(tag.full_name, safe=''))
         })
 
     return render_template_from_string(
-        """
-        <div class="pages-tag-cloud-box">
-            {% for tag in tags %}
-                <a class="tag" href="{{ tag.link }}" style="font-size: {{ tag.size }}; color: {{ tag.color }}">{{ tag.name }}</a>
-            {% endfor %}
-        </div>
-        """,
-        tags=render_tags
-    )
+            """
+            <div class="pages-tag-cloud-box">
+                {% for tag in tags %}
+                    <a class="tag" href="{{ tag.link }}" style="font-size: {{ tag.size }}; color: {{ tag.color }}">{{ tag.name }}</a>
+                {% endfor %}
+            </div>
+            """,
+            tags=render_tags
+        )

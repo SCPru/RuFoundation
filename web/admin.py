@@ -7,6 +7,25 @@ from .models.forum import *
 from .models.sites import Site
 
 
+class TagsCategoryForm(forms.ModelForm):
+    class Meta:
+        model = TagsCategory
+        widgets = {
+            'name': forms.TextInput,
+            'description': forms.TextInput,
+            'slug': forms.TextInput,
+        }
+        fields = '__all__'
+
+
+@admin.register(TagsCategory)
+class TagsCategoryAdmin(admin.ModelAdmin):
+    form = TagsCategoryForm
+    list_filter = ['site__domain']
+    list_display = ["name", "description", "priority", "slug"]
+    readonly_fields = ['slug']
+
+
 class TagForm(forms.ModelForm):
     class Meta:
         model = Tag

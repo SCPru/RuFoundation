@@ -1,8 +1,9 @@
+import auto_prefetch
 from django.db import models
 
 
-class Settings(models.Model):
-    class Meta:
+class Settings(auto_prefetch.Model):
+    class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Настройки"
         verbose_name_plural = "Настройки"
 
@@ -12,8 +13,8 @@ class Settings(models.Model):
         UpDown = 'updown'
         Stars = 'stars'
 
-    site = models.OneToOneField('Site', on_delete=models.CASCADE, null=True, related_name='_settings')
-    category = models.OneToOneField('Category', on_delete=models.CASCADE, null=True, related_name='_settings')
+    site = auto_prefetch.OneToOneField('Site', on_delete=models.CASCADE, null=True, related_name='_settings')
+    category = auto_prefetch.OneToOneField('Category', on_delete=models.CASCADE, null=True, related_name='_settings')
 
     rating_mode = models.TextField(choices=RatingMode.choices, default=RatingMode.Default, verbose_name="Система рейтинга", null=False)
 

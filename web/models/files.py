@@ -1,4 +1,5 @@
 from django.conf import settings
+import auto_prefetch
 from django.db import models
 
 from .articles import Article
@@ -8,14 +9,14 @@ import urllib.parse
 
 
 class File(SiteLimitedModel):
-    class Meta:
+    class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Файл"
         verbose_name_plural = "Файлы"
 
         indexes = [models.Index(fields=['article', 'name'])]
         constraints = [models.UniqueConstraint(fields=['article', 'name', 'deleted_at'], name='%(app_label)s_%(class)s_unique')]  # logic: non-deleted files should be unique
 
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
+    article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
 
     name = models.TextField(verbose_name="Название файла")
     media_name = models.TextField(verbose_name="Название файла в ФС-хранилище")
@@ -23,10 +24,10 @@ class File(SiteLimitedModel):
     mime_type = models.TextField(verbose_name="MIME-тип")
     size = models.PositiveBigIntegerField(verbose_name="Размер файла")
 
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name="Автор файла", null=True, related_name='created_files')
+    author = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name="Автор файла", null=True, related_name='created_files')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
 
-    deleted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name="Пользователь, удаливший файл", blank=True, null=True, related_name='deleted_files')
+    deleted_by = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name="Пользователь, удаливший файл", blank=True, null=True, related_name='deleted_files')
     deleted_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self) -> str:

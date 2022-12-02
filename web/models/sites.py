@@ -1,13 +1,14 @@
 from typing import Union, Sequence, Optional
 
+import auto_prefetch
 from django.db import models
 from web import threadvars
 
 from .settings import Settings
 
 
-class Site(models.Model):
-    class Meta:
+class Site(auto_prefetch.Model):
+    class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Сайт"
         verbose_name_plural = "Сайты"
 
@@ -34,7 +35,7 @@ class Site(models.Model):
 
 # This should be used with metaclass=, not parent class name.
 # Example: class Tag(metaclass=_SiteLimitedMetaclass)
-class _SiteLimitedMetaclass(models.base.ModelBase):
+class _SiteLimitedMetaclass(models.base.ModelBase, auto_prefetch.Model.Meta):
     def __new__(cls, name, bases, attrs, **kwargs):
         super_new = super().__new__
 
@@ -46,7 +47,7 @@ class _SiteLimitedMetaclass(models.base.ModelBase):
         # add site field
         if 'site' in attrs:
             raise KeyError('Field \'site\' already exists in \'%s\'. This is not compatible with SiteLimitedModel.' % name)
-        attrs['site'] = models.ForeignKey(to=Site, on_delete=models.CASCADE, null=False, verbose_name="Сайт")
+        attrs['site'] = auto_prefetch.ForeignKey(to=Site, on_delete=models.CASCADE, null=False, verbose_name="Сайт")
 
         # modify unique constraints and add site field
         meta = attrs.get('Meta')
@@ -75,8 +76,8 @@ class _SiteLimitedMetaclass(models.base.ModelBase):
         return parent.filter(site__in=site_filter)
 
 
-class SiteLimitedModel(models.Model, metaclass=_SiteLimitedMetaclass):
-    class Meta:
+class SiteLimitedModel(auto_prefetch.Model, metaclass=_SiteLimitedMetaclass):
+    class Meta(auto_prefetch.Model.Meta):
         abstract = True
 
     def __init__(self, *args, **kwargs):

@@ -11,7 +11,7 @@ _templates = dict()
 _templates_lock = threading.RLock()
 
 
-def render_template_from_string(template: str, **context):
+def render_template_from_string(template: str, **context: object) -> object:
     with _templates_lock:
         if template in _templates:
             tpl = _templates[template]

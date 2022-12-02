@@ -2,22 +2,56 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.postgres.fields import CITextField
+import auto_prefetch
 from django.db import models
 from .sites import SiteLimitedModel
 from .settings import Settings
 
 
+class TagsCategory(SiteLimitedModel):
+    class Meta(auto_prefetch.Model.Meta):
+        verbose_name = "Категория тегов"
+        verbose_name_plural = "Категории тегов"
+
+        constraints = [models.UniqueConstraint(fields=['slug'], name='%(app_label)s_%(class)s_unique')]
+        indexes = [models.Index(fields=['name'])]
+
+    name = models.TextField(verbose_name="Полное название")
+    description = models.TextField(blank=True, verbose_name="Описание")
+    priority = models.PositiveIntegerField(null=True, blank=True, unique=True, verbose_name="Порядковый номер")
+    slug = models.TextField(verbose_name="Наименование", unique=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.slug})"
+
+    @property
+    def is_default(self) -> bool:
+        return self.slug == "_default"
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.name = self.slug
+        return super(TagsCategory, self).save(*args, **kwargs)
+
+
 class Tag(SiteLimitedModel):
-    class Meta:
+    class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Тег"
         verbose_name_plural = "Теги"
 
-        constraints = [models.UniqueConstraint(fields=['name'], name='%(app_label)s_%(class)s_unique')]
-        indexes = [models.Index(fields=['name'])]
+        constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
+        indexes = [models.Index(fields=['category', 'name'])]
 
-    name = models.TextField(verbose_name="Название", unique=True)
+    category = auto_prefetch.ForeignKey(TagsCategory, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Категория")
+    name = models.TextField(verbose_name="Название")
 
     def __str__(self):
+        return self.name
+
+    @property
+    def full_name(self) -> str:
+        if self.category and not self.category.is_default:
+            return f"{self.category.slug}:{self.name}"
         return self.name
 
     def save(self, *args, **kwargs):
@@ -26,7 +60,7 @@ class Tag(SiteLimitedModel):
 
 
 class Category(SiteLimitedModel):
-    class Meta:
+    class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Настройки категории"
         verbose_name_plural = "Настройки категорий"
 
@@ -54,7 +88,7 @@ class Category(SiteLimitedModel):
 
 
 class Article(SiteLimitedModel):
-    class Meta:
+    class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Статья"
         verbose_name_plural = "Статьи"
 
@@ -65,9 +99,9 @@ class Article(SiteLimitedModel):
     name = models.TextField(verbose_name="Имя")
     title = models.TextField(verbose_name="Заголовок")
 
-    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Родитель")
+    parent = auto_prefetch.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Родитель")
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles", verbose_name="Тэги")
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Автор")
+    author = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Автор")
 
     locked = models.BooleanField(default=False, verbose_name="Страница защищена")
 
@@ -98,13 +132,13 @@ class Article(SiteLimitedModel):
 
 
 class ArticleVersion(SiteLimitedModel):
-    class Meta:
+    class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Версия статьи"
         verbose_name_plural = "Версии статей"
 
         indexes = [models.Index(fields=['article', 'created_at'])]
 
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья", related_name='versions')
+    article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья", related_name='versions')
     source = models.TextField(verbose_name="Исходник")
     ast = models.JSONField(blank=True, null=True, verbose_name="AST-дерево статьи")
     rendered = models.TextField(blank=True, null=True, verbose_name="Рендер статьи")
@@ -115,7 +149,7 @@ class ArticleVersion(SiteLimitedModel):
 
 
 class ArticleLogEntry(SiteLimitedModel):
-    class Meta:
+    class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Запись в журнале изменений"
         verbose_name_plural = "Записи в журнале изменений"
 
@@ -134,8 +168,8 @@ class ArticleLogEntry(SiteLimitedModel):
         Wikidot = 'wikidot'
         Revert = 'revert'
 
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
+    article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
+    user = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
     type = models.TextField(choices=LogEntryType.choices, verbose_name="Тип")
     meta = models.JSONField(default=dict, blank=True, verbose_name="Мета")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
@@ -147,15 +181,15 @@ class ArticleLogEntry(SiteLimitedModel):
 
 
 class Vote(SiteLimitedModel):
-    class Meta:
+    class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Оценка"
         verbose_name_plural = "Оценки"
 
         constraints = [models.UniqueConstraint(fields=['article', 'user'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['article'])]
 
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья", related_name='votes')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
+    article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья", related_name='votes')
+    user = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
     rate = models.FloatField(verbose_name="Оценка")
 
     def __str__(self) -> str:
@@ -163,7 +197,7 @@ class Vote(SiteLimitedModel):
 
 
 class ExternalLink(SiteLimitedModel):
-    class Meta:
+    class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Связь"
         verbose_name_plural = "Связи"
 
