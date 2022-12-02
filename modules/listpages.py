@@ -166,7 +166,6 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                 for tag in f_tags:
                     if tag[0] == '-':
                         category, name = articles.get_name(tag[1:])
-                        print(category, name)
                         if category == "_default":
                             q = q.exclude(tags__name=name)
                         else:
