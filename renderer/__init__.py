@@ -143,11 +143,11 @@ def page_info_from_context(context: RenderContext):
     site = get_current_site()
 
     if context.article:
-        raw_tags = context.article.tags.all()
+        raw_tags = context.article.tags.prefetch_related("category")
         tags = []
         for tag in raw_tags:
             tags.append(tag.full_name)
-            if not tag.category.is_default:
+            if tag.category and not tag.category.is_default:
                 tags.append(tag.name)
     else:
         tags = []
