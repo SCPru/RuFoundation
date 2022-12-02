@@ -7,10 +7,7 @@ def add_default(apps, schema_editor):
     Tag = apps.get_model("web", "Tag")
     for site in Site.objects.all():
         category, _ = TagsCategory.objects.get_or_create(slug="_default", site=site)
-        for tag in Tag.objects.filter(site=site):
-            if not tag.category:
-                tag.category = category
-                tag.save()
+        Tag.objects.filter(site=site, category__isnull=True).update(category=category)
 
 
 class Migration(migrations.Migration):
