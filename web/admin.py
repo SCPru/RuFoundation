@@ -23,7 +23,7 @@ class TagsCategoryAdmin(admin.ModelAdmin):
     form = TagsCategoryForm
     list_filter = ['site__domain']
     list_display = ["name", "description", "priority", "slug"]
-    #readonly_fields = ['slug']
+    readonly_fields = ['slug']
 
 
 class TagForm(forms.ModelForm):
@@ -38,7 +38,7 @@ class TagForm(forms.ModelForm):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     form = TagForm
-    list_filter = ['site__domain']
+    list_filter = ['category', 'site__domain']
 
 
 class SettingsForm(forms.ModelForm):
