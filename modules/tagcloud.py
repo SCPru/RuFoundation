@@ -100,7 +100,7 @@ def render(context, params):
 
     target = params.get('target', 'system:page-tags')
 
-    tags = Tag.objects.filter(~Q(name__startswith='_')).annotate(num_articles=Count('articles')).order_by('-num_articles')
+    tags = Tag.objects.prefetch_related("category").filter(~Q(name__startswith='_')).annotate(num_articles=Count('articles')).order_by('-num_articles')
     if limit is not None:
         tags = tags[:limit]
 

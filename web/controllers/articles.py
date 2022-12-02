@@ -600,15 +600,15 @@ def get_tag(full_name_or_tag: _FullNameOrTag) -> Optional[Tag]:
 def get_tags(full_name_or_article: _FullNameOrArticle) -> Sequence[str]:
     article = get_article(full_name_or_article)
     if article:
-        return sorted([x.full_name.lower() for x in article.tags.all()])
+        return sorted([x.full_name.lower() for x in article.tags.prefetch_related("category")])
     return []
 
 
 def get_tags_categories(full_name_or_article: _FullNameOrArticle) -> Dict[TagsCategory, Sequence[Tag]]:
     article = get_article(full_name_or_article)
     if article:
-        tags = article.tags.all()
-        return dict(sorted({category: list(tags.filter(category=category)) for category in set(TagsCategory.objects.filter(tag__articles=article))}.items(), key=lambda x: x[0].priority if x[0].priority is not None else tags.count()))
+        tags = article.tags.prefetch_related("category")
+        return dict(sorted({category: list(tags.filter(category=category)) for category in set(TagsCategory.objects.prefetch_related("tag_set").filter(tag__articles=article))}.items(), key=lambda x: x[0].priority if x[0].priority is not None else tags.count()))
     return {}
 
 
