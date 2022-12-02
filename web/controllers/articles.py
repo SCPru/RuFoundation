@@ -2,7 +2,7 @@ import shutil
 from pathlib import Path
 
 from django.contrib.auth.models import AbstractUser as _UserType
-from django.db.models import QuerySet, Sum, Avg, Count, Max, TextField, Value, IntegerField, Q
+from django.db.models import QuerySet, Sum, Avg, Count, Max, TextField, Value, IntegerField, Q, F
 from django.db.models.functions import Coalesce, Concat, Lower
 
 import renderer
@@ -582,15 +582,21 @@ def is_tag_name_allowed(name: str) -> bool:
     return ' ' not in name
 
 
-def get_tag(full_name_or_tag: _FullNameOrTag) -> Optional[Tag]:
+def get_tag(full_name_or_tag: _FullNameOrTag, create: bool = True) -> Optional[Tag]:
     if full_name_or_tag is None:
         return None
     if type(full_name_or_tag) == str:
         full_name_or_tag = full_name_or_tag.lower()
         category_name, name = get_name(full_name_or_tag)
-        category, _ = TagsCategory.objects.get_or_create(slug=category_name)
-        tag, _ = Tag.objects.get_or_create(category=category, name=name)
-        return tag
+        if create:
+            category, _ = TagsCategory.objects.get_or_create(slug=category_name)
+            tag, _ = Tag.objects.get_or_create(category=category, name=name)
+            return tag
+        try:
+            category = TagsCategory.objects.get(slug=category_name)
+            return Tag.objects.get(category=category, name=name)
+        except (Tag.DoesNotExist, TagsCategory.DoesNotExist):
+            return None
     if not isinstance(full_name_or_tag, Tag):
         raise ValueError('Expected str or Tag')
     return full_name_or_tag
@@ -634,7 +640,7 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user
 
     # garbage collect tags if anything was removed
     Tag.objects.annotate(num_articles=Count('articles')).filter(num_articles=0).delete()
-    TagsCategory.objects.annotate(num_tags=Count('tag')).filter(num_tags=0).delete()
+    TagsCategory.objects.annotate(num_tags=Count('tag')).filter(num_tags=0, slug=F('name')).delete()
 
     if (removed_tags or added_tags) and log:
         log = ArticleLogEntry(
