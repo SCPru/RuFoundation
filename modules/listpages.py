@@ -168,16 +168,14 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                 for name in f_tags:
                     if name.startswith('-'):
                         tag = articles.get_tag(name[1:], create=False)
-                        if tag:
-                            not_allowed_tags.append(tag)
+                        not_allowed_tags.append(tag)
                     elif name.startswith('+'):
                         tag = articles.get_tag(name[1:], create=False)
                         if tag:
                             q = q.filter(tags__in=[tag])
                     else:
                         tag = articles.get_tag(name, create=False)
-                        if tag:
-                            required_one.append(tag)
+                        required_one.append(tag)
                 if required_one:
                     q = q.filter(tags__in=required_one)
                 if not_allowed_tags:
