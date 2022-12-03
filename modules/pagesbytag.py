@@ -15,12 +15,12 @@ def render(context, params):
     if 'tag' not in params:
         return ''
 
-    tag = get_tag(params["tag"])
+    tag = get_tag(params["tag"], create=False)
 
     # find articles by tag
     try:
         articles = tag.articles.order_by('title')
-    except Tag.DoesNotExist:
+    except (AttributeError, Tag.DoesNotExist):
         return ''
 
     articles = [{'full_name': x.full_name, 'title': x.title or x.full_name} for x in articles]
