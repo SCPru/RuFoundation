@@ -134,11 +134,11 @@ def render(context, params):
                 {% for category, tags in categories.items %}
                     <div class="w-collapsible collapsible-block">
                         <div class="collapsible-block-folded" style="display: none;">
-                            <h2 class="collapsible-block-link"><a href="javascript:;">+ {{ category.name }}{% if not category.is_default %} ({{ category.slug }}){% endif %}</a></h2>
+                            <h2 class="collapsible-block-link"><a href="javascript:;">+ {{ category.name }}{% if not category.is_default and category.name != category.slug %} ({{ category.slug }}){% endif %}</a></h2>
                         </div>
                         <div class="collapsible-block-unfolded" style="display: block;">
                             <div class="collapsible-block-unfolded-link">
-                                <h2 class="collapsible-block-link"><a href="javascript:;">- {{ category.name }}{% if not category.is_default %} ({{ category.slug }}){% endif %}</a></h2>
+                                <h2 class="collapsible-block-link"><a href="javascript:;">- {{ category.name }}{% if not category.is_default and category.name != category.slug %} ({{ category.slug }}){% endif %}</a></h2>
                             </div>
                             <div class="collapsible-block-content">
                                 {% if category.description %}<h4>{{ category.description }}</h4>{% endif %}
