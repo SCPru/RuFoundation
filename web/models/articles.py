@@ -29,7 +29,7 @@ class TagsCategory(SiteLimitedModel):
         return self.slug == "_default"
 
     def save(self, *args, **kwargs):
-        if not self.id:
+        if not self.id and not self.name:
             self.name = self.slug
         return super(TagsCategory, self).save(*args, **kwargs)
 

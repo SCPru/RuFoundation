@@ -23,7 +23,6 @@ class TagsCategoryAdmin(admin.ModelAdmin):
     form = TagsCategoryForm
     list_filter = ['site__domain']
     list_display = ["name", "description", "priority", "slug"]
-    readonly_fields = ['slug']
 
 
 class TagForm(forms.ModelForm):
