@@ -118,10 +118,7 @@ def get_log_entries(full_name_or_article: _FullNameOrArticle) -> QuerySet[Articl
 
 # Gets latest log entry of article
 def get_latest_log_entry(full_name_or_article: _FullNameOrArticle) -> Optional[ArticleLogEntry]:
-    log_entry = get_log_entries(full_name_or_article)[:1]
-    if log_entry:
-        return log_entry[0]
-    return None
+    return get_log_entries(full_name_or_article).first()
 
 
 # Gets list of log entries from article, sorted, with specified bounds
