@@ -171,21 +171,21 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
             break
         elif entry.type == ArticleLogEntry.LogEntryType.Parent:
             new_props['parent'] = entry.meta['prev_parent_id']
-        elif entry.type == ArticleLogEntry.LogEntryType.FileAdded:
+        elif entry.type == ArticleLogEntry.LogEntryType.FileAdded and entry.meta['id']:
             if 'files_deleted' not in new_props:
                 new_props['files_deleted'] = {}
             if 'files_restored' not in new_props:
                 new_props['files_restored'] = {}
             new_props['files_deleted'][entry.meta['id']] = True
             new_props['files_restored'][entry.meta['id']] = False
-        elif entry.type == ArticleLogEntry.LogEntryType.FileDeleted:
+        elif entry.type == ArticleLogEntry.LogEntryType.FileDeleted and entry.meta['id']:
             if 'files_restored' not in new_props:
                 new_props['files_restored'] = {}
             if 'files_deleted' not in new_props:
                 new_props['files_deleted'] = {}
             new_props['files_restored'][entry.meta['id']] = True
             new_props['files_deleted'][entry.meta['id']] = False
-        elif entry.type == ArticleLogEntry.LogEntryType.FileRenamed:
+        elif entry.type == ArticleLogEntry.LogEntryType.FileRenamed and entry.meta['id']:
             if 'files_renamed' not in new_props:
                 new_props['files_renamed'] = {}
             new_props['files_renamed'][entry.meta['id']] = entry.meta['prev_name']
