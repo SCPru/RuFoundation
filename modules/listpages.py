@@ -167,10 +167,10 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                 for name in f_tags:
                     if name.startswith('-'):
                         category, tag = articles.get_name(name[1:])
-                        q = q.exclude(tags__category__slug=category, tags__name=tag)
+                        q = q.exclude(Q(tags__category__slug="_default", tags__name=tag) | Q(tags__category__slug=category, tags__name=tag))
                     elif name.startswith('+'):
                         category, tag = articles.get_name(name[1:])
-                        q = q.filter(tags__category__slug=category, tags__name=tag)
+                        q = q.filter(Q(tags__category__slug="_default", tags__name=tag) | Q(tags__category__slug=category, tags__name=tag))
                     else:
                         tag = articles.get_tag(name, create=False)
                         required_one.append(tag)
