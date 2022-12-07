@@ -77,15 +77,18 @@
                             </div>
                             <div class="page-tags">
                                 <span>
+                                <div>
                                     {% for cat, tags in tags_categories.items %}
-                                        <p><strong>{{ cat.name }}:</strong>
-                                        {% for tag in tags %}
-                                            {% if tag.name|first != "_" %}
-                                                <a href="/system:page-tags/tag/{{ tag.full_name }}#pages">{{ tag.name }}</a>{% if not forloop.last %},{% endif %}
-                                            {% endif %}
-                                        {% endfor %}
-                                        </p>
+                                        <div>
+                                            <strong>{{ cat.name }}:</strong>
+                                            {% for tag in tags %}
+                                                {% if tag.name|first != "_" %}
+                                                    <a href="/system:page-tags/tag/{{ tag.full_name }}#pages">{{ tag.name }}</a>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
                                     {% endfor %}
+                                </div>
                                 </span>
                             </div>
                             <div id="page-info-break"></div>
