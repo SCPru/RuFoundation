@@ -163,19 +163,25 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                 q = q.filter(tags__name__in=tags).annotate(num_tags=Count('tags')).filter(num_tags=len(tags))
             else:
                 f_tags = [x.strip() for x in f_tags.split(' ') if x.strip()]
-                required_one = []
-                for name in f_tags:
-                    if name.startswith('-'):
-                        category, tag = articles.get_name(name[1:])
-                        q = q.exclude(Q(tags__category__slug="_default", tags__name=tag) | Q(tags__category__slug=category, tags__name=tag))
-                    elif name.startswith('+'):
-                        category, tag = articles.get_name(name[1:])
-                        q = q.filter(Q(tags__category__slug="_default", tags__name=tag) | Q(tags__category__slug=category, tags__name=tag))
+                for tag in f_tags:
+                    if tag[0] == '-':
+                        category, name = articles.get_name(tag[1:])
+                        if category == "_default":
+                            q = q.exclude(tags__name=name)
+                        else:
+                            q = q.exclude(tags__name=name, tags__category__slug=category)
+                    elif tag[0] == '+':
+                        category, name = articles.get_name(tag[1:])
+                        if category == "_default":
+                            q = q.filter(tags__name=name)
+                        else:
+                            q = q.filter(tags__name=name, tags__category__slug=category)
                     else:
-                        tag = articles.get_tag(name, create=False)
-                        required_one.append(tag)
-                if required_one:
-                    q = q.filter(tags__in=required_one)
+                        category, name = articles.get_name(tag)
+                        if category == "_default":
+                            q = q.filter(tags__name=name)
+                        else:
+                            q = q.filter(tags__name=name, tags__category__slug=category)
         f_category = params.get('category', '.')
         if f_category != '*':
             f_category = f_category.replace(',', ' ').lower()
