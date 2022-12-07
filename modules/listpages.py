@@ -17,6 +17,7 @@ from web import threadvars
 import json
 import urllib.parse
 import math
+import re
 
 
 def has_content():
@@ -501,6 +502,16 @@ def render(context: RenderContext, params, content=None):
         append = params.get('appendline', '')
         separate = params.get('separate', 'yes') == 'yes'
         wrapper = params.get('wrapper', 'yes') == 'yes'
+
+        if content:
+            selection = re.match(r'(?:.*\s*(\[\[head]]\n?.(?P<head>.*?).\[\[/head]])|)(?:.*\s*(\[\[body]]\n?.(?P<body>.*?).\[\[/body]])|)(?:.*\s*(\[\[foot]]\n?.(?P<foot>.*?).\[\[/foot]])|)', content, re.S | re.I | re.M)
+            if selection:
+                if selection.group("head"):
+                    prepend = selection.group("head")
+                if selection.group("body"):
+                    content = selection.group("body")
+                if selection.group("foot"):
+                    append = selection.group("foot")
 
         pages, page_index, pagination_page, pagination_total_pages, total_pages = query_pages(context.article, params, context.user, context.path_params)
 
