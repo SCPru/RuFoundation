@@ -163,6 +163,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                 q = q.filter(tags__name__in=tags).annotate(num_tags=Count('tags')).filter(num_tags=len(tags))
             else:
                 f_tags = [x.strip() for x in f_tags.split(' ') if x.strip()]
+                one_allowed_tags = []
                 for tag in f_tags:
                     if tag[0] == '-':
                         category, name = articles.get_name(tag[1:])
@@ -177,11 +178,9 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                         else:
                             q = q.filter(tags__name=name, tags__category__slug=category)
                     else:
-                        category, name = articles.get_name(tag)
-                        if category == "_default":
-                            q = q.filter(tags__name=name)
-                        else:
-                            q = q.filter(tags__name=name, tags__category__slug=category)
+                        one_allowed_tags.append(articles.get_tag(tag, create=False))
+                if one_allowed_tags:
+                    q = q.filter(tags__in=one_allowed_tags)
         f_category = params.get('category', '.')
         if f_category != '*':
             f_category = f_category.replace(',', ' ').lower()
