@@ -4,16 +4,21 @@ import styled from "styled-components";
 import WikidotModal from "../util/wikidot-modal";
 import sleep from "../util/async-sleep";
 import {fetchArticle, updateArticle} from "../api/articles";
+import {fetchAllTags, FetchAllTagsResponse} from '../api/tags'
+import TagEditorComponent from '../components/tag-editor'
+import Loader from '../util/loader'
 
 
 interface Props {
     pageId: string
     isNew?: boolean
     onClose?: () => void
+    canCreateTags?: boolean
 }
 
 interface State {
-    tags: string
+    tags: Array<string>
+    allTags: FetchAllTagsResponse | null
     loading: boolean
     saving: boolean
     savingSuccess?: boolean
@@ -43,6 +48,10 @@ const Styles = styled.div`
     }
   }
 }
+  
+.w-tag-editor-container {
+  position: relative;
+}
 `;
 
 
@@ -50,26 +59,19 @@ class ArticleTags extends Component<Props, State> {
     constructor(props) {
         super(props);
         this.state = {
-            tags: '',
+            tags: [],
+            allTags: null,
             loading: true,
             saving: false
         }
-    }
-
-    static tagsToTagString(tags: Array<string>): string {
-        return tags.join(' ');
-    }
-
-    static tagStringToTags(tagString: string): Array<string> {
-        return tagString.split(/[\n ]/).map(x => x.trim()).filter(x => !!x);
     }
 
     async componentDidMount() {
         const { pageId } = this.props;
         this.setState({ loading: true });
         try {
-            const data = await fetchArticle(pageId);
-            this.setState({ loading: false, tags: ArticleTags.tagsToTagString(data.tags) });
+            const [data, allTags] = await Promise.all([fetchArticle(pageId), fetchAllTags()]);
+            this.setState({ loading: false, tags: data.tags, allTags: allTags });
         } catch (e) {
             this.setState({loading: false, fatalError: true, error: e.error || 'Ошибка связи с сервером'});
         }
@@ -85,7 +87,7 @@ class ArticleTags extends Component<Props, State> {
         this.setState({ saving: true, error: null, savingSuccess: false });
         const input = {
             pageId: this.props.pageId,
-            tags: ArticleTags.tagStringToTags(this.state.tags)
+            tags: this.state.tags
         };
         try {
             await updateArticle(pageId, input);
@@ -99,6 +101,14 @@ class ArticleTags extends Component<Props, State> {
         }
     };
 
+    onClear = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        this.setState({ tags: [] })
+    }
+
     onCancel = (e) => {
         if (e) {
             e.preventDefault();
@@ -106,16 +116,6 @@ class ArticleTags extends Component<Props, State> {
         }
         if (this.props.onClose)
             this.props.onClose()
-    };
-
-    onChange = (e) => {
-        // @ts-ignore
-        this.setState({[e.target.name]: e.target.value})
-    };
-
-    onClear = (e) => {
-        // @ts-ignore
-        this.setState({"tags": ""})
     };
 
     onCloseError = () => {
@@ -126,8 +126,13 @@ class ArticleTags extends Component<Props, State> {
         }
     };
 
+    onChange = (tags: Array<string>) => {
+        this.setState({ tags });
+    };
+
     render() {
-        const { tags, loading, saving, savingSuccess, error } = this.state;
+        const { canCreateTags } = this.props;
+        const { tags, allTags, loading, saving, savingSuccess, error } = this.state;
         return (
             <Styles>
                 { saving && <WikidotModal isLoading>Сохранение...</WikidotModal> }
@@ -148,11 +153,11 @@ class ArticleTags extends Component<Props, State> {
                             <td>
                                 Теги:
                             </td>
-                            <td>
-                                <textarea name="tags" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-tags-input" value={tags} disabled={loading||saving}></textarea>
-                                <div className="sub">
-                                    Список тегов через пробел.
-                                </div>
+                        </tr>
+                        <tr>
+                            <td className="w-tag-editor-container">
+                                { loading && <Loader className="loader" /> }
+                                <TagEditorComponent canCreateTags={canCreateTags} tags={tags} allTags={allTags || {categories: [], tags: []}} onChange={this.onChange} />
                             </td>
                         </tr>
                         </tbody>
