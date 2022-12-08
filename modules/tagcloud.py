@@ -120,13 +120,18 @@ def render(context, params):
             render_tags[category] = []
 
         for tag in tags:
-            value = float(tag.num_articles - min_num) / (max_num - min_num) if max_num - min_num else 0
-            render_tags[tag.category].append({
-                'name': tag.name,
-                'color': interpolate_color(min_color, max_color, value),
-                'size': interpolate_font_size(min_size, max_size, value),
-                'link': '/%s/tag/%s' % (target, urllib.parse.quote(tag.full_name, safe=''))
-            })
+            if not tag.name.startswith("_"):
+                value = float(tag.num_articles - min_num) / (max_num - min_num) if max_num - min_num else 0
+                render_tags[tag.category].append({
+                    'name': tag.name,
+                    'color': interpolate_color(min_color, max_color, value),
+                    'size': interpolate_font_size(min_size, max_size, value),
+                    'link': '/%s/tag/%s' % (target, urllib.parse.quote(tag.full_name, safe=''))
+                })
+
+        for category, tags in render_tags.items():
+             if not tags:
+                 del render_tags[category]
 
         return render_template_from_string(
             """
