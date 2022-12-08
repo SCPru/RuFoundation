@@ -265,8 +265,28 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
         el.scrollIntoView({block: 'nearest'});
     }, [selectedToAdd]);
 
+    const findSelectedCategoryAndTagIndex = () => {
+        let currentCategoryIndex, currentTagIndex;
+        for (let i = 0; i < filteredCategories.length; i++) {
+            if (`${filteredCategories[i].slug}:` === selectedToAdd) {
+                currentCategoryIndex = i;
+                break;
+            }
+            for (let j = 0; j < filteredCategories[i].tags.length; j++) {
+                const tag = filteredCategories[i].tags[j];
+                if (`${filteredCategories[i].slug}:${tag.name}` === selectedToAdd) {
+                    currentCategoryIndex = i;
+                    currentTagIndex = j;
+                    break;
+                }
+            }
+        }
+        return {currentCategoryIndex, currentTagIndex};
+    };
+
     const onInputKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && selectedToAdd) {
+        let {currentCategoryIndex, currentTagIndex} = findSelectedCategoryAndTagIndex();
+        if (e.key === 'Enter' && selectedToAdd && currentCategoryIndex !== undefined) {
             if (selectedToAdd.endsWith(':')) {
                 onSelectCategory(undefined, selectedToAdd.substring(0, selectedToAdd.length-1));
             } else {
@@ -282,22 +302,6 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
         } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault();
             e.stopPropagation();
-
-            let currentCategoryIndex, currentTagIndex;
-            for (let i = 0; i < filteredCategories.length; i++) {
-                if (`${filteredCategories[i].slug}:` === selectedToAdd) {
-                    currentCategoryIndex = i;
-                    break;
-                }
-                for (let j = 0; j < filteredCategories[i].tags.length; j++) {
-                    const tag = filteredCategories[i].tags[j];
-                    if (`${filteredCategories[i].slug}:${tag.name}` === selectedToAdd) {
-                        currentCategoryIndex = i;
-                        currentTagIndex = j;
-                        break;
-                    }
-                }
-            }
 
             if (e.key === 'ArrowUp') {
                 if (currentTagIndex === undefined && currentCategoryIndex === undefined && filteredCategories.length > 0) {
