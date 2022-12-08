@@ -151,6 +151,21 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
         };
     }).filter(x => !!x.tags.length);
 
+    parsedTags.forEach(tag => {
+        if (!allTags.categories.find(x => x.slug.toLowerCase() === tag.category.toLowerCase())) {
+            let category = categoriesAndTags.find(x => x.slug.toLowerCase() === tag.category.toLocaleLowerCase());
+            if (!category) {
+                category = {
+                    name: tag.category,
+                    slug: tag.category,
+                    tags: []
+                };
+                categoriesAndTags.push(category);
+            }
+            category.tags.push(tag);
+        }
+    });
+
     const filteredCategories = allTags.categories.map(category => ({
             ...category,
             tags: allTags.tags.filter(x => x.categoryId === category.id)
@@ -224,6 +239,8 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
         if (e.key === 'Enter' && canCreateTags) {
             setInputValue('');
             onChange([...tags.filter(x => x.toLowerCase() !== inputValue.toLowerCase()), inputValue]);
+            e.preventDefault();
+            e.stopPropagation();
         }
     };
 

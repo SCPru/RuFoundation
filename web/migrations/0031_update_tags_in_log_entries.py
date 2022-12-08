@@ -18,7 +18,7 @@ def update_entries(apps, schema_editor):
                     try:
                         new_tag = Tag.objects.get(site=site, name=tag)
                         new_added.append({'id': new_tag.id, 'name': get_full_name(new_tag)})
-                    except Tag.DoesNotExist:
+                    except (Tag.DoesNotExist, Tag.MultipleObjectsReturned):
                         pass
                 entry.meta['added_tags'] = new_added
             if 'removed_tags' in entry.meta:
@@ -26,7 +26,7 @@ def update_entries(apps, schema_editor):
                     try:
                         new_tag = Tag.objects.get(site=site, name=tag)
                         new_removed.append({'id': new_tag.id, 'name': get_full_name(new_tag)})
-                    except Tag.DoesNotExist:
+                    except (Tag.DoesNotExist, Tag.MultipleObjectsReturned):
                         pass
                 entry.meta['removed_tags'] = new_removed
             entry.save()
