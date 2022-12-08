@@ -24,7 +24,8 @@ def interpolate_font_size(min_size, max_size, value):
     min_sz, min_unit = parse_font_size(min_size)
     max_sz, max_unit = parse_font_size(max_size)
     if min_unit != max_unit:
-        raise ModuleError('Разные единицы измерения максимального и минимального размера: %s и %s' % (min_size, max_size))
+        raise ModuleError(
+            'Разные единицы измерения максимального и минимального размера: %s и %s' % (min_size, max_size))
     sz = min_sz + (max_sz - min_sz) * value
     return '%.4f%s' % (sz, min_unit)
 
@@ -34,9 +35,9 @@ def parse_color(color):
         if len(color) == 4 or len(color) == 7:
             try:
                 if len(color) == 4:
-                    r = int(color[1]+color[1], 16)
-                    g = int(color[2]+color[2], 16)
-                    b = int(color[3]+color[3], 16)
+                    r = int(color[1] + color[1], 16)
+                    g = int(color[2] + color[2], 16)
+                    b = int(color[3] + color[3], 16)
                 else:
                     r = int(color[1:3], 16)
                     g = int(color[3:5], 16)
@@ -100,7 +101,8 @@ def render(context, params):
 
     target = params.get('target', 'system:page-tags')
 
-    tags = Tag.objects.prefetch_related("category").filter(~Q(name__startswith='_')).annotate(num_articles=Count('articles')).order_by('-num_articles')
+    tags = Tag.objects.prefetch_related("category").filter(~Q(name__startswith='_')).annotate(
+        num_articles=Count('articles')).order_by('-num_articles')
     if limit is not None:
         tags = tags[:limit]
 
@@ -130,8 +132,8 @@ def render(context, params):
                 })
 
         for category, tags in render_tags.items():
-             if not tags:
-                 del render_tags[category]
+            if not tags:
+                del render_tags[category]
 
         return render_template_from_string(
             """
@@ -173,12 +175,12 @@ def render(context, params):
         })
 
     return render_template_from_string(
-            """
+        """
             <div class="pages-tag-cloud-box">
                 {% for tag in tags %}
                     <a class="tag" href="{{ tag.link }}" style="font-size: {{ tag.size }}; color: {{ tag.color }}">{{ tag.name }}</a>
                 {% endfor %}
             </div>
             """,
-            tags=render_tags
-        )
+        tags=render_tags
+    )
