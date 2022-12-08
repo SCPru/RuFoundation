@@ -268,9 +268,9 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
     const onInputKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && selectedToAdd) {
             if (selectedToAdd.endsWith(':')) {
-                onSelectCategory(undefined, selectedToAdd)
+                onSelectCategory(undefined, selectedToAdd.substring(0, selectedToAdd.length-1));
             } else {
-                onSelectTag(undefined, selectedToAdd)
+                onSelectTag(undefined, selectedToAdd);
             }
             e.preventDefault();
             e.stopPropagation();
