@@ -85,12 +85,14 @@ def log_entry_default_comment(entry: ArticleLogEntry) -> str:
         return 'Страница переименована из "%s" в "%s"' % (entry.meta['prev_name'], entry.meta['name'])
 
     if entry.type == ArticleLogEntry.LogEntryType.Tags:
-        if entry.meta.get('added_tags', []) and entry.meta.get('removed_tags', []):
-            return 'Добавлены теги: %s. Удалены теги: %s.' % (', '.join(entry.meta['added_tags']), ', '.join(entry.meta['removed_tags']))
-        if entry.meta.get('added_tags', []):
-            return 'Добавлены теги: %s.' % ', '.join(entry.meta['added_tags'])
-        if entry.meta.get('removed_tags', []):
-            return 'Удалены теги: %s.' % ', '.join(entry.meta['removed_tags'])
+        added_tags = map(lambda x: x['name'], entry.meta.get('added_tags', []))
+        removed_tags = map(lambda x: x['name'], entry.meta.get('removed_tags', []))
+        if added_tags and removed_tags:
+            return 'Добавлены теги: %s. Удалены теги: %s.' % (', '.join(added_tags), ', '.join(removed_tags))
+        if added_tags:
+            return 'Добавлены теги: %s.' % ', '.join(added_tags)
+        if removed_tags:
+            return 'Удалены теги: %s.' % ', '.join(removed_tags)
 
     if entry.type == ArticleLogEntry.LogEntryType.Parent:
         if entry.meta['prev_parent'] and entry.meta['parent']:
