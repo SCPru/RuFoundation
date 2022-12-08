@@ -2,7 +2,7 @@ from web.controllers.articles import get_latest_log_entry
 from django.db import migrations
 
 
-get_full_name = lambda tag: f"{tag.category.slug}:{tag.name}" if tag.category.slug == "_default" else tag.name
+get_full_name = lambda tag: f"{tag.category.slug}:{tag.name}" if tag.category.slug != "_default" else tag.name
 
 
 def update_entries(apps, schema_editor):
