@@ -207,14 +207,18 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
     };
 
     const onSelectCategory = (e: React.MouseEvent, category: string) => {
-        e.preventDefault();
-        e.stopPropagation();
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         setInputValue(`${category}:`);
     };
 
     const onSelectTag = (e: React.MouseEvent, tag: string) => {
-        e.preventDefault();
-        e.stopPropagation();
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
 
         if (!onChange) {
             return;
@@ -250,12 +254,81 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
         }
     }, [])
 
+    useEffect(() => {
+        if (!suggestionsRef.current) {
+            return;
+        }
+        const el = suggestionsRef.current.querySelector(`[data-selector="${selectedToAdd}"]`)
+        if (!el) {
+            return;
+        }
+        el.scrollIntoView({block: 'nearest'});
+    }, [selectedToAdd]);
+
     const onInputKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && canCreateTags) {
+        if (e.key === 'Enter' && selectedToAdd) {
+            if (selectedToAdd.endsWith(':')) {
+                onSelectCategory(undefined, selectedToAdd)
+            } else {
+                onSelectTag(undefined, selectedToAdd)
+            }
+            e.preventDefault();
+            e.stopPropagation();
+        } else if (e.key === 'Enter' && canCreateTags) {
             setInputValue('');
             onChange([...tags.filter(x => x.toLowerCase() !== inputValue.toLowerCase()), inputValue]);
             e.preventDefault();
             e.stopPropagation();
+        } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            e.stopPropagation();
+
+            let currentCategoryIndex, currentTagIndex;
+            for (let i = 0; i < filteredCategories.length; i++) {
+                if (`${filteredCategories[i].slug}:` === selectedToAdd) {
+                    currentCategoryIndex = i;
+                    break;
+                }
+                for (let j = 0; j < filteredCategories[i].tags.length; j++) {
+                    const tag = filteredCategories[i].tags[j];
+                    if (`${filteredCategories[i].slug}:${tag.name}` === selectedToAdd) {
+                        currentCategoryIndex = i;
+                        currentTagIndex = j;
+                        break;
+                    }
+                }
+            }
+
+            if (e.key === 'ArrowUp') {
+                if (currentTagIndex === undefined && currentCategoryIndex === undefined && filteredCategories.length > 0) {
+                    currentCategoryIndex = filteredCategories.length-1;
+                    currentTagIndex = filteredCategories[currentCategoryIndex].tags.length-1;
+                } else if (currentTagIndex === 0) {
+                    currentTagIndex = undefined;
+                } else if (currentTagIndex === undefined && currentCategoryIndex) {
+                    currentCategoryIndex--;
+                    currentTagIndex = filteredCategories[currentCategoryIndex].tags.length-1;
+                } else if (currentTagIndex) {
+                    currentTagIndex--;
+                }
+            } else if (e.key === 'ArrowDown') {
+                if (currentTagIndex === undefined && currentCategoryIndex === undefined && filteredCategories.length > 0) {
+                    currentCategoryIndex = 0;
+                    currentTagIndex = undefined;
+                } else if (currentTagIndex === undefined && currentCategoryIndex !== undefined) {
+                    currentTagIndex = 0;
+                } else if (currentTagIndex !== undefined && currentCategoryIndex !== undefined &&
+                            currentTagIndex < filteredCategories[currentCategoryIndex].tags.length-1) {
+                    currentTagIndex++;
+                } else if (currentTagIndex !== undefined && currentCategoryIndex !== undefined &&
+                            currentTagIndex >= filteredCategories[currentCategoryIndex].tags.length-1 &&
+                            currentCategoryIndex < filteredCategories.length-1) {
+                    currentCategoryIndex++;
+                    currentTagIndex = undefined;
+                }
+            }
+
+            setSelectedToAdd(currentCategoryIndex !== undefined ? `${filteredCategories[currentCategoryIndex].slug}:${currentTagIndex !== undefined ? filteredCategories[currentCategoryIndex].tags[currentTagIndex].name : ''}` : undefined);
         }
     };
 
@@ -288,11 +361,11 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
                     <TagSuggestionList ref={suggestionsRef}>
                         {filteredCategories.map(category => (
                             <React.Fragment key={category.slug}>
-                                <TagSuggestionCategory className={selectedToAdd === `${category.slug}:` ? 'active' : ''} onClick={e => onSelectCategory(e, category.slug)}>
+                                <TagSuggestionCategory data-selector={`${category.slug}:`} className={selectedToAdd === `${category.slug}:` ? 'active' : ''} onClick={e => onSelectCategory(e, category.slug)}>
                                     {category.name} [{category.slug}]
                                 </TagSuggestionCategory>
                                 {category.tags.map(tag => (
-                                    <TagSuggestionTag key={tag.name} className={selectedToAdd === `${category.slug}:${tag.name}` ? 'active' : ''} onClick={e => onSelectTag(e, `${category.slug}:${tag.name}`)}>
+                                    <TagSuggestionTag data-selector={`${category.slug}:${tag.name}`} key={tag.name} className={selectedToAdd === `${category.slug}:${tag.name}` ? 'active' : ''} onClick={e => onSelectTag(e, `${category.slug}:${tag.name}`)}>
                                         {tag.name}
                                     </TagSuggestionTag>
                                 ))}
