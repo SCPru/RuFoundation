@@ -52,6 +52,19 @@ const Styles = styled.div`
 .w-tag-editor-container {
   position: relative;
 }
+  
+/* fixes BHL; without table this looks bad */
+table.form {
+  display: table !important;
+}
+  
+.form tr {
+  display: table-row !important;
+}
+  
+.form td, th {
+  display: table-cell !important;
+}
 `;
 
 
