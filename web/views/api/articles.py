@@ -1,3 +1,6 @@
+import time
+import threading
+
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 
@@ -11,7 +14,44 @@ from renderer.parser import RenderContext
 
 import json
 
-from ...models.articles import ExternalLink, Article
+from ...models.articles import ExternalLink, Article, ArticleLogEntry
+from ...models.sites import get_current_site
+
+ALL_ARTICLES_LOCK = threading.RLock()
+ALL_ARTICLES = []
+ALL_ARTICLES_LAST_REQUEST = 0
+
+
+class AllArticlesView(APIView):
+    def get(self, request: HttpRequest):
+        global ALL_ARTICLES
+        global ALL_ARTICLES_LAST_REQUEST
+        site = get_current_site()
+        with ALL_ARTICLES_LOCK:
+            if time.time() - ALL_ARTICLES_LAST_REQUEST > 60 * 15:
+                db_articles = Article.objects.all()
+                ALL_ARTICLES = []
+                for article in db_articles:
+                    last_event = ArticleLogEntry.objects.filter(article=article).order_by('-rev_number')[0]
+                    rating, rating_votes, rating_mode = articles.get_rating(article)
+                    ALL_ARTICLES.append({
+                        'pageId': article.full_name,
+                        'title': article.title,
+                        'canonicalUrl': '//%s/%s' % (site.domain, article.full_name),
+                        'createdAt': article.created_at,
+                        'updatedAt': article.updated_at,
+                        'createdBy': render_user_to_json(article.author),
+                        'updatedBy': render_user_to_json(last_event.user),
+                        'rating': {
+                            'value': rating,
+                            'votes': rating_votes,
+                            'mode': rating_mode
+                        },
+                        'tags': articles.get_tags(article)
+                    })
+                ALL_ARTICLES_LAST_REQUEST = time.time()
+        return self.render_json(200, ALL_ARTICLES)
+
 
 
 class ArticleView(APIView):
