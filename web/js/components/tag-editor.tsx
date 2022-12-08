@@ -1,7 +1,7 @@
 import * as React from 'react';
 import styled from 'styled-components';
 import {FetchAllTagsResponse} from '../api/tags';
-import {useRef, useState} from 'react'
+import {useCallback, useEffect, useRef, useState} from 'react'
 
 interface Props {
     tags: Array<string>
@@ -224,16 +224,31 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
         onChange([...tags.filter(x => x.toLowerCase() !== tag.toLowerCase()), tag]);
     };
 
-    const onInputBlur = (e: React.FocusEvent) => {
-        let p: Node = e.relatedTarget as Node;
+    const checkIfInTree = (p: Node) => {
         while (p) {
             if (p === inputRef.current || p === suggestionsRef.current) {
-                return;
+                return true;
             }
             p = p.parentNode;
         }
-        setTimeout(() => setSuggestionsOpen(false), 100);
+        return false;
     };
+
+    const onFocusOutside = useCallback((e: FocusEvent | MouseEvent) => {
+        if (!checkIfInTree(e.target as Node)) {
+            setSuggestionsOpen(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        window.addEventListener('focus', onFocusOutside);
+        window.addEventListener('mousedown', onFocusOutside);
+
+        return () => {
+            window.removeEventListener('mousedown', onFocusOutside);
+            window.removeEventListener('focus', onFocusOutside);
+        }
+    }, [])
 
     const onInputKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && canCreateTags) {
@@ -268,7 +283,7 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
                     Добавить тег:<br/>
                     (начните печатать для поиска по тегам)
                 </TagInputTitle>
-                <TagInput onChange={onInputChange} type="text" value={inputValue} onFocus={onInputFocus} onBlur={onInputBlur} ref={inputRef} onKeyDown={onInputKeyDown} />
+                <TagInput onChange={onInputChange} type="text" value={inputValue} onFocus={onInputFocus} ref={inputRef} onKeyDown={onInputKeyDown} />
                 {!!inputValue.trim().length && !!filteredCategories.length && suggestionsOpen && (
                     <TagSuggestionList ref={suggestionsRef}>
                         {filteredCategories.map(category => (
