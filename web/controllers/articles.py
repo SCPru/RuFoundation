@@ -579,16 +579,12 @@ def is_tag_name_allowed(name: str) -> bool:
     return ' ' not in name
 
 
-def get_tag(full_name_or_tag_id: _FullNameOrTag, create: bool = True) -> Optional[Tag]:
+def get_tag(full_name_or_tag_id: _FullNameOrTag) -> Optional[Tag]:
     if full_name_or_tag_id is None:
         return None
     if type(full_name_or_tag_id) == str:
         full_name_or_tag_id = full_name_or_tag_id.lower()
         category_name, name = get_name(full_name_or_tag_id)
-        if create:
-            category, _ = TagsCategory.objects.get_or_create(slug=category_name)
-            tag, _ = Tag.objects.get_or_create(category=category, name=name)
-            return tag
         try:
             category = TagsCategory.objects.get(slug=category_name)
             return Tag.objects.get(category=category, name=name)
@@ -624,7 +620,7 @@ def get_tags_categories(full_name_or_article: _FullNameOrArticle) -> Dict[TagsCa
 def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[Union[str, int]], user: Optional[_UserType] = None, log: bool = True):
     article = get_article(full_name_or_article)
     article_tags = article.tags.all()
-    tags = [get_tag(x) for x in tags if isinstance(x, int) or is_tag_name_allowed(x)]
+    tags = list(filter(lambda x: x is not None, [get_tag(x) for x in tags if isinstance(x, int) or is_tag_name_allowed(x)]))
 
     removed_tags = []
     added_tags = []
@@ -639,10 +635,6 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[Union[str,
             # possibly create the tag here
             article.tags.add(tag)
             added_tags.append({'id': tag.id, 'name': tag.full_name})
-
-    # garbage collect tags if anything was removed
-    Tag.objects.annotate(num_articles=Count('articles')).filter(num_articles=0).delete()
-    TagsCategory.objects.annotate(num_tags=Count('tag')).filter(num_tags=0, slug=F('name')).delete()
 
     if (removed_tags or added_tags) and log:
         log = ArticleLogEntry(

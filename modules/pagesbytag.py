@@ -15,7 +15,7 @@ def render(context, params):
     if 'tag' not in params:
         return ''
 
-    tag = get_tag(params["tag"], create=False)
+    tag = get_tag(params["tag"])
 
     # find articles by tag
     try:

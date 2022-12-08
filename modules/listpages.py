@@ -179,11 +179,11 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                         else:
                             q = q.filter(tags__name=name, tags__category__slug=category)
                     else:
-                        obj = articles.get_tag(tag, create=False)
+                        obj = articles.get_tag(tag)
                         one_allowed_tags.append(obj)
                         if obj and not obj.category.is_default:
                             name = articles.get_name(tag)[1]
-                            one_allowed_tags.append(articles.get_tag(name, create=False))
+                            one_allowed_tags.append(articles.get_tag(name))
                 if one_allowed_tags:
                     q = q.filter(tags__in=one_allowed_tags)
         f_category = params.get('category', '.')
