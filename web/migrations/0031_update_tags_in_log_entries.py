@@ -43,14 +43,14 @@ def reverse_func(apps, schema_editor):
             if 'added_tags' in entry.meta:
                 for tag in entry.meta['added_tags']:
                     try:
-                        new_added.append(get_full_name(Tag.objects.get(site=site, id=tag)))
+                        new_added.append(get_full_name(Tag.objects.get(site=site, id=tag['id'])))
                     except Tag.DoesNotExist:
                         pass
                 entry.meta['added_tags'] = new_added
             if 'removed_tags' in entry.meta:
                 for tag in entry.meta['removed_tags']:
                     try:
-                        new_removed.append(get_full_name(Tag.objects.get(site=site, id=tag)))
+                        new_removed.append(get_full_name(Tag.objects.get(site=site, id=tag['id'])))
                     except Tag.DoesNotExist:
                         pass
                 entry.meta['removed_tags'] = new_removed
