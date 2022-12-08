@@ -30,6 +30,7 @@ interface Props {
     canComment?: boolean
     commentThread?: string
     commentCount?: number
+    canCreateTags?: boolean
 }
 
 
@@ -239,7 +240,7 @@ class PageOptions extends Component<Props, State> {
 
     pickSubView() {
         const { subView } = this.state;
-        const { pageId, rating, pathParams, editable, canDelete } = this.props;
+        const { pageId, rating, pathParams, editable, canDelete, canCreateTags } = this.props;
 
         switch (subView) {
             case 'edit':
@@ -253,7 +254,7 @@ class PageOptions extends Component<Props, State> {
                 return <ArticleRating pageId={pageId} rating={rating} onClose={this.onCancelSubView} />;
 
             case 'tags':
-                return <ArticleTags pageId={pageId} onClose={this.onCancelSubView} />;
+                return <ArticleTags pageId={pageId} onClose={this.onCancelSubView} canCreateTags={canCreateTags} />;
 
             case 'history':
                 return <ArticleHistory pageId={pageId} pathParams={pathParams} onClose={this.onCancelSubView} />;

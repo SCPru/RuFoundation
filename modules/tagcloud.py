@@ -181,6 +181,36 @@ def render(context, params):
                     <a class="tag" href="{{ tag.link }}" style="font-size: {{ tag.size }}; color: {{ tag.color }}">{{ tag.name }}</a>
                 {% endfor %}
             </div>
-            """,
+        """,
         tags=render_tags
     )
+
+
+def allow_api():
+    return True
+
+
+def api_list_tags(context, params):
+    categories = TagsCategory.objects.order_by('priority')
+    tags = Tag.objects.all()
+
+    output = {
+        'categories': [],
+        'tags': []
+    }
+
+    for category in categories:
+        output['categories'].append({
+            'id': category.id,
+            'name': category.name,
+            'description': category.description,
+            'slug': category.slug
+        })
+
+    for tag in tags:
+        output['tags'].append({
+            'categoryId': tag.category.id,
+            'name': tag.name
+        })
+
+    return output

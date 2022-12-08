@@ -179,6 +179,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'commentThread': '/forum/t-%d/%s' % (comment_thread_id, articles.normalize_article_name(article.display_name)) if article else None,
             'commentCount': comment_count,
             'canDelete': permissions.check(self.request.user, "delete", article),
+            'canCreateTags': site.get_settings().creating_tags_allowed,
         }
 
         tags_categories = articles.get_tags_categories(article)
