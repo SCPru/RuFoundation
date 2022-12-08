@@ -280,12 +280,14 @@ class ArticleHistory extends Component<Props, State> {
                 return <>Страница переименована из "<em>{entry.meta.prev_name}</em>" в "<em>{entry.meta.name}</em>"</>;
 
             case 'tags':
-                if (Array.isArray(entry.meta.added_tags) && entry.meta.added_tags.length && Array.isArray(entry.meta.removed_tags) && entry.meta.removed_tags.length) {
-                    return <>Добавлены теги: {entry.meta.added_tags.join(', ')}. Удалены теги: {entry.meta.removed_tags.join(', ')}.</>;
-                } else if (Array.isArray(entry.meta.added_tags) && entry.meta.added_tags.length) {
-                    return <>Добавлены теги: {entry.meta.added_tags.join(', ')}.</>;
-                } else if (Array.isArray(entry.meta.removed_tags) && entry.meta.removed_tags.length) {
-                    return <>Удалены теги: {entry.meta.removed_tags.join(', ')}.</>;
+                let added_tags = entry.meta.added_tags.map((tag) => tag['name'])
+                let removed_tags = entry.meta.removed_tags.map((tag) => tag['name'])
+                if (Array.isArray(added_tags) && added_tags.length && Array.isArray(removed_tags) && removed_tags.length) {
+                    return <>Добавлены теги: {added_tags.join(', ')}. Удалены теги: {removed_tags.join(', ')}.</>;
+                } else if (Array.isArray(added_tags) && added_tags.length) {
+                    return <>Добавлены теги: {added_tags.join(', ')}.</>;
+                } else if (Array.isArray(removed_tags) && removed_tags.length) {
+                    return <>Удалены теги: {removed_tags.join(', ')}.</>;
                 }
                 break;
 

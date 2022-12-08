@@ -155,16 +155,16 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
             #        tags that were added are now removed
             for tag in entry.meta['added_tags']:
                 try:
-                    new_props['added_tags'].remove(tag)
+                    new_props['added_tags'].remove(tag['id'])
                 except ValueError:
                     pass
-                new_props['removed_tags'].append(tag)
+                new_props['removed_tags'].append(tag['id'])
             for tag in entry.meta['removed_tags']:
                 try:
-                    new_props['removed_tags'].remove(tag)
+                    new_props['removed_tags'].remove(tag['id'])
                 except ValueError:
                     pass
-                new_props['added_tags'].append(tag)
+                new_props['added_tags'].append(tag['id'])
         elif entry.type == ArticleLogEntry.LogEntryType.New:
             # 'new' cannot be reverted. moreover, we should not reach this point at all.
             # but if we did, just stop
@@ -579,12 +579,12 @@ def is_tag_name_allowed(name: str) -> bool:
     return ' ' not in name
 
 
-def get_tag(full_name_or_tag: _FullNameOrTag, create: bool = True) -> Optional[Tag]:
-    if full_name_or_tag is None:
+def get_tag(full_name_or_tag_id: _FullNameOrTag, create: bool = True) -> Optional[Tag]:
+    if full_name_or_tag_id is None:
         return None
-    if type(full_name_or_tag) == str:
-        full_name_or_tag = full_name_or_tag.lower()
-        category_name, name = get_name(full_name_or_tag)
+    if type(full_name_or_tag_id) == str:
+        full_name_or_tag_id = full_name_or_tag_id.lower()
+        category_name, name = get_name(full_name_or_tag_id)
         if create:
             category, _ = TagsCategory.objects.get_or_create(slug=category_name)
             tag, _ = Tag.objects.get_or_create(category=category, name=name)
@@ -594,9 +594,14 @@ def get_tag(full_name_or_tag: _FullNameOrTag, create: bool = True) -> Optional[T
             return Tag.objects.get(category=category, name=name)
         except (Tag.DoesNotExist, TagsCategory.DoesNotExist):
             return None
-    if not isinstance(full_name_or_tag, Tag):
+    if type(full_name_or_tag_id) == int:
+        try:
+            return Tag.objects.get(id=full_name_or_tag_id)
+        except Tag.DoesNotExist:
+            return None
+    if not isinstance(full_name_or_tag_id, Tag):
         raise ValueError('Expected str or Tag')
-    return full_name_or_tag
+    return full_name_or_tag_id
 
 
 # Get tags from article
@@ -616,10 +621,10 @@ def get_tags_categories(full_name_or_article: _FullNameOrArticle) -> Dict[TagsCa
 
 
 # Set tags for article
-def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user: Optional[_UserType] = None, log: bool = True):
+def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[Union[str, int]], user: Optional[_UserType] = None, log: bool = True):
     article = get_article(full_name_or_article)
     article_tags = article.tags.all()
-    tags = [get_tag(x) for x in tags if is_tag_name_allowed(x)]
+    tags = [get_tag(x) for x in tags if isinstance(x, int) or is_tag_name_allowed(x)]
 
     removed_tags = []
     added_tags = []
@@ -627,13 +632,13 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[str], user
     for tag in article_tags:
         if tag not in tags:
             article.tags.remove(tag)
-            removed_tags.append(tag.name)
+            removed_tags.append({'id': tag.id, 'name': tag.full_name})
 
     for tag in tags:
         if tag not in article_tags:
             # possibly create the tag here
             article.tags.add(tag)
-            added_tags.append(tag.name)
+            added_tags.append({'id': tag.id, 'name': tag.full_name})
 
     # garbage collect tags if anything was removed
     Tag.objects.annotate(num_articles=Count('articles')).filter(num_articles=0).delete()

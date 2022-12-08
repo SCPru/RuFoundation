@@ -15,6 +15,10 @@ def update_updated_at(apps, schema_editor):
                 article.save()
 
 
+def reverse_func(apps, schema_editor):
+    pass
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -22,5 +26,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(update_updated_at, atomic=True)
+        migrations.RunPython(update_updated_at, reverse_func, atomic=True)
     ]
