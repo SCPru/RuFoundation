@@ -46,7 +46,7 @@ class Tag(SiteLimitedModel):
     name = models.TextField(verbose_name="Название")
 
     def __str__(self):
-        return self.name
+        return self.full_name
 
     @property
     def full_name(self) -> str:
