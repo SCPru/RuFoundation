@@ -38,6 +38,7 @@ class TagForm(forms.ModelForm):
 class TagAdmin(admin.ModelAdmin):
     form = TagForm
     list_filter = ['category', 'site__domain']
+    list_display = ['name', 'category__slug']
 
 
 class SettingsForm(forms.ModelForm):
