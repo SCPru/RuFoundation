@@ -19,6 +19,7 @@
  */
 
 use super::prelude::*;
+use crate::url::validate_href;
 
 pub const BLOCK_IFRAME: BlockRule = BlockRule {
     name: "block-iframe",
@@ -43,6 +44,10 @@ fn parse_fn<'r, 't>(
     assert_block_name(&BLOCK_IFRAME, name);
 
     let (url, arguments) = parser.get_head_name_map(&BLOCK_IFRAME, in_head)?;
+
+    if !validate_href(url, true) {
+        return Err(parser.make_warn(ParseWarningKind::RuleFailed));
+    }
 
     let element = Element::Iframe {
         url: cow!(url),

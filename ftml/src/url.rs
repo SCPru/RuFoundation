@@ -120,7 +120,7 @@ pub fn validate_href(url: &str, strict: bool) -> bool {
         return false
     }
     // if it starts with invalid protocol, it's not allowed
-    let lowered = url.to_ascii_lowercase();
+    let lowered = url.trim().to_ascii_lowercase();
     if lowered != "javascript:;" && lowered.starts_with("javascript:") {
         return false
     }
