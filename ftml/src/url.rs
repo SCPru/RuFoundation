@@ -124,6 +124,9 @@ pub fn validate_href(url: &str, strict: bool) -> bool {
     if lowered != "javascript:;" && lowered.starts_with("javascript:") {
         return false
     }
+    if lowered.starts_with("data:") {
+        return false
+    }
     // strict mode is used to disambiguate between [##green|FORBIDDEN PLACE##] and [#anchor text on the anchor]
     if strict && !URL_STRICT_REGEX.is_match(url) {
         return false
