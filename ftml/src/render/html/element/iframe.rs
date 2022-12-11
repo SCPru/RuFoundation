@@ -26,6 +26,7 @@ pub fn render_iframe(ctx: &mut HtmlContext, url: &str, attributes: &AttributeMap
 
     ctx.html().iframe().attr(attr!(
         "src" => url,
+        "sandbox" => "allow-scripts allow-top-navigation allow-popups",
         "crossorigin";;
         attributes
     ));
