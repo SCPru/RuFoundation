@@ -1,3 +1,5 @@
+from django.contrib.auth.models import AnonymousUser
+
 from web.controllers.articles import get_rating, Vote
 from web.models.settings import Settings
 from . import ModuleError
@@ -30,7 +32,7 @@ def render(context, _params):
                 '<div class="w-stars-rate-module" data-page-id="{{page_id}}">',
                 '<div class="w-stars-rate-rating">рейтинг:&nbsp;<span class="w-stars-rate-number">{{rating}}</span></div>',
                 '<div class="w-stars-rate-control">',
-                '<div class="w-stars-rate-stars-wrapper"><div class="w-stars-rate-stars-view" style="width: {{rating_percentage}}%"></div></div>',
+                '<div class="w-stars-rate-stars-wrapper"><div class="w-stars-rate-stars-view" style="width: {{rating_percentage}}%; --rated-var: {{rated}}"></div></div>',
                 '<div class="w-stars-rate-cancel"></div>'
                 '</div>',
                 '<div class="w-stars-rate-votes">голосов:&nbsp;<span class="w-stars-rate-number">{{votes}}</span></div>',
@@ -39,7 +41,9 @@ def render(context, _params):
             page_id=context.article.full_name,
             rating=('%.1f' % rating) if votes else '—',
             rating_percentage='%d' % (rating * 20),
-            votes='%d' % votes
+            votes='%d' % votes,
+            rated="#f0ac00" if context.user and not isinstance(context.user, AnonymousUser) and Vote.objects.filter(article=context.article, user=context.user) else '#4e6b6b'
+
         )
     else:
         return ''
