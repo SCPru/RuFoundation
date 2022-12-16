@@ -55,6 +55,7 @@ const Tag = styled.div`
   padding: 2px 4px;
   padding-right: 0;
   display: flex;
+  color: black;
 `
 
 const TagDelete = styled.div`
@@ -93,6 +94,8 @@ const TagInput = styled.input`
 
 const TagSuggestionList = styled.div`
   border: 1px solid #ccc;
+  background: white;
+  color: black;
   border-top: 0;
   width: 100%;
   overflow-y: auto;
@@ -101,6 +104,7 @@ const TagSuggestionList = styled.div`
 const TagSuggestionCategory = styled.div`
   padding: 4px 8px;
   background: #eee;
+  color: black;
   font-weight: 600;
   border-bottom: 1px solid #aaa;
   cursor: pointer;
@@ -116,6 +120,7 @@ const TagSuggestionCategory = styled.div`
 const TagSuggestionTag = styled.div`
   padding: 4px 8px;
   border-bottom: 1px solid #aaa;
+  color: black;
   cursor: pointer;
   &:last-child {
     border-bottom: 0;
