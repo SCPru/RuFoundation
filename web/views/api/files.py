@@ -15,8 +15,8 @@ from ...models.files import File
 
 class FileView(APIView):
     @staticmethod
-    def _validate_request(request: HttpRequest, article_name, edit=True):
-        article = articles.get_article(article_name)
+    def _validate_request(request: HttpRequest, article_name_or_article, edit=True):
+        article = articles.get_article(article_name_or_article)
         if article is None:
             raise APIError('Страница не найдена', 404)
         if edit and not permissions.check(request.user, "edit", article):
@@ -31,7 +31,7 @@ class GetOrUploadView(FileView):
         output = []
         current_files_size, absolute_files_size = articles.get_file_space_usage()
         for file in files:
-            output.append({'name': file.name, 'size': file.size, 'createdAt': file.created_at, 'author': render_user_to_json(file.author), 'mimeType': file.mime_type})
+            output.append({'id': file.id, 'name': file.name, 'size': file.size, 'createdAt': file.created_at, 'author': render_user_to_json(file.author), 'mimeType': file.mime_type})
         data = {
             'pageId': article.full_name,
             'files': output,
@@ -83,22 +83,34 @@ class GetOrUploadView(FileView):
 
 
 class RenameOrDeleteView(FileView):
-    def delete(self, request: HttpRequest, article_name, file_name):
-        article = self._validate_request(request, article_name)
-        file = articles.get_file_in_article(article, file_name)
+    @staticmethod
+    def _get_file_and_article(file_id):
+        file = File.objects.get(id=file_id)
+        if file is None:
+            return None, None
+        return file.article, file
+
+    def delete(self, request: HttpRequest, file_id):
+        article, file = self._get_file_and_article(file_id)
+        article = self._validate_request(request, article)
         if file is None:
             raise APIError('Файл не существует', 404)
         articles.delete_file_from_article(article, file, user=request.user)
         return self.render_json(200, {'status': 'ok'})
 
     @takes_json
-    def put(self, request: HttpRequest, article_name, file_name):
-        article = self._validate_request(request, article_name)
-        file = articles.get_file_in_article(article, file_name)
+    def put(self, request: HttpRequest, file_id):
+        article, file = self._get_file_and_article(file_id)
+        article = self._validate_request(request, article)
         if file is None:
             raise APIError('Файл не существует', 404)
         data = self.json_input
         if not isinstance(data, dict) or 'name' not in data:
             raise APIError('Некорректный запрос', 400)
+        if not data['name']:
+            raise APIError('Отсутствует название файла', 400)
+        existing_file = articles.get_file_in_article(article, data['name'])
+        if existing_file and existing_file.id != file.id:
+            raise APIError('Файл с таким именем уже существует', 409)
         articles.rename_file_in_article(article, file, data['name'], user=request.user)
         return self.render_json(200, {'status': 'ok'})
