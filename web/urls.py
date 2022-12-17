@@ -29,7 +29,7 @@ api_patterns = [
     path('articles/<str:full_name>/links', articles.FetchExternalLinks.as_view()),
 
     path('articles/<str:article_name>/files', files.GetOrUploadView.as_view()),
-    path('articles/<str:article_name>/files/<str:file_name>', files.RenameOrDeleteView.as_view()),
+    path('files/<int:file_id>', files.RenameOrDeleteView.as_view()),
 
     path('preview', preview.PreviewView.as_view()),
 

@@ -358,7 +358,7 @@ class ArticleFiles extends Component<Props, State> {
         const file = this.state.files[i];
         try {
             this.setState({ loading: true });
-            await deleteFile(pageId, file.name);
+            await deleteFile(file.id);
             this.setState({ optionsIndex: null });
             this.loadFiles();
         } catch (e) {
@@ -375,7 +375,7 @@ class ArticleFiles extends Component<Props, State> {
         const { files, renameIndex, renameName } = this.state;
         try {
             this.setState({ loading: true });
-            await renameFile(pageId, files[renameIndex].name, renameName);
+            await renameFile(files[renameIndex].id, renameName);
             this.setState({ optionsIndex: null });
             this.loadFiles();
         } catch (e) {
