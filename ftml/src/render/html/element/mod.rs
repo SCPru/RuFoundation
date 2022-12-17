@@ -24,7 +24,6 @@ mod collapsible;
 mod container;
 mod date;
 mod definition_list;
-mod embed;
 mod footnotes;
 mod form;
 mod iframe;
@@ -53,7 +52,6 @@ use self::collapsible::{render_collapsible, Collapsible};
 use self::container::{render_color, render_container};
 use self::date::render_date;
 use self::definition_list::render_definition_list;
-use self::embed::render_embed;
 use self::footnotes::{render_footnote, render_footnote_block};
 use self::form::render_form_input;
 use self::iframe::{render_html, render_iframe};
@@ -184,7 +182,6 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
         }
         Element::MathInline { latex_source } => render_math_inline(ctx, latex_source),
         Element::EquationReference(name) => render_equation_reference(ctx, name),
-        Element::Embed(embed) => render_embed(ctx, embed),
         Element::Html { contents } => render_html(ctx, contents),
         Element::Iframe { url, attributes } => render_iframe(ctx, url, attributes),
         Element::Include {

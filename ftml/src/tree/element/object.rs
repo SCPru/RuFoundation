@@ -26,7 +26,7 @@ use ref_map::*;
 use crate::data::PageRef;
 use crate::tree::{
     Alignment, AnchorTarget, AttributeMap, ClearFloat, Container, Date,
-    DefinitionListItem, Embed, FloatAlignment, ImageSource, LinkLabel, LinkLocation,
+    DefinitionListItem, FloatAlignment, ImageSource, LinkLabel, LinkLocation,
     LinkType, ListItem, ListType, Module, PartialElement, Tab, Table, VariableMap, FormInput
 };
 use crate::tree::clone::*;
@@ -247,9 +247,6 @@ pub enum Element<'t> {
     /// Element referring to an equation elsewhere in the page.
     EquationReference(Cow<'t, str>),
 
-    /// An embedded piece of media or content from elsewhere.
-    Embed(Embed<'t>),
-
     /// Element containing a sandboxed HTML block.
     Html { contents: Cow<'t, str> },
 
@@ -351,7 +348,6 @@ impl Element<'_> {
             Element::Math { .. } => "Math",
             Element::MathInline { .. } => "MathInline",
             Element::EquationReference(_) => "EquationReference",
-            Element::Embed(_) => "Embed",
             Element::Html { .. } => "HTML",
             Element::Iframe { .. } => "Iframe",
             Element::Include { .. } => "Include",
@@ -404,7 +400,6 @@ impl Element<'_> {
             Element::Math { .. } => false,
             Element::MathInline { .. } => true,
             Element::EquationReference(_) => true,
-            Element::Embed(_) => false,
             Element::Html { .. } | Element::Iframe { .. } => false,
             Element::Include { paragraph_safe, .. } => *paragraph_safe,
             Element::LineBreak | Element::LineBreaks { .. } => true,
@@ -556,7 +551,6 @@ impl Element<'_> {
             Element::EquationReference(name) => {
                 Element::EquationReference(string_to_owned(name))
             }
-            Element::Embed(embed) => Element::Embed(embed.to_owned()),
             Element::Html { contents } => Element::Html {
                 contents: string_to_owned(contents),
             },
