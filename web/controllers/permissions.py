@@ -13,7 +13,7 @@ def check(user, action, obj):
         case (AnonymousUser(), perm, _) if perm != 'view' and perm != 'view-comments':
             return False
 
-        case (_, perm, Article(locked=True)) if perm != 'view' and perm != 'view-comments':
+        case (_, perm, Article(locked=True)) if perm not in ['view', 'comment', 'view-comments', 'rate']:
             return False
 
         case (_, 'view', Article(category=category)):
