@@ -67,11 +67,8 @@ class MediaHostMiddleware(object):
 
             if not is_media_host and (site.domain != site.media_domain or not is_media_url):
                 response['X-Content-Type-Options'] = 'nosniff'
-            elif 'Origin' in request.headers:
-                allowed_origins = ['http://%s' % site.domain, 'https://%s' % site.domain]
-                origin = request.headers['Origin']
-                if origin in allowed_origins:
-                    response['Access-Control-Allow-Origin'] = origin
+            else:
+                response['Access-Control-Allow-Origin'] = '*'
 
             return response
 
