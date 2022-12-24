@@ -65,10 +65,11 @@ class MediaHostMiddleware(object):
 
             response = self.get_response(request)
 
-            if not is_media_host and (site.domain != site.media_domain or not is_media_url):
-                response['X-Content-Type-Options'] = 'nosniff'
-            else:
+            if is_media_host or (site.domain == site.media_domain and is_media_url):
                 response['Access-Control-Allow-Origin'] = '*'
+            else:
+                response['X-Content-Type-Options'] = 'nosniff'
+                response['X-Frame-Options'] = 'DENY'
 
             return response
 
