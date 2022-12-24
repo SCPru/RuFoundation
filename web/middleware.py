@@ -52,10 +52,10 @@ class MediaHostMiddleware(object):
             site = possible_sites[0]
             threadvars.put('current_site', site)
 
-            if site.media_domain != site.domain:
-                is_media_host = request.get_host().split(':')[0] == site.media_domain
-                is_media_url = request.path.startswith(settings.MEDIA_URL)
+            is_media_host = request.get_host().split(':')[0] == site.media_domain
+            is_media_url = request.path.startswith(settings.MEDIA_URL)
 
+            if site.media_domain != site.domain:
                 non_media_host = site.domain
 
                 if is_media_host and not is_media_url:
@@ -63,7 +63,17 @@ class MediaHostMiddleware(object):
                 elif not is_media_host and is_media_url:
                     return HttpResponseRedirect('//%s%s' % (site.media_domain, request.get_full_path()))
 
-            return self.get_response(request)
+            response = self.get_response(request)
+
+            if not is_media_host and (site.domain != site.media_domain or not is_media_url):
+                response['X-Content-Type-Options'] = 'nosniff'
+            elif 'Origin' in request.headers:
+                allowed_origins = ['http://%s' % site.domain, 'https://%s' % site.domain]
+                origin = request.headers['Origin']
+                if origin in allowed_origins:
+                    response['Access-Control-Allow-Origin'] = origin
+
+            return response
 
 
 class CsrfViewMiddleware(django.middleware.csrf.CsrfViewMiddleware):

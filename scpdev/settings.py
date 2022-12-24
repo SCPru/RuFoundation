@@ -190,9 +190,6 @@ APPEND_SLASH = False
 REMOVE_SLASH = True
 
 
-# Custom includes will not work yet
-# (BHL from GitHub)
-SECURE_CONTENT_TYPE_NOSNIFF = True
 # Fixes
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
