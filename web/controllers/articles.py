@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 
 from django.contrib.auth.models import AbstractUser as _UserType
+from django.db import transaction
 from django.db.models import QuerySet, Sum, Avg, Count, Max, TextField, Value, IntegerField, Q, F
 from django.db.models.functions import Coalesce, Concat, Lower
 
@@ -19,6 +20,7 @@ import os.path
 import unicodedata
 
 from web.models.forum import ForumThread, ForumPost
+from web.util import lock_table
 
 _FullNameOrArticle = Optional[Union[str, Article]]
 _FullNameOrCategory = Optional[Union[str, Category]]
@@ -96,19 +98,21 @@ def create_article(full_name: str, user: Optional[_UserType] = None) -> Article:
 # Adds log entry to article
 def add_log_entry(full_name_or_article: _FullNameOrArticle, log_entry: ArticleLogEntry):
     article = get_article(full_name_or_article)
-    # this black magic forces lock of ArticleLogEntry table on this article id,
-    # so that two concurrent log entries wait for each other and are not violating unique constraint on rev_number.
-    current_log = ArticleLogEntry.objects.select_related('article')\
-                                         .select_for_update()\
-                                         .filter(article=article)
-    max_rev_number = current_log.aggregate(max=Max('rev_number')).get('max')
-    if max_rev_number is None:
-        max_rev_number = -1
-    log_entry.rev_number = max_rev_number + 1
-    log_entry.save()
+    with transaction.atomic():
+        with lock_table(ArticleLogEntry):
+            # this black magic forces lock of ArticleLogEntry table on this article id,
+            # so that two concurrent log entries wait for each other and are not violating unique constraint on rev_number.
+            current_log = ArticleLogEntry.objects.select_related('article')\
+                                                 .select_for_update()\
+                                                 .filter(article=article)
+            max_rev_number = current_log.aggregate(max=Max('rev_number')).get('max')
+            if max_rev_number is None:
+                max_rev_number = -1
+            log_entry.rev_number = max_rev_number + 1
+            log_entry.save()
 
-    article.updated_at = log_entry.created_at
-    article.save()
+            article.updated_at = log_entry.created_at
+            article.save()
 
 
 # Gets all log entries of article, sorted
