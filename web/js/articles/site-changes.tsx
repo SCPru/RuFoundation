@@ -112,8 +112,9 @@ export function makeSiteChanges(node: HTMLElement) {
 
         const category = (node.querySelector('#rev-category') as HTMLSelectElement).value;
         const perPage = (node.querySelector('#rev-perpage') as HTMLSelectElement).value;
+        const userName = (node.querySelector('#rev-username') as HTMLInputElement).value;
 
-        const addParams = {category, perPage};
+        const addParams = {category, perPage, userName};
         typeFilters.forEach(filter => addParams[filter.name] = 'false');
         types.forEach(t => addParams[t] = 'true');
 

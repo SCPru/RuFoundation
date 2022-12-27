@@ -10,6 +10,7 @@ from renderer import RenderContext, render_template_from_string, render_user_to_
 import math
 
 import renderer
+from system.models import User
 
 from web.controllers import articles, permissions
 from web.models.articles import ArticleLogEntry, Article
@@ -133,6 +134,7 @@ def render(context: RenderContext, params):
 
     per_page = int(context.path_params.get('perpage', '20'))
     category = context.path_params.get('category', '*').lower()
+    user_name = context.path_params.get('username', '').lower().strip()
 
     q = ArticleLogEntry.objects.all()
 
@@ -141,6 +143,25 @@ def render(context: RenderContext, params):
 
     if category != '*':
         q = q.filter(article__category=category)
+
+    user_name_partial = False
+    user_name_search = user_name
+    if user_name.startswith('~'):
+        user_name_partial = True
+        user_name_search = user_name[1:].strip()
+
+    if user_name_search:
+        if user_name_partial:
+            user_q = list(User.objects.filter(Q(username__icontains=user_name_search)|Q(wikidot_username__icontains=user_name_search)))
+            new_q = Q(user__in=user_q)
+            if user_name_search in 'system':
+                new_q |= Q(user__isnull=True)
+        else:
+            user_q = list(User.objects.filter(Q(username__iexact=user_name_search)|Q(wikidot_username__iexact=user_name_search)))
+            new_q = Q(user__in=user_q)
+            if user_name_search == 'system':
+                new_q |= Q(user__isnull=True)
+        q = q.filter(new_q)
 
     q = q.order_by('-created_at')
 
@@ -273,6 +294,12 @@ def render(context: RenderContext, params):
                     </td>
                 </tr>
                 <tr>
+                    <td>Фильтр по имени пользователя:<br><span style="font-size: 75%">Используйте префикс "~" для фильтрации<br>по частичному имени пользователя</span></td>
+                    <td>
+                        <input value="{{ user_name }}" id="rev-username"> 
+                    </td>
+                </tr>
+                <tr>
                     <td>Правок на страницу:</td>
                     <td>
                         <select id="rev-perpage">
@@ -337,6 +364,7 @@ def render(context: RenderContext, params):
         data_path_params=json.dumps(context.path_params),
         data_params=json.dumps(params),
         category_param=category,
+        user_name=user_name,
         type_filter=type_filter,
         type_filter_empty=type_filter_empty,
         per_page=per_page
