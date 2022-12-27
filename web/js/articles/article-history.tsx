@@ -10,6 +10,10 @@ import UserView from "../util/user-view";
 import {showVersionMessage} from "../util/wikidot-message";
 import ArticleSource from "./article-source";
 import Pagination from '../util/pagination'
+import {Simulate} from "react-dom/test-utils";
+import change = Simulate.change;
+import ArticleDiffView from "./article-diff";
+import {find} from "styled-components/test-utils";
 
 
 interface Props {
@@ -28,6 +32,8 @@ interface State {
     perPage: number
     error?: string
     fatalError?: boolean
+    firstCompareEntry?: ArticleLogEntry
+    secondCompareEntry?: ArticleLogEntry
 }
 
 
@@ -110,7 +116,7 @@ class ArticleHistory extends Component<Props, State> {
             const from = (realPage-1) * perPage;
             const to = (realPage) * perPage;
             const history = await fetchArticleLog(pageId, from, to);
-            this.setState({ loading: false, error: null, entries: history.entries, entryCount: history.count, page: realPage });
+            this.setState({ loading: false, error: null, entries: history.entries, entryCount: history.count, page: realPage, firstCompareEntry: history.entries[1], secondCompareEntry: history.entries[0] });
         } catch (e) {
             this.setState({ loading: false, fatalError: entries === null, error: e.error || 'Ошибка связи с сервером' });
         }
@@ -153,6 +159,10 @@ class ArticleHistory extends Component<Props, State> {
                 <h1>История изменений</h1>
                 <div id="revision-list" className={`${loading?'loading':''}`}>
                     { loading && <Loader className="loader" /> }
+                    <div className="buttons">
+                        <input type="button" className="btn btn-default btn-sm" value="Обновить список" onClick={() => this.loadHistory()} />
+                            <input type="button" className="btn btn-default btn-sm" value="Сравнить редакции" name="compare" id="history-compare-button" onClick={this.displayVersionDiff} />
+                    </div>
                     { entries && (totalPages>1) && (
                         <Pagination page={page} maxPages={totalPages} onChange={this.onChangePage} />
                     ) }
@@ -174,7 +184,10 @@ class ArticleHistory extends Component<Props, State> {
                                         <td>
                                             {entry.revNumber}.
                                         </td>
-                                        <td style={{ width: '5em' }}>&nbsp;</td>
+                                        <td style={{ width: '5em' }}>
+                                            <input type="radio" name="from" value={entry.revNumber} onChange={() => {this.setState({firstCompareEntry: entry})}} defaultChecked={ (entries[1] === entry) } />
+			                                <input type="radio" name="to" value={entry.revNumber} onChange={() => {this.setState({secondCompareEntry: entry})}}  defaultChecked={ (entries[0] === entry) } />
+                                        </td>
                                         <td>
                                             {this.renderFlags(entry)}
                                         </td>
@@ -338,6 +351,22 @@ class ArticleHistory extends Component<Props, State> {
             onClose();
             show(<ArticleSource pageId={pageId} onClose={onClose} source={resp.source} />);
         })
+    }
+
+    displayVersionDiff = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const { pageId, pathParams } = this.props;
+        const { firstCompareEntry, secondCompareEntry } = this.state;
+        if (firstCompareEntry && secondCompareEntry) {
+            let onClose = this.hideSubArea;
+            let show = this.showSubArea;
+
+            onClose();
+            show(<ArticleDiffView pageId={pageId} onClose={onClose} firstEntry={firstCompareEntry}
+                                  secondEntry={secondCompareEntry} pathParams={pathParams}/>);
+        }
     }
 
     showSubArea = (component: JSX.Element) => {
