@@ -1,12 +1,12 @@
 <div align="center">
-  <h1>RuFoundation</h1>
-  <h3>Wiki engine compatible with Wikidot developed by Russian SCP Branch</h3>
+  <h1>RuFoundation - 中文翻译</h1>
+  <h3>由SCP基金会俄罗斯分支开发的与Wikidot兼容的Wiki引擎</h3>
   <h4><a href="https://boosty.to/scpfanpage">#StandWithSCPRU</a></h4>
   <img src="https://i.kym-cdn.com/photos/images/facebook/001/839/765/e80.png" width="300px" alt="scp-ru">
 </div>
 
 
-## Requirements
+## 配置要求
 
 Note: this is what I tested with, your mileage may differ.
 
@@ -15,7 +15,7 @@ Note: this is what I tested with, your mileage may differ.
 - Python 3.10.1
 - Rust 1.63
 
-## How to launch
+## 如何启动？
 
 - First navigate to `web/js` and execute `yarn install`
 - After that, from the root project directory, run:
