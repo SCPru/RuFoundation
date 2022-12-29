@@ -8,7 +8,7 @@
 
 ## 配置要求
 
-Note: this is what I tested with, your mileage may differ.
+注意：这是我测试的，在你那里配置要求可能会有所不同。
 
 - Windows 10
 - NodeJS v17.3.0
@@ -30,7 +30,7 @@ To start working, the following objects are required:
 - Minimally one website record (for localhost)
 - Some pages (such as `nav:top` or `nav:side`) that are critical for proper appearance 
 
-You can provision these basic structures by running the following commands:
+您可以通过运行以下命令来预配这些基本结构：
 
 - `python manage.py createsite -s scp-ru -d localhost:8000 -t "SCP Foundation" -H "Russian branch"`
 - `python manage.py seed -s scp-ru`
