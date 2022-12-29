@@ -10,32 +10,36 @@
 
 注意：这是我测试的，在你那里配置要求可能会有所不同。
 
-- Windows 10
-- NodeJS v17.3.0
-- Python 3.10.1
-- Rust 1.63
+* [Windows 10](https://www.microsoft.com/zh-cn/windows/?r=1)
+* [NodeJS v17.3.0](https://nodejs.org/en/download/)
+* [Python 3.10.1](https://www.python.org/download/)-译者注：需要添加python到根目录
+* [Rust 1.63](https://www.rust-lang.org/zh-CN/)
 
 ## 如何启动？
 
-- First navigate to `web/js` and execute `yarn install`
-- After that, from the root project directory, run:
-  - `pip install -r requirements.txt`
-  - `python manage.py migrate`
-  - `python manage.py runserver --watch`
+* 首先，解压后进入解压文件夹，在命令行执行`web/jsyarn install`
+* 之后，在项目的根目录下执行命令：
+```
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver --watch
+```
+
 
 ## Seeding the database
 
 To start working, the following objects are required:
 
-- Minimally one website record (for localhost)
-- Some pages (such as `nav:top` or `nav:side`) that are critical for proper appearance 
+要播种数据库，需要下面的东西：
+* 至少一个网站备份（在本地主机）
+* 部分页面（例如`nav:top`和`nav:side`）对网站外观非常重要！
 
 您可以通过运行以下命令来预配这些基本结构：
 
 - `python manage.py createsite -s scp-ru -d localhost:8000 -t "SCP Foundation" -H "Russian branch"`
 - `python manage.py seed -s scp-ru`
 
-## Running in Docker
+## 在Docker隔离沙箱运行
 
 ### Requirements (tested with):
 
