@@ -1,18 +1,19 @@
 ## ftml
 
-### Note from SCPRU/RuFoundation Team
+### SCPRU/RuFoundation 团队的说明
 
-This is a fork / alternate version of WikiJump's FTML.
+这是WikiJump的FTML的分支/替代版本。
 
-Link to the original repository: https://github.com/scpwiki/wikijump/tree/develop/ftml
+原始存储库链接：https://github.com/scpwiki/wikijump/tree/develop/ftml
 
-Our fork is largely unmodified and some texts may still refer to WikiJump, however this version **IS NOT OFFICIALLY SUPPORTED** by the original WikiJump team.
 
-Please do not report any issues with this version to WikiJump, unless the issue also reproduces in the original version.
+我们的分支在很大程度上没有修改，一些文本可能仍然引用WikiJump，但是这个版本**没有得到原始WikiJump团队的官方支持**。
 
-### Foundation Text Markup Language
+请不要向WikiJump报告此版本的任何问题，除非该问题也在原始版本有中出现。
 
-(Alternatively, ftml: the markup language)
+### 基金会文本标记语言
+
+（或者说，ftml：标记语言）
 
 A Rust library to parse Wikidot text ("Wikitext") into an abstract syntax tree (AST).
 This aims to be a replacement for the aging [Text\_Wiki](https://github.com/gabrys/wikidot/tree/master/lib/Text_Wiki/Text) from Wikidot.
