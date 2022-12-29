@@ -26,9 +26,7 @@ python manage.py runserver --watch
 ```
 
 
-## Seeding the database
-
-To start working, the following objects are required:
+## 播种数据库
 
 要播种数据库，需要下面的东西：
 * 至少一个网站备份（在本地主机）
