@@ -50,9 +50,10 @@ def background_reload():
                         })
                     logging.info('%s: Finished reloading articles for %s', threading.current_thread().ident, site.slug)
                 state[site.slug] = stored_articles
-            nonexistent_sites = [k for k in state.keys() if k not in [site.slug for site in sites]]
-            for site in nonexistent_sites:
-                del state[site]
+            with lock:
+                nonexistent_sites = [k for k in state.keys() if k not in [site.slug for site in sites]]
+                for site in nonexistent_sites:
+                    del state[site]
             time.sleep(BACKGROUND_RELOAD_DELAY)
         except Exception as e:
             logging.error('Failed to background-reload pages', exc_info=e)
