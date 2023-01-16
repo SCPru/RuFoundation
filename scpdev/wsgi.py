@@ -11,6 +11,10 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
+from shared_data import shared_articles
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'scpdev.settings')
+
+shared_articles.init()
 
 application = get_wsgi_application()
