@@ -15,6 +15,8 @@ import platform
 import threading
 import time
 
+from shared_data import shared_articles
+
 
 _ALREADY_WATCHING = False
 _ALREADY_WATCHING_RUST = False

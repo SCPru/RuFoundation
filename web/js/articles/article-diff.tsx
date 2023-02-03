@@ -55,6 +55,22 @@ textarea {
 
 
 class ArticleDiffView extends Component<Props, State> {
+    diffStyles = {
+        variables: {
+            light: {
+                emptyLineBackground: ''
+            }
+        },
+        wordDiff: {
+            display: 'inline'
+        },
+        contentText: {
+            fontFamily: 'inherit'
+        },
+        lineNumber: {
+            fontFamily: 'inherit'
+        }
+    }
 
     constructor(props) {
         super(props);
@@ -65,6 +81,12 @@ class ArticleDiffView extends Component<Props, State> {
 
     componentDidMount() {
         this.compareSource();
+    }
+
+    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
+        if (this.props.firstEntry !== prevProps.firstEntry || this.props.secondEntry !== prevProps.secondEntry) {
+            this.compareSource();
+        }
     }
 
     async compareSource() {
@@ -125,7 +147,7 @@ class ArticleDiffView extends Component<Props, State> {
                     </table>
                     <h3>Изменение источника:</h3>
                     { loading && <Loader className="loader" /> }
-                    <ReactDiffViewer oldValue={firstSource} newValue={secondSource} compareMethod={DiffMethod.WORDS} splitView={false} />
+                    <ReactDiffViewer oldValue={firstSource} newValue={secondSource} compareMethod={DiffMethod.WORDS} splitView={false} styles={this.diffStyles} />
                 </div>
             </Styles>
         )
