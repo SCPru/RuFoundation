@@ -177,11 +177,11 @@ class ForumPostEditor extends Component<Props, State> {
 
         return (
             <Styles>
-                { saving && <WikidotModal isLoading>Сохранение...</WikidotModal> }
-                { savingSuccess && <WikidotModal>Успешно сохранено!</WikidotModal> }
+                { saving && <WikidotModal isLoading><p>Сохранение...</p></WikidotModal> }
+                { savingSuccess && <WikidotModal><p>Успешно сохранено!</p></WikidotModal> }
                 { error && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]}>
-                        <strong>Ошибка:</strong> {error}
+                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
+                        <p><strong>Ошибка:</strong> {error}</p>
                     </WikidotModal>
                 ) }
                 <form id={formId} onSubmit={this.onSubmit}>

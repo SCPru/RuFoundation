@@ -216,11 +216,11 @@ class ArticleEditor extends Component<Props, State> {
         const { title, source, comment, loading, saving, savingSuccess, error } = this.state;
         return (
             <Styles>
-                { saving && <WikidotModal isLoading>Сохранение...</WikidotModal> }
-                { savingSuccess && <WikidotModal>Успешно сохранено!</WikidotModal> }
+                { saving && <WikidotModal isLoading><p>Сохранение...</p></WikidotModal> }
+                { savingSuccess && <WikidotModal><p>Успешно сохранено!</p></WikidotModal> }
                 { error && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]}>
-                        <strong>Ошибка:</strong> {error}
+                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
+                        <p><strong>Ошибка:</strong> {error}</p>
                     </WikidotModal>
                 ) }
                 { isNew ? <h1>Создать страницу</h1> : <h1>Редактировать страницу</h1> }

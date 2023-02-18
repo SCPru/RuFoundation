@@ -232,10 +232,10 @@ class ForumThreadOptions extends Component<Props, State> {
             <>
                 {isEditing && this.renderEdit()}
                 {isMoving && this.renderMove()}
-                {isLoading && <WikidotModal isLoading>Сохранение...</WikidotModal>}
+                {isLoading && <WikidotModal isLoading><p>Сохранение...</p></WikidotModal>}
                 {error && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]}>
-                        <strong>Ошибка:</strong> {error}
+                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
+                        <p><strong>Ошибка:</strong> {error}</p>
                     </WikidotModal>
                 )}
                 {canEdit && <a href="#" onClick={this.onEdit} className="btn btn-default btn-small btn-sm">Редактировать название и описание</a>}

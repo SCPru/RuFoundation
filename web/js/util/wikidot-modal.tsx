@@ -15,6 +15,7 @@ interface Button {
 
 interface Props {
     isLoading?: boolean
+    isError?: boolean
     buttons?: Array<Button>
 }
 
@@ -42,7 +43,7 @@ class WikidotModal extends Component<Props, State> {
     render(): any {
         const container = getModalContainer(this.state.modalId);
         if (container)
-            return ReactDOM.createPortal(<WikidotModalWindow {...this.props}/>, container);
+            return ReactDOM.createPortal(<WikidotModalWindow {...this.props} id={this.state.modalId} />, container);
         return null;
     }
 }
@@ -82,7 +83,7 @@ const Styles = styled.div`
 `;
 
 
-class WikidotModalWindow extends Component<Props> {
+class WikidotModalWindow extends Component<Props & {id: string}> {
     handleCallback(e, callback) {
         e.preventDefault();
         e.stopPropagation();
@@ -90,21 +91,21 @@ class WikidotModalWindow extends Component<Props> {
     }
 
     render() {
-        const { children, isLoading, buttons } = this.props;
+        const { children, isLoading, isError, buttons, id } = this.props;
         return (
             <Styles>
                 <div className="odialog-container">
-                    <div className={`owindow ${isLoading?'owait':''}`}>
+                    <div id={`owindow-${id}`} className={`owindow ${isLoading?'owait':''} ${isError?'error':''}`}>
                         <div className="content modal-body">
                             { children }
                             { buttons && (
                                 <>
                                     <hr className="buttons-hr"/>
-                                    <div className="w-modal-buttons">
+                                    <div className="w-modal-buttons button-bar modal-footer">
                                         { buttons.map((button, i) =>
-                                            <button key={i} className={`btn btn-${button.type || 'default'}`} onClick={(e) => this.handleCallback(e, button.onClick)}>
+                                            <a key={i} className={`btn btn-${button.type || 'default'} button button-close-message`} href="javascript:;" onClick={(e) => this.handleCallback(e, button.onClick)}>
                                                 {button.title}
-                                            </button>
+                                            </a>
                                         ) }
                                     </div>
                                 </>
@@ -169,8 +170,8 @@ export function showErrorModal(error) {
     };
 
     const modal =
-        <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]}>
-            <strong>Ошибка:</strong> {error}
+        <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]} isError>
+            <p><strong>Ошибка:</strong> {error}</p>
         </WikidotModal>;
 
     uuid = addUnmanagedModal(modal);
@@ -194,7 +195,7 @@ export function showRevertModal(pageId: string, entry: ArticleLogEntry) {
     const modal =
         <WikidotModal buttons={[{title: 'Отменить', onClick: onClose}, {title: "Да, вернуть", onClick: onRevert}]}>
             <h1>Вернуть версию страницы?</h1>
-            Вы уверены, что хотите откатить версию страницы к ревизии <strong>№{entry.revNumber}</strong>?
+            <p>Вы уверены, что хотите откатить версию страницы к ревизии <strong>№{entry.revNumber}</strong>?</p>
         </WikidotModal>;
 
     uuid = addUnmanagedModal(modal);

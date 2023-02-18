@@ -393,8 +393,8 @@ class ArticleFiles extends Component<Props, State> {
         return (
             <Styles>
                 { error && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]}>
-                        <strong>Ошибка:</strong> {error}
+                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
+                        <p><strong>Ошибка:</strong> {error}</p>
                     </WikidotModal>
                 ) }
                 { (renameIndex != null) && (

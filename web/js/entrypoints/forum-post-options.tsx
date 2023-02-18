@@ -265,8 +265,8 @@ class ForumPostOptions extends Component<Props, State> {
                 )}
                 <div style={{ display: 'none' }} ref={r=>this.refSelf=r?.parentElement} />
                 { deleteError && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]}>
-                        <strong>Ошибка:</strong> {deleteError}
+                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
+                        <p><strong>Ошибка:</strong> {deleteError}</p>
                     </WikidotModal>
                 ) }
                 {canReply && <strong><a href="#" onClick={this.onReply}>Ответить</a></strong>}

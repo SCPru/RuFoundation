@@ -124,8 +124,8 @@ class ArticleDiffView extends Component<Props, State> {
         return (
             <Styles>
                 { error && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]}>
-                        <strong>Ошибка:</strong> {error}
+                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
+                        <p><strong>Ошибка:</strong> {error}</p>
                     </WikidotModal>
                 ) }
                 <a className="action-area-close btn btn-danger" href="#" onClick={this.onClose}>Закрыть</a>
