@@ -65,7 +65,8 @@ class ArticleDiffView extends Component<Props, State> {
             display: 'inline'
         },
         contentText: {
-            fontFamily: 'inherit'
+            fontFamily: 'inherit',
+            color: '#242424'
         },
         lineNumber: {
             fontFamily: 'inherit'
