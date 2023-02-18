@@ -7,7 +7,8 @@ def apply_template(template: str, vars_or_resolver: dict | Callable[[str], str |
         lower_vars = {k.lower(): v for (k, v) in vars_or_resolver.items()}
 
         def resolver(name):
-            return lower_vars.get(name.lower(), None)
+            v = lower_vars.get(name.lower(), None)
+            return v() if callable(v) else v
     else:
         resolver = vars_or_resolver
 

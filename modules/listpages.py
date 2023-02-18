@@ -19,6 +19,8 @@ import urllib.parse
 import math
 import re
 
+from web.util.lazy_dict import LazyDict
+
 
 def has_content():
     return True
@@ -40,7 +42,8 @@ def render_date(date, format='%H:%M %d.%m.%Y'):
 
 def render_var(var, page_vars, page):
     if var in page_vars:
-        return page_vars[var]
+        v = page_vars[var]
+        return v() if callable(v) else v
     if var.startswith('created_at|'):
         format = var[11:].strip()
         try:
@@ -57,42 +60,49 @@ def render_var(var, page_vars, page):
 
 
 def page_to_listpages_vars(page: Article, template, index, total):
-    updated_by = articles.get_latest_log_entry(page).user
-    tags = articles.get_tags(page)
-    page_vars = {
-        'name': page.name,
-        'category': page.category,
-        'fullname': articles.get_full_name(page),
-        'title': page.title,
-        'title_linked': '[[[%s|]]]' % (articles.get_full_name(page)),
-        'link': '/%s' % page.title,  # temporary, must be full page URL based on hostname
-        'content': '[[include %s]]' % (articles.get_full_name(page)),
-        'rating': articles.get_formatted_rating(page),
-        'rating_votes': str(len(Vote.objects.filter(article=page))),
-        'revisions': str(len(ArticleLogEntry.objects.filter(article=page))),
-        'index': str(index),
-        'total': str(total),
-        'created_by': render_user_to_text(page.author),
-        'created_by_linked': ('[[*user %s]]' % page.author.username) if page.author and 'username' in page.author.__dict__ else render_user_to_text(page.author),
-        'updated_by': render_user_to_text(updated_by),
-        'updated_by_linked': ('[[*user %s]]' % updated_by.username) if page.author and 'username' in page.author.__dict__ else render_user_to_text(updated_by),
+    updated_by = None
+
+    def get_updated_by():
+        nonlocal updated_by
+        if not updated_by:
+            updated_by = articles.get_latest_log_entry(page).user
+
+        return updated_by
+
+    page_vars = LazyDict({
+        'name': lambda: page.name,
+        'category': lambda: page.category,
+        'fullname': lambda: articles.get_full_name(page),
+        'title': lambda: page.title,
+        'title_linked': lambda: '[[[%s|]]]' % (articles.get_full_name(page)),
+        'link': lambda: '/%s' % page.title,  # temporary, must be full page URL based on hostname
+        'content': lambda: '[[include %s]]' % (articles.get_full_name(page)),
+        'rating': lambda: articles.get_formatted_rating(page),
+        'rating_votes': lambda: str(len(Vote.objects.filter(article=page))),
+        'revisions': lambda: str(len(ArticleLogEntry.objects.filter(article=page))),
+        'index': lambda: str(index),
+        'total': lambda: str(total),
+        'created_by': lambda: render_user_to_text(page.author),
+        'created_by_linked': lambda: ('[[*user %s]]' % page.author.username) if page.author and 'username' in page.author.__dict__ else render_user_to_text(page.author),
+        'updated_by': lambda: render_user_to_text(get_updated_by()),
+        'updated_by_linked': lambda: ('[[*user %s]]' % get_updated_by().username) if get_updated_by() and 'username' in get_updated_by().__dict__ else render_user_to_text(get_updated_by()),
         # content{n} = content sections are not supported yet
         # preview and preview(n) = first characters of the page are not supported yet
         # summary = wtf is this?
-        'tags': ', '.join(tags),
-        'tags_linked': ', '.join(('[/system:page-tags/tag/%s %s]' % (urllib.parse.quote(tag, safe=''), tag)) for tag in tags),
+        'tags': lambda: ', '.join(articles.get_tags(page)),
+        'tags_linked': lambda: ', '.join(('[/system:page-tags/tag/%s %s]' % (urllib.parse.quote(tag, safe=''), tag)) for tag in articles.get_tags(page)),
         # _tags, _tags_linked, _tags_linked|link_prefix = not yet
         # form_data{name}, form_raw{name}, form_label{name}, form_hint{name} = never ever
-        'created_at': '[[date %d]]' % int(page.created_at.timestamp()),
-        'updated_at': '[[date %d]]' % int(page.updated_at.timestamp()),
+        'created_at': lambda: '[[date %d]]' % int(page.created_at.timestamp()),
+        'updated_at': lambda: '[[date %d]]' % int(page.updated_at.timestamp()),
         # commented_at, commented_by, commented_by_unix, commented_by_id, commented_by_linked = not yet
-    }
+    })
     if page.parent:
-        page_vars['parent_name'] = page.parent.name
-        page_vars['parent_category'] = page.parent.category
-        page_vars['parent_fullname'] = articles.get_full_name(page.parent)
-        page_vars['parent_title'] = page.parent.title
-        page_vars['parent_title_linked'] = '[[[%s|%s]]]' % (articles.get_full_name(page.parent), page.parent.title)
+        page_vars['parent_name'] = lambda: page.parent.name
+        page_vars['parent_category'] = lambda: page.parent.category
+        page_vars['parent_fullname'] = lambda: articles.get_full_name(page.parent)
+        page_vars['parent_title'] = lambda: page.parent.title
+        page_vars['parent_title_linked'] = lambda: '[[[%s|%s]]]' % (articles.get_full_name(page.parent), page.parent.title)
     template = apply_template(template, lambda name: render_var(name, page_vars, page))
     return template
 
