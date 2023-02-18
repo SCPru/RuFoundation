@@ -17,7 +17,10 @@ class LazyDict(Mapping):
 
     def __setitem__(self, key, value):
         self._raw_dict[key] = value
-        del self._values_dict[key]
+        try:
+            del self._values_dict[key]
+        except KeyError:
+            pass
         return value
 
     def __iter__(self):
