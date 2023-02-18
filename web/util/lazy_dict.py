@@ -15,6 +15,11 @@ class LazyDict(Mapping):
         self._values_dict[key] = v
         return v
 
+    def __setitem__(self, key, value):
+        self._raw_dict[key] = value
+        del self._values_dict[key]
+        return value
+
     def __iter__(self):
         return iter(self._raw_dict)
 

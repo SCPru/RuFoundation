@@ -97,7 +97,7 @@ def page_to_listpages_vars(page: Article, template, index, total):
         'updated_at': lambda: '[[date %d]]' % int(page.updated_at.timestamp()),
         # commented_at, commented_by, commented_by_unix, commented_by_id, commented_by_linked = not yet
     })
-    if page.parent:
+    if page.parent_id is not None:
         page_vars['parent_name'] = lambda: page.parent.name
         page_vars['parent_category'] = lambda: page.parent.category
         page_vars['parent_fullname'] = lambda: articles.get_full_name(page.parent)
