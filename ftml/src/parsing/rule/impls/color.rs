@@ -36,7 +36,7 @@ fn try_consume_fn<'p, 'r, 't>(
     // ## [color-style] | [text to be colored] ##
 
     // Gather the color name until the separator
-    let color = collect_text(
+    let mut color = collect_text(
         parser,
         RULE_COLOR,
         &[],
@@ -47,6 +47,13 @@ fn try_consume_fn<'p, 'r, 't>(
         ],
         None,
     )?;
+
+    match color.find(';') {
+        Some(index) => {
+            color = &color[0..index]
+        }
+        _ => {}
+    }
 
     debug!("Retrieved color descriptor, now building container ('{color}')");
 
