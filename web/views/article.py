@@ -86,14 +86,15 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 title = ''
                 status = 403
             else:
-                source = articles.get_latest_source(article)
-                source = apply_template(source, lambda param: self.get_page_path_params(path_params, param))
+                template_source = '%%content%%'
 
                 if article.name != '_template':
                     template = articles.get_article('%s:_template' % article.category)
                     if template:
                         template_source = articles.get_latest_source(template)
-                        source = page_to_listpages_vars(article, template_source, index=1, total=1)
+
+                source = page_to_listpages_vars(article, template_source, index=1, total=1)
+                source = apply_template(source, lambda param: self.get_page_path_params(path_params, param))
                 context = RenderContext(article, article, path_params, self.request.user)
                 content, excerpt, image = single_pass_render_with_excerpt(source, context)
                 redirect_to = context.redirect_to
