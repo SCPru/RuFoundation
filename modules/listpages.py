@@ -76,7 +76,7 @@ def page_to_listpages_vars(page: Article, template, index, total):
         'title': lambda: page.title,
         'title_linked': lambda: '[[[%s|]]]' % (articles.get_full_name(page)),
         'link': lambda: '/%s' % page.title,  # temporary, must be full page URL based on hostname
-        'content': lambda: '[[include %s]]' % (articles.get_full_name(page)),
+        'content': lambda: articles.get_latest_source(page),
         'rating': lambda: articles.get_formatted_rating(page),
         'rating_votes': lambda: str(len(Vote.objects.filter(article=page))),
         'revisions': lambda: str(len(ArticleLogEntry.objects.filter(article=page))),
