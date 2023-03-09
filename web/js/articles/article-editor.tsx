@@ -154,7 +154,7 @@ class ArticleEditor extends Component<Props, State> {
                 await createArticle(input);
                 this.setState({ saving: false, savingSuccess: true, saved: true });
                 await sleep(1000);
-                this.setState({ savingSuccess: false });
+                this.setState({ savingSuccess: false, saved: false });
                 window.location.href = `/${pageId}`;
             } catch (e) {
                 this.setState({ saving: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
@@ -164,7 +164,7 @@ class ArticleEditor extends Component<Props, State> {
                 await updateArticle(pageId, input);
                 this.setState({ saving: false, savingSuccess: true, saved: true });
                 await sleep(1000);
-                this.setState({ savingSuccess: false });
+                this.setState({ savingSuccess: false, saved: false });
                 window.scrollTo(window.scrollX, 0);
                 if (pathParams["edit"]) {
                     window.location.href = `/${pageId}`;
