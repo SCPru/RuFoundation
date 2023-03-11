@@ -154,17 +154,17 @@ class ArticleEditor extends Component<Props, State> {
                 await createArticle(input);
                 this.setState({ saving: false, savingSuccess: true, saved: true });
                 await sleep(1000);
-                this.setState({ savingSuccess: false, saved: false });
+                this.setState({ savingSuccess: false});
                 window.location.href = `/${pageId}`;
             } catch (e) {
-                this.setState({ saving: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
+                this.setState({ saving: false, saved: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
             }
         } else {
             try {
                 await updateArticle(pageId, input);
                 this.setState({ saving: false, savingSuccess: true, saved: true });
                 await sleep(1000);
-                this.setState({ savingSuccess: false, saved: false });
+                this.setState({ savingSuccess: false });
                 window.scrollTo(window.scrollX, 0);
                 if (pathParams["edit"]) {
                     window.location.href = `/${pageId}`;
@@ -172,7 +172,7 @@ class ArticleEditor extends Component<Props, State> {
                     window.location.reload();
                 }
             } catch (e) {
-                this.setState({ saving: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
+                this.setState({ saving: false, saved: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
             }
         }
     };
