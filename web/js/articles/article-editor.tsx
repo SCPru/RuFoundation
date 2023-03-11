@@ -27,6 +27,7 @@ interface State {
     savingSuccess?: boolean
     error?: string
     fatalError?: boolean
+    saved?: boolean
     previewOriginalTitle?: string
     previewOriginalTitleDisplay?: string
     previewOriginalBody?: string
@@ -105,13 +106,16 @@ class ArticleEditor extends Component<Props, State> {
             comment: '',
             loading: true,
             saving: false,
+            saved: true,
             previewOriginalTitle: getElement(props.previewTitleElement)?.innerText,
             previewOriginalTitleDisplay: getElement(props.previewTitleElement)?.style?.display,
             previewOriginalBody: getElement(props.previewBodyElement)?.innerHTML
         }
+        this.handleRefresh = this.handleRefresh.bind(this);
     }
 
     async componentDidMount() {
+        window.addEventListener('beforeunload', this.handleRefresh);
         const { isNew, pageId } = this.props;
         if (!isNew) {
             this.setState({ loading: true });
@@ -124,6 +128,16 @@ class ArticleEditor extends Component<Props, State> {
         } else {
             this.setState({ loading: false })
         }
+    }
+    async componentWillUnmount() {
+        window.removeEventListener('beforeunload', this.handleRefresh);
+      }
+
+    handleRefresh(event) {
+        if (!this.state.saved) {
+            event.preventDefault();
+            event.returnValue = '';
+          }
     }
 
     onSubmit = async () => {
@@ -138,17 +152,17 @@ class ArticleEditor extends Component<Props, State> {
         if (isNew) {
             try {
                 await createArticle(input);
-                this.setState({ saving: false, savingSuccess: true });
+                this.setState({ saving: false, savingSuccess: true, saved: true });
                 await sleep(1000);
-                this.setState({ savingSuccess: false });
+                this.setState({ savingSuccess: false});
                 window.location.href = `/${pageId}`;
             } catch (e) {
-                this.setState({ saving: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
+                this.setState({ saving: false, saved: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
             }
         } else {
             try {
                 await updateArticle(pageId, input);
-                this.setState({ saving: false, savingSuccess: true });
+                this.setState({ saving: false, savingSuccess: true, saved: true });
                 await sleep(1000);
                 this.setState({ savingSuccess: false });
                 window.scrollTo(window.scrollX, 0);
@@ -158,7 +172,7 @@ class ArticleEditor extends Component<Props, State> {
                     window.location.reload();
                 }
             } catch (e) {
-                this.setState({ saving: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
+                this.setState({ saving: false, saved: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
             }
         }
     };
@@ -201,6 +215,7 @@ class ArticleEditor extends Component<Props, State> {
     onChange = (e) => {
         // @ts-ignore
         this.setState({[e.target.name]: e.target.value})
+        this.setState({ saved: false });
     };
 
     onCloseError = () => {
