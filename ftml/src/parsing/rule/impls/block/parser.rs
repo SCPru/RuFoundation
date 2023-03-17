@@ -27,7 +27,7 @@ use crate::parsing::rule::impls::prelude::check_step;
 use crate::parsing::strip::{strip_newlines, strip_whitespace};
 use crate::parsing::{
     gather_paragraphs, parse_string, ExtractedToken, ParseResult, ParseWarning,
-    ParseWarningKind, Parser, Token
+    ParseWarningKind, Parser, Token, ParseException
 };
 use crate::tree::Element;
 use regex::Regex;
@@ -214,9 +214,29 @@ where
         );
 
         if as_paragraphs {
-            self.get_body_elements_paragraphs(block_rule, closing_name)
+            self.get_body_elements_paragraphs(block_rule, closing_name, |_| false)
         } else {
-            self.get_body_elements_no_paragraphs(block_rule, closing_name)
+            self.get_body_elements_no_paragraphs(block_rule, closing_name, |_| false)
+        }
+    }
+
+    #[inline]
+    pub fn get_body_elements_with_custom_stop(
+        &mut self,
+        block_rule: &BlockRule,
+        closing_name: &str,
+        as_paragraphs: bool,
+        stop_rule: fn(&mut Self) -> bool,
+    ) -> ParseResult<'r, 't, Vec<Element<'t>>> {
+        info!(
+            "Getting block body as elements (block rule {}, as-paragraphs {})",
+            block_rule.name, as_paragraphs,
+        );
+
+        if as_paragraphs {
+            self.get_body_elements_paragraphs(block_rule, closing_name, stop_rule)
+        } else {
+            self.get_body_elements_no_paragraphs(block_rule, closing_name, stop_rule)
         }
     }
 
@@ -224,6 +244,7 @@ where
         &mut self,
         block_rule: &BlockRule,
         closing_name: &str,
+        stop_rule: fn(&mut Self) -> bool,
     ) -> ParseResult<'r, 't, Vec<Element<'t>>> {
         let mut first = true;
 
@@ -231,6 +252,10 @@ where
             self,
             self.rule(),
             Some(move |parser: &mut Parser<'r, 't>| {
+                if stop_rule(parser) {
+                    return Err(parser.make_warn(ParseWarningKind::ManualBreak))
+                }
+
                 let result = parser.verify_end_block(first, block_rule, closing_name);
                 first = false;
 
@@ -243,15 +268,22 @@ where
         &mut self,
         block_rule: &BlockRule,
         closing_name: &str,
+        stop_rule: fn(&mut Self) -> bool,
     ) -> ParseResult<'r, 't, Vec<Element<'t>>> {
         let mut all_elements = Vec::new();
-        let mut all_exceptions = Vec::new();
+        let mut all_exceptions: Vec<ParseException> = Vec::new();
         let mut paragraph_safe = true;
         let mut first = true;
 
         loop {
-            let result = self.verify_end_block(first, block_rule, closing_name);
-            if result.is_some() {
+            if stop_rule(self) {
+                // This is normally used for _ blocks. We should strip all leading/trailing whitespace and newlines from the content.
+                strip_whitespace(&mut all_elements);
+                strip_newlines(&mut all_elements);
+                all_exceptions.push(ParseException::Warning(self.make_warn(ParseWarningKind::ManualBreak)));
+                return ok!(paragraph_safe; all_elements, all_exceptions);
+            }
+            if self.verify_end_block(first, block_rule, closing_name).is_some() {
                 // This is normally used for _ blocks. We should strip all leading/trailing whitespace and newlines from the content.
                 strip_whitespace(&mut all_elements);
                 strip_newlines(&mut all_elements);

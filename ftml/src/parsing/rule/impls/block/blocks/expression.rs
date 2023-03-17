@@ -20,7 +20,7 @@
 
 use std::borrow::Cow;
 
-use crate::{data::ExpressionResult, tree::PartialElement};
+use crate::data::ExpressionResult;
 
 use super::prelude::*;
 
@@ -40,7 +40,7 @@ pub const BLOCK_IF_WITH_BODY: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: false,
-    accepts_partial: AcceptsPartial::Else,
+    accepts_partial: AcceptsPartial::None,
     parse_fn: parse_if_with_body,
 };
 
@@ -50,18 +50,8 @@ pub const BLOCK_IFEXPR_WITH_BODY: BlockRule = BlockRule {
     accepts_star: false,
     accepts_score: false,
     accepts_newlines: false,
-    accepts_partial: AcceptsPartial::Else,
-    parse_fn: parse_ifexpr_with_body,
-};
-
-pub const BLOCK_IF_ELSE: BlockRule = BlockRule {
-    name: "block-if-else",
-    accepts_names: &["else"],
-    accepts_star: false,
-    accepts_score: false,
-    accepts_newlines: false,
     accepts_partial: AcceptsPartial::None,
-    parse_fn: parse_if_else,
+    parse_fn: parse_ifexpr_with_body,
 };
 
 pub const BLOCK_EXPR: BlockRule = BlockRule {
@@ -87,18 +77,29 @@ fn parse_fn<'r, 't>(
 
     // syntax: [[#if|#ifexpr condition | truthy nodes | falsey nodes]]
 
+    let rule = parser.rule();
+
     let condition = collect_text(
         parser,
-        parser.rule(),
+        rule,
         &[],
         &[ParseCondition::current(Token::Pipe)],
         &[],
         None,
     )?;
 
+    let cond_matched =     
+    match name {
+        "#if" => evaluate_if(parser, condition),
+        "#ifexpr" => evaluate_ifexpr(parser, condition),
+        _ => unreachable!()
+    };
+
+    let parser_tx = &mut parser.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC);
+
     let truthy_raw = collect_consume_keep(
-        parser,
-        parser.rule(),
+        parser_tx,
+        rule,
         &[],
         &[ParseCondition::current(Token::RightBlock), ParseCondition::current(Token::Pipe)],
         &[],
@@ -107,36 +108,38 @@ fn parse_fn<'r, 't>(
 
     let truthy = ParseSuccess::new(truthy_raw.item.0, truthy_raw.exceptions, truthy_raw.paragraph_safe);
 
+    if cond_matched {
+        parser_tx.commit();
+    } else {
+        parser_tx.rollback();
+    }
+
+    let falsey_tx = &mut parser_tx.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC);
+
     let falsey = match truthy_raw.item.1.token {
         Token::Pipe => collect_consume(
-            parser,
-            parser.rule(),
+            falsey_tx,
+            rule,
             &[],
             &[ParseCondition::current(Token::RightBlock)],
             &[],
             None
         )?,
         Token::RightBlock => ParseSuccess::new(vec![], vec![], true),
-        _ => return Err(parser.make_warn(ParseWarningKind::RuleFailed))
+        _ => return Err(falsey_tx.make_warn(ParseWarningKind::RuleFailed))
     };
 
+    if !cond_matched {
+        falsey_tx.commit();
+    } else {
+        falsey_tx.rollback();
+    }
+
     // evaluate right away; 
-    match name {
-        "#if" => {
-            if evaluate_if(parser, condition) {
-                ok!(truthy.paragraph_safe; truthy.item, truthy.exceptions)
-            } else {
-                ok!(truthy.paragraph_safe; falsey.item, truthy.exceptions)
-            }
-        }
-        "#ifexpr" => {
-            if evaluate_ifexpr(parser, condition) {
-                ok!(truthy.paragraph_safe; truthy.item, truthy.exceptions)
-            } else {
-                ok!(truthy.paragraph_safe; falsey.item, truthy.exceptions)
-            }
-        }
-        _ => unreachable!()
+    if cond_matched {
+        ok!(truthy.paragraph_safe; truthy.item, truthy.exceptions)
+    } else {
+        ok!(truthy.paragraph_safe; falsey.item, truthy.exceptions)
     }
 }
 
@@ -168,21 +171,6 @@ fn parse_ifexpr_with_body<'r, 't>(
     parse_with_body(parser, name, &BLOCK_IFEXPR_WITH_BODY)
 }
 
-fn parse_if_else<'r, 't>(
-    _parser: &mut Parser<'r, 't>,
-    name: &'t str,
-    flag_star: bool,
-    flag_score: bool,
-    in_head: bool,
-) -> ParseResult<'r, 't, Elements<'t>> {
-    info!("Parsing else block (name {name}, in-head {in_head})");
-    assert!(!flag_star, "Else doesn't allow star flag");
-    assert!(!flag_score, "Else doesn't allow score flag");
-    assert_block_name(&BLOCK_IF_ELSE, name);
-
-    ok!(true; Element::Partial(PartialElement::Else), vec![])
-}
-
 fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &BlockRule) -> ParseResult<'r, 't, Elements<'t>> {
     // syntax: [[if|ifexpr condition]]truthy nodes[[else]]falsey nodes[[/if|ifexpr]]
 
@@ -195,43 +183,67 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
         None,
     )?;
 
-    // Get body content, never with paragraphs
-    let (elements, _, _) =
-        parser.get_body_elements(rule, name, false)?.into();
+    let cond_matched =     
+        match name {
+            "if" => evaluate_if(parser, condition),
+            "ifexpr" => evaluate_ifexpr(parser, condition),
+            _ => unreachable!()
+        };
 
-    // Check for "else" separating truthy and falsey conditions
-    let (truthy, falsey) = match elements.iter().position(|x| matches!(x, Element::Partial(PartialElement::Else))) {
-        Some(idx) => {
-            let truthy = &elements[..idx];
-            let falsey = &elements[(idx+1)..];
-            // make sure there is no second else. if there is, it's an error
-            if falsey.iter().any(|x| matches!(x, Element::Partial(PartialElement::Else))) {
-                return Err(parser.make_warn(ParseWarningKind::SecondElse))
-            }
-            (Vec::from(truthy), Vec::from(falsey))
+    let parser_tx = &mut parser.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC);
+
+    // Get body content, never with paragraphs
+    let (truthy, truthy_exceptions, _) =
+        parser_tx.get_body_elements_with_custom_stop(rule, name, false, |parser| {
+            // check for presence of "else"
+            
+            let found_else = parser.save_evaluate_fn(|parser| {
+                let (name, _) = parser.get_block_name(false)?;
+
+                if name == "else" {
+                    Ok(true)
+                } else {
+                    Err(parser.make_warn(ParseWarningKind::ManualBreak))
+                }
+            });
+
+            found_else.is_some()
+        })?.into();
+
+    let has_else = truthy_exceptions.iter().any(|exc| {
+        match exc {
+            ParseException::Warning(warning) => warning.kind() == ParseWarningKind::ManualBreak,
+            _ => false
         }
-        _ => {
-            (elements, vec![])
-        }
+    });
+
+    if cond_matched {
+        parser_tx.commit();
+    } else {
+        parser_tx.rollback();
+    }
+
+    let falsey_tx = &mut parser_tx.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC);
+
+    let falsey = if has_else {
+        let (falsey, _, _) = falsey_tx.get_body_elements(rule, name, false)?.into();
+
+        falsey
+    } else {
+        vec![]
     };
 
-    // evaluate right away; 
-    match name {
-        "if" => {
-            if evaluate_if(parser, condition) {
-                ok!(true; truthy, vec![])
-            } else {
-                ok!(true; falsey, vec![])
-            }
-        }
-        "ifexpr" => {
-            if evaluate_ifexpr(parser, condition) {
-                ok!(true; truthy, vec![])
-            } else {
-                ok!(true; falsey, vec![])
-            }
-        }
-        _ => unreachable!()
+    if !cond_matched {
+        falsey_tx.commit();
+    } else {
+        falsey_tx.rollback();
+    }
+
+    //
+    if cond_matched {
+        ok!(true; truthy, vec![])
+    } else {
+        ok!(true; falsey, vec![])
     }
 }
 

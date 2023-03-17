@@ -36,7 +36,7 @@ use strum_macros::IntoStaticStr;
 /// to the top level.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub enum ParseException {
-    Warning(ParseWarning),
+    Warning(ParseWarning)
 }
 
 /// An issue that occurred during parsing.
@@ -223,17 +223,14 @@ pub enum ParseWarningKind {
     /// The URL passed here was invalid.
     InvalidUrl,
 
-    /// An [[if]] condition had multiple [[else]] clauses.
-    SecondElse,
-
-    /// [[else]] outside of [[if]]
-    ElseOutsideIf,
-
     /// Interwiki PageRef not allowed
     CrossSiteRef,
 
     /// This is used to skip syntax like ******* or ________
     EmptyInlineContainer,
+
+    /// Internal hack for breaking on specific condition
+    ManualBreak,
 }
 
 impl ParseWarningKind {

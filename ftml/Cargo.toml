@@ -24,6 +24,7 @@ html     = []
 mathml   = ["html", "latex2mathml"]
 
 [dependencies]
+bitflags = "2.0.1"
 cfg-if = "1"
 chrono = { version = "0.4.22", features = ["serde", "wasmbind"] }
 enum-map = "2"

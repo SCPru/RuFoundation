@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use bitflags::bitflags;
+
 use super::condition::ParseCondition;
 use super::{prelude::*, parse_internal, UnstructuredParseResult};
 use super::rule::Rule;
@@ -26,12 +28,96 @@ use crate::data::{PageCallbacks, PageInfo, PageRef};
 use crate::render::text::TextRender;
 use crate::tokenizer::Tokenization;
 use crate::tree::{AcceptsPartial, HeadingLevel, Container, ContainerType, AttributeMap};
-use std::cell::RefCell;
+use std::cell::{Ref, RefMut, RefCell};
 use std::collections::HashMap;
+use std::vec;
 use std::rc::Rc;
 use std::{mem, ptr};
+use std::ops::{Deref, DerefMut};
 
 const MAX_RECURSION_DEPTH: usize = 100;
+
+bitflags! {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    pub struct ParserTransactionFlags: u32 {
+        const TOC = 1 << 1;
+        const Footnotes = 1 << 2;
+        const FootnoteFlag = 1 << 3;
+        const InternalLinks = 1 << 4;
+        const AcceptsPartial = 1 << 5;
+    }
+}
+
+#[derive(Debug, Clone)]
+struct ParserState<'t> {
+    // Migrated from ParserWrap.
+    accepts_partial: AcceptsPartial,
+
+    // Table of Contents
+    //
+    // Schema: Vec<(depth, _, name)>
+    //
+    // Note: These three are in Rc<_> items so that the Parser
+    //       can be cloned. This struct is intended as a
+    //       cheap pointer object, with the true contents
+    //       here preserved across parser child instances.
+    table_of_contents: Vec<(usize, String)>,
+
+    // Footnotes
+    //
+    // Schema: Vec<List of elements in a footnote>
+    footnotes: Vec<Vec<Element<'t>>>,
+
+    // Internal links
+    internal_links: Vec<PageRef<'t>>,
+
+    // Flags
+    has_footnote_block: bool, // Whether a [[footnoteblock]] was created.
+    has_toc_block: bool, // Whether a [[toc]] was created.
+    in_footnote: bool, // Whether we're currently inside [[footnote]] ... [[/footnote]].
+}
+
+#[derive(Debug)]
+pub struct ParserTransaction<'a, 'r, 't> {
+    flags: ParserTransactionFlags,
+    parser: &'a mut Parser<'r, 't>,
+    applied: bool
+}
+
+impl ParserTransaction<'_, '_, '_> {
+    pub fn commit(&mut self) {
+        assert!(!self.applied);
+        self.applied = true;
+        self.parser.pop_state(self.flags)
+    }
+
+    pub fn rollback(&mut self) {
+        if !self.applied {
+            self.applied = true;
+            self.parser.pop_state(ParserTransactionFlags::all().difference(self.flags))
+        }
+    }
+}
+
+impl<'a, 'r, 't> Deref for ParserTransaction<'a, 'r, 't> {
+    type Target = Parser<'r, 't>;
+
+    fn deref(&self) -> &Parser<'r, 't> {
+        self.parser
+    }
+}
+
+impl<'a, 'r, 't> DerefMut for ParserTransaction<'a, 'r, 't> {
+    fn deref_mut(&mut self) -> &mut Parser<'r, 't> {
+        self.parser
+    }
+}
+
+impl Drop for ParserTransaction<'_, '_, '_> {
+    fn drop(&mut self) {
+        self.rollback();
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Parser<'r, 't> {
@@ -50,29 +136,10 @@ pub struct Parser<'r, 't> {
     rule: Rule,
     depth: usize,
 
-    // Table of Contents
-    //
-    // Schema: Vec<(depth, _, name)>
-    //
-    // Note: These three are in Rc<_> items so that the Parser
-    //       can be cloned. This struct is intended as a
-    //       cheap pointer object, with the true contents
-    //       here preserved across parser child instances.
-    table_of_contents: Rc<RefCell<Vec<(usize, String)>>>,
-
-    // Footnotes
-    //
-    // Schema: Vec<List of elements in a footnote>
-    footnotes: Rc<RefCell<Vec<Vec<Element<'t>>>>>,
-
-    // Internal links
-    internal_links: Rc<RefCell<Vec<PageRef<'t>>>>,
+    // State that affects the output.
+    state: Vec<ParserState<'t>>,
 
     // Flags
-    accepts_partial: AcceptsPartial,
-    in_footnote: bool, // Whether we're currently inside [[footnote]] ... [[/footnote]].
-    has_footnote_block: bool, // Whether a [[footnoteblock]] was created.
-    has_toc_block: bool, // Whether a [[toc]] was created.
     start_of_line: bool,
 }
 
@@ -93,6 +160,16 @@ impl<'r, 't> Parser<'r, 't> {
             .split_first()
             .expect("Parsed tokens list was empty (expected at least one element)");
 
+        let root_state = ParserState {
+            accepts_partial: AcceptsPartial::None,
+            table_of_contents: vec![],
+            footnotes: vec![],
+            internal_links: vec![],
+            has_footnote_block: false,
+            has_toc_block: false,
+            in_footnote: false,
+        };
+
         Parser {
             page_info,
             page_callbacks,
@@ -103,15 +180,73 @@ impl<'r, 't> Parser<'r, 't> {
             full_text,
             rule: RULE_PAGE,
             depth: 0,
-            table_of_contents: make_shared_vec(),
-            footnotes: make_shared_vec(),
-            internal_links: make_shared_vec(),
-            accepts_partial: AcceptsPartial::None,
-            in_footnote: false,
-            has_footnote_block: false,
-            has_toc_block: false,
             start_of_line: true,
+            state: vec![root_state]
         }
+    }
+
+    // This saves current parser state.
+    pub fn transaction(&mut self, flags: ParserTransactionFlags) -> ParserTransaction<'_, 'r, 't> {
+        let current = self.state().clone();
+
+        self.state.push(ParserState {
+            accepts_partial: current.accepts_partial,
+            table_of_contents: current.table_of_contents.clone(),
+            footnotes: current.footnotes.clone(),
+            internal_links: current.internal_links.clone(),
+            has_footnote_block: current.has_footnote_block,
+            has_toc_block: current.has_toc_block,
+            in_footnote: current.in_footnote,
+        });
+
+        ParserTransaction {
+            parser: self,
+            flags,
+            applied: false
+        }
+    }
+
+    // This pops the stack and persists all values specified in flags on top of previously known value.
+    fn pop_state(&mut self, flags: ParserTransactionFlags) {
+        assert!(self.state.len() > 1);
+
+        let last_known = self.state.pop().unwrap().clone();
+        let mut current = self.state_mut();
+
+        if flags.contains(ParserTransactionFlags::AcceptsPartial) {
+            current.accepts_partial = last_known.accepts_partial;
+        }
+
+        if flags.contains(ParserTransactionFlags::TOC) {
+            current.has_toc_block = last_known.has_toc_block;
+            current.table_of_contents = last_known.table_of_contents;
+        }
+
+        if flags.contains(ParserTransactionFlags::Footnotes) {
+            current.has_footnote_block = last_known.has_footnote_block;
+            current.footnotes = last_known.footnotes;
+        }
+
+        if flags.contains(ParserTransactionFlags::FootnoteFlag) {
+            current.in_footnote = last_known.in_footnote;
+        }
+
+        if flags.contains(ParserTransactionFlags::InternalLinks) {
+            current.internal_links = last_known.internal_links;
+        }
+    }
+
+    //
+    #[inline]
+    fn state(&self) -> &ParserState<'t> {
+        assert!(!self.state.is_empty());
+        return self.state.last().unwrap()
+    }
+
+    #[inline]
+    fn state_mut(&mut self) -> &mut ParserState<'t> {
+        assert!(!self.state.is_empty());
+        return self.state.last_mut().unwrap()
     }
 
     // This runs a sub-parser, appending state to current structure.
@@ -148,25 +283,23 @@ impl<'r, 't> Parser<'r, 't> {
             Ok(ParseSuccess{item, ..}) => {
                 let elements: Vec<Element<'static>> = item.iter().map(|element| element.to_owned()).collect();
 
-                let mut toc_upd = self.table_of_contents.borrow_mut();
-                let mut foot_upd = self.footnotes.borrow_mut();
-                let mut link_upd = self.internal_links.borrow_mut();
-        
+                let mut state = self.state_mut();
+
                 for toc_depth in table_of_contents_depths {
-                    toc_upd.push(toc_depth.to_owned());
+                    state.table_of_contents.push(toc_depth.to_owned());
                 }
         
                 for foot in footnotes {
                     let elements = foot.iter().map(|element| element.to_owned()).collect();
-                    foot_upd.push(elements);
+                    state.footnotes.push(elements);
                 }
 
                 for internal in internal_links {
-                    link_upd.push(internal.to_owned());
+                    state.internal_links.push(internal.to_owned());
                 }
         
-                self.has_footnote_block |= has_footnote_block;
-                self.has_toc_block |= has_toc_block;
+                state.has_footnote_block |= has_footnote_block;
+                state.has_toc_block |= has_toc_block;
                 
                 elements
             }
@@ -210,22 +343,22 @@ impl<'r, 't> Parser<'r, 't> {
 
     #[inline]
     pub fn accepts_partial(&self) -> AcceptsPartial {
-        self.accepts_partial
+        self.state().accepts_partial
     }
 
     #[inline]
     pub fn in_footnote(&self) -> bool {
-        self.in_footnote
+        self.state().in_footnote
     }
 
     #[inline]
     pub fn has_footnote_block(&self) -> bool {
-        self.has_footnote_block
+        self.state().has_footnote_block
     }
 
     #[inline]
     pub fn has_toc_block(&self) -> bool {
-        self.has_toc_block
+        self.state().has_toc_block
     }
 
     #[inline]
@@ -264,22 +397,22 @@ impl<'r, 't> Parser<'r, 't> {
 
     #[inline]
     pub fn set_accepts_partial(&mut self, value: AcceptsPartial) {
-        self.accepts_partial = value;
+        self.state_mut().accepts_partial = value;
     }
 
     #[inline]
     pub fn set_footnote_flag(&mut self, value: bool) {
-        self.in_footnote = value;
+        self.state_mut().in_footnote = value;
     }
 
     #[inline]
     pub fn set_footnote_block(&mut self) {
-        self.has_footnote_block = true;
+        self.state_mut().has_footnote_block = true;
     }
 
     #[inline]
     pub fn set_toc_block(&mut self) {
-        self.has_toc_block = true;
+        self.state_mut().has_toc_block = true;
     }
 
     // Parse settings helpers
@@ -304,32 +437,32 @@ impl<'r, 't> Parser<'r, 't> {
         let name =
             TextRender.render_partial(name_elements, self.page_info, self.page_callbacks.clone(), self.settings);
 
-        self.table_of_contents.borrow_mut().push((level, name));
+        self.state_mut().table_of_contents.push((level, name));
     }
 
     #[cold]
     pub fn remove_table_of_contents(&mut self) -> Vec<(usize, String)> {
-        mem::take(&mut self.table_of_contents.borrow_mut())
+        mem::take(&mut self.state_mut().table_of_contents)
     }
 
     // Footnotes
     pub fn push_footnote(&mut self, contents: Vec<Element<'t>>) {
-        self.footnotes.borrow_mut().push(contents);
+        self.state_mut().footnotes.push(contents);
     }
 
     #[cold]
     pub fn remove_footnotes(&mut self) -> Vec<Vec<Element<'t>>> {
-        mem::take(&mut self.footnotes.borrow_mut())
+        mem::take(&mut self.state_mut().footnotes)
     }
 
     // Internal links
     pub fn push_internal_link(&mut self, page_ref: PageRef<'t>) {
-        self.internal_links.borrow_mut().push(page_ref);
+        self.state_mut().internal_links.push(page_ref);
     }
 
     #[cold]
     pub fn remove_internal_links(&mut self) -> Vec<PageRef<'t>> {
-        mem::take(&mut self.internal_links.borrow_mut())
+        mem::take(&mut self.state_mut().internal_links)
     }
 
     // Special for [[include]], appending a SyntaxTree
@@ -338,11 +471,10 @@ impl<'r, 't> Parser<'r, 't> {
         table_of_contents: &mut Vec<(usize, String)>,
         footnotes: &mut Vec<Vec<Element<'t>>>,
     ) {
-        self.table_of_contents
-            .borrow_mut()
+        self.state_mut().table_of_contents
             .append(table_of_contents);
 
-        self.footnotes.borrow_mut().append(footnotes);
+        self.state_mut().footnotes.append(footnotes);
     }
 
     // State evaluation
@@ -469,8 +601,11 @@ impl<'r, 't> Parser<'r, 't> {
     #[inline]
     pub fn update_flags(&mut self, parser: &Parser<'r, 't>) {
         // Flags
-        self.has_footnote_block |= parser.has_footnote_block;
-        self.has_toc_block |= parser.has_toc_block;
+        let other_state = parser.state();
+        let mut state = self.state_mut();
+
+        state.has_footnote_block |= other_state.has_footnote_block;
+        state.has_toc_block |= other_state.has_toc_block;
     }
 
     #[inline]
@@ -479,8 +614,11 @@ impl<'r, 't> Parser<'r, 't> {
         self.update_flags(parser);
 
         // Flags that depend on current state
-        self.accepts_partial = parser.accepts_partial;
-        self.in_footnote = parser.in_footnote;
+        let other_state = parser.state();
+        let state = self.state_mut();
+
+        *state = other_state.clone();
+        
         self.start_of_line = parser.start_of_line;
 
         // Token pointers
@@ -635,11 +773,6 @@ impl<'r, 't> Parser<'r, 't> {
     pub fn make_warn(&self, kind: ParseWarningKind) -> ParseWarning {
         ParseWarning::new(kind, self.rule, self.current)
     }
-}
-
-#[inline]
-fn make_shared_vec<T>() -> Rc<RefCell<Vec<T>>> {
-    Rc::new(RefCell::new(Vec::new()))
 }
 
 // Tests

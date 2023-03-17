@@ -32,7 +32,6 @@ mod exception;
 mod outcome;
 mod paragraph;
 mod parser;
-mod parser_wrap;
 mod result;
 mod rule;
 mod string;
@@ -211,7 +210,11 @@ fn extract_exceptions(
 
     for exception in exceptions {
         match exception {
-            ParseException::Warning(warning) => warnings.push(warning),
+            ParseException::Warning(warning) => {
+                if warning.kind() != ParseWarningKind::ManualBreak {
+                    warnings.push(warning)
+                }
+            }
         }
     }
 

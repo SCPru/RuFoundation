@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::parsing::parser_wrap::ParserWrap;
+use crate::parsing::parser::ParserTransactionFlags;
 
 use super::super::prelude::*;
 use super::mapping::get_block_rule_with_name;
@@ -105,7 +105,9 @@ where
     // This is responsible for parsing any arguments,
     // and terminating the block (the ']]' token),
     // then processing the body (if any) and tail block.
-    let parser = &mut ParserWrap::new(parser, block.accepts_partial);
+    let parser = &mut parser.transaction(ParserTransactionFlags::AcceptsPartial);
+    parser.set_accepts_partial(block.accepts_partial);
+    
     let result = (block.parse_fn)(parser, full_name, flag_star, flag_score, in_head)?;
 
     // If this is an underline block, skip whitespace to next element. This is what Wikidot does.

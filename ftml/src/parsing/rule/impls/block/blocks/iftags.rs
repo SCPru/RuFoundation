@@ -21,6 +21,7 @@
 use super::prelude::*;
 use crate::data::PageInfo;
 use crate::parsing::ElementCondition;
+use crate::parsing::parser::ParserTransactionFlags;
 
 pub const BLOCK_IFTAGS: BlockRule = BlockRule {
     name: "block-iftags",
@@ -44,16 +45,18 @@ fn parse_fn<'r, 't>(
     assert!(!flag_score, "IfTags doesn't allow score flag");
     assert_block_name(&BLOCK_IFTAGS, name);
 
+    let mut parser_tx = parser.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC);
+
     // Parse out tag conditions
     let conditions =
-        parser.get_head_value(&BLOCK_IFTAGS, in_head, |parser, spec| match spec {
+        parser_tx.get_head_value(&BLOCK_IFTAGS, in_head, |parser, spec| match spec {
             Some(spec) => Ok(ElementCondition::parse(spec)),
             None => Err(parser.make_warn(ParseWarningKind::BlockMissingArguments)),
         })?;
 
     // Get body content, never with paragraphs
     let (elements, mut exceptions, paragraph_safe) =
-        parser.get_body_elements(&BLOCK_IFTAGS, name, false)?.into();
+        parser_tx.get_body_elements(&BLOCK_IFTAGS, name, false)?.into();
 
     debug!(
         "IfTags conditions parsed (conditions length {}, elements length {})",
@@ -62,8 +65,11 @@ fn parse_fn<'r, 't>(
     );
 
     // Return elements based on condition
-    let elements = if check_iftags(parser.page_info(), &conditions) {
+    let elements = if check_iftags(parser_tx.page_info(), &conditions) {
         debug!("Conditions passed, including elements");
+
+        // Confirm parser state modification caused by iftags content.
+        parser_tx.commit();
 
         Elements::Multiple(elements)
     } else {
@@ -71,6 +77,9 @@ fn parse_fn<'r, 't>(
 
         // Filter out non-warning exceptions
         exceptions.retain(|ex| matches!(ex, ParseException::Warning(_)));
+
+        // Cancel all state modifications (forget TOC and footnotes).
+        parser_tx.rollback();
 
         Elements::None
     };
