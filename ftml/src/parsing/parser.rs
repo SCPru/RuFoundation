@@ -88,7 +88,7 @@ impl ParserTransaction<'_, '_, '_> {
     pub fn commit(&mut self) {
         assert!(!self.applied);
         self.applied = true;
-        self.parser.pop_state(self.flags)
+        self.parser.pop_state(ParserTransactionFlags::all())
     }
 
     pub fn rollback(&mut self) {
