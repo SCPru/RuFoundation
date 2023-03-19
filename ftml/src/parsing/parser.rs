@@ -61,15 +61,15 @@ struct ParserState<'t> {
     //       can be cloned. This struct is intended as a
     //       cheap pointer object, with the true contents
     //       here preserved across parser child instances.
-    table_of_contents: Vec<(usize, String)>,
+    table_of_contents: Rc<RefCell<Vec<(usize, String)>>>,
 
     // Footnotes
     //
     // Schema: Vec<List of elements in a footnote>
-    footnotes: Vec<Vec<Element<'t>>>,
+    footnotes: Rc<RefCell<Vec<Vec<Element<'t>>>>>,
 
     // Internal links
-    internal_links: Vec<PageRef<'t>>,
+    internal_links: Rc<RefCell<Vec<PageRef<'t>>>>,
 
     // Flags
     has_footnote_block: bool, // Whether a [[footnoteblock]] was created.
@@ -162,9 +162,9 @@ impl<'r, 't> Parser<'r, 't> {
 
         let root_state = ParserState {
             accepts_partial: AcceptsPartial::None,
-            table_of_contents: vec![],
-            footnotes: vec![],
-            internal_links: vec![],
+            table_of_contents: make_shared_vec(),
+            footnotes: make_shared_vec(),
+            internal_links: make_shared_vec(),
             has_footnote_block: false,
             has_toc_block: false,
             in_footnote: false,
@@ -189,11 +189,29 @@ impl<'r, 't> Parser<'r, 't> {
     pub fn transaction(&mut self, flags: ParserTransactionFlags) -> ParserTransaction<'_, 'r, 't> {
         let current = self.state().clone();
 
+        let cloned_toc = if flags.contains(ParserTransactionFlags::TOC) {
+            Rc::new(RefCell::new(current.table_of_contents.borrow().to_vec()))
+        } else {
+            current.table_of_contents
+        };
+
+        let cloned_footnotes = if flags.contains(ParserTransactionFlags::Footnotes) {
+            Rc::new(RefCell::new(current.footnotes.borrow().to_vec()))
+        } else {
+            current.footnotes
+        };
+
+        let cloned_internal_links = if flags.contains(ParserTransactionFlags::InternalLinks) {
+            Rc::new(RefCell::new(current.internal_links.borrow().to_vec()))
+        } else {
+            current.internal_links
+        };
+
         self.state.push(ParserState {
             accepts_partial: current.accepts_partial,
-            table_of_contents: current.table_of_contents.clone(),
-            footnotes: current.footnotes.clone(),
-            internal_links: current.internal_links.clone(),
+            table_of_contents: cloned_toc,
+            footnotes: cloned_footnotes,
+            internal_links: cloned_internal_links,
             has_footnote_block: current.has_footnote_block,
             has_toc_block: current.has_toc_block,
             in_footnote: current.in_footnote,
@@ -286,16 +304,16 @@ impl<'r, 't> Parser<'r, 't> {
                 let mut state = self.state_mut();
 
                 for toc_depth in table_of_contents_depths {
-                    state.table_of_contents.push(toc_depth.to_owned());
+                    state.table_of_contents.borrow_mut().push(toc_depth.to_owned());
                 }
         
                 for foot in footnotes {
                     let elements = foot.iter().map(|element| element.to_owned()).collect();
-                    state.footnotes.push(elements);
+                    state.footnotes.borrow_mut().push(elements);
                 }
 
                 for internal in internal_links {
-                    state.internal_links.push(internal.to_owned());
+                    state.internal_links.borrow_mut().push(internal.to_owned());
                 }
         
                 state.has_footnote_block |= has_footnote_block;
@@ -437,32 +455,32 @@ impl<'r, 't> Parser<'r, 't> {
         let name =
             TextRender.render_partial(name_elements, self.page_info, self.page_callbacks.clone(), self.settings);
 
-        self.state_mut().table_of_contents.push((level, name));
+        self.state_mut().table_of_contents.borrow_mut().push((level, name));
     }
 
     #[cold]
     pub fn remove_table_of_contents(&mut self) -> Vec<(usize, String)> {
-        mem::take(&mut self.state_mut().table_of_contents)
+        mem::take(&mut self.state_mut().table_of_contents.borrow_mut())
     }
 
     // Footnotes
     pub fn push_footnote(&mut self, contents: Vec<Element<'t>>) {
-        self.state_mut().footnotes.push(contents);
+        self.state_mut().footnotes.borrow_mut().push(contents);
     }
 
     #[cold]
     pub fn remove_footnotes(&mut self) -> Vec<Vec<Element<'t>>> {
-        mem::take(&mut self.state_mut().footnotes)
+        mem::take(&mut self.state_mut().footnotes.borrow_mut())
     }
 
     // Internal links
     pub fn push_internal_link(&mut self, page_ref: PageRef<'t>) {
-        self.state_mut().internal_links.push(page_ref);
+        self.state_mut().internal_links.borrow_mut().push(page_ref);
     }
 
     #[cold]
     pub fn remove_internal_links(&mut self) -> Vec<PageRef<'t>> {
-        mem::take(&mut self.state_mut().internal_links)
+        mem::take(&mut self.state_mut().internal_links.borrow_mut())
     }
 
     // Special for [[include]], appending a SyntaxTree
@@ -471,10 +489,9 @@ impl<'r, 't> Parser<'r, 't> {
         table_of_contents: &mut Vec<(usize, String)>,
         footnotes: &mut Vec<Vec<Element<'t>>>,
     ) {
-        self.state_mut().table_of_contents
-            .append(table_of_contents);
+        self.state_mut().table_of_contents.borrow_mut().append(table_of_contents);
 
-        self.state_mut().footnotes.append(footnotes);
+        self.state_mut().footnotes.borrow_mut().append(footnotes);
     }
 
     // State evaluation
@@ -773,6 +790,11 @@ impl<'r, 't> Parser<'r, 't> {
     pub fn make_warn(&self, kind: ParseWarningKind) -> ParseWarning {
         ParseWarning::new(kind, self.rule, self.current)
     }
+}
+
+#[inline]
+fn make_shared_vec<T>() -> Rc<RefCell<Vec<T>>> {
+    Rc::new(RefCell::new(Vec::new()))
 }
 
 // Tests
