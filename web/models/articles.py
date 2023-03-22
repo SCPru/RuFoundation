@@ -191,6 +191,7 @@ class Vote(SiteLimitedModel):
     article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья", related_name='votes')
     user = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
     rate = models.FloatField(verbose_name="Оценка")
+    date = models.DateTimeField(verbose_name="Дата голоса", auto_now_add=True, null=True)
 
     def __str__(self) -> str:
         return f"{self.article}: {self.user} - {self.rate}"
