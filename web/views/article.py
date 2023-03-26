@@ -33,7 +33,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
     @staticmethod
     def get_path_params(path: str) -> tuple[str, dict[str, str]]:
         path = [urllib.parse.unquote(x) for x in path.split('/')]
-        article_name = path[0]
+        article_name = path[0].strip()
         if not article_name:
             article_name = 'main'
 
