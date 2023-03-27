@@ -43,7 +43,7 @@ lazy_static! {
             .unwrap()
     };
     static ref TRAILING_WHITESPACE: Regex = {
-        RegexBuilder::new(r"[ \u00a0]+$")
+        RegexBuilder::new(r"[ ]+$")
             .multi_line(true)
             .build()
             .unwrap()
