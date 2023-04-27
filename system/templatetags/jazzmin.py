@@ -44,12 +44,9 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
             model_meta_by_model[model["model"]] = model
             app_label_by_model[model["model"]] = app["app_label"].lower()
 
-    print(repr(model_meta_by_model))
-
     menu = []
 
     for section in structure:
-        print(repr(section))
         app = dict()
         app["icon"] = options["default_icon_parents"]
         app["name"] = section[0]
@@ -59,7 +56,6 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
             model = model_meta_by_model[model["model"]]
             if not model:
                 continue
-            print(repr(model))
             model_str = "{app_label}.{model}".format(app_label=app_label, model=model["object_name"]).lower()
             if model_str in options.get("hide_models", []):
                 continue

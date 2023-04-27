@@ -3,6 +3,8 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db import models
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 
 class User(AbstractUser):
@@ -32,6 +34,27 @@ class User(AbstractUser):
     bio = models.TextField(blank=True, verbose_name="Описание")
 
     api_key = models.CharField(unique=True, blank=True, null=True, max_length=67, verbose_name="Апи-ключ")
+
+    is_forum_active = models.BooleanField(verbose_name='Активирован форум', default=True)
+    forum_inactive_until = models.DateTimeField(verbose_name='Деактивировать форум до', null=True)
+
+    is_active = models.BooleanField(verbose_name='Активирован', default=True)
+    inactive_until = models.DateTimeField(verbose_name='Деактивировать до', null=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.inactive_until:
+            self.is_active = False
+            print(repr(self.inactive_until))
+        if self.inactive_until and not self.is_active and datetime.now(ZoneInfo('UTC')) > self.inactive_until:
+            self.inactive_until = None
+            self.is_active = True
+        if self.forum_inactive_until:
+            self.is_forum_active = False
+            print(repr(self.forum_inactive_until))
+        if self.forum_inactive_until and not self.is_forum_active and datetime.now(ZoneInfo('UTC')) > self.forum_inactive_until:
+            self.forum_inactive_until = None
+            self.is_forum_active = True
 
     def get_avatar(self, default=None):
         if self.avatar:

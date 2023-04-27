@@ -10,10 +10,10 @@ def check(user, action, obj):
         case (User(is_superuser=True) | User(is_staff=True), _, _):
             return True
 
-        case (AnonymousUser(), perm, _) if perm != 'view' and perm != 'view-comments':
+        case (AnonymousUser(), perm, _) if perm not in ('view', 'view-comments'):
             return False
 
-        case (_, perm, Article(locked=True)) if perm not in ['view', 'comment', 'view-comments', 'rate']:
+        case (_, perm, Article(locked=True)) if perm not in ('view', 'comment', 'view-comments', 'rate'):
             return False
 
         case (_, 'view', Article(category=category)):
@@ -46,6 +46,9 @@ def check(user, action, obj):
         case (_, 'view', ForumCategory(section=section)):
             return check(user, 'view', section)
 
+        case (User(is_forum_active=False), permission, ForumThread()) if permission != 'view':
+            return False
+
         # check for visibility of article comments
         case (_, 'view', ForumThread(category=None, article=article)):
             return check(user, 'view', article)
@@ -63,6 +66,9 @@ def check(user, action, obj):
 
         case (user, 'delete', ForumThread(author=author)) if author == user:
             return True
+
+        case (User(is_forum_active=False), permission, ForumPost()) if permission != 'view':
+            return False
 
         # These should not be checked often -- it's going to be quite heavy due to nesting
         case (_, 'create', ForumPost(thread=ForumThread(is_locked=True))):

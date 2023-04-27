@@ -100,7 +100,6 @@ def callbacks_with_context(context):
                 ref_dumb = self._page_name_to_dumb(ref.full_name)
                 include_name = articles.normalize_article_name(ref_dumb)
                 if include_name in threadvars.get('include_tree', []):
-                    print(repr(threadvars.get('include_tree', [])))
                     threadvars.put('include_err', threadvars.get('include_err', []) + [include_name])
                     result.append(ftml.FetchedPage(full_name=ref.full_name, content=None))
                 else:

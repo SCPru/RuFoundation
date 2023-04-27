@@ -26,6 +26,7 @@ class AdvancedUserAdmin(UserAdmin):
     readonly_fields = ["api_key"]
 
     fieldsets = UserAdmin.fieldsets
+    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'is_staff', 'is_superuser', 'groups', 'user_permissions')
     fieldsets[1][1]["fields"] += ("bio", "avatar")
     fieldsets[0][1]["fields"] += ("type", "wikidot_username", "api_key")
 
@@ -45,6 +46,8 @@ class AdvancedUserAdmin(UserAdmin):
 
     def get_form(self, request, *args, **kwargs):
         form = super().get_form(request, *args, **kwargs)
-        if 'wikidot_username' in form.base_fields:
-            form.base_fields['wikidot_username'].required = False
+        not_required = ['inactive_until', 'forum_inactive_until', 'wikidot_username']
+        for not_required_field in not_required:
+            if not_required_field in form.base_fields:
+                form.base_fields[not_required_field].required = False
         return form
