@@ -34,6 +34,7 @@ export function makeFootnote(node: HTMLElement) {
             width: 'auto',
             backgroundColor: 'white',
             position: 'fixed',
+            display: 'none'
         });
         footnoteHovertip.innerHTML = '<div class="content"><div class="footnote"><div class="f-heading"></div><div class="f-content"></div><div class="f-footer">(нажмите, чтобы перейти к сноскам)</div></div></div>'
         footnoteContainer.appendChild(footnoteHovertip);
