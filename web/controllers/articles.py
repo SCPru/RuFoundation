@@ -674,19 +674,19 @@ def get_comment_info(full_name_or_article: _FullNameOrArticle) -> (int, int):
 
 
 # Get article rating
-def get_rating(full_name_or_article: _FullNameOrArticle) -> (int | float, int, Settings.RatingMode):
+def get_rating(full_name_or_article: _FullNameOrArticle) -> (int | float, int, int, Settings.RatingMode):
     article = get_article(full_name_or_article)
     if not article:
-        return 0, 0, Settings.RatingMode.Disabled
+        return 0, 0, 0, Settings.RatingMode.Disabled
     obj_settings = article.get_settings()
     if obj_settings.rating_mode == Settings.RatingMode.UpDown:
-        data = Vote.objects.filter(article=article).aggregate(sum=Coalesce(Sum('rate'), 0, output_field=IntegerField()), count=Count('rate'))
-        return data['sum'] or 0, data['count'] or 0, obj_settings.rating_mode
+        data = Vote.objects.filter(article=article).aggregate(sum=Coalesce(Sum('rate'), 0, output_field=IntegerField()), count=Count('rate'), good=Count('rate', filter=Q(rate=1)))
+        return data['sum'] or 0, data['count'] or 0, round((data['good'] or 0) / (data['count'] or 1) * 100), obj_settings.rating_mode
     elif obj_settings.rating_mode == Settings.RatingMode.Stars:
-        data = Vote.objects.filter(article=article).aggregate(avg=Coalesce(Avg('rate'), 0.0), count=Count('rate'))
-        return round(data['avg'], 1) or 0.0, data['count'] or 0, obj_settings.rating_mode
+        data = Vote.objects.filter(article=article).aggregate(avg=Coalesce(Avg('rate'), 0.0), count=Count('rate'), good=Count('rate', filter=Q(rate__gte=3)))
+        return round(data['avg'], 1) or 0.0, data['count'] or 0, round((data['good'] or 0) / (data['count'] or 1) * 100), obj_settings.rating_mode
     elif obj_settings.rating_mode == Settings.RatingMode.Disabled:
-        return 0, 0, obj_settings.rating_mode
+        return 0, 0, 0, obj_settings.rating_mode
     else:
         raise ValueError('Unsupported rate type "%s"' % obj_settings.rating_mode)
 
@@ -695,7 +695,7 @@ def get_formatted_rating(full_name_or_article: _FullNameOrArticle) -> str:
     article = get_article(full_name_or_article)
     if not article:
         return '0'
-    rating, votes, mode = get_rating(article)
+    rating, votes, _, mode = get_rating(article)
     if mode == Settings.RatingMode.UpDown:
         return '%+d' % rating
     elif mode == Settings.RatingMode.Stars:

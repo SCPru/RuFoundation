@@ -11,7 +11,7 @@ from renderer.utils import render_user_to_json, render_template_from_string
 def render(context, _params):
     if not context.article:
         raise ModuleError('Страница не указана')
-    rating, votes, mode = get_rating(context.article)
+    rating, votes, popularity, mode = get_rating(context.article)
 
     if mode == Settings.RatingMode.UpDown:
         return render_template_from_string(
@@ -35,13 +35,14 @@ def render(context, _params):
                 '<div class="w-stars-rate-stars-wrapper"><div class="w-stars-rate-stars-view" style="width: {{rating_percentage}}%; --rated-var: {{rated}}"></div></div>',
                 '<div class="w-stars-rate-cancel"></div>'
                 '</div>',
-                '<div class="w-stars-rate-votes">голосов:&nbsp;<span class="w-stars-rate-number">{{votes}}</span></div>',
+                '<div class="w-stars-rate-votes"><span class="w-stars-rate-number">{{votes}}</span>/<span class="w-stars-rate-popularity">{{popularity}}</span>%</div>',
                 '</div>'
             ]),
             page_id=context.article.full_name,
             rating=('%.1f' % rating) if votes else '—',
             rating_percentage='%d' % (rating * 20),
             votes='%d' % votes,
+            popularity='%d' % popularity,
             rated="#f0ac00" if context.user and not isinstance(context.user, AnonymousUser) and Vote.objects.filter(article=context.article, user=context.user) else '#4e6b6b'
 
         )
@@ -56,18 +57,18 @@ def allow_api():
 def api_get_rating(context, _params):
     if not context.article:
         raise ModuleError('Страница не указана')
-    rating, votes, mode = articles.get_rating(context.article)
-    return {'pageId': context.article.full_name, 'rating': rating, 'voteCount': votes, 'ratingMode': mode}
+    rating, votes, popularity, mode = articles.get_rating(context.article)
+    return {'pageId': context.article.full_name, 'rating': rating, 'voteCount': votes, 'popularity': popularity, 'ratingMode': mode}
 
 
 def api_get_votes(context, _params):
     if not context.article:
         raise ModuleError('Страница не указана')
     votes = []
-    rating, _, mode = articles.get_rating(context.article)
+    rating, _, popularity, mode = articles.get_rating(context.article)
     for db_vote in Vote.objects.filter(article=context.article).order_by('-user__username'):
         votes.append({'user': render_user_to_json(db_vote.user), 'value': db_vote.rate})
-    return {'pageId': context.article.full_name, 'votes': votes, 'rating': rating, 'mode': mode}
+    return {'pageId': context.article.full_name, 'votes': votes, 'rating': rating, 'popularity': popularity, 'mode': mode}
 
 
 def api_rate(context, params):

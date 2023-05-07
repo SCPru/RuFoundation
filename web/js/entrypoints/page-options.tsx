@@ -23,6 +23,7 @@ interface Props {
     lockable?: boolean
     rating?: number
     ratingVotes?: number
+    ratingPopularity?: number
     ratingMode?: RatingMode
     pathParams?: { [key: string]: string }
     canRate?: boolean

@@ -32,7 +32,7 @@ def background_reload():
                     stored_articles = []
                     for article in db_articles:
                         last_event = ArticleLogEntry.objects.filter(article=article).order_by('-rev_number')[0]
-                        rating, rating_votes, rating_mode = articles.get_rating(article)
+                        rating, rating_votes, popularity, rating_mode = articles.get_rating(article)
                         stored_articles.append({
                             'pageId': article.full_name,
                             'title': article.title,
@@ -44,6 +44,7 @@ def background_reload():
                             'rating': {
                                 'value': rating,
                                 'votes': rating_votes,
+                                'popularity': popularity,
                                 'mode': rating_mode
                             },
                             'tags': articles.get_tags(article)

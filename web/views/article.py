@@ -160,7 +160,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         }
 
         site = get_current_site()
-        article_rating, article_votes, article_rating_mode = articles.get_rating(article)
+        article_rating, article_votes, article_popularity, article_rating_mode = articles.get_rating(article)
 
         comment_thread_id, comment_count = articles.get_comment_info(article)
 
@@ -174,6 +174,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'rating': article_rating,
             'ratingMode': article_rating_mode,
             'ratingVotes': article_votes,
+            'ratingPopularity': article_popularity,
             'pathParams': path_params,
             'canRate': permissions.check(self.request.user, "rate", article),
             'canComment': permissions.check(self.request.user, "view-comments", article) if article else False,

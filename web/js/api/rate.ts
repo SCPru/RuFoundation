@@ -7,6 +7,8 @@ export interface ModuleRateResponse {
     pageId: string
     rating: number
     voteCount: number
+
+    popularity: number
     mode: RatingMode
 }
 
@@ -20,6 +22,7 @@ export interface ModuleRateVotesResponse {
     rating: number
     mode: RatingMode
     votes: Array<ModuleRateVote>
+    popularity: number
 }
 
 export interface ModuleRateRequest {

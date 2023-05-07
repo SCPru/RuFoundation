@@ -13,9 +13,10 @@ async function onClick(e: MouseEvent, pageId: string, vote: number): Promise<Mod
     }
 }
 
-function updateRating(number: HTMLElement, votes: HTMLElement, control: HTMLElement, votesData: ModuleRateResponse) {
+function updateRating(number: HTMLElement, votes: HTMLElement, popularity: HTMLElement, control: HTMLElement, votesData: ModuleRateResponse) {
     number.textContent = votesData.voteCount ? sprintf('%.1f', votesData.rating) : '—';
     votes.textContent = sprintf('%d', votesData.voteCount);
+    popularity.textContent = sprintf('%d', votesData.popularity);
     control.style.width = `${Math.floor(votesData.rating * 20)}%`;
 }
 
@@ -29,6 +30,7 @@ export function makeStarsRateModule(node: HTMLElement) {
 
     const number: HTMLElement = node.querySelector('.w-stars-rate-rating .w-stars-rate-number');
     const votes: HTMLElement = node.querySelector('.w-stars-rate-votes .w-stars-rate-number');
+    const popularity: HTMLElement = node.querySelector('.w-stars-rate-votes .w-stars-rate-popularity');
     const rateWrapper: HTMLElement = node.querySelector('.w-stars-rate-stars-wrapper');
     const control: HTMLElement = rateWrapper.querySelector('.w-stars-rate-stars-view')
     const cancel: HTMLElement = node.querySelector('.w-stars-rate-cancel');
@@ -37,7 +39,7 @@ export function makeStarsRateModule(node: HTMLElement) {
     let rateWith = null;
 
     const callback = function (votesData) {
-        updateRating(number, votes, control, votesData);
+        updateRating(number, votes, popularity, control, votesData);
         originalRateWidth = control.style.width;
     };
 

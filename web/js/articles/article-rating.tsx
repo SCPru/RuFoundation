@@ -20,6 +20,7 @@ interface State {
     rating: number
     mode: RatingMode
     votes?: Array<ModuleRateVote>
+    popularity?: number
     error?: string
 }
 
@@ -70,7 +71,7 @@ class ArticleRating extends Component<Props, State> {
         this.setState({ loading: true, error: null });
         try {
             const rating = await fetchPageVotes(pageId);
-            this.setState({ loading: false, error: null, votes: rating.votes, rating: rating.rating, mode: rating.mode });
+            this.setState({ loading: false, error: null, votes: rating.votes, rating: rating.rating, popularity: rating.popularity, mode: rating.mode });
         } catch (e) {
             this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' });
         }
@@ -117,7 +118,7 @@ class ArticleRating extends Component<Props, State> {
 
     renderStarsRating() {
         const { pageId } = this.props;
-        const { rating, votes } = this.state;
+        const { rating, votes, popularity } = this.state;
 
         return (
             <div className="w-stars-rate-module" data-page-id={pageId}>
@@ -128,7 +129,8 @@ class ArticleRating extends Component<Props, State> {
                     </div>
                     <div className="w-stars-rate-cancel" />
                 </div>
-                <div className="w-stars-rate-votes">голосов:&nbsp;<span className="w-stars-rate-number">{votes.length}</span></div>
+                <div className="w-stars-rate-votes"><span className="w-stars-rate-number">{votes.length}</span>/<span className="w-stars-rate-popularity">{popularity}</span>%
+                </div>
             </div>
         )
     }

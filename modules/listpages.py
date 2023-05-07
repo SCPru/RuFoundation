@@ -12,7 +12,7 @@ from web.controllers import articles
 from web.models.articles import Article, Vote, ArticleLogEntry, Tag
 from web.models.settings import Settings
 from django.db.models import Q, Value as V, F, Count, Sum, Avg, CharField, IntegerField, FloatField
-from django.db.models.functions import Concat, Random, Coalesce
+from django.db.models.functions import Concat, Random, Coalesce, Round
 from web import threadvars
 import json
 import urllib.parse
@@ -308,7 +308,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                 if article is None:
                     q = q.filter(id=-1)
                 else:
-                    current_rating, votes, mode = articles.get_rating(article)
+                    current_rating, votes, popularity, mode = articles.get_rating(article)
                     q = q.filter(rating=current_rating)
             else:
                 op, f_rating = split_arg_operator(f_rating, ['>=', '<=', '<>', '>', '<', '='], '=')
@@ -341,16 +341,13 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                 if article is None:
                     q = q.filter(id=-1)
                 else:
-                    current_rating, votes, mode = articles.get_rating(article)
+                    current_rating, votes, popularity, mode = articles.get_rating(article)
                     q = q.filter(num_votes=votes)
             else:
                 op, f_votes = split_arg_operator(f_votes, ['>=', '<=', '<>', '>', '<', '='], '=')
                 f_votes = f_votes.strip()
                 try:
-                    try:
-                        i_votes = int(f_votes)
-                    except ValueError:
-                        i_votes = float(f_votes)
+                    i_votes = int(f_votes)
                     if op == '=':
                         q = q.filter(num_votes=i_votes)
                     elif op == '<>':
@@ -363,6 +360,44 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                         q = q.filter(num_votes__lte=i_votes)
                     elif op == '>=':
                         q = q.filter(num_votes__gte=i_votes)
+                    else:
+                        raise ValueError(op)
+                except:
+                    q = q.filter(id=-1)
+
+        f_popularity = params.get('popularity')
+        if f_popularity:
+            if q:
+                first_obj = q[0]
+                obj_settings = first_obj.get_settings()
+                with_votes = q.filter(num_votes__gt=0)
+                if obj_settings.rating_mode == Settings.RatingMode.UpDown:
+                    q = with_votes.annotate(popularity=Round(Count('votes', filter=Q(votes__rate=1)) / Count('votes') * 100))
+                elif obj_settings.rating_mode == Settings.RatingMode.Stars:
+                    q = with_votes.annotate(popularity=Round(Count('votes', filter=Q(votes__rate__gte=3.0)) / Count('votes') * 100))
+            if f_popularity.strip() == '=':
+                if article is None:
+                    q = q.filter(id=-1)
+                else:
+                    current_rating, votes, popularity, mode = articles.get_rating(article)
+                    q = q.filter(popularity=votes)
+            else:
+                op, f_popularity = split_arg_operator(f_popularity, ['>=', '<=', '<>', '>', '<', '='], '=')
+                f_popularity = f_popularity.strip()
+                try:
+                    i_popularity = int(f_popularity)
+                    if op == '=':
+                        q = q.filter(popularity=i_popularity)
+                    elif op == '<>':
+                        q = q.filter(~Q(popularity=i_popularity))
+                    elif op == '<':
+                        q = q.filter(popularity__lt=i_popularity)
+                    elif op == '>':
+                        q = q.filter(popularity__gt=i_popularity)
+                    elif op == '<=':
+                        q = q.filter(popularity__lte=i_popularity)
+                    elif op == '>=':
+                        q = q.filter(popularity__gte=i_popularity)
                     else:
                         raise ValueError(op)
                 except:
