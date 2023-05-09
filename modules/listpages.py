@@ -11,7 +11,7 @@ from system.models import User
 from web.controllers import articles
 from web.models.articles import Article, Vote, ArticleLogEntry, Tag
 from web.models.settings import Settings
-from django.db.models import Q, Value as V, F, Count, Sum, Avg, CharField, IntegerField, FloatField
+from django.db.models import Q, Value as V, F, Count, Sum, Avg, Case, When, CharField, IntegerField, FloatField
 from django.db.models.functions import Concat, Random, Coalesce, Round
 from web import threadvars
 import json
@@ -69,6 +69,8 @@ def page_to_listpages_vars(page: Article, template, index, total):
 
         return updated_by
 
+    _, votes, popularity, _ = articles.get_rating(page)
+
     page_vars = LazyDict({
         'name': lambda: page.name,
         'category': lambda: page.category,
@@ -78,7 +80,8 @@ def page_to_listpages_vars(page: Article, template, index, total):
         'link': lambda: '/%s' % page.title,  # temporary, must be full page URL based on hostname
         'content': lambda: articles.get_latest_source(page),
         'rating': lambda: articles.get_formatted_rating(page),
-        'rating_votes': lambda: str(len(Vote.objects.filter(article=page))),
+        'rating_votes': lambda: str(votes),
+        'popularity': lambda: str(popularity),
         'revisions': lambda: str(len(ArticleLogEntry.objects.filter(article=page))),
         'index': lambda: str(index),
         'total': lambda: str(total),
@@ -292,14 +295,19 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
 
         # annotate each article with rating
         rating_func = F('id')
+        popularity_func = F('id')
         if q:
             first_obj = q[0]
             obj_settings = first_obj.get_settings()
             if obj_settings.rating_mode == Settings.RatingMode.UpDown:
                 rating_func = Coalesce(Sum('votes__rate'), 0)
+                popularity_func = Case(When(Q(num_votes__gt=0), then=Round(Count('votes', filter=Q(votes__rate=1)) / Count('votes') * 100)),
+                                       When(Q(num_votes=0), then=0))
             elif obj_settings.rating_mode == Settings.RatingMode.Stars:
                 rating_func = Coalesce(Avg('votes__rate'), 0.0)
-        q = q.annotate(rating=rating_func, num_votes=Count('votes'))
+                popularity_func = Case(When(Q(num_votes__gt=0), then=Round(Count('votes', filter=Q(votes__rate__gte=3.0)) / Count('votes') * 100)),
+                                       When(Q(num_votes=0), then=0))
+        q = q.annotate(rating=rating_func, num_votes=Count('votes'), popularity=popularity_func)
         # end annotate
 
         f_rating = params.get('rating')
@@ -367,14 +375,6 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
 
         f_popularity = params.get('popularity')
         if f_popularity:
-            if q:
-                first_obj = q[0]
-                obj_settings = first_obj.get_settings()
-                with_votes = q.filter(num_votes__gt=0)
-                if obj_settings.rating_mode == Settings.RatingMode.UpDown:
-                    q = with_votes.annotate(popularity=Round(Count('votes', filter=Q(votes__rate=1)) / Count('votes') * 100))
-                elif obj_settings.rating_mode == Settings.RatingMode.Stars:
-                    q = with_votes.annotate(popularity=Round(Count('votes', filter=Q(votes__rate__gte=3.0)) / Count('votes') * 100))
             if f_popularity.strip() == '=':
                 if article is None:
                     q = q.filter(id=-1)
@@ -413,6 +413,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
             'fullname': Concat('category', V(':'), 'name', output_field=CharField()),
             'rating': F('rating'),
             'votes': F('num_votes'),
+            'popularity': F('popularity'),
             'random': Random(),
         }
         if f_sort[0] not in allowed_sort_columns:
