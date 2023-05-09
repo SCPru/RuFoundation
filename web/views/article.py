@@ -167,7 +167,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         canonical_url = '//%s/%s%s' % (site.domain, article.full_name if article else article_name, encoded_params)
 
         options_config = {
-            'optionsEnabled': status == 200,
+            'optionsEnabled': article is not None,
             'editable': permissions.check(self.request.user, "edit", article),
             'lockable': permissions.check(self.request.user, "lock", article),
             'pageId': article_name,
