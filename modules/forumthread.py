@@ -126,6 +126,7 @@ def render(context: RenderContext, params):
 
     context.title += ' — ' + name
 
+    section_url = '/forum/s-%d/%s' % (category.section.id, articles.normalize_article_name(category.section.name)) if category else ''
     category_url = '/forum/c-%d/%s' % (category.id, articles.normalize_article_name(category.name)) if category else ''
     short_url = '/forum/t-%d' % thread.id
 
@@ -223,7 +224,9 @@ def render(context: RenderContext, params):
                 <a href="/forum/start">Форум</a>
                 {% if category %}
                 &raquo;
-                <a href="{{ category_url }}">{{ category.section.name }} / {{ category.name }}</a>
+                <a href="{{ section_url }}">{{ category.section.name }}</a>
+                &raquo;
+                <a href="{{ category_url }}">{{ category.name }}</a>
                 {% endif %}
                 &raquo;
                 {{ name }}
@@ -262,6 +265,7 @@ def render(context: RenderContext, params):
             {% endif %}
         </div>
         """,
+        section_url=section_url,
         category_url=category_url,
         category=category,
         name=name,
