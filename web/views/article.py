@@ -131,6 +131,10 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             case re.Match() as match:
                 path = 'forum:thread/t/' + match[1] + match[2]
 
+        match re.match(r'^forum/s-(\d+)(.*)$', path):
+            case re.Match() as match:
+                path = 'forum:start/s/' + match[1] + match[2]
+
         article_name, path_params = self.get_path_params(path)
 
         encoded_params = ''

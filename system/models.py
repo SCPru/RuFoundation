@@ -45,13 +45,11 @@ class User(AbstractUser):
         super().__init__(*args, **kwargs)
         if self.inactive_until:
             self.is_active = False
-            print(repr(self.inactive_until))
         if self.inactive_until and not self.is_active and datetime.now(ZoneInfo('UTC')) > self.inactive_until:
             self.inactive_until = None
             self.is_active = True
         if self.forum_inactive_until:
             self.is_forum_active = False
-            print(repr(self.forum_inactive_until))
         if self.forum_inactive_until and not self.is_forum_active and datetime.now(ZoneInfo('UTC')) > self.forum_inactive_until:
             self.forum_inactive_until = None
             self.is_forum_active = True

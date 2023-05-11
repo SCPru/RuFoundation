@@ -13,18 +13,29 @@ def render(context: RenderContext, params):
     context.title = 'Разделы форума'
 
     hidden = context.path_params.get('hidden', 'hide')
+    section = context.path_params.get('s')
 
     categories = ForumCategory.objects.all().order_by('order', 'id')
     sections = ForumSection.objects.all().order_by('order', 'id')
 
-    if hidden != 'show':
+    if section is not None:
+        sections = sections.filter(id=int(section))
+        if not sections:
+            context.status = 404
+            raise ModuleError('Раздел "%s" не найден' % section)
+    elif hidden != 'show':
         sections = sections.filter(is_hidden=False)
+
+    sections = list(sections)
+
+    if section is not None and len(sections):
+        context.title = 'Форум — %s' % sections[0].name
 
     items = []
     for section in sections:
         if not permissions.check(context.user, 'view', section):
             continue
-        item = {'name': section.name, 'description': section.description, 'categories': []}
+        item = {'name': section.name, 'description': section.description, 'categories': [], 'url': '/forum/s-%d/%s' % (section.id, articles.normalize_article_name(section.name))}
         for category in categories:
             if category.section_id != section.id:
                 continue
@@ -59,45 +70,52 @@ def render(context: RenderContext, params):
     return render_template_from_string(
         """
         <div class="forum-start-box">
-        {% for section in sections %}
-            <div class="forum-group" style="width: 98%">
-                <div class="head">
-                    <div class="title">{{ section.name }}</div>
-                    <div class="description">{{ section.description }}</div>
+            {% if section %}
+                <div class="forum-breadcrumbs">
+                    <a href="/forum/start">Форум</a>
+                    &raquo;
+                    {{ section.name }}
                 </div>
-                <div>
-                    <table>
-                    <tbody>
-                    <tr class="head">
-                        <td>Название категории</td>
-                        <td>Тем</td>
-                        <td>Сообщений</td>
-                        <td>Последнее сообщение</td>
-                    </tr>
-                    {% for category in section.categories %}
-                        <tr>
-                            <td class="name">
-                                <div class="title"><a href="{{ category.url }}">{{ category.name }}</a></div>
-                                <div class="description">{{ category.description }}</div>
-                            </td>
-                            <td class="threads">{{ category.threads }}</td>
-                            <td class="posts">{{ category.posts }}</td>
-                            <td class="last">
-                                {% if category.last_post_url %}
-                                    Автор: {{ category.last_post_user }}
-                                    <br>
-                                    {{ category.last_post_date }}
-                                    <br>
-                                    <a href="{{ category.last_post_url }}">Перейти</a>
-                                {% endif %}
-                            </td>
+            {% endif %}
+            {% for section in sections %}
+                <div class="forum-group" style="width: 98%">
+                    <div class="head">
+                        <div class="title"><a href="{{ section.url }}">{{ section.name }}</a></div>
+                        <div class="description">{{ section.description }}</div>
+                    </div>
+                    <div>
+                        <table>
+                        <tbody>
+                        <tr class="head">
+                            <td>Название категории</td>
+                            <td>Тем</td>
+                            <td>Сообщений</td>
+                            <td>Последнее сообщение</td>
                         </tr>
-                    {% endfor %}
-                    </tbody>
-                    </table>
+                        {% for category in section.categories %}
+                            <tr>
+                                <td class="name">
+                                    <div class="title"><a href="{{ category.url }}">{{ category.name }}</a></div>
+                                    <div class="description">{{ category.description }}</div>
+                                </td>
+                                <td class="threads">{{ category.threads }}</td>
+                                <td class="posts">{{ category.posts }}</td>
+                                <td class="last">
+                                    {% if category.last_post_url %}
+                                        Автор: {{ category.last_post_user }}
+                                        <br>
+                                        {{ category.last_post_date }}
+                                        <br>
+                                        <a href="{{ category.last_post_url }}">Перейти</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-        {% endfor %}
+            {% endfor %}
         </div>
         <p style="text-align: right">
             {% if hidden == 'show' %}
@@ -108,5 +126,6 @@ def render(context: RenderContext, params):
         </p>
         """,
         sections=items,
+        section=sections[0] if section is not None else None,
         hidden=hidden
     )

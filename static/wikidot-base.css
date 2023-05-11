@@ -1891,6 +1891,10 @@ version: 2.3.1
 	border: 1px solid #333;
 }
 
+.forum-group div.head a {
+	color: #FFF !important;
+}
+
 .forum-group div.head .title{
 	font-weight: bold;
 }
@@ -1934,6 +1938,9 @@ version: 2.3.1
 	background-color: #EEE;
 }
 
+.forum-start-box .forum-breadcrumbs {
+	margin-bottom: 24px;
+}
 
 
 

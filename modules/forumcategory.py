@@ -105,7 +105,9 @@ def render(context: RenderContext, params):
             <div class="forum-breadcrumbs">
                 <a href="/forum/start">Форум</a>
                 &raquo;
-                {{ category.section.name }} / {{ category.name }}
+                <a href="{{section_url}}">{{ category.section.name }}</a>
+                &raquo;
+                {{ category.name }}
             </div>
             <div class="description-block well">
                 <div class="statistics">
@@ -181,6 +183,7 @@ def render(context: RenderContext, params):
         </div>
         """,
         category=category,
+        section_url='/forum/s-%d/%s' % (category.section.id, articles.normalize_article_name(category.section.name)),
         num_threads=num_threads,
         num_posts=num_posts,
         sort_by=sort_by,
