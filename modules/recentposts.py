@@ -34,11 +34,13 @@ def get_post_info(context, posts, category_for_comments):
                 'id': post.thread.category.id,
                 'name': post.thread.category.name,
                 'section_name': post.thread.category.section.name,
+                'section_url': '/forum/s-%d/%s' % (post.thread.category.section.id, articles.normalize_article_name(post.thread.category.section.name)),
                 'url': '/forum/c-%d/%s' % (post.thread.category.id, articles.normalize_article_name(post.thread.category.name))
             } if post.thread.category_id else {
                 'id': category_for_comments.id,
                 'name': category_for_comments.name,
                 'section_name': category_for_comments.section.name,
+                'section_url': '/forum/s-%d/%s' % (category_for_comments.section.id, articles.normalize_article_name(category_for_comments.section.name)),
                 'url': '/forum/c-%d/%s' % (category_for_comments.id, articles.normalize_article_name(category_for_comments.name))
             } if category_for_comments else None,
             'thread': {
@@ -170,7 +172,8 @@ def render(context: RenderContext, params):
                                         <br>
                                         в дискуссии
                                         {% if post.category %}
-                                        <a href="{{ post.category.url }}">{{ post.category.section_name }} / {{post.category.name}}</a> &raquo;
+                                        <a href="{{ post.category.section_url }}">{{ post.category.section_name }}</a> &raquo;
+                                        <a href="{{ post.category.url }}">{{post.category.name}}</a> &raquo;
                                         {% endif %}
                                         <a href="{{ post.thread.url}}">{{ post.thread.name }}</a>
                                     </div>
