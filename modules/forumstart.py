@@ -31,6 +31,13 @@ def render(context: RenderContext, params):
     if section is not None and len(sections):
         context.title = 'Форум — %s' % sections[0].name
 
+    if section is not None:
+        hidden_hide = '/forum/s-%d/%s' % (sections[0].id, articles.normalize_article_name(sections[0].name))
+        hidden_show = '/forum/s-%d/hidden/show' % sections[0].id
+    else:
+        hidden_hide = '/forum/start'
+        hidden_show = '/forum/start/hidden/show'
+
     items = []
     for section in sections:
         if not permissions.check(context.user, 'view', section):
@@ -119,13 +126,15 @@ def render(context: RenderContext, params):
         </div>
         <p style="text-align: right">
             {% if hidden == 'show' %}
-                <a href="/forum/start">Скрыть скрытые</a>
+                <a href="{{ hidden_hide }}">Скрыть скрытые</a>
             {% else %}
-                <a href="/forum/start/hidden/show">Показать скрытые</a>
+                <a href="{{ hidden_show }}">Показать скрытые</a>
             {% endif %}
         </p>
         """,
         sections=items,
         section=sections[0] if section is not None else None,
+        hidden_hide=hidden_hide,
+        hidden_show=hidden_show,
         hidden=hidden
     )
