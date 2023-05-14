@@ -26,7 +26,7 @@ class AdvancedUserAdmin(UserAdmin):
     readonly_fields = ["api_key"]
 
     fieldsets = UserAdmin.fieldsets
-    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'is_staff', 'is_superuser', 'groups', 'user_permissions')
+    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'is_editor', 'is_staff', 'is_superuser', 'groups', 'user_permissions')
     fieldsets[1][1]["fields"] += ("bio", "avatar")
     fieldsets[0][1]["fields"] += ("type", "wikidot_username", "api_key")
 

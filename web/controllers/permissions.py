@@ -16,6 +16,27 @@ def check(user, action, obj):
         case (_, perm, Article(locked=True)) if perm not in ('view', 'comment', 'view-comments', 'rate'):
             return False
 
+        case (User(is_editor=False), 'view', Article(category=category)):
+            return _get_or_default_category(category).readers_can_view
+
+        case (User(is_editor=False), 'create', Article(category=category)):
+            return _get_or_default_category(category).readers_can_create
+
+        case (User(is_editor=False), 'edit', Article(category=category)):
+            return _get_or_default_category(category).readers_can_edit
+
+        case (User(is_editor=False), 'rate', Article(category=category)):
+            return _get_or_default_category(category).readers_can_rate
+
+        case (User(is_editor=False), 'comment', Article(category=category)):
+            return _get_or_default_category(category).readers_can_comment
+
+        case (User(is_editor=False), 'view-comments', Article(category=category)):
+            return _get_or_default_category(category).readers_can_comment
+
+        case (User(is_editor=False), 'delete', Article(category=category)):
+            return _get_or_default_category(category).users_can_delete
+
         case (_, 'view', Article(category=category)):
             return _get_or_default_category(category).users_can_view
 

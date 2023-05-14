@@ -16,6 +16,7 @@ class UserProfileForm(forms.ModelForm):
 class InviteForm(forms.Form):
     _selected_user = forms.IntegerField(widget=forms.MultipleHiddenInput, required=False)
     email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'vTextField'}))
+    is_editor = forms.BooleanField(label='Статус редактора', required=False)
 
 
 class CreateAccountForm(forms.Form):
