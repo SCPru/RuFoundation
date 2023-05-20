@@ -129,7 +129,7 @@ class ArticleRating extends Component<Props, State> {
                     </div>
                     <div className="w-stars-rate-cancel" />
                 </div>
-                <div className="w-stars-rate-votes"><span className="w-stars-rate-number">{votes.length}</span>/<span className="w-stars-rate-popularity">{popularity}</span>%
+                <div className="w-stars-rate-votes"><span className="w-stars-rate-number" title="Количество голосов">{votes.length}</span>/<span className="w-stars-rate-popularity" title="Популярность (процент голосов 3.0 и выше)">{popularity}</span>%
                 </div>
             </div>
         )

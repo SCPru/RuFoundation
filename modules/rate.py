@@ -35,7 +35,7 @@ def render(context, _params):
                 '<div class="w-stars-rate-stars-wrapper"><div class="w-stars-rate-stars-view" style="width: {{rating_percentage}}%; --rated-var: {{rated}}"></div></div>',
                 '<div class="w-stars-rate-cancel"></div>'
                 '</div>',
-                '<div class="w-stars-rate-votes"><span class="w-stars-rate-number">{{votes}}</span>/<span class="w-stars-rate-popularity">{{popularity}}</span>%</div>',
+                '<div class="w-stars-rate-votes"><span class="w-stars-rate-number" title="Количество голосов">{{votes}}</span>/<span class="w-stars-rate-popularity" title="Популярность (процент голосов 3.0 и выше)">{{popularity}}</span>%</div>',
                 '</div>'
             ]),
             page_id=context.article.full_name,
