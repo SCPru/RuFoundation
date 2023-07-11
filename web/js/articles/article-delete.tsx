@@ -83,6 +83,7 @@ class ArticleDelete extends Component<Props, State> {
             if (!permanent) {
                 const input = {
                     pageId: new_name,
+                    tags: []
                 };
                 await updateArticle(pageId, input);
             } else {
