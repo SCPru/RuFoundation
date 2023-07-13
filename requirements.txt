@@ -1,4 +1,4 @@
-Django==4.1.6
+Django==4.1.10
 py7zr==0.20.2
 whitenoise==6.2.0
 django-jazzmin==2.5.0
