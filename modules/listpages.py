@@ -533,7 +533,7 @@ def render(context: RenderContext, params, content=None):
 
         # do url params
         for k, v in params.items():
-            if v.startswith('@URL|'):
+            if v[:5].lower() == '@url|':
                 default = v[5:]
                 if k in context.path_params:
                     params[k] = context.path_params[k]
