@@ -23,10 +23,16 @@ class ProfileView(DetailView):
             ctx['avatar'] = user.get_avatar(default=settings.DEFAULT_AVATAR)
             ctx['displayname'] = user.username
         ctx['subtitle'] = ''
-        if user.is_superuser:
+        if not user.is_active:
+            ctx['subtitle'] = 'Неактивен' if user.type == User.UserType.Wikidot else 'Заблокирован'
+        elif user.is_superuser:
             ctx['subtitle'] = 'Администратор сайта'
         elif user.is_staff:
             ctx['subtitle'] = 'Модератор сайта'
+        elif user.is_editor:
+            ctx['subtitle'] = 'Редактор'
+        else:
+            ctx['subtitle'] = 'Читатель'
         ctx['bio_rendered'] = single_pass_render(user.bio, RenderContext(article=None, source_article=None, path_params=None, user=self.request.user), 'inline')
         return ctx
 
