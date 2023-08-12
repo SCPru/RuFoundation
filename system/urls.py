@@ -34,5 +34,5 @@ urlpatterns = [
     path("profile", profile.MyProfileView.as_view(template_name="profile/user.html"), name="profile"),
     path("profile/edit", profile.ChangeProfileView.as_view(template_name="profile/change.html"), name="profile_edit"),
 
-    path('accept/<uidb64>/<token>', signup.ActivateView.as_view(template_name="signup/accept.html"), name='accept'),
+    path('accept/<uidb64>/<token>', signup.AcceptInvitationView.as_view(), name="accept"),
 ] + make_path("admin", admin.site.urls)

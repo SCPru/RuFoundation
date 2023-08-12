@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.urls import path
 from django import forms
 
-from .views.signup import InviteView
+from .views.invite import InviteView
 from .views.bot import CreateBotView
 from .models import User
 

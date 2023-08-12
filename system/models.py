@@ -1,3 +1,4 @@
+from django.contrib.auth.validators import ASCIIUsernameValidator
 from django.contrib.postgres.fields import CITextField
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser
@@ -19,14 +20,14 @@ class User(AbstractUser):
         Bot = 'bot'
 
     username = CITextField(
-        max_length=150, validators=[AbstractUser.username_validator], unique=True,
+        max_length=150, validators=[ASCIIUsernameValidator()], unique=True,
         verbose_name="Имя пользователя",
         error_messages={
             "unique": "Пользователь с данным именем уже существует",
         },
     )
 
-    wikidot_username = CITextField(unique=True, max_length=150, validators=[AbstractUser.username_validator], verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
+    wikidot_username = CITextField(unique=True, max_length=150, validators=[ASCIIUsernameValidator()], verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
 
     type = models.TextField(choices=UserType.choices, default=UserType.Normal, verbose_name="Тип")
 

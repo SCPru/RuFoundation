@@ -13,9 +13,6 @@ class LoginView(TemplateResponseMixin, ContextMixin, View):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def render(self):
-        return 'test'
-
     def get(self, request, *args, **kwargs):
         if not isinstance(request.user, AnonymousUser):
             to = request.GET.get('to', settings.LOGIN_REDIRECT_URL)
@@ -29,8 +26,8 @@ class LoginView(TemplateResponseMixin, ContextMixin, View):
         path = request.META['RAW_PATH'][1:]
         context = self.get_context_data(path=path)
         to = request.GET.get('to', settings.LOGIN_REDIRECT_URL)
-        username = request.POST.get('username', [''])
-        password = request.POST.get('password', [''])
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
         user = authenticate(username=username, password=password)
         if user:
             login(request, user)
