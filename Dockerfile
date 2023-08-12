@@ -18,7 +18,7 @@ RUN cargo build --release
 # JS stuff
 FROM node:17 as js_build
 
-RUN mkdir /build/static
+RUN mkdir -p /build/static
 
 WORKDIR /build/web/js
 COPY web/js .
