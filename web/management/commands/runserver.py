@@ -15,10 +15,9 @@ import platform
 import threading
 import time
 
-from shared_data import shared_articles
-
 
 _ALREADY_WATCHING = False
+_ALREADY_WATCHING_SYSTEM = False
 _ALREADY_WATCHING_RUST = False
 
 _SHELL = platform.system() == "Windows"
@@ -63,6 +62,7 @@ class Command(BaseRunserverCommand):
             return
 
         self.watch_js()
+        self.watch_system()
         self.watch_ftml(options['ftml_release'])
 
     def watch_js(self):
@@ -74,6 +74,16 @@ class Command(BaseRunserverCommand):
         p = subprocess.Popen(['yarn', 'run', 'watch'], shell=_SHELL, cwd=base_project_dir+'/js')
         atexit.register(lambda: _safe_kill(p))
         _ALREADY_WATCHING = True
+
+    def watch_system(self):
+        global _ALREADY_WATCHING_SYSTEM
+        if _ALREADY_WATCHING_SYSTEM or os.environ.get('RUN_MAIN') == 'true':
+            return
+        print('Will watch System JS ' + repr(self))
+        base_project_dir = os.path.dirname(__file__) + '/../../../system'
+        p = subprocess.Popen(['yarn', 'run', 'watch'], shell=_SHELL, cwd=base_project_dir + '/js')
+        atexit.register(lambda: _safe_kill(p))
+        _ALREADY_WATCHING_SYSTEM = True
 
     # Runs this command but with --internal-run
     def run_child(self, second=False):

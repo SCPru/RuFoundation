@@ -18,11 +18,15 @@ RUN cargo build --release
 # JS stuff
 FROM node:17 as js_build
 
-WORKDIR /build/web/js
-
-COPY web/js .
-
 RUN mkdir /build/static
+
+WORKDIR /build/web/js
+COPY web/js .
+RUN yarn install
+RUN yarn run build
+
+WORKDIR /build/system/js
+COPY system/js .
 RUN yarn install
 RUN yarn run build
 

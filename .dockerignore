@@ -15,6 +15,10 @@ static/app.css
 static/app.css.map
 static/app.js
 static/app.js.map
+static/system.css
+static/system.css.map
+static/system.js
+static/system.js.map
 ftml/target
 ftml/pkg
 ftml/*.pyd
