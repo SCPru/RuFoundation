@@ -1,4 +1,3 @@
-from django.contrib.auth.views import LoginView, LogoutView
 from django.views.generic.base import RedirectView
 
 from django.urls import path, URLPattern, URLResolver
@@ -6,7 +5,7 @@ from django.contrib.auth.views import PasswordResetDoneView, PasswordResetConfir
     PasswordResetView
 from django.contrib import admin
 
-from .views import profile, signup
+from .views import profile, signup, login
 
 from typing import List, Union
 
@@ -22,8 +21,8 @@ def make_path(url: str, *args, **kwargs) -> List[_PathType]:
 
 
 urlpatterns = [
-    path("login", LoginView.as_view(template_name="login/login.html"), name="login"),
-    path("logout", LogoutView.as_view(next_page="/"), name="logout"),
+    path("login", login.LoginView.as_view()),
+    path("logout", login.LogoutView.as_view()),
     path("password_reset", PasswordResetView.as_view(template_name="login/password_reset.html",
                                                      email_template_name="mails/password_reset_email.txt"),
          name="password_reset"),
