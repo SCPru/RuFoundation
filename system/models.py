@@ -1,3 +1,4 @@
+import auto_prefetch
 from django.contrib.auth.validators import ASCIIUsernameValidator
 from django.contrib.postgres.fields import CITextField
 from django.contrib.auth.hashers import make_password
@@ -80,3 +81,24 @@ class User(AbstractUser):
         else:
             self.api_key = None
         return super().save(*args, **kwargs)
+
+
+class UsedToken(auto_prefetch.Model):
+    class Meta(auto_prefetch.Model.Meta):
+        verbose_name = "Использованный токен"
+        verbose_name_plural = "Использованные токены"
+
+    token = models.TextField(verbose_name='Токен', null=False)
+    is_case_sensitive = models.BooleanField(verbose_name='Чувствителен к регистру', null=False, default=True)
+
+    @classmethod
+    def is_used(cls, token):
+        used_sensitive = cls.objects.filter(token__exact=token)
+        if used_sensitive:
+            return True
+        used_insensitive = cls.objects.filter(token__iexact=token)
+        return used_insensitive and not used_insensitive[0].is_case_sensitive
+
+    @classmethod
+    def mark_used(cls, token, is_case_sensitive):
+        cls(token=token, is_case_sensitive=is_case_sensitive).save()

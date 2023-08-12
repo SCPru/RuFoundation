@@ -3,7 +3,6 @@ from django.contrib.auth.models import AnonymousUser
 from django.utils.decorators import method_decorator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
-from django.shortcuts import resolve_url
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseRedirect
 from django.views.decorators.csrf import csrf_protect
@@ -11,7 +10,8 @@ from django.contrib.auth import login
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 
 import re
-from system.forms import CreateAccountForm
+
+from system.models import UsedToken
 from system.views.invite import account_activation_token
 
 User = get_user_model()
@@ -37,7 +37,7 @@ class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
         path = request.META['RAW_PATH'][1:]
         context = self.get_context_data(path=path)
         user = self.get_user()
-        if not account_activation_token.check_token(user, self.kwargs["token"]):
+        if UsedToken.is_used(self.kwargs['token']) or not account_activation_token.check_token(user, self.kwargs["token"]):
             context.update({'error': 'Некорректное приглашение.', 'error_fatal': True})
             return self.render_to_response(context)
         if user.type == User.UserType.Wikidot:
@@ -49,7 +49,7 @@ class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
         path = request.META['RAW_PATH'][1:]
         context = self.get_context_data(path=path)
         user = self.get_user()
-        if not account_activation_token.check_token(user, self.kwargs["token"]):
+        if UsedToken.is_used(self.kwargs['token']) or not account_activation_token.check_token(user, self.kwargs['token']):
             context.update({'error': 'Некорректное приглашение.', 'error_fatal': True})
             return self.render_to_response(context)
         if user.type == User.UserType.Wikidot:
@@ -84,6 +84,7 @@ class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
         user.set_password(password1)
         user.is_active = True
         user.save()
+        UsedToken.mark_used(self.kwargs['token'], is_case_sensitive=True)
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         return HttpResponseRedirect(redirect_to=settings.LOGIN_REDIRECT_URL)
 
