@@ -75,7 +75,7 @@ class CategoryAdmin(GuardedModelAdmin):
         (None, {"fields": ('name', 'site')}),
         ('Права читателей',
          {"fields": ('readers_can_view', 'readers_can_create', 'readers_can_edit', 'readers_can_rate', 'readers_can_delete', 'readers_can_comment')}),
-        ('Права редакторов', {"fields": ('users_can_view', 'users_can_create', 'users_can_edit', 'users_can_rate', 'users_can_delete', 'users_can_comment')})
+        ('Права участников', {"fields": ('users_can_view', 'users_can_create', 'users_can_edit', 'users_can_rate', 'users_can_delete', 'users_can_comment')})
     )
     inlines = [SettingsAdmin]
 

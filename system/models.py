@@ -43,7 +43,7 @@ class User(AbstractUser):
     is_active = models.BooleanField(verbose_name='Активирован', default=True)
     inactive_until = models.DateTimeField(verbose_name='Деактивировать до', null=True)
 
-    is_editor = models.BooleanField(verbose_name='Статус редактора', default=False)
+    is_editor = models.BooleanField(verbose_name='Статус участника', default=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

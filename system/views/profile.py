@@ -30,7 +30,7 @@ class ProfileView(DetailView):
         elif user.is_staff:
             ctx['subtitle'] = 'Модератор сайта'
         elif user.is_editor:
-            ctx['subtitle'] = 'Редактор'
+            ctx['subtitle'] = 'Участник'
         else:
             ctx['subtitle'] = 'Читатель'
         ctx['bio_rendered'] = single_pass_render(user.bio, RenderContext(article=None, source_article=None, path_params=None, user=self.request.user), 'inline')

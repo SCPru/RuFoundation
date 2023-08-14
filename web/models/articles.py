@@ -76,12 +76,12 @@ class Category(SiteLimitedModel):
     readers_can_comment = models.BooleanField(verbose_name='Читатели могут комментировать статьи', null=False, default=True)
     readers_can_delete = models.BooleanField(verbose_name='Читатели могут удалять статьи', null=False, default=False)
 
-    users_can_view = models.BooleanField(verbose_name='Редакторы могут просматривать статьи', null=False, default=True)
-    users_can_create = models.BooleanField(verbose_name='Редакторы могут создавать статьи', null=False, default=True)
-    users_can_edit = models.BooleanField(verbose_name='Редакторы могут редактировать статьи', null=False, default=True)
-    users_can_rate = models.BooleanField(verbose_name='Редакторы могут голосовать за статьи', null=False, default=True)
-    users_can_comment = models.BooleanField(verbose_name='Редакторы могут комментировать статьи', null=False, default=True)
-    users_can_delete = models.BooleanField(verbose_name='Редакторы могут удалять статьи', null=False, default=False)
+    users_can_view = models.BooleanField(verbose_name='Участники могут просматривать статьи', null=False, default=True)
+    users_can_create = models.BooleanField(verbose_name='Участники могут создавать статьи', null=False, default=True)
+    users_can_edit = models.BooleanField(verbose_name='Участники могут редактировать статьи', null=False, default=True)
+    users_can_rate = models.BooleanField(verbose_name='Участники могут голосовать за статьи', null=False, default=True)
+    users_can_comment = models.BooleanField(verbose_name='Участники могут комментировать статьи', null=False, default=True)
+    users_can_delete = models.BooleanField(verbose_name='Участники могут удалять статьи', null=False, default=False)
 
     def __str__(self) -> str:
         return self.name

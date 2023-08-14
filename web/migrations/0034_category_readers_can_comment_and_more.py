@@ -43,31 +43,31 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='category',
             name='users_can_comment',
-            field=models.BooleanField(default=True, verbose_name='Редакторы могут комментировать статьи'),
+            field=models.BooleanField(default=True, verbose_name='Участники могут комментировать статьи'),
         ),
         migrations.AlterField(
             model_name='category',
             name='users_can_create',
-            field=models.BooleanField(default=True, verbose_name='Редакторы могут создавать статьи'),
+            field=models.BooleanField(default=True, verbose_name='Участники могут создавать статьи'),
         ),
         migrations.AlterField(
             model_name='category',
             name='users_can_delete',
-            field=models.BooleanField(default=False, verbose_name='Редакторы могут удалять статьи'),
+            field=models.BooleanField(default=False, verbose_name='Участники могут удалять статьи'),
         ),
         migrations.AlterField(
             model_name='category',
             name='users_can_edit',
-            field=models.BooleanField(default=True, verbose_name='Редакторы могут редактировать статьи'),
+            field=models.BooleanField(default=True, verbose_name='Участники могут редактировать статьи'),
         ),
         migrations.AlterField(
             model_name='category',
             name='users_can_rate',
-            field=models.BooleanField(default=True, verbose_name='Редакторы могут голосовать за статьи'),
+            field=models.BooleanField(default=True, verbose_name='Участники могут голосовать за статьи'),
         ),
         migrations.AlterField(
             model_name='category',
             name='users_can_view',
-            field=models.BooleanField(default=True, verbose_name='Редакторы могут просматривать статьи'),
+            field=models.BooleanField(default=True, verbose_name='Участники могут просматривать статьи'),
         ),
     ]

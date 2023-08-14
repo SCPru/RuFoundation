@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='user',
             name='is_editor',
-            field=models.BooleanField(default=False, verbose_name='Статус редактора'),
+            field=models.BooleanField(default=False, verbose_name='Статус участника'),
         ),
     ]
