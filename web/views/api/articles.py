@@ -42,7 +42,7 @@ class CreateView(ArticleView):
 
         self._validate_article_data(data)
 
-        name, category = articles.get_name(data['pageId'])
+        category, name = articles.get_name(data['pageId'])
         if not permissions.check(request.user, "create", Article(category=category, name=name)):
             raise APIError('Недостаточно прав', 403)
 
