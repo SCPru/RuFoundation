@@ -1,5 +1,5 @@
 import auto_prefetch
-from django.contrib.auth.validators import ASCIIUsernameValidator
+from django.core.validators import RegexValidator
 from django.contrib.postgres.fields import CITextField
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser
@@ -7,6 +7,16 @@ from django.conf import settings
 from django.db import models
 from datetime import datetime
 from zoneinfo import ZoneInfo
+import re
+
+
+class StrictUsernameValidator(RegexValidator):
+    regex = r"^[\w.-]+\Z"
+    message = (
+        "Enter a valid username. This value may contain only English letters, "
+        "numbers, and ./-/_ characters."
+    )
+    flags = re.ASCII
 
 
 class User(AbstractUser):
@@ -21,14 +31,14 @@ class User(AbstractUser):
         Bot = 'bot'
 
     username = CITextField(
-        max_length=150, validators=[ASCIIUsernameValidator()], unique=True,
+        max_length=150, validators=[StrictUsernameValidator()], unique=True,
         verbose_name="Имя пользователя",
         error_messages={
             "unique": "Пользователь с данным именем уже существует",
         },
     )
 
-    wikidot_username = CITextField(unique=True, max_length=150, validators=[ASCIIUsernameValidator()], verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
+    wikidot_username = CITextField(unique=True, max_length=150, validators=[StrictUsernameValidator()], verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
 
     type = models.TextField(choices=UserType.choices, default=UserType.Normal, verbose_name="Тип")
 

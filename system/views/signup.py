@@ -61,8 +61,8 @@ class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
         password1 = request.POST.get('password', '')
         password2 = request.POST.get('password2', '')
         # check if username is not valid
-        if not re.match(r"^[\w.@+-]+\Z", username, re.ASCII):
-            context.update({'error': 'Некорректное имя пользователя. Разрешённые символы: A-Z, a-z, 0-9, @, +, -, _.'})
+        if not re.match(r"^[\w.-]+\Z", username, re.ASCII):
+            context.update({'error': 'Некорректное имя пользователя. Разрешённые символы: A-Z, a-z, 0-9, -, _.'})
             return self.render_to_response(context)
         # check if user already exists
         user_exists = User.objects.filter(username__iexact=username)
