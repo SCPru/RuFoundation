@@ -158,7 +158,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
         if f_name != '*':
             f_name = f_name.replace('%', '*').lower()
             if f_name == '=':
-                q = q.filter(name=article.name)
+                q = q.filter(name=article.name if article else '')
             elif '*' in f_name:
                 up_to = f_name.index('*')
                 q = q.filter(name__startswith=f_name[:up_to])
@@ -200,7 +200,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
             f_category = f_category.replace(',', ' ').lower()
             if f_category == '.':
                 if article:
-                    q = q.filter(category=article.category)
+                    q = q.filter(category=article.category if article else '')
             else:
                 categories = []
                 not_allowed = []
@@ -208,7 +208,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                     if not category:
                         continue
                     if category == '.':
-                        category = article.category
+                        category = article.category if article else ''
                     if category[0] == '-':
                         not_allowed.append(category[1:])
                     else:
@@ -222,9 +222,9 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
             if f_parent == '-':
                 q = q.filter(parent=None)
             elif f_parent == '=':
-                q = q.filter(parent=article.parent)
+                q = q.filter(parent=article.parent if article else None)
             elif f_parent == '-=':
-                q = q.filter(~Q(parent=article.parent))
+                q = q.filter(~Q(parent=article.parent if article else None))
             elif f_parent == '.':
                 q = q.filter(parent=article)
             else:

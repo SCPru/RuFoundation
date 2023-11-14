@@ -2107,7 +2107,9 @@ version: 2.3.1
 .thread-container .post  .long  .head .info{
 }
 
-.thread-container .post  .long  .content{}
+.thread-container .post  .long  .content{
+	word-break: break-word;
+}
 
 .thread-container .post  .long  .content p{
 	/*margin: 5px 0;*/

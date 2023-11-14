@@ -21,7 +21,7 @@ def make_path(url: str, *args, **kwargs) -> List[_PathType]:
 
 
 urlpatterns = [
-    path("login", login.LoginView.as_view()),
+    path("login", login.LoginView.as_view(), name='login'),
     path("logout", login.LogoutView.as_view()),
     path("password_reset", PasswordResetView.as_view(template_name="login/password_reset.html",
                                                      email_template_name="mails/password_reset_email.txt"),
@@ -30,7 +30,7 @@ urlpatterns = [
     path('reset/<uidb64>/<token>', PasswordResetConfirmView.as_view(template_name="login/password_reset_confirm.html"), name='password_reset_confirm'),
     path('reset/done', PasswordResetCompleteView.as_view(template_name='login/password_reset_complete.html'), name='password_reset_complete'),
 
-    path("users/<int:pk>-<slug:slug>", profile.ProfileView.as_view(template_name="profile/user.html"), name="users"),
+    path("users/<int:pk>-<slug>", profile.ProfileView.as_view(template_name="profile/user.html"), name="users"),
     path("profile", profile.MyProfileView.as_view(template_name="profile/user.html"), name="profile"),
     path("profile/edit", profile.ChangeProfileView.as_view(template_name="profile/change.html"), name="profile_edit"),
 

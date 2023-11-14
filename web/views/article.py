@@ -104,7 +104,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 rev_number = articles.get_latest_log_entry(article).rev_number
                 updated_at = article.updated_at
         else:
-            name, category = articles.get_name(fullname)
+            category, name = articles.get_name(fullname)
             options = {'page_id': fullname, 'pathParams': path_params}
             context = {'options': json.dumps(options), 'allow_create': articles.is_full_name_allowed(fullname) and permissions.check(self.request.user, "create", Article(name=name, category=category))}
             content = render_to_string(self.template_404, context)

@@ -42,7 +42,7 @@ class CreateView(ArticleView):
 
         self._validate_article_data(data)
 
-        name, category = articles.get_name(data['pageId'])
+        category, name = articles.get_name(data['pageId'])
         if not permissions.check(request.user, "create", Article(category=category, name=name)):
             raise APIError('Недостаточно прав', 403)
 
@@ -146,7 +146,7 @@ class FetchOrRevertLogView(APIView):
         try:
             c_from = int(request.GET.get('from', '0'))
             c_to = int(request.GET.get('to', '25'))
-            get_all = request.GET.get('all') == True
+            get_all = bool(request.GET.get('all'))
         except ValueError:
             raise APIError('Некорректное указание ограничений списка', 400)
 
