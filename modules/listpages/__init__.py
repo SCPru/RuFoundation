@@ -181,14 +181,14 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
 
         obj_settings = Article(name='_tmp', category=requested_category or '_default').get_settings()
         if obj_settings.rating_mode == Settings.RatingMode.UpDown:
-            rating_func = Coalesce(Sum('votes__rate'), 0)
+            rating_func = Coalesce(Sum('votes__rate', distinct=True), 0)
             popularity_func = Case(
-                When(Q(num_votes__gt=0), then=Round(Count('votes', filter=Q(votes__rate=1)) / Count('votes') * 100)),
+                When(Q(num_votes__gt=0), then=Round(Count('votes', distinct=True, filter=Q(votes__rate=1)) / Count('votes', distinct=True) * 100)),
                 When(Q(num_votes=0), then=0))
         elif obj_settings.rating_mode == Settings.RatingMode.Stars:
-            rating_func = Coalesce(Avg('votes__rate'), 0.0)
+            rating_func = Coalesce(Avg('votes__rate', distinct=True), 0.0)
             popularity_func = Case(When(Q(num_votes__gt=0), then=Round(
-                Count('votes', filter=Q(votes__rate__gte=3.0)) / Count('votes') * 100)),
+                Count('votes', distinct=True, filter=Q(votes__rate__gte=3.0)) / Count('votes', distinct=True) * 100)),
                                    When(Q(num_votes=0), then=0))
 
         if has_rating:
@@ -197,7 +197,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
             q = q.annotate(popularity=popularity_func)
 
     if has_votes or has_popularity:
-        q = q.annotate(num_votes=Count('votes'))
+        q = q.annotate(num_votes=Count('votes', distinct=True))
 
     requested_offset = 0
     requested_limit = None
