@@ -167,7 +167,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
     if has_parent:
         prefetch_related.append('parent')
 
-    q = Article.objects.prefetch_related(*prefetch_related)
+    q = Article.objects.prefetch_related(*prefetch_related).distinct()
 
     # detect required annotations and annotate if needed
     if has_rating or has_popularity:
@@ -217,10 +217,10 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
             case param.NoTags():
                 q = q.filter(tags__isnull=True)
             case param.ExactTags(tags=tags):
-                q = q.filter(tags__in=tags).annotate(num_tags=Count('tags')).filter(num_tags=len(tags))
+                q = q.filter(tags__in=tags).annotate(num_tags=Count('tags', distinct=True)).filter(num_tags=len(tags))
             case param.Tags(required=required, present=present, absent=absent):
                 if required:
-                    q = q.filter(tags__in=required).annotate(num_required_tags=Count('tags', filter=Q(tags__in=required))).filter(num_required_tags=len(required))
+                    q = q.filter(tags__in=required).annotate(num_required_tags=Count('tags', distinct=True, filter=Q(tags__in=required))).filter(num_required_tags=len(required))
                 if present:
                     q = q.filter(tags__in=present)
                 if absent:
