@@ -212,8 +212,7 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
 
     let has_else = truthy_exceptions.iter().any(|exc| {
         match exc {
-            ParseException::Warning(warning) => warning.kind() == ParseWarningKind::ManualBreak,
-            _ => false
+            ParseException::Warning(warning) => warning.kind() == ParseWarningKind::ManualBreak
         }
     });
 

@@ -299,12 +299,6 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
 
             ctx.add_newline();
         }
-        Element::RadioButton { checked, .. } => {
-            str_write!(ctx, "({}) ", if *checked { '*' } else { ' ' })
-        }
-        Element::CheckBox { checked, .. } => {
-            str_write!(ctx, "[{}] ", if *checked { 'X' } else { ' ' })
-        }
         Element::Collapsible {
             elements,
             show_text,
@@ -405,7 +399,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             }
         }
         Element::User { name, .. } => ctx.push_str(name),
-        Element::Date { value, format, .. } => {
+        Element::Date { value, .. } => {
             str_write!(ctx, "{}", value.format(Some((*value).default_format_string())));
         }
         Element::Color { elements, .. } => render_elements(ctx, elements),

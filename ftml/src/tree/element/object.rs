@@ -145,24 +145,6 @@ pub enum Element<'t> {
     /// A definition list.
     DefinitionList(Vec<DefinitionListItem<'t>>),
 
-    /// A radio button.
-    ///
-    /// The "name" field translates to HTML, but is standard for grouping them.
-    /// The "checked" field determines if the radio button starts checked or not.
-    RadioButton {
-        name: Cow<'t, str>,
-        checked: bool,
-        attributes: AttributeMap<'t>,
-    },
-
-    /// A checkbox.
-    ///
-    /// The "checked" field determines if the radio button starts checked or not.
-    CheckBox {
-        checked: bool,
-        attributes: AttributeMap<'t>,
-    },
-
     /// A collapsible, containing content hidden to be opened on click.
     ///
     /// This is an interactable element provided by Wikidot which allows hiding
@@ -335,8 +317,6 @@ impl Element<'_> {
             Element::Image { .. } => "Image",
             Element::List { .. } => "List",
             Element::DefinitionList(_) => "DefinitionList",
-            Element::RadioButton { .. } => "RadioButton",
-            Element::CheckBox { .. } => "CheckBox",
             Element::Collapsible { .. } => "Collapsible",
             Element::TableOfContents { .. } => "TableOfContents",
             Element::Footnote => "Footnote",
@@ -388,7 +368,6 @@ impl Element<'_> {
             Element::Image { .. } => true,
             Element::List { .. } => false,
             Element::DefinitionList(_) => false,
-            Element::RadioButton { .. } | Element::CheckBox { .. } => true,
             Element::Collapsible { .. } => false,
             Element::TableOfContents { .. } => false,
             Element::Footnote => true,
@@ -478,22 +457,6 @@ impl Element<'_> {
             Element::DefinitionList(items) => Element::DefinitionList(
                 items.iter().map(|item| item.to_owned()).collect(),
             ),
-            Element::RadioButton {
-                name,
-                checked,
-                attributes,
-            } => Element::RadioButton {
-                name: string_to_owned(name),
-                checked: *checked,
-                attributes: attributes.to_owned(),
-            },
-            Element::CheckBox {
-                checked,
-                attributes,
-            } => Element::CheckBox {
-                checked: *checked,
-                attributes: attributes.to_owned(),
-            },
             Element::Collapsible {
                 elements,
                 attributes,

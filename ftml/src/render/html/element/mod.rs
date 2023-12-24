@@ -29,7 +29,6 @@ mod form;
 mod iframe;
 mod image;
 mod include;
-mod input;
 mod link;
 mod list;
 mod math;
@@ -57,7 +56,6 @@ use self::form::render_form_input;
 use self::iframe::{render_html, render_iframe};
 use self::image::render_image;
 use self::include::{render_include, render_variable};
-use self::input::{render_checkbox, render_radio_button};
 use self::link::{render_anchor, render_link};
 use self::list::render_list;
 use self::math::{render_equation_reference, render_math_block, render_math_inline};
@@ -129,15 +127,6 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
             attributes,
         } => render_list(ctx, *ltype, items, attributes),
         Element::DefinitionList(items) => render_definition_list(ctx, items),
-        Element::RadioButton {
-            name,
-            checked,
-            attributes,
-        } => render_radio_button(ctx, name, *checked, attributes),
-        Element::CheckBox {
-            checked,
-            attributes,
-        } => render_checkbox(ctx, *checked, attributes),
         Element::Collapsible {
             elements,
             attributes,

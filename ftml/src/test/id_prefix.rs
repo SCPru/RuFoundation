@@ -244,64 +244,6 @@ fn isolate_user_ids() {
         }],
     );
 
-    // Radio buttons and checkboxes
-    check!(
-        r#"[[radio vegetables class="apple" id="banana"]] Celery
-[[radio vegetables class="u-cherry" id="u-durian"]] Lettuce"#,
-        vec![Element::Container(Container::new(
-            ContainerType::Paragraph,
-            vec![
-                Element::RadioButton {
-                    name: cow!("vegetables"),
-                    checked: false,
-                    attributes: AttributeMap::from(btreemap! {
-                        cow!("class") => cow!("apple"),
-                        cow!("id") => cow!("u-banana"),
-                    }),
-                },
-                text!("Celery"),
-                Element::LineBreak,
-                Element::RadioButton {
-                    name: cow!("vegetables"),
-                    checked: false,
-                    attributes: AttributeMap::from(btreemap! {
-                        cow!("class") => cow!("u-cherry"),
-                        cow!("id") => cow!("u-durian"),
-                    }),
-                },
-                text!("Lettuce"),
-            ],
-            AttributeMap::new(),
-        ))],
-    );
-    check!(
-        r#"[[checkbox class="apple" id="banana"]] Celery
-[[checkbox class="u-cherry" id="u-durian"]] Lettuce"#,
-        vec![Element::Container(Container::new(
-            ContainerType::Paragraph,
-            vec![
-                Element::CheckBox {
-                    checked: false,
-                    attributes: AttributeMap::from(btreemap! {
-                        cow!("class") => cow!("apple"),
-                        cow!("id") => cow!("u-banana"),
-                    }),
-                },
-                text!("Celery"),
-                Element::LineBreak,
-                Element::CheckBox {
-                    checked: false,
-                    attributes: AttributeMap::from(btreemap! {
-                        cow!("class") => cow!("u-cherry"),
-                        cow!("id") => cow!("u-durian"),
-                    }),
-                },
-                text!("Lettuce"),
-            ],
-            AttributeMap::new(),
-        ))],
-    );
-
     // Collapsibles [[collapsible]]
     check!(
         r#"[[collapsible class="apple" id="banana"]]X[[/collapsible]]"#,

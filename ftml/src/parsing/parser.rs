@@ -28,7 +28,7 @@ use crate::data::{PageCallbacks, PageInfo, PageRef};
 use crate::render::text::TextRender;
 use crate::tokenizer::Tokenization;
 use crate::tree::{AcceptsPartial, HeadingLevel, Container, ContainerType, AttributeMap};
-use std::cell::{Ref, RefMut, RefCell};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::vec;
 use std::rc::Rc;
