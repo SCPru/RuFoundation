@@ -141,19 +141,36 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
 
     prefetch_related = []
 
-    if parsed_params.has_type(param.Rating) or parsed_params.has_type(param.Votes) or parsed_params.has_type(param.Popularity):
+    has_rating = parsed_params.has_type(param.Rating)
+    has_votes = parsed_params.has_type(param.Votes)
+    has_popularity = parsed_params.has_type(param.Popularity)
+
+    sorting_param = parsed_params.get_type(param.Sort)
+    if sorting_param:
+        sorting_param = sorting_param[0]
+        if sorting_param.column == 'rating':
+            has_rating = True
+        if sorting_param.column == 'votes':
+            has_votes = True
+        if sorting_param.column == 'popularity':
+            has_popularity = True
+
+    has_tags = parsed_params.has_type(param.Tags)
+    has_parent = parsed_params.has_type(param.Parent) or parsed_params.has_type(param.NotParent)
+
+    if has_rating or has_votes or has_popularity:
         prefetch_related.append('votes')
 
-    if parsed_params.has_type(param.Tags):
+    if has_tags:
         prefetch_related.append('tags')
 
-    if parsed_params.has_type(param.Parent) or parsed_params.has_type(param.NotParent):
+    if has_parent:
         prefetch_related.append('parent')
 
     q = Article.objects.prefetch_related(*prefetch_related)
 
     # detect required annotations and annotate if needed
-    if parsed_params.has_type(param.Rating) or parsed_params.has_type(param.Popularity):
+    if has_rating or has_popularity:
         requested_category = '_default'
         category_param = parsed_params.get_type(param.Category)
         if category_param and category_param[0].allowed:
@@ -174,12 +191,12 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                 Count('votes', filter=Q(votes__rate__gte=3.0)) / Count('votes') * 100)),
                                    When(Q(num_votes=0), then=0))
 
-        if parsed_params.has_type(param.Rating):
+        if has_rating:
             q = q.annotate(rating=rating_func)
-        if parsed_params.has_type(param.Popularity):
+        if has_popularity:
             q = q.annotate(popularity=popularity_func)
 
-    if parsed_params.has_type(param.Votes):
+    if has_votes:
         q = q.annotate(votes=Count('votes'))
 
     requested_offset = 0
