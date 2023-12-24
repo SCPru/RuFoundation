@@ -196,8 +196,8 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
         if has_popularity:
             q = q.annotate(popularity=popularity_func)
 
-    if has_votes:
-        q = q.annotate(votes=Count('votes'))
+    if has_votes or has_popularity:
+        q = q.annotate(num_votes=Count('votes'))
 
     requested_offset = 0
     requested_limit = None
@@ -266,17 +266,17 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
             # ---- end Rating
             # ---- start Votes
             case param.Votes(type='eq', votes=votes):
-                q = q.filter(votes=votes)
+                q = q.filter(num_votes=votes)
             case param.Votes(type='ne', votes=votes):
-                q = q.filter(~Q(votes=votes))
+                q = q.filter(~Q(num_votes=votes))
             case param.Votes(type='lt', votes=votes):
-                q = q.filter(votes__lt=votes)
+                q = q.filter(num_votes__lt=votes)
             case param.Votes(type='lte', votes=votes):
-                q = q.filter(votes__lte=votes)
+                q = q.filter(num_votes__lte=votes)
             case param.Votes(type='gt', votes=votes):
-                q = q.filter(votes__gt=votes)
+                q = q.filter(num_votes__gt=votes)
             case param.Votes(type='gte', votes=votes):
-                q = q.filter(votes__gte=votes)
+                q = q.filter(num_votes__gte=votes)
             # ---- end Votes
             # ---- start Popularity
             case param.Popularity(type='eq', popularity=popularity):
