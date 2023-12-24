@@ -220,7 +220,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                 q = q.filter(tags__in=tags).annotate(num_tags=Count('tags')).filter(num_tags=len(tags))
             case param.Tags(required=required, present=present, absent=absent):
                 if required:
-                    q = q.filter(tags__in=required).annotate(num_required_tags=Count(Q(tags__in=required))).filter(num_required_tags=len(required))
+                    q = q.filter(tags__in=required).annotate(num_required_tags=Count('tags', filter=Q(tags__in=required))).filter(num_required_tags=len(required))
                 if present:
                     q = q.filter(tags__in=present)
                 if absent:
@@ -310,7 +310,6 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                     direction = 'desc'
                 # asc/desc is a function call on DB val, e.g. F('popularity').asc(), so we use getattr here
                 q = q.order_by(getattr(allowed_sort_columns[column], direction)())
-                q = q.distinct()
             case param.Offset(offset=offset):
                 requested_offset = offset
             case param.Limit(limit=limit):
