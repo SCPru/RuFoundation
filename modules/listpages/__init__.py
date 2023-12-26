@@ -194,9 +194,10 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
         if has_rating:
             q = q.annotate(rating=rating_func)
         if has_popularity:
+            q = q.annotate(num_votes=Count('votes'))
             q = q.annotate(popularity=popularity_func)
 
-    if has_votes or has_popularity:
+    if not has_popularity and has_votes:
         q = q.annotate(num_votes=Count('votes'))
 
     requested_offset = 0
