@@ -170,6 +170,9 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
     q = Article.objects.prefetch_related(*prefetch_related).distinct()
 
     # detect required annotations and annotate if needed
+    if has_votes:
+        q = q.annotate(num_votes=Count('votes', distinct=True))
+
     if has_rating or has_popularity:
         requested_category = '_default'
         category_param = parsed_params.get_type(param.Category)
@@ -177,7 +180,6 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
             requested_category = category_param[0].allowed[0]
 
         rating_func = F('id')
-        popularity_func = F('id')
 
         obj_settings = Article(name='_tmp', category=requested_category or '_default').get_settings()
         popularity_filter = V(True)
@@ -192,13 +194,11 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
         if has_rating:
             q = q.annotate(rating=rating_func)
         if has_popularity:
-            q = q.annotate(num_votes=Count('votes', distinct=True), num_votes_above_popularity=Count('votes', filter=popularity_filter, distinct=True))
+            q = q.annotate(num_votes_above_popularity=Count('votes', filter=popularity_filter, distinct=True))
             q = q.annotate(popularity=Case(
                 When(Q(num_votes__gt=0), then=Round((Cast(F('num_votes_above_popularity'), FloatField()) / Cast(F('num_votes'), FloatField())) * 100, output_field=IntegerField())),
                 When(Q(num_votes=0), then=0))
             )
-    elif has_votes:
-        q = q.annotate(num_votes=Count('votes', distinct=True))
 
     requested_offset = 0
     requested_limit = None
