@@ -13,7 +13,7 @@ from web.controllers import articles
 from web.models.articles import Article, Vote, ArticleLogEntry, Tag
 from web.models.settings import Settings
 from django.db.models import Q, Value as V, F, Count, Sum, Avg, Case, When, CharField, IntegerField, FloatField
-from django.db.models.functions import Concat, Random, Coalesce, Round
+from django.db.models.functions import Concat, Random, Coalesce, Round, Cast
 from web import threadvars
 
 from .params import ListPagesParams
@@ -180,25 +180,25 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
         popularity_func = F('id')
 
         obj_settings = Article(name='_tmp', category=requested_category or '_default').get_settings()
+        popularity_filter = V(True)
         if obj_settings.rating_mode == Settings.RatingMode.UpDown:
             rating_func = Coalesce(Sum('votes__rate'), 0)
-            popularity_func = Case(
-                When(Q(num_votes__gt=0), then=Round(Count('votes', filter=Q(votes__rate=1)) / Count('votes') * 100)),
-                When(Q(num_votes=0), then=0))
+            popularity_filter = Q(votes__rate__gt=0)
         elif obj_settings.rating_mode == Settings.RatingMode.Stars:
             rating_func = Coalesce(Avg('votes__rate'), 0.0)
-            popularity_func = Case(When(Q(num_votes__gt=0), then=Round(
-                Count('votes', filter=Q(votes__rate__gte=3.0)) / Count('votes') * 100)),
-                                   When(Q(num_votes=0), then=0))
+            popularity_filter = Q(votes__rate__gte=3.0)
+
 
         if has_rating:
             q = q.annotate(rating=rating_func)
         if has_popularity:
-            q = q.annotate(num_votes=Count('votes'))
-            q = q.annotate(popularity=popularity_func)
-
-    if not has_popularity and has_votes:
-        q = q.annotate(num_votes=Count('votes'))
+            q = q.annotate(num_votes=Count('votes', distinct=True), num_votes_above_popularity=Count('votes', filter=popularity_filter, distinct=True))
+            q = q.annotate(popularity=Case(
+                When(Q(num_votes__gt=0), then=Round((Cast(F('num_votes_above_popularity'), FloatField()) / Cast(F('num_votes'), FloatField())) * 100, output_field=IntegerField())),
+                When(Q(num_votes=0), then=0))
+            )
+    elif has_votes:
+        q = q.annotate(num_votes=Count('votes', distinct=True))
 
     requested_offset = 0
     requested_limit = None
