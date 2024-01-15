@@ -95,7 +95,7 @@ fn parse_tab<'r, 't>(
     assert_block_name(&BLOCK_TAB, name);
 
     let mut raw_label =
-        parser.get_head_value(&BLOCK_TAB, in_head, |parser, value| match value {
+        parser.get_head_value(&BLOCK_TAB, in_head, |_parser, value| match value {
             Some(name) => Ok(name),
             None => Ok("untitled"),
         })?;

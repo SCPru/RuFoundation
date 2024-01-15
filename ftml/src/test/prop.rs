@@ -215,15 +215,6 @@ fn arb_code() -> impl Strategy<Value = Element<'static>> {
         .prop_map(|(contents, language)| Element::Code { contents, language })
 }
 
-fn arb_checkbox() -> impl Strategy<Value = Element<'static>> {
-    (any::<bool>(), arb_attribute_map()).prop_map(|(checked, attributes)| {
-        Element::CheckBox {
-            checked,
-            attributes,
-        }
-    })
-}
-
 // Container elements
 
 fn arb_container<S>(elements: S) -> impl Strategy<Value = Element<'static>>
@@ -323,8 +314,6 @@ fn arb_element_leaf() -> impl Strategy<Value = Element<'static>> {
         cow!(SIMPLE_EMAIL_REGEX).prop_map(Element::Email),
         arb_link_element(),
         arb_image(),
-        // TODO: Element::RadioButton
-        arb_checkbox(),
         // TODO: Element::User
         arb_code(),
         cow!(".*").prop_map(|contents| Element::Html { contents }),

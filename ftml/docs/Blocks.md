@@ -199,26 +199,6 @@ Example:
 This file is [[char copy]] 2019-2022 Team Wikijump.
 ```
 
-### Checkbox
-
-Outputs: `Element::CheckBox` / `<input type="checkbox">`
-
-Body: None
-
-Accepts star (`*`): Element starts checked.
-
-Arguments:
-* All accepted attributes
-
-Example:
-
-```
-[[checkbox]] Apple
-[[*checkbox]] Blueberry
-[[checkbox]] Cherry
-[[checkbox]] Durian
-```
-
 ### Code
 
 Outputs: `Element::Code` / `<pre class="wj-code"><code>`
@@ -758,28 +738,6 @@ Example
 
 ```
 [[p]]My contents of a paragraph here.[[/p]]
-```
-
-### Radio
-
-Accepts star (`*`): Element starts selected.
-
-Body: None
-
-Output: `Element::RadioButton` / `<input type="radio">`
-
-Arguments:
-* All accepted attributes
-
-Example:
-
-```
-Favorite kind of music:
-
-[[radio music]] Disco
-[[radio music]] Dance
-[[radio music]] Rap
-[[*radio music]] Noise
 ```
 
 ### Ruby
