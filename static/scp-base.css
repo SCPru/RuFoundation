@@ -1,4 +1,5 @@
 @import url('./fonts/font-bauhaus.css');
+@import url('./fonts/new-fonts.css');
 @import url('https://fonts.googleapis.com/earlyaccess/nanumgothic.css');
 @import url('https://fonts.googleapis.com/earlyaccess/nanumgothiccoding.css');
 @import url('https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css');
@@ -603,7 +604,7 @@ sup {
     max-height: 0;
     color: #eee;
     background: transparent;
-    font-family: BauhausLTDemi, 'Nanum Gothic', Arial, sans-serif;
+    font-family: 'Sans Normalcy', 'Nanum Gothic', Arial, sans-serif;
     font-size: 180%;
     text-decoration: none;
     text-shadow: 3px 3px 5px #000;
