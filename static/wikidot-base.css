@@ -1,12 +1,13 @@
-body {
+body{
 	margin: 0px;
 	padding: 0px;
 }
 
 
 /* general font settings */
-body {
-    	font-family: Inter, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+body
+{
+	font-family: verdana,arial,helvetica,sans-serif;
 	font-size: 0.82em;
 }
 
@@ -2107,9 +2108,7 @@ version: 2.3.1
 .thread-container .post  .long  .head .info{
 }
 
-.thread-container .post  .long  .content{
-	word-break: break-word;
-}
+.thread-container .post  .long  .content{}
 
 .thread-container .post  .long  .content p{
 	/*margin: 5px 0;*/
