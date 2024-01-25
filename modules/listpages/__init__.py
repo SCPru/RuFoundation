@@ -317,7 +317,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                 requested_limit = limit
             case param.Pagination(page=page, per_page=per_page):
                 requested_page = page
-                requested_per_page = per_page
+                requested_per_page = min(per_page, 250)
 
     if requested_limit is not None:
         q = q[requested_offset:requested_offset + requested_limit]
