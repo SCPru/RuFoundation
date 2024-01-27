@@ -1,12 +1,13 @@
-body {
+body{
 	margin: 0px;
 	padding: 0px;
 }
 
 
 /* general font settings */
-body {
-    	font-family: Inter, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+body
+{
+	font-family: verdana,arial,helvetica,sans-serif;
 	font-size: 0.82em;
 }
 
