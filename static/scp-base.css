@@ -505,8 +505,6 @@ sup {
     z-index: 10;
     padding-bottom: 22px; /* FOR MENU */
     background: url('/-/static/images/header-logo.svg') 10px 40px no-repeat;
-    background-position: 10px 64%;
-    background-size: 100px;
 }
  
 #search-top-box {
