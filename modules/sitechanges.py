@@ -219,7 +219,7 @@ def render(context: RenderContext, params):
                 }
                 
                 .changes-list-item{
-                    overflow: hidden;
+                    /* overflow: hidden; */
                     padding: 2px;
                 }
                 
