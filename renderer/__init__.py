@@ -19,6 +19,8 @@ import os
 
 # FTML is not imported globally to prevent loading DLL for commands that don't require it
 
+MAX_INCLUDE_LEVEL = 25
+
 
 def callbacks_with_context(context):
     from ftml import ftml
@@ -96,17 +98,17 @@ def callbacks_with_context(context):
                 included_map[item.full_name] = item.source
             result = []
             new_includes = []
+            is_include_overflow = threadvars.get('include_level', MAX_INCLUDE_LEVEL) <= 0
             for ref in include_refs:
                 ref_dumb = self._page_name_to_dumb(ref.full_name)
                 include_name = articles.normalize_article_name(ref_dumb)
-                if include_name in threadvars.get('include_tree', []):
+                if is_include_overflow:
                     threadvars.put('include_err', threadvars.get('include_err', []) + [include_name])
                     result.append(ftml.FetchedPage(full_name=ref.full_name, content=None))
                 else:
                     result.append(ftml.FetchedPage(full_name=ref.full_name, content=included_map.get(ref_dumb, None)))
                     if include_name not in new_includes:
                         new_includes.append(include_name)
-            threadvars.put('include_tree', threadvars.get('include_tree', []) + new_includes)
             return result
 
         def fetch_internal_links(self, page_refs: list[str]) -> list[ftml.PartialPageInfo]:
@@ -132,11 +134,17 @@ def callbacks_with_context(context):
             from web.controllers.articles import normalize_article_name
             return normalize_article_name(full_name)
 
+        def next_include_level(self) -> bool:
+            current_level = threadvars.get('include_level', MAX_INCLUDE_LEVEL)
+            if current_level <= 0:
+                return False
+            threadvars.put('include_level', current_level-1)
+            return True
+
     return CallbacksWithContextImpl(context)
 
 
 def page_info_from_context(context: RenderContext):
-    from web.controllers import articles
     from ftml import ftml
 
     site = get_current_site()
@@ -167,8 +175,6 @@ def single_pass_render(source, context=None, mode='article') -> str:
     from ftml import ftml
 
     with threadvars.context():
-        threadvars.put('include_tree', [])
-        threadvars.put('include_err', [])
         html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
         return SafeString(html.body)
 
@@ -177,17 +183,15 @@ def single_pass_render_with_excerpt(source, context=None, mode='article') -> [st
     from ftml import ftml
 
     with threadvars.context():
-        threadvars.put('include_tree', [])
-        threadvars.put('include_err', [])
         html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
-        threadvars.put('include_tree', [])
-        threadvars.put('include_err', [])
+    with threadvars.context():
         text = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context), mode).body
-        text = '\n'.join([x.strip() for x in text.split('\n')])
-        text = re.sub(r'\n+', '\n', text)
-        if len(text) > 384:
-            text = text[:384] + '...'
-        return SafeString(html.body), text, None
+
+    text = '\n'.join([x.strip() for x in text.split('\n')])
+    text = re.sub(r'\n+', '\n', text)
+    if len(text) > 384:
+        text = text[:384] + '...'
+    return SafeString(html.body), text, None
 
 
 def single_pass_fetch_backlinks(source, context=None, mode='article') -> tuple[list[str], list[str]]:

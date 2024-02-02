@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from modules import ModuleError
-from renderer import RenderContext, render_template_from_string, single_pass_render
+from renderer import RenderContext, render_template_from_string
 import json
 
 from renderer.utils import render_user_to_json

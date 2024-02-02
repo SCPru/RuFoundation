@@ -33,6 +33,7 @@ fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, call
     let mut included_text = input.clone();
     let mut included_pages = vec![];
     loop {
+        page_callbacks.next_include_level();
         let includer = PythonCallbacks{ callbacks: Box::new(callbacks.clone()) };
         let mut current_text = included_text;
         preprocess(&mut current_text);
@@ -227,6 +228,19 @@ fn log_python_error<T>(res: &PyResult<T>) {
                 error.print(py)
             }),
         _ => {}
+    }
+}
+
+impl PythonCallbacks {
+    fn next_include_level(&self) -> bool {
+        let result = Python::with_gil(|py| {
+            return self.callbacks.getattr(py, "next_include_level")?.call(py, (), None)?.extract(py);
+        });
+        log_python_error(&result);
+        match result {
+            Ok(result) => result,
+            Err(_) => false
+        }
     }
 }
 
