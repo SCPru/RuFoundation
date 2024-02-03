@@ -98,7 +98,7 @@ class ForumPostEditor extends Component<Props, State> {
         }
     }
 
-    async componentWillUnmount() {
+    componentWillUnmount() {
         window.removeEventListener('beforeunload', this.handleRefresh);
         (window as any)._closePostEditor = undefined;
     }
