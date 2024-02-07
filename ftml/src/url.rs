@@ -52,7 +52,7 @@ lazy_static! {
             .unwrap()
     };
     static ref URL_STRICT_REGEX: Regex = {
-        RegexBuilder::new(r"^(#[A-Za-z0-9_\-%]+|/[^/]+.*|[^/].*/.*|#)$")
+        RegexBuilder::new(r"^(#[A-Za-z0-9_\-%]+|//[^/]+.*|/[^/]+.*|[^/].*/.*|#)$")
             .build() 
             .unwrap()
     };
