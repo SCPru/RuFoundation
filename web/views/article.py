@@ -148,8 +148,12 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             return {'redirect_to': '/%s%s' % (normalized_article_name, encoded_params)}
 
         article = articles.get_article(article_name)
+        comment_thread_id, comment_count = articles.get_comment_info(article)
         breadcrumbs = [{'url': '/' + articles.get_full_name(x), 'title': x.title} for x in
                        articles.get_breadcrumbs(article)]
+
+        if article is not None and path_params.get('comments') == 'show':
+            return {'redirect_to': '/forum/t-%d/%s' % (comment_thread_id, articles.normalize_article_name(article.display_name))}
 
         # this is needed for parser debug logging so that page content is always the last printed
         nav_top = self._render_nav("nav:top", article, path_params)
@@ -166,8 +170,6 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         site = get_current_site()
         article_rating, article_votes, article_popularity, article_rating_mode = articles.get_rating(article)
 
-        comment_thread_id, comment_count = articles.get_comment_info(article)
-
         canonical_url = '//%s/%s%s' % (site.domain, article.full_name if article else article_name, encoded_params)
 
         options_config = {
@@ -182,7 +184,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'pathParams': path_params,
             'canRate': permissions.check(self.request.user, "rate", article),
             'canComment': permissions.check(self.request.user, "view-comments", article) if article else False,
-            'commentThread': '/forum/t-%d/%s' % (comment_thread_id, articles.normalize_article_name(article.display_name)) if article else None,
+            'commentThread': ('/%s/comments/show' % normalized_article_name) if article else None,
             'commentCount': comment_count,
             'canDelete': permissions.check(self.request.user, "delete", article),
             'canCreateTags': site.get_settings().creating_tags_allowed,
