@@ -1,0 +1,204 @@
+@import 'node_modules/highlight.js/styles/github.css';
+
+.rimg img, .limg img, .cimg img, .img img, .scp-image-block img {
+  // compatibility patch for some unobvious stuff that started working differently after moving away from XHTML
+  // https://stackoverflow.com/questions/10844205/html-5-strange-img-always-adds-3px-margin-at-bottom
+  vertical-align: middle;
+}
+
+.w-list-pages {
+  position: relative;
+}
+
+.printuser.avatarhover img.small {
+  padding: 0;
+  margin-right: 8px;
+  border: 1px solid #777;
+  transition: all 0.25s ease;
+  pointer-events: none;
+}
+
+.printuser.avatarhover a:hover img.small, .printuser span:hover img.small {
+  transform: scale(4);
+  z-index: 100;
+  position: relative;
+}
+
+// fixes printusers misbehaving in tables
+.printuser a {
+  margin-right: 0;
+}
+
+// stars rating stuff
+.w-stars-rate-module {
+  width: 128px;
+  display: inline-block;
+  color: black;
+  margin-bottom: 16px;
+  .w-stars-rate-number {
+    color: #4e6b6b;
+    font-weight: bold;
+  }
+  .w-stars-rate-rating {
+    position: relative;
+    z-index: 0;
+    background: #ddd;
+    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 100%, 0 100%);
+    padding: 2px 8px;
+    text-align: center;
+    margin-left: 8px;
+    margin-right: 8px;
+  }
+  .w-stars-rate-control {
+    position: relative;
+    z-index: 1;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 4px #6666664f;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    height: 24px;
+    .w-stars-rate-stars-wrapper {
+      position: relative;
+      font-size: 150%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      &:before {
+        font-family: 'Font Awesome 5 Free';
+        position: relative;
+        left: 1px;
+        font-weight: 900;
+        font-size: 13px;
+        line-height: 13px;
+        content: '\f005\f005\f005\f005\f005';
+        letter-spacing: 2px;
+        color: #eee;
+        white-space: nowrap;
+      }
+      .w-stars-rate-stars-view {
+        pointer-events: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        &:before {
+          font-family: 'Font Awesome 5 Free';
+          position: relative;
+          left: 1px;
+          font-weight: 900;
+          font-size: 13px;
+          line-height: 13px;
+          content: '\f005\f005\f005\f005\f005';
+          letter-spacing: 2px;
+          white-space: nowrap;
+          color: var(--rated-var, #4e6b6b);
+        }
+        overflow: hidden;
+      }
+      &:hover {
+        .w-stars-rate-stars-view {
+          &:before {
+            color: #f0ac00;
+          }
+        }
+      }
+    }
+    .w-stars-rate-cancel {
+      width: 16px;
+      height: 16px;
+      background: #eee;
+      cursor: pointer;
+      border-radius: 3px;
+      margin-left: 8px;
+      text-align: center;
+      &:before {
+        content: '×';
+      }
+      &:hover {
+        background: #ec3f3f;
+        color: white;
+      }
+    }
+  }
+  .w-stars-rate-votes {
+    position: relative;
+    z-index: 0;
+    background: #ddd;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 8px 100%);
+    padding: 2px 8px;
+    font-size: 75%;
+    text-align: center;
+    margin-left: 8px;
+    margin-right: 8px;
+    color: #4e6b6b;
+    font-weight: bold;
+  }
+}
+
+.w-code {
+  white-space: pre !important;
+}
+
+// ========Rating Distribution Widget========
+
+.article-rating-widgets-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
+}
+
+.w-rate-dist {
+  font-family: sans-serif;
+  font-weight: bold;
+  max-width: 100%;
+}
+
+.w-rate-row {
+  display: grid;
+  align-items: center;
+  grid-template-columns: max-content max-content max-content;
+}
+
+.w-rate-bar {
+  width: 236px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #eee;
+}
+
+.w-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background-color: #4e6b6b;
+}
+
+.w-rate-num {
+  width: 25px;
+}
+
+.w-rate-stat {
+  display: grid;
+  grid-template-columns: auto auto;
+}
+
+.w-v-count {
+  padding: 0 5px;
+  width: 25px;
+}
+
+.w-afterstar {
+  &:after {
+    font-family: "Font Awesome 5 Free";
+    content: "\f005";
+    font-weight: 600;
+    color: #f0ac00;
+  }
+}
+
+// ==========================================
