@@ -34,7 +34,7 @@ def render_user_to_html(user: User, avatar=True, hover=True):
     if user is None:
         return render_template_from_string(
             '<span class="printuser{{class_add}}"><strong>system</strong></span>',
-             class_add=(' avatarhover' if hover else '')
+            class_add=(' avatarhover' if hover else '')
         )
     if isinstance(user, AnonymousUser):
         return render_template_from_string(
@@ -43,8 +43,7 @@ def render_user_to_html(user: User, avatar=True, hover=True):
                 {% if show_avatar %}
                     <a onclick="return false;"><img class="small" src="{{avatar}}" alt="Anonymous User"></a>
                 {% endif %}
-                <a onclick="return false;">Anonymous User</a>
-            </span>
+                <a onclick="return false;">Anonymous User</a></span>
             """,
             class_add=(' avatarhover' if hover else ''),
             show_avatar=avatar,
@@ -62,9 +61,8 @@ def render_user_to_html(user: User, avatar=True, hover=True):
             {% if show_avatar %}
                 <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
             {% endif %}
-            <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a>
-        </span>
-        """,
+            <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a></span>
+        """, # i know it's a crutch
         class_add=(' avatarhover' if hover else ''),
         show_avatar=avatar,
         avatar=user_avatar,
