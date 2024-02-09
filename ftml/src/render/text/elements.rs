@@ -305,6 +305,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             hide_text,
             show_top,
             show_bottom,
+            text_align,
             ..
         } => {
 
