@@ -159,6 +159,7 @@ pub enum Element<'t> {
         hide_text: Option<Cow<'t, str>>,
         show_top: bool,
         show_bottom: bool,
+        text_align: Option<Cow<'t, str>>,
     },
 
     /// A table of contents block.
@@ -465,6 +466,7 @@ impl Element<'_> {
                 hide_text,
                 show_top,
                 show_bottom,
+                text_align,
             } => Element::Collapsible {
                 elements: elements_to_owned(elements),
                 attributes: attributes.to_owned(),
@@ -473,6 +475,7 @@ impl Element<'_> {
                 hide_text: option_string_to_owned(hide_text),
                 show_top: *show_top,
                 show_bottom: *show_bottom,
+                text_align: option_string_to_owned(show_text),
             },
             Element::TableOfContents { align, attributes } => Element::TableOfContents {
                 align: *align,

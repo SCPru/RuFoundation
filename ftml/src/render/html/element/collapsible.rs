@@ -30,6 +30,7 @@ pub struct Collapsible<'a> {
     hide_text: Option<&'a str>,
     show_top: bool,
     show_bottom: bool,
+    text_align: Option<&'a str>,
 }
 
 impl<'a> Collapsible<'a> {
@@ -42,6 +43,7 @@ impl<'a> Collapsible<'a> {
         hide_text: Option<&'a str>,
         show_top: bool,
         show_bottom: bool,
+        text_align: Option<&'a str>,
     ) -> Self {
         Collapsible {
             elements,
@@ -51,6 +53,7 @@ impl<'a> Collapsible<'a> {
             hide_text,
             show_top,
             show_bottom,
+            text_align,
         }
     }
 }
@@ -64,16 +67,18 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
         hide_text,
         show_top,
         show_bottom,
+        text_align,
     } = collapsible;
 
     info!(
-        "Rendering collapsible (elements length {}, start-open {}, show-text {}, hide-text {}, show-top {}, show-bottom {})",
+        "Rendering collapsible (elements length {}, start-open {}, show-text {}, hide-text {}, show-top {}, show-bottom {}, text-align {})",
         elements.len(),
         start_open,
         show_text.unwrap_or("<default>"),
         hide_text.unwrap_or("<default>"),
         show_top,
         show_bottom,
+        text_align.unwrap_or("<default>"),
     );
 
     let show_text = match show_text {
@@ -86,13 +91,20 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
         _ => ctx.handle().get_message("collapsible-hide")
     };
 
+    let text_align = match text_align {
+        Some(s) => String::from(s),
+        _ => String::from("initial")
+    };
+
+    let unfold_link_stylevariants:[&str;2] = [&format!("display: none; text-align: {}", text_align) as &str, &format!("display: block; text-align: {}", text_align) as &str];
+
     ctx.html()
         .div()
         .attr(attr!("class" => "w-collapsible collapsible-block"))
         .contents(|ctx| {
             ctx.html()
                 .div()
-                .attr(attr!("class" => "collapsible-block-folded", "style" => if start_open { "display: none" } else { "display: block" }))
+                .attr(attr!("class" => "collapsible-block-folded", "style" => if start_open { unfold_link_stylevariants[0] } else { unfold_link_stylevariants[1] }))
                 .contents(|ctx| {
                     ctx.html()
                         .a()
@@ -107,7 +119,7 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
                     let build_unfolded_link = |ctx: &mut HtmlContext| {
                         ctx.html()
                             .div()
-                            .attr(attr!("class" => "collapsible-block-unfolded-link"))
+                            .attr(attr!("class" => "collapsible-block-unfolded-link", "style" => format!("text-align: {}", text_align).as_str()))
                             .contents(|ctx| {
                                 ctx.html()
                                     .a()
