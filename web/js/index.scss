@@ -144,3 +144,61 @@
 .w-code {
   white-space: pre !important;
 }
+
+// ========Rating Distribution Widget========
+
+.article-rating-widgets-area {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 25px;
+}
+
+.w-rate-dist {
+  font-family: sans-serif;
+  font-weight: bold;
+  max-width: 100%;
+}
+
+.w-rate-row {
+  display: grid;
+  align-items: center;
+  grid-template-columns: max-content max-content max-content;
+}
+
+.w-rate-bar {
+  width: 236px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #eee;
+}
+
+.w-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background-color: #4e6b6b;
+}
+
+.w-rate-num {
+  width: 25px;
+}
+
+.w-rate-stat {
+  display: grid;
+  grid-template-columns: auto auto;
+}
+
+.w-v-count {
+  padding: 0 5px;
+  width: 25px;
+}
+
+.w-afterstar {
+  &:after {
+    font-family: "Font Awesome 5 Free";
+    content: "\f005";
+    font-weight: 600;
+    color: #f0ac00;
+  }
+}
+
+// ==========================================
