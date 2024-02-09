@@ -76,11 +76,9 @@ class ForumPostEditor extends Component<Props, State> {
             loading: true,
             saving: false
         }
-        this.handleRefresh = this.handleRefresh.bind(this);
     }
 
     async componentDidMount() {
-        window.addEventListener('beforeunload', this.handleRefresh);
         const { isNew, postId } = this.props;
         (window as any)._closePostEditor = () => {
             this.onCancel(undefined);
@@ -99,15 +97,7 @@ class ForumPostEditor extends Component<Props, State> {
     }
 
     componentWillUnmount() {
-        window.removeEventListener('beforeunload', this.handleRefresh);
         (window as any)._closePostEditor = undefined;
-    }
-
-    handleRefresh = (event) => {
-        if (!this.state.saved) {
-            event.preventDefault();
-            event.returnValue = '';
-          }
     }
 
     onSubmit = async (e) => {
