@@ -43,7 +43,8 @@ def render_user_to_html(user: User, avatar=True, hover=True):
                 {% if show_avatar %}
                     <a onclick="return false;"><img class="small" src="{{avatar}}" alt="Anonymous User"></a>
                 {% endif %}
-                <a onclick="return false;">Anonymous User</a></span>""",
+                <a onclick="return false;">Anonymous User</a></span>
+            """,
             class_add=(' avatarhover' if hover else ''),
             show_avatar=avatar,
             avatar=settings.ANON_AVATAR
