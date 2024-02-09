@@ -103,10 +103,10 @@ class ForumPostEditor extends Component<Props, State> {
         (window as any)._closePostEditor = undefined;
     }
 
-    handleRefresh = (event) => {
-        if (!this.state.saved) {
-            event.preventDefault();
-            event.returnValue = '';
+    handleRefresh = (e) => {
+        if (!this.state.saving) {
+            e.preventDefault();
+            e.returnValue = '';
         }
     }
 
