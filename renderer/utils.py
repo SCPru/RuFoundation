@@ -12,11 +12,11 @@ _templates_lock = threading.RLock()
 
 
 def render_template_from_string(template: str, **context: object) -> object:
-    # with _templates_lock:
-    #     if template in _templates:
-    #         tpl = _templates[template]
-    #     else:
-    tpl = _templates[template] = Template(template.strip())
+    with _templates_lock:
+        if template in _templates:
+            tpl = _templates[template]
+        else:
+            tpl = _templates[template] = Template(template.strip())
     return tpl.render(Context(context))
 
 
