@@ -46,10 +46,21 @@ impl TryFrom<&'_ str> for Alignment {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "<" => Ok(Alignment::Left),
-            ">" => Ok(Alignment::Right),
-            "=" => Ok(Alignment::Center),
-            "==" => Ok(Alignment::Justify),
+            "<" | "left" => Ok(Alignment::Left),
+            ">" | "right" => Ok(Alignment::Right),
+            "=" | "center" => Ok(Alignment::Center),
+            "==" | "justify" => Ok(Alignment::Justify),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryFrom<Option<&'_ str>> for Alignment {
+    type Error = ();
+
+    fn try_from(value: Option<&str>) -> Result<Self, Self::Error> {
+        match value {
+            Some(value) => Alignment::try_from(value),
             _ => Err(()),
         }
     }

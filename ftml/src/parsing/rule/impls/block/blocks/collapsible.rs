@@ -19,7 +19,7 @@
  */
 
 use super::prelude::*;
-use crate::parsing::{ParseWarning, ParseWarningKind};
+use crate::{parsing::{ParseWarning, ParseWarningKind}, tree::Alignment};
 
 pub const BLOCK_COLLAPSIBLE: BlockRule = BlockRule {
     name: "block-collapsible",
@@ -73,7 +73,7 @@ fn parse_fn<'r, 't>(
         hide_text,
         show_top,
         show_bottom,
-        text_align,
+        text_align: Alignment::try_from(text_align.as_deref()).ok(),
     };
 
     ok!(element, exceptions)

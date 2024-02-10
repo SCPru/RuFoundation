@@ -146,7 +146,7 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
                 ref_cow!(hide_text),
                 *show_top,
                 *show_bottom,
-                ref_cow!(text_align),
+                *text_align,
             ),
         ),
         Element::TableOfContents { align, attributes } => {
