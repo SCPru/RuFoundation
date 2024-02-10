@@ -94,7 +94,7 @@ class ArticleRating extends Component<Props, State> {
     renderUserVote(vote) {
         const { mode } = this.state;
         if (mode === 'updown') {
-            return vote > 0 ? '+' : '-';
+            return vote >= 3 ? '+' : '-';
         } else if (mode === 'stars') {
             return sprintf('%.1f', vote);
         } else {
