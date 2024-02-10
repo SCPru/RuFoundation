@@ -91,12 +91,12 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
         _ => ctx.handle().get_message("collapsible-hide")
     };
 
-    let text_align = match text_align {
-        Some(s) => String::from(s),
-        _ => String::from("initial")
+    let text_align_property = match text_align {
+        Some(s) => format!("text-align: {}", String::from(s)),
+        _ => "".to_string()
     };
 
-    let unfold_link_stylevariants:[&str;2] = [&format!("display: none; text-align: {}", text_align) as &str, &format!("display: block; text-align: {}", text_align) as &str];
+    let unfold_link_stylevariants:[&str;2] = [&format!("display: none; {}", text_align_property) as &str, &format!("display: block; {}", text_align_property) as &str];
 
     ctx.html()
         .div()
@@ -119,7 +119,7 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
                     let build_unfolded_link = |ctx: &mut HtmlContext| {
                         ctx.html()
                             .div()
-                            .attr(attr!("class" => "collapsible-block-unfolded-link", "style" => format!("text-align: {}", text_align).as_str()))
+                            .attr(attr!("class" => "collapsible-block-unfolded-link", "style" => text_align_property.as_str()))
                             .contents(|ctx| {
                                 ctx.html()
                                     .a()
