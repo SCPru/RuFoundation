@@ -169,9 +169,14 @@ class ArticleRating extends Component<Props, State> {
         const { votes } = this.state;
 
         let votesCount = [0, 0, 0, 0, 0, 0];
+        let votesPercent = [0, 0, 0, 0, 0, 0];
 
         votes?.forEach(vote => {
             votesCount[Math.ceil(vote.value)]++;
+        })
+
+        votesCount.map((count, i) => {
+            votesPercent[i] = count * 100 / (votes.length ? votes.length : 1);
         })
 
         return (
@@ -181,11 +186,11 @@ class ArticleRating extends Component<Props, State> {
                     <div className="w-rate-row">
                         <div className="w-rate-num w-afterstar">{ 5 - i }</div>
                         <div className="w-rate-bar">
-                            <div className="w-bar-fill" style={{ width: `${votesCount[5-i] * 100 / votes.length}%` }}></div>
+                            <div className="w-bar-fill" style={{ width: `${votesPercent[5-i]}%` }}></div>
                         </div>
                         <div className="w-rate-stat">
                             <div className="w-v-count">{ votesCount[5-i] }</div>
-                            <div>{ Math.round(votesCount[5-i] * 100 / votes.length) }%</div>
+                            <div>{ Math.round(votesPercent[5-i]) }%</div>
                         </div>
                     </div>
                 )) }
