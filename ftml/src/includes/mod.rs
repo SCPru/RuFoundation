@@ -31,6 +31,8 @@ mod include_ref;
 mod includer;
 mod parse;
 
+use std::borrow::Cow;
+
 pub use self::include_ref::IncludeRef;
 pub use self::includer::{DebugIncluder, FetchedPage, Includer, NullIncluder};
 
@@ -152,7 +154,7 @@ where
             // Take fetched content, replace variables
             Some(mut content) => {
                 replace_variables(content.to_mut(), &variables);
-                content
+                Cow::from(format!("[[scope]]{}[[/scope]]", content))
             }
 
             // Include not found, return premade template

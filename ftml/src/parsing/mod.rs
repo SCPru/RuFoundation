@@ -64,6 +64,7 @@ use crate::tree::{
     SyntaxTree, Container, ContainerType,
 };
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 pub use self::boolean::{parse_boolean, NonBooleanValue};
@@ -71,6 +72,8 @@ pub use self::exception::{ParseException, ParseWarning, ParseWarningKind};
 pub use self::outcome::ParseOutcome;
 pub use self::result::{ParseResult, ParseSuccess};
 pub use self::token::{ExtractedToken, Token};
+
+pub type WikiScriptScope<'t> = HashMap<Cow<'t, str>, (Cow<'t, str>, u32)>;
 
 /// Parse through the given tokens and produce an AST.
 ///

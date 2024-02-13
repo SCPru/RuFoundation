@@ -278,6 +278,9 @@ pub enum Element<'t> {
     ///
     /// See [`WJ-816`](https://scuttle.atlassian.net/browse/WJ-816).
     Partial(PartialElement<'t>),
+
+    // An empty element
+    Void,
 }
 
 impl Element<'_> {
@@ -337,6 +340,7 @@ impl Element<'_> {
             Element::ClearFloat(_) => "ClearFloat",
             Element::HorizontalRule => "HorizontalRule",
             Element::Partial(partial) => partial.name(),
+            Element::Void => "Void",
         }
     }
 
@@ -387,7 +391,8 @@ impl Element<'_> {
             Element::HorizontalRule => false,
             Element::Partial(_) => {
                 panic!("Should not check for paragraph safety of partials")
-            }
+            },
+            Element::Void => false,
         }
     }
 
@@ -540,6 +545,7 @@ impl Element<'_> {
             Element::ClearFloat(clear_float) => Element::ClearFloat(*clear_float),
             Element::HorizontalRule => Element::HorizontalRule,
             Element::Partial(partial) => Element::Partial(partial.to_owned()),
+            Element::Void => Element::Void,
         }
     }
 }

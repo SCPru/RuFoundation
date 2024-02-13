@@ -22,7 +22,7 @@ use super::{blocks::*, BlockRule};
 use std::collections::HashMap;
 use unicase::UniCase;
 
-pub const BLOCK_RULES: [BlockRule; 58] = [
+pub const BLOCK_RULES: [BlockRule; 61] = [
     BLOCK_ALIGN_CENTER,
     BLOCK_ALIGN_JUSTIFY,
     BLOCK_ALIGN_LEFT,
@@ -83,6 +83,10 @@ pub const BLOCK_RULES: [BlockRule; 58] = [
     BLOCK_EXPR,
     BLOCK_IF_WITH_BODY,
     BLOCK_IFEXPR_WITH_BODY,
+
+    BLOCK_SCOPE,
+    BLOCK_DECLARE,
+    BLOCK_SET,
 ];
 
 pub type BlockRuleMap = HashMap<UniCase<&'static str>, &'static BlockRule>;

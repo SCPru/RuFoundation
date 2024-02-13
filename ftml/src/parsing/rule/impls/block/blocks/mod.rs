@@ -108,6 +108,7 @@ mod target;
 mod toc;
 mod underline;
 mod user;
+mod wiki_script;
 
 pub use self::align_center::BLOCK_ALIGN_CENTER;
 pub use self::align_justify::BLOCK_ALIGN_JUSTIFY;
@@ -158,3 +159,5 @@ pub use self::underline::BLOCK_UNDERLINE;
 pub use self::user::BLOCK_USER;
 
 pub use self::expression::{BLOCK_IF, BLOCK_EXPR, BLOCK_IF_WITH_BODY, BLOCK_IFEXPR_WITH_BODY};
+
+pub use self::wiki_script::{BLOCK_SCOPE, BLOCK_DECLARE, BLOCK_SET};

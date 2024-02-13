@@ -205,5 +205,6 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
             ctx.html().hr();
         }
         Element::Partial(_) => panic!("Encountered partial element during parsing"),
+        Element::Void => {},
     }
 }

@@ -305,7 +305,6 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             hide_text,
             show_top,
             show_bottom,
-            text_align,
             ..
         } => {
 
@@ -479,6 +478,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             ctx.add_newline();
         }
         Element::Partial(_) => panic!("Encountered partial element during parsing"),
+        Element::Void => {},
     }
 }
 
