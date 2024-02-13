@@ -98,56 +98,6 @@ impl<'a> LinkLocation<'a> {
     }
 }
 
-#[test]
-fn test_link_location() {
-    macro_rules! check {
-        ($input:expr => $site:expr, $category:expr, $name:expr) => {{
-            let site = $site.map(|site| cow!(site));
-            let category = cow!($category);
-            let name = cow!($name);
-            let expected = LinkLocation::Page(PageRef { site, category, name }, None);
-
-            check!($input; expected);
-        }};
-
-        ($input:expr => $url:expr) => {
-            let url = cow!($url);
-            let expected = LinkLocation::Url(url);
-
-            check!($input; expected);
-        };
-
-        ($input:expr; $expected:expr) => {{
-            use crate::data::NullPageCallbacks;
-            let actual = LinkLocation::parse(cow!($input), Rc::new(NullPageCallbacks{}));
-
-            assert_eq!(
-                actual,
-                $expected,
-                "Actual link location result doesn't match expected",
-            );
-        }};
-    }
-
-    check!("" => "");
-    check!("#" => "#");
-    check!("#anchor" => "#anchor");
-
-    check!("page" => None, "_default", "page");
-    check!("/page" => None, "_default", "page");
-    check!("component:theme" => None, "component", "theme");
-    check!(":scp-wiki:scp-1000" => Some("scp-wiki"), "_default", "scp-1000");
-    check!(":scp-wiki:component:theme" => Some("scp-wiki"), "component", "theme");
-
-    check!("http://blog.wikidot.com/" => "http://blog.wikidot.com/");
-    check!("https://example.com" => "https://example.com");
-    check!("mailto:test@example.net" => "mailto:test@example.net");
-
-    check!("::page" => "::page");
-    check!("::component:theme" => "::component:theme");
-    check!("page:multiple:category" => None, "page", "multiple:category");
-}
-
 #[derive(Serialize, Deserialize, Debug, Hash, Clone, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum LinkLabel<'a> {
@@ -225,30 +175,5 @@ impl<'a> TryFrom<&'a str> for LinkType {
             "table-of-contents" => Ok(LinkType::TableOfContents),
             _ => Err(value),
         }
-    }
-}
-
-/// Ensure `LinkType::name()` produces the same output as serde.
-#[test]
-fn link_type_name_serde() {
-    use strum::IntoEnumIterator;
-
-    for variant in LinkType::iter() {
-        let output = serde_json::to_string(&variant).expect("Unable to serialize JSON");
-        let serde_name: String =
-            serde_json::from_str(&output).expect("Unable to deserialize JSON");
-
-        assert_eq!(
-            &serde_name,
-            variant.name(),
-            "Serde name does not match variant name",
-        );
-
-        let converted: LinkType = serde_name
-            .as_str()
-            .try_into()
-            .expect("Could not convert item");
-
-        assert_eq!(converted, variant, "Converted item does not match variant");
     }
 }

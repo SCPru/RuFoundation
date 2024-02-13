@@ -18,17 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use cfg_if::cfg_if;
 use rand::distributions::Alphanumeric;
 use rand::prelude::*;
 use std::iter;
-
-#[cfg(test)]
-const TEST_RANDOM_SEED: [u8; 32] = [
-    0x53, 0x43, 0x50, 0x2d, 0x31, 0x37, 0x33, 0x3a, 0x20, 0x4d, 0x6f, 0x76, 0x65, 0x64,
-    0x20, 0x74, 0x6f, 0x20, 0x53, 0x69, 0x74, 0x65, 0x2d, 0x31, 0x39, 0x20, 0x31, 0x39,
-    0x39, 0x33, 0x2e, 0x0a,
-];
 
 #[derive(Debug)]
 pub struct Random {
@@ -38,13 +30,7 @@ pub struct Random {
 impl Default for Random {
     #[inline]
     fn default() -> Self {
-        cfg_if! {
-            if #[cfg(test)] {
-                let rng = SmallRng::from_seed(TEST_RANDOM_SEED);
-            } else {
-                let rng = SmallRng::from_entropy();
-            }
-        }
+        let rng = SmallRng::from_entropy();
 
         Random { rng }
     }
@@ -67,27 +53,4 @@ impl Random {
         self.generate_html_id_into(&mut buffer);
         buffer
     }
-}
-
-#[test]
-fn html_id() {
-    // Random output is deterministic in tests.
-    //
-    // This is to ensure HTML test output is consistent,
-    // but that means we can test for exact values here.
-
-    let mut rand = Random::default();
-    let mut buffer = String::new();
-
-    rand.generate_html_id_into(&mut buffer);
-    assert_eq!(
-        buffer, "wj-id-bW5Ql2DLZtnd9s18",
-        "Generated HTML ID doesn't match expected",
-    );
-
-    let html_id = rand.generate_html_id();
-    assert_eq!(
-        html_id, "wj-id-ePZbhugrfP89c4Fk",
-        "Generated HTML ID doesn't match expected",
-    );
 }

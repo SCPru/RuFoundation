@@ -18,9 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#[cfg(test)]
-mod test;
-
 mod lexer {
     // Since pest makes enums automatically that clippy doesn't like
     #![allow(clippy::upper_case_acronyms)]

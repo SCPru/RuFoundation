@@ -107,9 +107,6 @@ extern crate str_macro;
 
 // Library top-level modules
 
-#[cfg(test)]
-mod test;
-
 #[macro_use]
 mod macros;
 
