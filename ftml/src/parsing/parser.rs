@@ -21,7 +21,7 @@
 use bitflags::bitflags;
 
 use super::condition::ParseCondition;
-use super::{parse_internal, prelude::*, UnstructuredParseResult, WikiScriptScope};
+use super::{prelude::*, parse_internal, UnstructuredParseResult, WikiScriptScope};
 use super::rule::Rule;
 use super::RULE_PAGE;
 use crate::data::{PageCallbacks, PageInfo, PageRef};
