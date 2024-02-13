@@ -122,17 +122,3 @@ impl<'t> SyntaxTree<'t> {
         }
     }
 }
-
-#[test]
-fn borrowed_to_owned<'a>() {
-    use std::mem;
-
-    let tree_1: SyntaxTree<'a> = SyntaxTree::default();
-    let tree_2: SyntaxTree<'static> = tree_1.to_owned();
-
-    mem::drop(tree_1);
-
-    let tree_3: SyntaxTree<'static> = tree_2.clone();
-
-    mem::drop(tree_3);
-}

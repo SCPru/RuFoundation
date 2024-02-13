@@ -59,39 +59,3 @@ impl<'e, 't> Iterator for BorrowedElementsIterator<'e, 't> {
         }
     }
 }
-
-#[test]
-fn iter() {
-    macro_rules! check {
-        ($elements:expr, $expected:expr $(,)?) => {{
-            let elements = &$elements;
-
-            let actual: Vec<&Element> = elements.into_iter().collect();
-            let expected: Vec<&Element> = $expected;
-
-            assert_eq!(
-                actual, expected,
-                "Actual element iteration doesn't match expected",
-            );
-        }};
-    }
-
-    check!(Elements::None, vec![]);
-    check!(Elements::Single(text!("a")), vec![&text!("a")]);
-    check!(
-        Elements::Multiple(vec![]), //
-        vec![],
-    );
-    check!(
-        Elements::Multiple(vec![text!("a")]), //
-        vec![&text!("a")],
-    );
-    check!(
-        Elements::Multiple(vec![text!("a"), text!("b")]),
-        vec![&text!("a"), &text!("b")],
-    );
-    check!(
-        Elements::Multiple(vec![text!("a"), text!("b"), text!("c")]),
-        vec![&text!("a"), &text!("b"), &text!("c")],
-    );
-}

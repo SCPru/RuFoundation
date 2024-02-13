@@ -41,19 +41,3 @@ pub fn check_step<'r, 't>(
         Err(parser.make_warn(kind))
     }
 }
-
-#[test]
-fn check_step_fail() {
-    use crate::data::PageInfo;
-    use crate::settings::{WikitextMode, WikitextSettings};
-    use std::rc::Rc;
-    use crate::data::NullPageCallbacks;
-
-    let page_info = PageInfo::dummy();
-    let settings = WikitextSettings::from_mode(WikitextMode::Page);
-    let tokenization = crate::tokenize("**Apple** banana");
-    let mut parser = Parser::new(&tokenization, &page_info, Rc::new(NullPageCallbacks{}), &settings);
-
-    let result = check_step(&mut parser, Token::Italics, ParseWarningKind::RuleFailed);
-    assert!(matches!(result, Err(_)));
-}

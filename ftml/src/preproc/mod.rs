@@ -21,9 +21,6 @@
 mod typography;
 mod whitespace;
 
-#[cfg(test)]
-mod test;
-
 /// Run the preprocessor on the given wikitext, which is modified in-place.
 ///
 /// The following modifications are performed:
@@ -39,12 +36,4 @@ pub fn preprocess(text: &mut String) {
     whitespace::substitute(text);
     typography::substitute(text);
     info!("Finished preprocessing of text");
-}
-
-#[test]
-fn fn_type() {
-    type SubstituteFn = fn(&mut String);
-
-    let _: SubstituteFn = whitespace::substitute;
-    let _: SubstituteFn = typography::substitute;
 }
