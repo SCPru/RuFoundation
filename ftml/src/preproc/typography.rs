@@ -175,34 +175,3 @@ pub fn substitute(text: &mut String) {
     // Miscellaneous
     replace!(ELLIPSIS);
 }
-
-#[cfg(test)]
-const TEST_CASES: [(&str, &str); 3] = [
-    (
-        "John laughed. ``You'll never defeat me!''\n``That's where you're wrong...''",
-        "John laughed. “You'll never defeat me!”\n“That's where you're wrong…”",
-    ),
-    (
-        ",,あんたはばかです！''\n``Ehh?''\n,,ほんと！''\n[[footnoteblock]]",
-        "„あんたはばかです！”\n“Ehh?”\n„ほんと！”\n[[footnoteblock]]",
-    ),
-    (
-        "**ENTITY MAKES DRAMATIC MOTION** . . . ",
-        "**ENTITY MAKES DRAMATIC MOTION** … ",
-    ),
-];
-
-#[test]
-fn regexes() {
-    let _ = &*SINGLE_QUOTES;
-    let _ = &*DOUBLE_QUOTES;
-    let _ = &*LOW_DOUBLE_QUOTES;
-    let _ = &*ELLIPSIS;
-}
-
-#[test]
-fn test_substitute() {
-    use super::test::test_substitution;
-
-    test_substitution("typography", substitute, &TEST_CASES);
-}

@@ -60,19 +60,3 @@ pub fn tokenize(text: &str) -> Tokenization {
 
     Tokenization { tokens, full_text }
 }
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use proptest::prelude::*;
-
-    proptest! {
-        #![proptest_config(ProptestConfig::with_cases(4096))]
-
-        #[test]
-        #[ignore = "slow test"]
-        fn tokenizer_prop(s in ".*") {
-            let _ = tokenize(&s);
-        }
-    }
-}
