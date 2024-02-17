@@ -171,6 +171,7 @@ class ArticleRating extends Component<Props, State> {
         const { votes } = this.state;
 
         let votesCount = [0, 0, 0, 0, 0, 0];
+        let votesPercent = [0, 0, 0, 0, 0, 0];
 
         votes?.forEach(vote => {
             let minCount = Math.floor(vote.value);

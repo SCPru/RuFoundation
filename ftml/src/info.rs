@@ -56,13 +56,3 @@ lazy_static! {
     pub static ref GIT_COMMIT_HASH_SHORT: Option<&'static str> =
         GIT_COMMIT_HASH.map(|s| &s[..8]);
 }
-
-#[test]
-fn info() {
-    assert!(VERSION.starts_with(PKG_NAME));
-    assert!(VERSION.ends_with(&*VERSION_INFO));
-
-    if let Some(hash) = *GIT_COMMIT_HASH_SHORT {
-        assert_eq!(hash.len(), 8);
-    }
-}

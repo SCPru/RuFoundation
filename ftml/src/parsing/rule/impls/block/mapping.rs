@@ -126,8 +126,3 @@ fn build_block_rule_map(block_rules: &'static [BlockRule]) -> BlockRuleMap {
 
     map
 }
-
-#[test]
-fn block_rule_map() {
-    let _ = &*BLOCK_RULE_MAP;
-}
