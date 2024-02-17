@@ -175,14 +175,15 @@ class ArticleRating extends Component<Props, State> {
 
         votes?.forEach(vote => {
             let minCount = Math.floor(vote.value);
-            let maxCount = Math.ceil(vote.value);
-            let affectMin = vote.value - minCount;
+            let affectMin = 1.0 - (vote.value - minCount);
             let affectMax = 1.0 - (minCount + 1.0 - vote.value);
             votesCount[minCount] += affectMin;
-            votesCount[maxCount] += affectMax;
+            if (minCount + 1 <= 5) {
+                votesCount[minCount + 1] += affectMax;
+            }
         })
 
-        const maxCount = Math.ceil(Math.max(...votesCount));
+        const maxCount = Math.max(...votesCount);
 
         return (
             <div className="w-rate-dist">
