@@ -146,6 +146,8 @@ class ArticleRating extends Component<Props, State> {
 
         votesCount[0] = votes?.length - votesCount[1];
 
+        const maxCount = Math.max(...votesCount);
+
         return (
             <div className="w-rate-dist">
                 { !!(votesCount && votesCount.length) }
@@ -153,11 +155,11 @@ class ArticleRating extends Component<Props, State> {
                     <div className="w-rate-row">
                         <div className="w-rate-num">{ i ? '-' : '+' }</div>
                         <div className="w-rate-bar">
-                            <div className="w-bar-fill" style={{ width: `${votesCount[1-i] * 100 / votes.length}%` }}></div>
+                            <div className="w-bar-fill" style={{ width: `${maxCount > 0 ? votesCount[1-i] * 100 / votes.length : 0}%` }}></div>
                         </div>
                         <div className="w-rate-stat">
-                            <div className="w-v-count">{ votesCount[1-i] }</div>
-                            <div>{ Math.round(votesCount[1-i] * 100 / votes.length) }%</div>
+                            <div className="w-v-count">{ maxCount > 0 ? votesCount[1-i] : '—' }</div>
+                            <div>{ maxCount > 0 ? `${Math.round(votesCount[1-i] * 100 / votes.length)}%` : '—' }</div>
                         </div>
                     </div>
                 )) }
@@ -172,12 +174,16 @@ class ArticleRating extends Component<Props, State> {
         let votesPercent = [0, 0, 0, 0, 0, 0];
 
         votes?.forEach(vote => {
-            votesCount[Math.ceil(vote.value)]++;
+            let minCount = Math.floor(vote.value);
+            let affectMin = 1.0 - (vote.value - minCount);
+            let affectMax = 1.0 - (minCount + 1.0 - vote.value);
+            votesCount[minCount] += affectMin;
+            if (minCount + 1 <= 5) {
+                votesCount[minCount + 1] += affectMax;
+            }
         })
 
-        votesCount.map((count, i) => {
-            votesPercent[i] = count * 100 / (votes.length ? votes.length : 1);
-        })
+        const maxCount = Math.max(...votesCount);
 
         return (
             <div className="w-rate-dist">
@@ -186,11 +192,10 @@ class ArticleRating extends Component<Props, State> {
                     <div className="w-rate-row">
                         <div className="w-rate-num w-afterstar">{ 5 - i }</div>
                         <div className="w-rate-bar">
-                            <div className="w-bar-fill" style={{ width: `${votesPercent[5-i]}%` }}></div>
+                            <div className="w-bar-fill" style={{ width: `${maxCount > 0 ? votesCount[5-i] * 100 / maxCount : '0'}%` }}></div>
                         </div>
                         <div className="w-rate-stat">
-                            <div className="w-v-count">{ votesCount[5-i] }</div>
-                            <div>{ Math.round(votesPercent[5-i]) }%</div>
+                            <div className="w-v-count">{ maxCount > 0 ? `${Math.round(votesCount[5-i] * 100 / votes.length)}%` : '—' }</div>
                         </div>
                     </div>
                 )) }
