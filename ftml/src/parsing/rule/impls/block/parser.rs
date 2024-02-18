@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::borrow::Cow;
+
 use super::arguments::Arguments;
 use super::BlockRule;
 use crate::parsing::collect::{collect_text, collect_text_keep};
@@ -370,7 +372,12 @@ where
 
                         // Gather argument key string slice
                         let end = self.current();
-                        self.full_text().slice_partial(start, end)
+
+                        let mut slice = Cow::Borrowed(self.full_text().slice_partial(start, end));
+
+                        self.replace_variables(slice.to_mut());
+
+                        slice.as_ref()
                     };
 
                     // Equal sign
@@ -382,10 +389,10 @@ where
                     let value_raw = self.get_quoted_string(ParseWarningKind::BlockMalformedArguments)?;
 
                     // Parse the string
-                    let value = parse_string(value_raw);
+                    let parsed = parse_string(value_raw);
 
                     // Add to argument map
-                    map.insert(key, value);
+                    map.insert(key, parsed);
 
                     Ok(true)
                 })();
@@ -455,13 +462,13 @@ where
         convert: F,
     ) -> Result<T, ParseWarning>
     where
-        F: FnOnce(&Self, Option<&'t str>) -> Result<T, ParseWarning>,
+        F: FnOnce(&Self, Option<&str>) -> Result<T, ParseWarning>,
     {
         info!("Looking for a value argument, then ']]' (in-head {in_head})");
 
         let argument = if in_head {
             // Gather slice of tokens in value
-            let slice = collect_text(
+            let mut slice = Cow::Borrowed(collect_text(
                 self,
                 self.rule(),
                 &[],
@@ -471,9 +478,11 @@ where
                     ParseCondition::current(Token::LineBreak),
                 ],
                 Some(ParseWarningKind::BlockMalformedArguments),
-            )?;
+            )?);
 
-            Some(slice)
+            self.replace_variables(slice.to_mut());
+
+            Some(slice.as_ref())
         } else {
             None
         };

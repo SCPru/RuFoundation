@@ -1,14 +1,8 @@
 use super::prelude::*;
 
-use crate::{data::ExpressionResult, parsing::WikiScriptScope};
+use crate::data::ExpressionResult;
 
 use std::borrow::Cow;
-use regex::Regex;
-
-lazy_static! {
-    static ref VARIABLE_REGEX: Regex =
-        Regex::new(r"\{@(?P<name>[a-zA-Z0-9_\-]+)\}").unwrap();
-}
 
 pub const BLOCK_SCOPE: BlockRule = BlockRule {
     name: "block-scpoe",
@@ -102,26 +96,26 @@ fn parse_var<'r, 't>(
 
     let mut params = condition.splitn(2," ");
 
-    let var_name = match params.next(){
+    let var_name = match params.next() {
         Some(param) => param,
         None => ""
     };
 
-    let mut expr = match params.next(){
-        Some(param) => Cow::from(param),
-        None => Cow::from("")
+    let mut expr = match params.next() {
+        Some(param) => Cow::Borrowed(param),
+        None => Cow::Borrowed("")
     };
 
     if var_name == "" || expr == "" {
         return Err(parser.make_warn(ParseWarningKind::NoSuchVariable));
     }
 
-    replace_variables(expr.to_mut(), parser.current_scope());
+    parser.replace_variables(expr.to_mut());
 
 
     let value = Cow::from(evaluate_expr(parser, &expr).to_string());
 
-    parser.push_variable(Cow::from(var_name), value.clone(), name == "declare");
+    parser.push_variable(Cow::Borrowed(var_name), value.clone(), name == "declare");
 
     let transaction = &mut parser.transaction(ParserTransactionFlags::Scopes);
 
@@ -135,23 +129,5 @@ fn parse_var<'r, 't>(
 }
 
 fn evaluate_expr<'r, 't>(parser: &mut Parser<'r, 't>, expr: &str) -> ExpressionResult<'static> {
-    parser.page_callbacks().evaluate_expression(Cow::from(expr))
-}
-
-fn replace_variables(content: &mut String, variables: &WikiScriptScope) {
-    let mut matches = Vec::new();
-
-    for capture in VARIABLE_REGEX.captures_iter(content) {
-        let mtch = capture.get(0).unwrap();
-        let name = &capture["name"];
-
-        if let Some(value) = variables.get(name) {
-            matches.push((&value.0, mtch.range()));
-        }
-    }
-
-    matches.reverse();
-    for (value, range) in matches {
-        content.replace_range(range, value);
-    }
+    parser.page_callbacks().evaluate_expression(Cow::Borrowed(expr))
 }

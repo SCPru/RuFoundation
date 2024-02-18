@@ -31,10 +31,16 @@ use crate::tree::{AcceptsPartial, HeadingLevel, Container, ContainerType, Attrib
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use regex::Regex;
 use std::vec;
 use std::rc::Rc;
 use std::{mem, ptr};
 use std::ops::{Deref, DerefMut};
+
+lazy_static! {
+    static ref VARIABLE_REGEX: Regex =
+        Regex::new(r"\{@(?P<name>[a-zA-Z0-9_\-]+)\}").unwrap();
+}
 
 const MAX_RECURSION_DEPTH: usize = 100;
 
@@ -159,8 +165,7 @@ impl<'r, 't> Parser<'r, 't> {
         page_callbacks: Rc<dyn PageCallbacks>,
         settings: &'r WikitextSettings,
     ) -> Self {
-        let mut scopes = Vec::new();
-        scopes.push(WikiScriptScope::new());
+        let scopes = vec![WikiScriptScope::new()];
 
         let full_text = tokenization.full_text();
         let (current, remaining) = tokenization
@@ -539,6 +544,48 @@ impl<'r, 't> Parser<'r, 't> {
         };
 
         current_scope.insert(name, (value, new_depth));
+    }
+
+    pub fn replace_variables(&self, content: &mut String) {
+        let variables = self.current_scope();
+        let mut matches = Vec::new();
+    
+        for capture in VARIABLE_REGEX.captures_iter(content) {
+            let mtch = capture.get(0).unwrap();
+            let name = &capture["name"];
+    
+            if let Some(value) = variables.get(name) {
+                matches.push((&value.0, mtch.range()));
+            }
+        }
+    
+        matches.reverse();
+        for (value, range) in matches {
+            content.replace_range(range, value);
+        }
+    }
+
+    pub fn replace_variables_alloc(&self, content_: &str) -> Cow<str> {
+        let variables = self.current_scope();
+        let mut matches = Vec::new();
+
+        let mut content = content_.to_owned();
+    
+        for capture in VARIABLE_REGEX.captures_iter(&mut content) {
+            let mtch = capture.get(0).unwrap();
+            let name = &capture["name"];
+    
+            if let Some(value) = variables.get(name) {
+                matches.push((&value.0, mtch.range()));
+            }
+        }
+    
+        matches.reverse();
+        for (value, range) in matches {
+            content.replace_range(range, value);
+        }
+
+        Cow::from(content)
     }
     
     // Footnotes

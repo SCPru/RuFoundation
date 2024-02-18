@@ -270,7 +270,7 @@ fn parse_expr<'r, 't>(
 
     let result = evaluate_expr(parser, condition).to_string();
 
-    ok!(Element::Text(Cow::from(result.to_owned())))
+    ok!(Element::Text(Cow::from(result)))
 }
 
 fn evaluate_if<'r, 't>(_parser: &mut Parser<'r, 't>, expr: &str) -> bool {

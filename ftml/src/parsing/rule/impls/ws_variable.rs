@@ -27,7 +27,7 @@ fn try_consume_fn<'p, 'r, 't>(
         .expect("Capture group not found")
         .as_str();
 
-    let value = parser.variable(Cow::from(variable));
+    let value = parser.variable(Cow::Borrowed(variable));
 
     ok!(Element::Text(value))
 }
