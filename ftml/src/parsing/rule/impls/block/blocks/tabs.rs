@@ -96,7 +96,7 @@ fn parse_tab<'r, 't>(
 
     let mut raw_label =
         parser.get_head_value(&BLOCK_TAB, in_head, |_parser, value| match value {
-            Some(name) => Ok(name),
+            Some(name) => Ok(name.as_ref()),
             None => Ok("untitled"),
         })?;
 

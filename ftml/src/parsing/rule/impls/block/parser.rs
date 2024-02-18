@@ -372,12 +372,7 @@ where
 
                         // Gather argument key string slice
                         let end = self.current();
-
-                        let mut slice = Cow::Borrowed(self.full_text().slice_partial(start, end));
-
-                        self.replace_variables(slice.to_mut());
-
-                        slice.as_ref()
+                        self.full_text().slice_partial(start, end)
                     };
 
                     // Equal sign
@@ -389,10 +384,11 @@ where
                     let value_raw = self.get_quoted_string(ParseWarningKind::BlockMalformedArguments)?;
 
                     // Parse the string
-                    let parsed = parse_string(value_raw);
+                    let value = parse_string(value_raw);
+                    let value_with_vars = Cow::Owned(self.replace_variables_alloc(value.as_ref()).as_ref().to_owned());
 
                     // Add to argument map
-                    map.insert(key, parsed);
+                    map.insert(key, value_with_vars);
 
                     Ok(true)
                 })();
@@ -462,13 +458,13 @@ where
         convert: F,
     ) -> Result<T, ParseWarning>
     where
-        F: FnOnce(&Self, Option<&str>) -> Result<T, ParseWarning>,
+        F: FnOnce(&Self, Option<&'t str>) -> Result<T, ParseWarning>,
     {
         info!("Looking for a value argument, then ']]' (in-head {in_head})");
 
         let argument = if in_head {
             // Gather slice of tokens in value
-            let mut slice = Cow::Borrowed(collect_text(
+            let slice = collect_text(
                 self,
                 self.rule(),
                 &[],
@@ -478,11 +474,9 @@ where
                     ParseCondition::current(Token::LineBreak),
                 ],
                 Some(ParseWarningKind::BlockMalformedArguments),
-            )?);
+            )?;
 
-            self.replace_variables(slice.to_mut());
-
-            Some(slice.as_ref())
+            Some(slice)
         } else {
             None
         };

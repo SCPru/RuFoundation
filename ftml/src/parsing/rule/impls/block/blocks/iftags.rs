@@ -50,7 +50,7 @@ fn parse_fn<'r, 't>(
     // Parse out tag conditions
     let conditions =
         parser_tx.get_head_value(&BLOCK_IFTAGS, in_head, |parser, spec| match spec {
-            Some(spec) => Ok(ElementCondition::parse(spec)),
+            Some(spec) => Ok(ElementCondition::parse(spec.as_ref())),
             None => Err(parser.make_warn(ParseWarningKind::BlockMissingArguments)),
         })?;
 
