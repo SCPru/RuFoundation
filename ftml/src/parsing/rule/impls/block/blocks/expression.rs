@@ -89,7 +89,7 @@ fn parse_fn<'r, 't>(
     )?;
 
     let cond_matched =     
-    match name {
+    match name.splitn(2, ':').next().unwrap_or("") {
         "#if" => evaluate_if(parser, condition),
         "#ifexpr" => evaluate_ifexpr(parser, condition),
         _ => unreachable!()
@@ -184,7 +184,7 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
     )?;
 
     let cond_matched =     
-        match name {
+        match name.splitn(2, ':').next().unwrap_or("") {
             "if" => evaluate_if(parser, condition),
             "ifexpr" => evaluate_ifexpr(parser, condition),
             _ => unreachable!()
