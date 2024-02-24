@@ -94,3 +94,14 @@ def filter_url(url):
     if test_url.startswith('javascript:') or test_url.startswith('data:'):
         return '#invalid-url'
     return url
+
+
+def get_boolean_param(params: dict, key, default=False):
+    value = params.get(key, default)
+    if isinstance(value, str):
+        value = value.lower()
+    if value in ['true', 't', '1', 'yes']:
+        return True
+    if value in ['false', 'f', '0', 'no']:
+        return False
+    return default
