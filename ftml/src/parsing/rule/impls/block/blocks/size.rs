@@ -44,11 +44,13 @@ fn parse_fn<'r, 't>(
     assert!(!flag_score, "Size doesn't allow score flag");
     assert_block_name(&BLOCK_SIZE, name);
 
-    let size =
+    let mut size =
         parser.get_head_value(&BLOCK_SIZE, in_head, |parser, value| match value {
             Some(size) => Ok(format!("font-size: {size};")),
             None => Err(parser.make_warn(ParseWarningKind::BlockMissingArguments)),
         })?;
+
+    parser.replace_variables(&mut size);
 
     // Get body content, without paragraphs
     let (elements, exceptions, paragraph_safe) =

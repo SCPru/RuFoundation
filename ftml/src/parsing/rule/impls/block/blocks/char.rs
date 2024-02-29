@@ -62,7 +62,9 @@ fn parse_fn<'r, 't>(
     assert_block_name(&BLOCK_CHAR, name);
 
     // Parse the entity and get the string
-    let string = parser.get_head_value(&BLOCK_CHAR, in_head, parse_entity)?;
+    let mut string = parser.get_head_value(&BLOCK_CHAR, in_head, parse_entity)?;
+
+    parser.replace_variables(string.to_mut());
 
     ok!(Element::Text(string))
 }

@@ -52,5 +52,9 @@ fn parse_fn<'r, 't>(
             },
         )?;
 
-    ok!(Element::EquationReference(cow!(name)))
+    let mut name_with_vars = cow!(name);
+
+    parser.replace_variables(name_with_vars.to_mut());
+
+    ok!(Element::EquationReference(name_with_vars))
 }

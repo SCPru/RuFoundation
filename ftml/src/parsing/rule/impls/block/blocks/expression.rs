@@ -274,12 +274,16 @@ fn parse_expr<'r, 't>(
 }
 
 fn evaluate_if<'r, 't>(_parser: &mut Parser<'r, 't>, expr: &str) -> bool {
-    let expr = expr.trim().to_ascii_lowercase();
+    let mut expr = expr.trim().to_ascii_lowercase();
+    _parser.replace_variables(&mut expr);
     !(expr == "false" || expr == "null" || (expr.starts_with("{$") && expr.ends_with('}')) || (expr.starts_with("%%") && expr.ends_with("%%")))
 }
 
 fn evaluate_ifexpr<'r, 't>(parser: &mut Parser<'t, 't>, expr: &str) -> bool {
-    match evaluate_expr(parser, expr) {
+    let mut expr_with_vars = cow!(expr);
+    parser.replace_variables(expr_with_vars.to_mut());
+
+    match evaluate_expr(parser, &expr_with_vars) {
         ExpressionResult::Bool(b) => b,
         ExpressionResult::Int(i) => i != 0,
         ExpressionResult::Float(f) => f != 0.0,

@@ -18,8 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use std::borrow::Cow;
-
 use super::arguments::Arguments;
 use super::BlockRule;
 use crate::parsing::collect::{collect_text, collect_text_keep};

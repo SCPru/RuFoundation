@@ -55,11 +55,15 @@ fn parse_fn<'r, 't>(
         return Err(parser.make_warn(ParseWarningKind::BlockMissingArguments));
     }
 
+    let mut name_with_vars = cow!(name);
+
+    parser.replace_variables(name_with_vars.to_mut());
+
     // Isolate ID if requested
     let name = if parser.settings().isolate_user_ids {
-        Cow::Owned(isolate_ids(name))
+        Cow::Owned(isolate_ids(&name_with_vars))
     } else {
-        cow!(name)
+        name_with_vars
     };
 
     ok!(Element::AnchorName(name))

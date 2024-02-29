@@ -104,13 +104,15 @@ fn parse_tab<'r, 't>(
 
     // hack: Wikidot allows [[tab title=""]]
     // no other arguments are allowed like this. so we just check for tab title
-    let label = if raw_label.starts_with("title=\"") && raw_label.ends_with('"') {
+    let mut label = if raw_label.starts_with("title=\"") && raw_label.ends_with('"') {
         parse_string(&raw_label[6..])
     } else {
         cow!(raw_label)
     };
 
     let (elements, exceptions, _) = parser.get_body_elements(&BLOCK_TAB, name, true)?.into();
+
+    parser.replace_variables(label.to_mut());
 
     // Build element and return
     let element = Element::Partial(PartialElement::Tab(Tab {

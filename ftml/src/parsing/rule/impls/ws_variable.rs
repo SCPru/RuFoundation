@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use super::prelude::*;
 use regex::Regex;
 
@@ -27,7 +25,7 @@ fn try_consume_fn<'p, 'r, 't>(
         .expect("Capture group not found")
         .as_str();
 
-    let value = parser.variable(Cow::Borrowed(variable));
+    let value = parser.variable(cow!(variable));
 
     ok!(Element::Text(value))
 }
