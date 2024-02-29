@@ -7,7 +7,7 @@ from django.utils.safestring import SafeString
 
 import renderer
 from renderer.templates import apply_template
-from renderer.utils import render_user_to_text, render_template_from_string
+from renderer.utils import render_user_to_text, render_template_from_string, get_boolean_param
 from renderer.parser import RenderContext
 from web.controllers import articles
 from web.models.articles import Article, Vote, ArticleLogEntry, Tag
@@ -422,8 +422,8 @@ def render(context: RenderContext, params, content=None):
 
         prepend = params.get('prependline', '')
         append = params.get('appendline', '')
-        separate = params.get('separate', 'yes') == 'yes'
-        wrapper = params.get('wrapper', 'yes') == 'yes'
+        separate = get_boolean_param(params, 'separate', True)
+        wrapper = get_boolean_param(params, 'wrapper', True)
 
         if content:
             selection = re.match(r'(?:.*\s*(\[\[head]]\n?.(?P<head>.*?).\[\[/head]])|)(?:.*\s*(\[\[body]]\n?.(?P<body>.*?).\[\[/body]])|)(?:.*\s*(\[\[foot]]\n?.(?P<foot>.*?).\[\[/foot]])|)', content, re.S | re.I | re.M)
@@ -438,7 +438,7 @@ def render(context: RenderContext, params, content=None):
         pages, page_index, pagination_page, pagination_total_pages, total_pages = query_pages(context.article, params, context.user, context.path_params)
 
         pages = list(pages)
-        if params.get('reverse', 'no') == 'yes':
+        if get_boolean_param(params, 'reverse', False):
             pages = reversed(pages)
 
         output = SafeString()
