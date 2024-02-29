@@ -384,11 +384,11 @@ where
                     let value_raw = self.get_quoted_string(ParseWarningKind::BlockMalformedArguments)?;
 
                     // Parse the string
-                    let value = parse_string(value_raw);
-                    let value_with_vars = Cow::Owned(self.replace_variables_alloc(value.as_ref()).as_ref().to_owned());
-
+                    let mut value = parse_string(value_raw);
+                    self.replace_variables(value.to_mut());
+                    
                     // Add to argument map
-                    map.insert(key, value_with_vars);
+                    map.insert(key, value);
 
                     Ok(true)
                 })();
