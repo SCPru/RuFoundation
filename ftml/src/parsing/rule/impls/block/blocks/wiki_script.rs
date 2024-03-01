@@ -113,7 +113,11 @@ fn parse_var<'r, 't>(
     parser.replace_variables(expr.to_mut());
 
 
-    let value = Cow::from(evaluate_expr(parser, &expr).to_string());
+    let value = if flag_star {
+        Cow::from(evaluate_expr(parser, &expr).to_string())
+    } else {
+        Cow::from(expr)
+    };
 
     parser.push_variable(Cow::Borrowed(var_name), value.clone(), name == "declare");
 
@@ -121,11 +125,7 @@ fn parse_var<'r, 't>(
 
     transaction.commit();
 
-    if flag_star {
-        ok!(Element::Text(value))
-    } else {
-        ok!(Element::Void)
-    }
+    ok!(Element::Void)
 }
 
 fn evaluate_expr<'r, 't>(parser: &mut Parser<'r, 't>, expr: &str) -> ExpressionResult<'static> {
