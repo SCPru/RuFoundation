@@ -113,6 +113,7 @@ pub enum ContainerType {
     Form,
     Align(Alignment),
     Header(Heading),
+    WSScope,
 }
 
 impl ContainerType {
@@ -146,6 +147,7 @@ impl ContainerType {
             ContainerType::Align(_) => HtmlTag::new("div"),
             ContainerType::Form => HtmlTag::new("form"),
             ContainerType::Header(heading) => heading.html_tag(indexer),
+            ContainerType::WSScope => HtmlTag::new("scope"),
         }
     }
 
@@ -177,6 +179,7 @@ impl ContainerType {
             ContainerType::Align(_) => false,
             ContainerType::Form => false,
             ContainerType::Header(_) => false,
+            ContainerType::WSScope => false,
         }
     }
 }

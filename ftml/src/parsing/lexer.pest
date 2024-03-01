@@ -47,6 +47,7 @@ token = _{
     identifier |
     email |
     variable |
+    ws_variable |
     string_quote_doubleescape |
     string_quote_escape |
     string_quote |
@@ -198,6 +199,12 @@ table_column_title = @{ "||~" }
 // Variable {{{
 
 variable = @{ "{$" ~ identifier ~ "}" }
+
+// }}}
+
+// WSVariable {{{
+
+ws_variable = @{ "{@" ~ identifier ~ "}" }
 
 // }}}
 

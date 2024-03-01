@@ -21,19 +21,26 @@
 use bitflags::bitflags;
 
 use super::condition::ParseCondition;
-use super::{prelude::*, parse_internal, UnstructuredParseResult};
+use super::{prelude::*, parse_internal, UnstructuredParseResult, WikiScriptScope};
 use super::rule::Rule;
 use super::RULE_PAGE;
 use crate::data::{PageCallbacks, PageInfo, PageRef};
 use crate::render::text::TextRender;
 use crate::tokenizer::Tokenization;
 use crate::tree::{AcceptsPartial, HeadingLevel, Container, ContainerType, AttributeMap};
+use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use regex::Regex;
 use std::vec;
 use std::rc::Rc;
 use std::{mem, ptr};
 use std::ops::{Deref, DerefMut};
+
+lazy_static! {
+    static ref VARIABLE_REGEX: Regex =
+        Regex::new(r"\{@(?P<name>[a-zA-Z0-9_\-]+)\}").unwrap();
+}
 
 const MAX_RECURSION_DEPTH: usize = 100;
 
@@ -45,6 +52,7 @@ bitflags! {
         const FootnoteFlag = 1 << 3;
         const InternalLinks = 1 << 4;
         const AcceptsPartial = 1 << 5;
+        const Scopes = 1 << 6;
     }
 }
 
@@ -75,6 +83,9 @@ struct ParserState<'t> {
     has_footnote_block: bool, // Whether a [[footnoteblock]] was created.
     has_toc_block: bool, // Whether a [[toc]] was created.
     in_footnote: bool, // Whether we're currently inside [[footnote]] ... [[/footnote]].
+
+    // WikiScript variable scopes
+    scopes: Vec<WikiScriptScope<'t>>,
 }
 
 #[derive(Debug)]
@@ -154,6 +165,8 @@ impl<'r, 't> Parser<'r, 't> {
         page_callbacks: Rc<dyn PageCallbacks>,
         settings: &'r WikitextSettings,
     ) -> Self {
+        let scopes = vec![WikiScriptScope::new()];
+
         let full_text = tokenization.full_text();
         let (current, remaining) = tokenization
             .tokens()
@@ -168,6 +181,7 @@ impl<'r, 't> Parser<'r, 't> {
             has_footnote_block: false,
             has_toc_block: false,
             in_footnote: false,
+            scopes,
         };
 
         Parser {
@@ -215,6 +229,7 @@ impl<'r, 't> Parser<'r, 't> {
             has_footnote_block: current.has_footnote_block,
             has_toc_block: current.has_toc_block,
             in_footnote: current.in_footnote,
+            scopes: current.scopes,
         });
 
         ParserTransaction {
@@ -229,7 +244,7 @@ impl<'r, 't> Parser<'r, 't> {
         assert!(self.state.len() > 1);
 
         let last_known = self.state.pop().unwrap().clone();
-        let mut current = self.state_mut();
+        let current = self.state_mut();
 
         if flags.contains(ParserTransactionFlags::AcceptsPartial) {
             current.accepts_partial = last_known.accepts_partial;
@@ -251,6 +266,10 @@ impl<'r, 't> Parser<'r, 't> {
 
         if flags.contains(ParserTransactionFlags::InternalLinks) {
             current.internal_links = last_known.internal_links;
+        }
+
+        if flags.contains(ParserTransactionFlags::Scopes) {
+            current.scopes = last_known.scopes;
         }
     }
 
@@ -301,7 +320,7 @@ impl<'r, 't> Parser<'r, 't> {
             Ok(ParseSuccess{item, ..}) => {
                 let elements: Vec<Element<'static>> = item.iter().map(|element| element.to_owned()).collect();
 
-                let mut state = self.state_mut();
+                let state = self.state_mut();
 
                 for toc_depth in table_of_contents_depths {
                     state.table_of_contents.borrow_mut().push(toc_depth.to_owned());
@@ -384,6 +403,35 @@ impl<'r, 't> Parser<'r, 't> {
         self.start_of_line
     }
 
+    #[inline]
+    pub fn scope_depth(&self) -> u32 {
+        self.state().scopes.len() as u32
+    }
+
+    #[inline]
+    pub fn current_scope(&self) -> &WikiScriptScope<'t> {
+        let state =  self.state();
+
+        state.scopes.last().unwrap()
+    }
+
+    #[inline]
+    pub fn current_scope_mut(&mut self) -> &mut WikiScriptScope<'t> {
+        let state =  self.state_mut();
+
+        state.scopes.last_mut().unwrap()
+    }
+
+    #[inline]
+    pub fn variable(&mut self, name: Cow<'t, str>) -> Cow<'t, str> {
+        let scope = self.current_scope();
+        
+        match scope.get(&name) {
+            Some(value) => value.0.to_owned(),
+            None => Cow::from("")
+        }
+    }
+
     // Setters
     #[inline]
     pub fn set_rule(&mut self, rule: Rule) {
@@ -463,6 +511,83 @@ impl<'r, 't> Parser<'r, 't> {
         mem::take(&mut self.state_mut().table_of_contents.borrow_mut())
     }
 
+    // WikiScript scopes and variables management
+
+    pub fn push_scope(&mut self) {
+        let scopes = &mut self.state_mut().scopes;
+        let current_scope = scopes.last().unwrap();
+
+        scopes.push(current_scope.clone());
+    }
+    
+    pub fn pop_scope(&mut self) {
+        let state = self.state_mut();
+        let last_scope = state.scopes.pop().unwrap();
+        let current_depth = self.scope_depth();
+        let current_scope = self.current_scope_mut();
+        
+        for (name, (value, depth)) in last_scope.iter() {
+            let last_depth = depth.to_owned();
+            if last_depth <= current_depth {
+                current_scope.insert(name.to_owned(), (value.to_owned(), last_depth));
+            }
+        }
+    }
+
+    pub fn push_variable(&mut self, name: Cow<'t, str>, value: Cow<'t, str>, override_: bool) {
+        let scope_depth = self.scope_depth();
+        let current_scope = self.current_scope_mut();
+
+        let new_depth = match override_ {
+            false => if current_scope.contains_key(&name) { current_scope.get(&name).unwrap().1 } else { scope_depth },
+            true => scope_depth
+        };
+
+        current_scope.insert(name, (value, new_depth));
+    }
+
+    pub fn replace_variables(&self, content: &mut String) {
+        let variables = self.current_scope();
+        let mut matches = Vec::new();
+    
+        for capture in VARIABLE_REGEX.captures_iter(content) {
+            let mtch = capture.get(0).unwrap();
+            let name = &capture["name"];
+    
+            if let Some(value) = variables.get(name) {
+                matches.push((&value.0, mtch.range()));
+            }
+        }
+    
+        matches.reverse();
+        for (value, range) in matches {
+            content.replace_range(range, value);
+        }
+    }
+
+    pub fn replace_variables_alloc(&self, content_: &str) -> Cow<str> {
+        let variables = self.current_scope();
+        let mut matches = Vec::new();
+
+        let mut content = content_.to_owned();
+    
+        for capture in VARIABLE_REGEX.captures_iter(&mut content) {
+            let mtch = capture.get(0).unwrap();
+            let name = &capture["name"];
+    
+            if let Some(value) = variables.get(name) {
+                matches.push((&value.0, mtch.range()));
+            }
+        }
+    
+        matches.reverse();
+        for (value, range) in matches {
+            content.replace_range(range, value);
+        }
+
+        Cow::from(content)
+    }
+    
     // Footnotes
     pub fn push_footnote(&mut self, contents: Vec<Element<'t>>) {
         self.state_mut().footnotes.borrow_mut().push(contents);
@@ -619,7 +744,7 @@ impl<'r, 't> Parser<'r, 't> {
     pub fn update_flags(&mut self, parser: &Parser<'r, 't>) {
         // Flags
         let other_state = parser.state();
-        let mut state = self.state_mut();
+        let state = self.state_mut();
 
         state.has_footnote_block |= other_state.has_footnote_block;
         state.has_toc_block |= other_state.has_toc_block;

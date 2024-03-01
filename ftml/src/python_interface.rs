@@ -266,7 +266,7 @@ impl PageCallbacks for PythonCallbacks {
         });
         log_python_error(&result);
         match result {
-            Ok(result) => Cow::from(result.as_str().to_owned()),
+            Ok(result) => Cow::from(result),
             Err(_) => Cow::from("")
         }
     }
@@ -277,7 +277,7 @@ impl PageCallbacks for PythonCallbacks {
         });
         log_python_error(&result);
         match result {
-            Ok(result) => Cow::from(result.as_str().to_owned()),
+            Ok(result) => Cow::from(result),
             Err(_) => Cow::from("")
         }
     }
@@ -288,7 +288,7 @@ impl PageCallbacks for PythonCallbacks {
         });
         log_python_error(&result);
         match result {
-            Ok(result) => Cow::from(result.as_str().to_owned()),
+            Ok(result) => Cow::from(result),
             Err(_) => Cow::from("?")
         }
     }
@@ -335,7 +335,7 @@ impl PageCallbacks for PythonCallbacks {
         });
         log_python_error(&result);
         match result {
-            Ok(result) => Cow::from(result.as_str().to_owned()),
+            Ok(result) => Cow::from(result),
             Err(_) => Cow::Owned(full_name.to_string())
         }
     }
@@ -368,7 +368,7 @@ impl<'t> Includer<'t> for PythonCallbacks {
         });
         log_python_error(&result);
         match result {
-            Ok(result) => Ok(Cow::from(result.as_str().to_owned())),
+            Ok(result) => Ok(Cow::from(result)),
             Err(_) => Err(())
         }
     }

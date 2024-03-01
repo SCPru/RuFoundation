@@ -47,8 +47,12 @@ fn parse_fn<'r, 't>(
             None => Err(parser.make_warn(ParseWarningKind::BlockMissingArguments)),
         })?;
 
+    let mut name_with_vars = cow!(name);
+
+    parser.replace_variables(name_with_vars.to_mut());
+
     let element = Element::User {
-        name: cow!(name),
+        name: name_with_vars,
         show_avatar: flag_star,
     };
 

@@ -66,6 +66,7 @@ mod underline;
 mod underscore_line_break;
 mod url;
 mod variable;
+mod ws_variable;
 
 pub use self::anchor::RULE_ANCHOR;
 pub use self::block::RULE_BLOCK;
@@ -104,3 +105,4 @@ pub use self::underline::RULE_UNDERLINE;
 pub use self::underscore_line_break::RULE_UNDERSCORE_LINE_BREAK;
 pub use self::url::RULE_URL;
 pub use self::variable::RULE_VARIABLE;
+pub use self::ws_variable::RULE_WS_VARIABLE;

@@ -56,7 +56,11 @@ fn parse_count<'r, 't>(
         None => return Err(parser.make_warn(ParseWarningKind::BlockMissingArguments)),
     };
 
-    match argument.parse::<NonZeroU32>() {
+    let mut argument_with_vars = cow!(argument);
+
+    parser.replace_variables(argument_with_vars.to_mut());
+
+    match argument_with_vars.parse::<NonZeroU32>() {
         Ok(value) if value.get() > 100 => {
             warn!("Number of lines ({}) is too great (max 100)", value.get());
             Err(parser.make_warn(ParseWarningKind::BlockMalformedArguments))

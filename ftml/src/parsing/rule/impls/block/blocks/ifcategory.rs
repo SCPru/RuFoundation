@@ -49,7 +49,7 @@ fn parse_fn<'r, 't>(
         parser.get_head_value(&BLOCK_IFCATEGORY, in_head, |parser, spec| match spec {
             None => Err(parser.make_warn(ParseWarningKind::BlockMissingArguments)),
             Some(spec) => {
-                let mut conditions = ElementCondition::parse(spec);
+                let mut conditions = ElementCondition::parse(spec.as_ref());
 
                 conditions.iter_mut().for_each(|condition| {
                     // Because a page can be in at most one category,

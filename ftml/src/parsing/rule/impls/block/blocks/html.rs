@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::borrow::Cow;
+
 use super::prelude::*;
 
 pub const BLOCK_HTML: BlockRule = BlockRule {
@@ -43,9 +45,11 @@ fn parse_fn<'r, 't>(
     assert_block_name(&BLOCK_HTML, name);
 
     parser.get_head_none(&BLOCK_HTML, in_head)?;
-    let html = parser.get_body_text(&BLOCK_HTML, name)?;
+    let mut html = Cow::from(parser.get_body_text(&BLOCK_HTML, name)?);
+    parser.replace_variables(html.to_mut());
+    
     let element = Element::Html {
-        contents: cow!(html),
+        contents: html,
     };
 
     ok!(element)
