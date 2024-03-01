@@ -1099,7 +1099,6 @@ div.sexy-box div.image-container img {
  
 .scp-image-block img {
     border: 0;
-    width: 300px;
 }
  
 .scp-image-block .scp-image-caption {
@@ -1109,7 +1108,7 @@ div.sexy-box div.image-container img {
     font-size: 80%;
     font-weight: bold;
     text-align: center;
-    width: 300px;
+    width: 100%;
 }
  
 .scp-image-block > p {
