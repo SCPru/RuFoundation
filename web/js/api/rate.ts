@@ -15,6 +15,7 @@ export interface ModuleRateResponse {
 export interface ModuleRateVote {
     user: UserData
     value: number
+    date?: string
 }
 
 export interface ModuleRateVotesResponse {

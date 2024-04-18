@@ -6,6 +6,7 @@ import Loader from "../util/loader";
 import {fetchPageVotes, ModuleRateVote, RatingMode} from "../api/rate";
 import UserView from "../util/user-view";
 import {sprintf} from 'sprintf-js'
+import formatDate from '../util/date-format'
 
 
 interface Props {
@@ -46,7 +47,11 @@ const Styles = styled.div<{loading?: boolean}>`
     z-index: 1;
   }
 }
-
+.admin-vote-date {
+  font-size: 90%;
+  font-style: italic;
+  opacity: 0.5;
+}
 `;
 
 
@@ -227,6 +232,21 @@ class ArticleRating extends Component<Props, State> {
         }
     }
 
+    renderVoteDate(date?: string) {
+        if (!date) {
+            return null
+        }
+
+        return (
+            <>
+                &nbsp;
+                <span className="admin-vote-date">
+                    ({formatDate(new Date(date))})
+                </span>
+            </>
+        )
+    }
+
     render() {
         const { error, loading, votes } = this.state;
         return (
@@ -250,7 +270,7 @@ class ArticleRating extends Component<Props, State> {
                     { !!(votes && votes.length) && <h2>Список голосовавших за страницу</h2>}
                     { votes.map((vote, i) => (
                         <React.Fragment key={i}>
-                            <UserView data={vote.user} />&nbsp;{this.renderUserVote(vote.value)}<br/>
+                            <UserView data={vote.user} />&nbsp;{this.renderUserVote(vote.value)}{this.renderVoteDate(vote.date)}<br/>
                         </React.Fragment>
                     )) }
                 </div>

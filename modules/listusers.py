@@ -12,7 +12,7 @@ def has_content():
 def render(context, params, content=None):
     # all params are ignored. always current user
     if not context.user.is_authenticated:
-        if get_boolean_param(params, 'always'):
+        if not get_boolean_param(params, 'always'):
             return ''
         tpl_vars = {
             'avatar': settings.DEFAULT_AVATAR
