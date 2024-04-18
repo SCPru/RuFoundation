@@ -66,8 +66,11 @@ def api_get_votes(context, _params):
         raise ModuleError('Страница не указана')
     votes = []
     rating, _, popularity, mode = articles.get_rating(context.article)
-    for db_vote in Vote.objects.filter(article=context.article).order_by('-user__username'):
-        votes.append({'user': render_user_to_json(db_vote.user), 'value': db_vote.rate})
+    for db_vote in Vote.objects.filter(article=context.article).order_by('date'):
+        rendered_vote = {'user': render_user_to_json(db_vote.user), 'value': db_vote.rate}
+        if context.user.is_staff or context.user.is_superuser:
+            rendered_vote['date'] = db_vote.date.isoformat()
+        votes.append(rendered_vote)
     return {'pageId': context.article.full_name, 'votes': votes, 'rating': rating, 'popularity': popularity, 'mode': mode}
 
 
