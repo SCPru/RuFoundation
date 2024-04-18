@@ -16,7 +16,6 @@ export function makeWantedPages(node: HTMLElement) {
 
     const wpBasePathParams = JSON.parse(node.dataset.wantedPagesPathParams);
     const wpBaseParams = JSON.parse(node.dataset.wantedPagesParams);
-    const wpPageId = node.dataset.listPagesPageId;
 
     // display loader when needed.
     const loaderInto = document.createElement('div');
@@ -45,7 +44,6 @@ export function makeWantedPages(node: HTMLElement) {
         try {
             const { result: rendered } = await callModule<ModuleRenderResponse>({
                 module: 'wantedpages',
-                pageId: wpPageId,
                 method: 'render',
                 pathParams: Object.assign(wpBasePathParams, {p: page}),
                 params: wpBaseParams,
