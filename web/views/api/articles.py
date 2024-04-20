@@ -34,7 +34,6 @@ class ArticleView(APIView):
         if 'source' in data and len(data['source']) > settings.ARTICLE_SOURCE_LIMIT:
             raise APIError('Превышен лимит размера страницы')
 
-
 class CreateView(ArticleView):
     @takes_json
     def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
@@ -54,6 +53,8 @@ class CreateView(ArticleView):
         article = articles.create_article(articles.normalize_article_name(data['pageId']), request.user)
         article.title = data['title']
         article.save()
+        if data.get('parent', ''):
+            articles.set_parent(article, articles.normalize_article_name(data['parent']), request.user)
         version = articles.create_article_version(article, data['source'], request.user)
         articles.refresh_article_links(version)
 
