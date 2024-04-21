@@ -145,7 +145,7 @@ class ArticleRename extends Component<Props, State> {
                                 Новое название страницы:
                             </td>
                             <td>
-                                <input type="text" name="new_name" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-rename-input" defaultValue={new_name} disabled={loading||saving}/>
+                                <input type="text" name="new_name" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-rename-input" defaultValue={new_name} disabled={loading||saving} autoFocus/>
                             </td>
                         </tr>
                         </tbody>

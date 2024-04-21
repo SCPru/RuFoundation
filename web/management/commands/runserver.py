@@ -132,7 +132,7 @@ class Command(BaseRunserverCommand):
                     filename = ('ftml.dll',)
                     new_filename = 'ftml.pyd'
                 else:
-                    filename = ('ftml.so', 'libftml.so')
+                    filename = ('ftml.so', 'libftml.so', 'libftml.dylib')
                     new_filename = filename[0]
                 return filename, new_filename
 

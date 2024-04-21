@@ -56,9 +56,9 @@ class ArticleChild extends Component<Props, State> {
         }
 
         const { pageId } = this.props;
-        let { child } = this.state;
+        const { child } = this.state;
 
-        if (isFullNameAllowed(child)) {
+        if (isFullNameAllowed(child) && child != pageId) {
             window.location.href = `/${child}/edit/true/parent/${pageId}`;
         } else {
             this.setState({ error: 'Некорректный ID дочерней страницы!' });
@@ -76,11 +76,15 @@ class ArticleChild extends Component<Props, State> {
 
     onChange = (e) => {
         // @ts-ignore
-        this.setState({[e.target.name]: e.target.value})
+        this.setState({ [e.target.name]: e.target.value })
     };
 
     onCloseError = () => {
-        this.setState({error: undefined});
+        this.setState({ error: undefined });
+    };
+
+    onSnippet = (e) => {
+        this.setState({ child: e.target.id });
     };
 
     render() {
@@ -96,7 +100,7 @@ class ArticleChild extends Component<Props, State> {
                 <a className="action-area-close btn btn-danger" href="#" onClick={this.onCancel}>Закрыть</a>
                 <h1>Создать дочернюю страницу</h1>
                 <p>Это действие создаст страницу, в качестве родителя которой будет установлена данная страница.</p>
-                <p>Это полезно например при создании оффсетов.</p>
+                <p> <em>Подсказки:</em> <a id="fragment:" onClick={this.onSnippet}>fragment:</a> / <a id={`fragment:${pageId}_`} onClick={this.onSnippet}>{`fragment:${pageId}_`}</a></p>
 
                 <form method="POST" onSubmit={this.onSubmit}>
                     <table className="form">
@@ -114,7 +118,7 @@ class ArticleChild extends Component<Props, State> {
                                 Название дочерней страницы:
                             </td>
                             <td>
-                                <input type="text" name="child" className="text" onChange={this.onChange} id="page-child-input" defaultValue={child}/>
+                                <input type="text" name="child" className="text" onChange={this.onChange} id="page-child-input" value={child} autoFocus/>
                             </td>
                         </tr>
                         </tbody>
