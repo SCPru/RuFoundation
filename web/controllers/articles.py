@@ -342,7 +342,10 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
 
     if 'parent' in new_props:
         subtypes.append(ArticleLogEntry.LogEntryType.Parent)
-        parent = Article.objects.get(id=new_props['parent'])
+        try:
+            parent = Article.objects.get(id=new_props['parent'])
+        except Article.DoesNotExist:
+            parent = None
         meta['parent'] = {
             'parent': get_full_name(parent),
             'parent_id': new_props['parent'],
