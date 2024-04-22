@@ -13,7 +13,7 @@ import ArticleLock from "../articles/article-lock";
 import ArticleFiles from "../articles/article-files";
 import ArticleDelete from "../articles/article-delete";
 import { RatingMode } from '../api/rate'
-import sprintf from 'sprintf-js'
+import { sprintf } from 'sprintf-js'
 import ArticleBacklinksView from '../articles/article-backlinks'
 
 
