@@ -7,12 +7,13 @@ import ArticleSource from "../articles/article-source";
 import ArticleTags from "../articles/article-tags";
 import ArticleRating from "../articles/article-rating";
 import ArticleParent from "../articles/article-parent";
+import ArticleChild from "../articles/article-child";
 import ArticleRename from "../articles/article-rename";
 import ArticleLock from "../articles/article-lock";
 import ArticleFiles from "../articles/article-files";
 import ArticleDelete from "../articles/article-delete";
-import {RatingMode} from '../api/rate'
-import {sprintf} from 'sprintf-js'
+import { RatingMode } from '../api/rate'
+import { sprintf } from 'sprintf-js'
 import ArticleBacklinksView from '../articles/article-backlinks'
 
 
@@ -36,7 +37,7 @@ interface Props {
 
 
 interface State {
-    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'lock' | 'rename' | 'files' | 'delete' | 'backlinks' | null
+    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'child' | 'lock' | 'rename' | 'files' | 'delete' | 'backlinks' | null
     extOptions: boolean
     isNewEditor: boolean
     onCancelNewEditor?: () => void
@@ -138,6 +139,15 @@ class PageOptions extends Component<Props, State> {
         });
     };
 
+    onChild = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ subView: 'child' });
+        setTimeout(() => {
+            window.scrollTo(window.scrollX, document.body.scrollHeight);
+        });
+    };
+
     onLock = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -226,6 +236,7 @@ class PageOptions extends Component<Props, State> {
                     <a id="backlinks-button" className="btn btn-default" href="#" onClick={this.onBacklinks}>Обратные ссылки</a>
                     <a id="view-source-button" className="btn btn-default" href="#" onClick={this.onSource}>Исходник страницы</a>
                     { editable && <a id="parent-page-button" className="btn btn-default" href="#" onClick={this.onParent}>Родитель</a> }
+                    { editable && <a id="child-page-button" className="btn btn-default" href="#" onClick={this.onChild}>Создать дочернюю страницу</a> }
                     { lockable && <a id="page-block-button" className="btn btn-default" href="#" onClick={this.onLock}>Заблокировать страницу</a> }
                     { editable && <a id="rename-move-button" className="btn btn-default" href="#" onClick={this.onRename}>Переименовать</a> }
                     { editable && <a id="delete-button" className="btn btn-default" href="#" onClick={this.onDelete}>Удалить</a> }
@@ -265,6 +276,9 @@ class PageOptions extends Component<Props, State> {
 
             case 'parent':
                 return <ArticleParent pageId={pageId} onClose={this.onCancelSubView} />;
+
+            case 'child':
+                return <ArticleChild pageId={pageId} onClose={this.onCancelSubView} />;
 
             case 'lock':
                 return <ArticleLock pageId={pageId} onClose={this.onCancelSubView} />;
