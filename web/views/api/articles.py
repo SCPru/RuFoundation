@@ -53,10 +53,11 @@ class CreateView(ArticleView):
         article = articles.create_article(articles.normalize_article_name(data['pageId']), request.user)
         article.title = data['title']
         article.save()
-        if data.get('parent', ''):
-            articles.set_parent(article, articles.normalize_article_name(data['parent']), request.user)
         version = articles.create_article_version(article, data['source'], request.user)
         articles.refresh_article_links(version)
+        
+        if data.get('parent') is not None:
+            articles.set_parent(article, articles.normalize_article_name(data['parent']), request.user)
 
         return self.render_json(201, {'status': 'ok'})
 
