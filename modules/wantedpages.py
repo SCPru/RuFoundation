@@ -37,6 +37,7 @@ def render(context, params):
     total_links: int = q.count()
 
     page: int = 1
+    
     if page_str.isnumeric():
         page = max(1, int(page_str))
     
@@ -53,20 +54,20 @@ def render(context, params):
                 """
                 <div class="w-wanted-pages"
                 data-wanted-pages-path-params="{{ data_path_params }}"
-                data-wanted-pages-params="{{ data_params}} ">
+                data-wanted-pages-params="{{ data_params }}">
                 {% if has_content %}
                 {{ pagination }}
-                    <table class="form grid" style="margin: 1em auto;">
-                        <tbody>
-                            <tr><th>Исходная страница</th><th>Вожделенные единицы информации</th></tr>
-                            {% for record in records %}
-                                <tr>
-                                    <td><a href="/{{ record.link_from }}">{{ record.link_from }}</a></td>
-                                    <td><a href="/{{ record.link_to }}">{{ record.link_to }}</a></td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <table class="form grid" style="margin: 1em auto;">
+                    <tbody>
+                        <tr><th>Исходная страница</th><th>Вожделенные единицы информации</th></tr>
+                        {% for record in records %}
+                            <tr>
+                                <td><a href="/{{ record.link_from }}">{{ record.link_from }}</a></td>
+                                <td><a href="/{{ record.link_to }}">{{ record.link_to }}</a></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
                 {{ pagination }}
                 {% endif %}
                 </div>
