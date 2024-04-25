@@ -209,6 +209,11 @@ class ExternalLink(SiteLimitedModel):
         verbose_name = "Связь"
         verbose_name_plural = "Связи"
 
+        indexes = [
+            models.Index(fields=['link_from', 'link_to']),
+            models.Index(fields=['link_type'])
+        ]
+
         constraints = [models.UniqueConstraint(fields=['link_from', 'link_to', 'link_type'], name='%(app_label)s_%(class)s_unique')]
 
     class Type(models.TextChoices):
