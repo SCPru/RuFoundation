@@ -8,6 +8,7 @@ import {makeUpDownRateModule} from "./articles/rate-updown";
 import {makeStarsRateModule} from "./articles/rate-stars";
 import "./articles/auto-resize-iframe";
 import {makeListPages} from "./articles/list-pages";
+import {makeWantedPages} from './articles/wanted-pages';
 import {makePasswordToggle} from "./util/password";
 import PageLoginStatus from "./entrypoints/page-login-status";
 import {makeTOC} from "./articles/toc";
@@ -54,6 +55,8 @@ window.addEventListener('DOMContentLoaded', () => {
             makeStarsRateModule(node);
         } else if (node.classList.contains('w-list-pages')) {
             makeListPages(node);
+        } else if (node.classList.contains('w-wanted-pages')) {
+            makeWantedPages(node);
         } else if (node.classList.contains('w-toc')) {
             makeTOC(node);
         } else if (node.classList.contains('w-forum-post-options')) {
