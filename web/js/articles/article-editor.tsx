@@ -147,8 +147,10 @@ class ArticleEditor extends Component<Props, State> {
             pageId: this.props.pageId,
             title: this.state.title,
             source: this.state.source,
-            comment: this.state.comment
+            comment: this.state.comment,
+            parent: pathParams['parent']
         };
+        
         if (isNew) {
             try {
                 await createArticle(input);

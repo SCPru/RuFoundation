@@ -2,6 +2,7 @@ import renderer
 from django.conf import settings
 
 from renderer.templates import apply_template
+from renderer.utils import get_boolean_param
 
 
 def has_content():
@@ -11,7 +12,7 @@ def has_content():
 def render(context, params, content=None):
     # all params are ignored. always current user
     if not context.user.is_authenticated:
-        if params.get('always', 'no') != 'yes':
+        if not get_boolean_param(params, 'always'):
             return ''
         tpl_vars = {
             'avatar': settings.DEFAULT_AVATAR

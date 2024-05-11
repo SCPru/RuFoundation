@@ -71,6 +71,8 @@ def module_allows_api(name_or_module):
 
 @transaction.atomic
 def render_module(name, context, params, content=None):
+    if context and context.path_params.get('nomodule', 'false') == 'true':
+        raise ModuleError('Обработка модулей отключена')
     m = get_module(name)
     if m is None:
         raise ModuleError('Модуль \'%s\' не существует' % name)

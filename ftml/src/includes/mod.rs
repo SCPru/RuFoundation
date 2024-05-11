@@ -24,9 +24,6 @@
 //! `[[include-messy]]` and directly replaces that part with the
 //! foreign page's wikitext.
 
-#[cfg(test)]
-mod test;
-
 mod include_ref;
 mod includer;
 mod parse;

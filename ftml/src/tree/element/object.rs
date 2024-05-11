@@ -159,6 +159,7 @@ pub enum Element<'t> {
         hide_text: Option<Cow<'t, str>>,
         show_top: bool,
         show_bottom: bool,
+        text_align: Option<Alignment>,
     },
 
     /// A table of contents block.
@@ -277,6 +278,9 @@ pub enum Element<'t> {
     ///
     /// See [`WJ-816`](https://scuttle.atlassian.net/browse/WJ-816).
     Partial(PartialElement<'t>),
+
+    // An empty element
+    Void,
 }
 
 impl Element<'_> {
@@ -336,6 +340,7 @@ impl Element<'_> {
             Element::ClearFloat(_) => "ClearFloat",
             Element::HorizontalRule => "HorizontalRule",
             Element::Partial(partial) => partial.name(),
+            Element::Void => "Void",
         }
     }
 
@@ -386,7 +391,8 @@ impl Element<'_> {
             Element::HorizontalRule => false,
             Element::Partial(_) => {
                 panic!("Should not check for paragraph safety of partials")
-            }
+            },
+            Element::Void => false,
         }
     }
 
@@ -465,6 +471,7 @@ impl Element<'_> {
                 hide_text,
                 show_top,
                 show_bottom,
+                text_align,
             } => Element::Collapsible {
                 elements: elements_to_owned(elements),
                 attributes: attributes.to_owned(),
@@ -473,6 +480,7 @@ impl Element<'_> {
                 hide_text: option_string_to_owned(hide_text),
                 show_top: *show_top,
                 show_bottom: *show_bottom,
+                text_align: *text_align,
             },
             Element::TableOfContents { align, attributes } => Element::TableOfContents {
                 align: *align,
@@ -537,6 +545,7 @@ impl Element<'_> {
             Element::ClearFloat(clear_float) => Element::ClearFloat(*clear_float),
             Element::HorizontalRule => Element::HorizontalRule,
             Element::Partial(partial) => Element::Partial(partial.to_owned()),
+            Element::Void => Element::Void,
         }
     }
 }

@@ -135,6 +135,7 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
             hide_text,
             show_top,
             show_bottom,
+            text_align,
         } => render_collapsible(
             ctx,
             Collapsible::new(
@@ -145,6 +146,7 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
                 ref_cow!(hide_text),
                 *show_top,
                 *show_bottom,
+                *text_align,
             ),
         ),
         Element::TableOfContents { align, attributes } => {
@@ -203,5 +205,6 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
             ctx.html().hr();
         }
         Element::Partial(_) => panic!("Encountered partial element during parsing"),
+        Element::Void => {},
     }
 }

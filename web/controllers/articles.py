@@ -342,7 +342,10 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
 
     if 'parent' in new_props:
         subtypes.append(ArticleLogEntry.LogEntryType.Parent)
-        parent = Article.objects.get(id=new_props['parent'])
+        try:
+            parent = Article.objects.get(id=new_props['parent'])
+        except Article.DoesNotExist:
+            parent = None
         meta['parent'] = {
             'parent': get_full_name(parent),
             'parent_id': new_props['parent'],
@@ -829,6 +832,7 @@ def rename_file_in_article(full_name_or_article: _FullNameOrArticle, file: File,
 # Check if name is allowed for creation
 # Pretty much this blocks six 100% special paths, everything else is OK
 def is_full_name_allowed(article_name: str) -> bool:
+    article_name = article_name.lower()
     reserved = ['-', '_', 'api', 'forum', 'local--files', 'local--code']
     if article_name in reserved:
         return False

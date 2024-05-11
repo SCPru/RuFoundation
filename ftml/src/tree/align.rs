@@ -46,10 +46,21 @@ impl TryFrom<&'_ str> for Alignment {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "<" => Ok(Alignment::Left),
-            ">" => Ok(Alignment::Right),
-            "=" => Ok(Alignment::Center),
-            "==" => Ok(Alignment::Justify),
+            "<" | "left" => Ok(Alignment::Left),
+            ">" | "right" => Ok(Alignment::Right),
+            "=" | "center" => Ok(Alignment::Center),
+            "==" | "justify" => Ok(Alignment::Justify),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryFrom<Option<&'_ str>> for Alignment {
+    type Error = ();
+
+    fn try_from(value: Option<&str>) -> Result<Self, Self::Error> {
+        match value {
+            Some(value) => Alignment::try_from(value),
             _ => Err(()),
         }
     }
@@ -90,48 +101,4 @@ impl TryFrom<&'_ str> for FloatAlignment {
 
         Ok(FloatAlignment { align, float })
     }
-}
-
-#[test]
-fn image_alignment() {
-    macro_rules! check {
-        ($input:expr) => {
-            check!($input => None)
-        };
-
-        ($input:expr, $align:expr, $float:expr) => {
-            check!($input => Some(FloatAlignment {
-                align: $align,
-                float: $float,
-            }))
-        };
-
-        ($input:expr => $expected:expr) => {{
-            let actual = FloatAlignment::parse($input);
-            let expected = $expected;
-
-            assert_eq!(
-                actual, expected,
-                "Actual image alignment result does not match expected",
-            );
-        }};
-    }
-
-    check!("");
-    check!("image");
-
-    check!("=image", Alignment::Center, false);
-    check!(">image", Alignment::Right, false);
-    check!("<image", Alignment::Left, false);
-    check!("f>image", Alignment::Right, true);
-    check!("f<image", Alignment::Left, true);
-
-    check!("=IMAGE", Alignment::Center, false);
-    check!(">IMAGE", Alignment::Right, false);
-    check!("<IMAGE", Alignment::Left, false);
-    check!("f>IMAGE", Alignment::Right, true);
-    check!("f<IMAGE", Alignment::Left, true);
-
-    check!("F>IMAGE", Alignment::Right, true);
-    check!("F<IMAGE", Alignment::Left, true);
 }

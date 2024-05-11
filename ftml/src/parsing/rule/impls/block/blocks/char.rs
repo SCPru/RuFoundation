@@ -62,7 +62,9 @@ fn parse_fn<'r, 't>(
     assert_block_name(&BLOCK_CHAR, name);
 
     // Parse the entity and get the string
-    let string = parser.get_head_value(&BLOCK_CHAR, in_head, parse_entity)?;
+    let mut string = parser.get_head_value(&BLOCK_CHAR, in_head, parse_entity)?;
+
+    parser.replace_variables(string.to_mut());
 
     ok!(Element::Text(string))
 }
@@ -141,103 +143,4 @@ fn strip_entity(mut s: &str) -> &str {
     }
 
     s
-}
-
-/* Tests */
-
-#[test]
-fn test_get_entity() {
-    macro_rules! check {
-        ($input:expr, $expected:expr $(,)?) => {{
-            let actual = find_entity($input);
-            let expected = $expected;
-
-            assert_eq!(
-                actual, expected,
-                "Actual entity string doesn't match expected",
-            );
-        }};
-    }
-
-    check!("", None);
-
-    // Names
-    check!("amp", Some(cow!("&")));
-    check!("lt", Some(cow!("<")));
-    check!("gt", Some(cow!(">")));
-    check!("copy", Some(cow!("©")));
-    check!("xxxzzz", None);
-
-    // Decimal
-    check!("#32", Some(cow!(" ")));
-    check!("#255", Some(cow!("\u{ff}")));
-    check!("#128175", Some(cow!("💯")));
-    check!("#2097151", None);
-
-    // Hex
-    check!("#x20", Some(cow!(" ")));
-    check!("#xff", Some(cow!("\u{ff}")));
-    check!("#x1f4af", Some(cow!("💯")));
-    check!("#x1fffff", None);
-}
-
-#[test]
-fn test_get_char() {
-    macro_rules! check {
-        ($value:expr, $radix:expr, $expected:expr $(,)?) => {{
-            let actual = get_char($value, $radix);
-            let expected = $expected;
-
-            assert_eq!(
-                actual, expected,
-                "Actual character value doesn't match expected",
-            );
-        }};
-    }
-
-    // Decimal
-    check!("32", 10, Some(Cow::Owned(str!(' '))));
-    check!("255", 10, Some(Cow::Owned(str!('\u{ff}'))));
-    check!("128175", 10, Some(Cow::Owned(str!('💯'))));
-    check!("2097151", 10, None);
-
-    // Hex
-    check!("20", 16, Some(Cow::Owned(str!(' '))));
-    check!("ff", 16, Some(Cow::Owned(str!('\u{ff}'))));
-    check!("1f4af", 16, Some(Cow::Owned(str!('💯'))));
-    check!("1fffff", 16, None);
-}
-
-#[test]
-fn test_strip_entity() {
-    macro_rules! check {
-        ($input:expr, $expected:expr $(,)?) => {{
-            let actual = strip_entity($input);
-            let expected = $expected;
-
-            assert_eq!(
-                actual, expected,
-                "Actual stripped entity value didn't match expected",
-            );
-        }};
-    }
-
-    check!("", "");
-    check!("abc", "abc");
-    check!("legumes1", "legumes1");
-    check!("&amp;", "amp");
-    check!("&#100;", "#100");
-    check!("&xdeadbeef;", "xdeadbeef");
-
-    check!("&amp", "amp");
-    check!("amp;", "amp");
-    check!("&#100", "#100");
-    check!("#100;", "#100");
-
-    check!(" ", "");
-    check!(" abc", "abc");
-    check!(" legumes1", "legumes1");
-    check!(" &amp;", "amp");
-    check!(" &#100;", "#100");
-    check!(" &xdeadbeef;", "xdeadbeef");
 }

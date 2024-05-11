@@ -89,7 +89,7 @@ fn parse_fn<'r, 't>(
     )?;
 
     let cond_matched =     
-    match name {
+    match name.splitn(2, ':').next().unwrap_or("") {
         "#if" => evaluate_if(parser, condition),
         "#ifexpr" => evaluate_ifexpr(parser, condition),
         _ => unreachable!()
@@ -184,7 +184,7 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
     )?;
 
     let cond_matched =     
-        match name {
+        match name.splitn(2, ':').next().unwrap_or("") {
             "if" => evaluate_if(parser, condition),
             "ifexpr" => evaluate_ifexpr(parser, condition),
             _ => unreachable!()
@@ -270,16 +270,20 @@ fn parse_expr<'r, 't>(
 
     let result = evaluate_expr(parser, condition).to_string();
 
-    ok!(Element::Text(Cow::from(result.to_owned())))
+    ok!(Element::Text(Cow::from(result)))
 }
 
 fn evaluate_if<'r, 't>(_parser: &mut Parser<'r, 't>, expr: &str) -> bool {
-    let expr = expr.trim().to_ascii_lowercase();
+    let mut expr = expr.trim().to_ascii_lowercase();
+    _parser.replace_variables(&mut expr);
     !(expr == "false" || expr == "null" || (expr.starts_with("{$") && expr.ends_with('}')) || (expr.starts_with("%%") && expr.ends_with("%%")))
 }
 
 fn evaluate_ifexpr<'r, 't>(parser: &mut Parser<'t, 't>, expr: &str) -> bool {
-    match evaluate_expr(parser, expr) {
+    let mut expr_with_vars = cow!(expr);
+    parser.replace_variables(expr_with_vars.to_mut());
+
+    match evaluate_expr(parser, &expr_with_vars) {
         ExpressionResult::Bool(b) => b,
         ExpressionResult::Int(i) => i != 0,
         ExpressionResult::Float(f) => f != 0.0,

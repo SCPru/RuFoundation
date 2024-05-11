@@ -6,6 +6,7 @@ import Loader from "../util/loader";
 import {fetchPageVotes, ModuleRateVote, RatingMode} from "../api/rate";
 import UserView from "../util/user-view";
 import {sprintf} from 'sprintf-js'
+import formatDate from '../util/date-format'
 
 
 interface Props {
@@ -46,7 +47,11 @@ const Styles = styled.div<{loading?: boolean}>`
     z-index: 1;
   }
 }
-
+.admin-vote-date {
+  font-size: 90%;
+  font-style: italic;
+  opacity: 0.5;
+}
 `;
 
 
@@ -135,6 +140,74 @@ class ArticleRating extends Component<Props, State> {
         )
     }
 
+    renderUpDownRatingDistribution() {
+        const { votes } = this.state;
+
+        let votesCount = [0, 0];
+
+        votes?.forEach(vote => {
+            if (vote.value > 0) votesCount[1] ++;
+        })
+
+        votesCount[0] = votes?.length - votesCount[1];
+
+        const maxCount = Math.max(...votesCount);
+
+        return (
+            <div className="w-rate-dist">
+                { !!(votesCount && votesCount.length) }
+                { votesCount.map((stat, i) => (
+                    <div className="w-rate-row">
+                        <div className="w-rate-num">{ i ? '-' : '+' }</div>
+                        <div className="w-rate-bar">
+                            <div className="w-bar-fill" style={{ width: `${maxCount > 0 ? votesCount[1-i] * 100 / votes.length : 0}%` }}></div>
+                        </div>
+                        <div className="w-rate-stat">
+                            <div className="w-v-count">{ maxCount > 0 ? votesCount[1-i] : '—' }</div>
+                            <div>{ maxCount > 0 ? `${Math.round(votesCount[1-i] * 100 / votes.length)}%` : '—' }</div>
+                        </div>
+                    </div>
+                )) }
+            </div>
+        )
+    }
+
+    renderStarsRatingDistribution() {
+        const { votes } = this.state;
+
+        let votesCount = [0, 0, 0, 0, 0, 0];
+        let votesPercent = [0, 0, 0, 0, 0, 0];
+
+        votes?.forEach(vote => {
+            let minCount = Math.floor(vote.value);
+            let affectMin = 1.0 - (vote.value - minCount);
+            let affectMax = 1.0 - (minCount + 1.0 - vote.value);
+            votesCount[minCount] += affectMin;
+            if (minCount + 1 <= 5) {
+                votesCount[minCount + 1] += affectMax;
+            }
+        })
+
+        const maxCount = Math.max(...votesCount);
+
+        return (
+            <div className="w-rate-dist">
+                { !!(votesCount && votesCount.length) }
+                { votesCount.map((stat, i) => (
+                    <div className="w-rate-row">
+                        <div className="w-rate-num w-afterstar">{ 5 - i }</div>
+                        <div className="w-rate-bar">
+                            <div className="w-bar-fill" style={{ width: `${maxCount > 0 ? votesCount[5-i] * 100 / maxCount : '0'}%` }}></div>
+                        </div>
+                        <div className="w-rate-stat">
+                            <div className="w-v-count">{ maxCount > 0 ? `${Math.round(votesCount[5-i] * 100 / votes.length)}%` : '—' }</div>
+                        </div>
+                    </div>
+                )) }
+            </div>
+        )
+    }
+
     renderRating() {
         const { mode } = this.state;
 
@@ -145,6 +218,33 @@ class ArticleRating extends Component<Props, State> {
         } else {
             return null;
         }
+    }
+
+    renderRatingDistribution() {
+        const { mode } = this.state;
+
+        if (mode === 'updown') {
+            return this.renderUpDownRatingDistribution();
+        } else if (mode === 'stars') {
+            return this.renderStarsRatingDistribution();
+        } else {
+            return null;
+        }
+    }
+
+    renderVoteDate(date?: string) {
+        if (!date) {
+            return null
+        }
+
+        return (
+            <>
+                &nbsp;
+                <span className="admin-vote-date">
+                    ({formatDate(new Date(date))})
+                </span>
+            </>
+        )
     }
 
     render() {
@@ -160,14 +260,17 @@ class ArticleRating extends Component<Props, State> {
                 <h1>Рейтинг страницы</h1>
                 <span>
                     Оценить страницу:<br/><br/>
-                    {this.renderRating()}
+                    <div className="article-rating-widgets-area">
+                        {this.renderRating()}
+                        {this.renderRatingDistribution()}
+                    </div>
                 </span>
                 <div id="who-rated-page-area" className={`${loading?'loading':''}`}>
                     { loading && <Loader className="loader" /> }
                     { !!(votes && votes.length) && <h2>Список голосовавших за страницу</h2>}
                     { votes.map((vote, i) => (
                         <React.Fragment key={i}>
-                            <UserView data={vote.user} />&nbsp;{this.renderUserVote(vote.value)}<br/>
+                            <UserView data={vote.user} />&nbsp;{this.renderUserVote(vote.value)}{this.renderVoteDate(vote.date)}<br/>
                         </React.Fragment>
                     )) }
                 </div>

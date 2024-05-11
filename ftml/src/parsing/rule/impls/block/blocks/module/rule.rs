@@ -49,13 +49,15 @@ fn parse_fn<'r, 't>(
     let (subname, arguments) = parser.get_head_name_map(&BLOCK_MODULE, in_head)?;
 
     let module_has_body = parser.page_callbacks().module_has_body(Cow::from(subname));
-    let body: Cow<'t, str>;
+    let mut body: Cow<'t, str>;
 
     if module_has_body {
         body = Cow::from(parser.get_body_text(&BLOCK_MODULE, name)?);
     } else {
         body = Cow::from("");
     }
+
+    parser.replace_variables(body.to_mut());
 
     return ok!(false; Elements::Single(Element::Module(Module::new(Cow::from(subname), arguments.to_hash_map(), body))), vec![]);
 }

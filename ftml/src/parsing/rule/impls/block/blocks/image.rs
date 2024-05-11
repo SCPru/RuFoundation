@@ -60,7 +60,7 @@ fn parse_fn<'r, 't>(
                     parser.push_internal_link(page_ref.to_owned());
                 },
                 LinkLocation::Url(url) => {
-                    if !validate_href(url, true) {
+                    if !validate_href(url, false) {
                         return Err(parser.make_warn(ParseWarningKind::RuleFailed));
                     }
                 },

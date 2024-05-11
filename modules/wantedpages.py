@@ -73,6 +73,7 @@ def render(context, params):
     links = links.annotate(title=Subquery(all_articles.filter(full_name=OuterRef('link_from_complete')).values('title')))
 
     max_page: int = max(1, int(math.ceil(total_links / per_page)))
+
     if page > max_page:
         page = max_page
 
@@ -91,6 +92,7 @@ def render(context, params):
                             <td><a href="/{{ record.link_from }}">{{ record.title }}</a></td>
                             <td><a href="/{{ record.link_to }}" class="newpage">{{ record.link_to }}</a></td>
                         </tr>
+
                         {% endfor %}
                     </tbody>
                 </table>

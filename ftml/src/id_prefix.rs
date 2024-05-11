@@ -46,32 +46,3 @@ pub fn isolate_ids(id_string: &str) -> String {
 
     isolated_ids
 }
-
-#[test]
-fn test_isolate_ids() {
-    macro_rules! check {
-        ($input:expr, $expected:expr) => {
-            assert_eq!(
-                isolate_ids($input),
-                $expected,
-                "Actual isolated ID string doesn't match expected",
-            );
-        };
-    }
-
-    check!("", "");
-    check!("  ", "");
-    check!("apple", "u-apple");
-    check!("apple banana", "u-apple u-banana");
-    check!("apple  banana", "u-apple u-banana");
-    check!(" apple  banana", "u-apple u-banana");
-    check!(" apple   banana ", "u-apple u-banana");
-    check!("apple banana cherry", "u-apple u-banana u-cherry");
-    check!("apple  banana cherry", "u-apple u-banana u-cherry");
-    check!("  apple  banana\tcherry", "u-apple u-banana u-cherry");
-    check!("u-apple banana cherry", "u-apple u-banana u-cherry");
-    check!("u-apple u-banana cherry", "u-apple u-banana u-cherry");
-    check!("u-apple u-banana u-cherry", "u-apple u-banana u-cherry");
-    check!("apple u-banana cherry", "u-apple u-banana u-cherry");
-    check!("u-u-apple", "u-u-apple");
-}

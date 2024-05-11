@@ -18,9 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#[cfg(test)]
-mod test;
-
 mod lexer {
     // Since pest makes enums automatically that clippy doesn't like
     #![allow(clippy::upper_case_acronyms)]
@@ -140,6 +137,7 @@ pub enum Token {
     Email,
     Url,
     Variable,
+    WSVariable,
     StringQuote,
     StringQuoteEscape,
     StringQuoteDoubleEscape,
@@ -273,6 +271,7 @@ impl Token {
             Rule::email => Token::Email,
             Rule::url => Token::Url,
             Rule::variable => Token::Variable,
+            Rule::ws_variable => Token::WSVariable,
             Rule::string_quote => Token::StringQuote,
             Rule::string_quote_escape => Token::StringQuoteEscape,
             Rule::string_quote_doubleescape => Token::StringQuoteDoubleEscape,

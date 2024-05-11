@@ -23,7 +23,6 @@ use crate::data::{PageRef, PageRefParseError};
 use crate::settings::WikitextSettings;
 use pest::iterators::Pairs;
 use pest::Parser;
-use std::borrow::Cow;
 use std::collections::HashMap;
 
 #[derive(Parser, Debug)]
@@ -109,8 +108,8 @@ fn process_pairs(mut pairs: Pairs<Rule>) -> Result<IncludeRef, IncludeParseError
         str_write!(var_reference, "{{${key}}}");
 
         if !arguments.contains_key(key) && value != var_reference {
-            let key = Cow::Borrowed(key);
-            let value = Cow::Borrowed(value.trim());
+            let key = cow!(key);
+            let value = cow!(value.trim());
 
             arguments.insert(key, value);
         }

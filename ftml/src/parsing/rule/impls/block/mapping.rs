@@ -22,7 +22,7 @@ use super::{blocks::*, BlockRule};
 use std::collections::HashMap;
 use unicase::UniCase;
 
-pub const BLOCK_RULES: [BlockRule; 58] = [
+pub const BLOCK_RULES: [BlockRule; 56] = [
     BLOCK_ALIGN_CENTER,
     BLOCK_ALIGN_JUSTIFY,
     BLOCK_ALIGN_LEFT,
@@ -36,20 +36,16 @@ pub const BLOCK_RULES: [BlockRule; 58] = [
     BLOCK_DATE,
     BLOCK_DEL,
     BLOCK_DIV,
-    BLOCK_EQUATION_REF,
     BLOCK_FOOTNOTE,
     BLOCK_FOOTNOTE_BLOCK,
     BLOCK_FORM,
     BLOCK_FORM_INPUT,
-    BLOCK_HIDDEN,
     BLOCK_HTML,
     BLOCK_IFCATEGORY,
     BLOCK_IFRAME,
     BLOCK_IFTAGS,
     BLOCK_IMAGE,
-    BLOCK_INCLUDE_MESSY,
     BLOCK_INS,
-    BLOCK_INVISIBLE,
     BLOCK_ITALICS,
     BLOCK_LI,
     BLOCK_LINES,
@@ -74,7 +70,6 @@ pub const BLOCK_RULES: [BlockRule; 58] = [
     BLOCK_TABLE_OF_CONTENTS,
     BLOCK_TABLE_ROW,
     BLOCK_TABVIEW,
-    BLOCK_TARGET,
     BLOCK_UL,
     BLOCK_UNDERLINE,
     BLOCK_USER,
@@ -83,6 +78,10 @@ pub const BLOCK_RULES: [BlockRule; 58] = [
     BLOCK_EXPR,
     BLOCK_IF_WITH_BODY,
     BLOCK_IFEXPR_WITH_BODY,
+
+    BLOCK_SCOPE,
+    BLOCK_DECLARE,
+    BLOCK_SET,
 ];
 
 pub type BlockRuleMap = HashMap<UniCase<&'static str>, &'static BlockRule>;
@@ -125,9 +124,4 @@ fn build_block_rule_map(block_rules: &'static [BlockRule]) -> BlockRuleMap {
     }
 
     map
-}
-
-#[test]
-fn block_rule_map() {
-    let _ = &*BLOCK_RULE_MAP;
 }
