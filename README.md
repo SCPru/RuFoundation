@@ -18,6 +18,7 @@ Note: this is what I tested with, your mileage may differ.
 ## How to launch
 
 - First navigate to `web/js` and execute `yarn install`
+- Then navigate to `system/js` and execute `yarn install`
 - After that, from the root project directory, run:
   - `pip install -r requirements.txt`
   - `python manage.py migrate`
