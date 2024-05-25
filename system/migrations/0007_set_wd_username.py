@@ -10,5 +10,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL("update system_user u set wikidot_username=username where wikidot_username is null and username != 'AnonymousUser' and not exists (select 1 from system_user where wikidot_username = u.username)")
+        migrations.RunSQL("update \"system_user\" u set wikidot_username=username where wikidot_username is null and username != 'AnonymousUser' and not exists (select 1 from \"system_user\" where wikidot_username = u.username)")
     ]
