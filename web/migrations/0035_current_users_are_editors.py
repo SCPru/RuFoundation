@@ -10,5 +10,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL('UPDATE system_user SET is_editor=TRUE'),
+        migrations.RunSQL('UPDATE "system_user" SET is_editor=TRUE'),
     ]
