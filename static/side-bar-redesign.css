@@ -1,0 +1,202 @@
+.new-side-block {
+    border: 1px solid #ccc !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    position: relative;
+    padding: 10px 14px !important;
+}
+
+.new-heading {
+    border-top: solid 1px #600;
+    padding-top: 10px;
+    margin: 10px 0 !important;
+    border-bottom: 0 !important;
+    text-transform: uppercase;
+    color: #404040 !important;
+}
+
+.sandbox-heading {
+    border-top: 0 !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+.corner-side {
+    position: relative;
+}
+
+.corner-side::before {
+    left: -3.5px;
+    top: -4px;
+    border-left: 7px solid #901;
+    border-top: 7px solid #901;
+}
+
+.corner-side::before {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    content: "";
+}
+
+.random-article-block {
+    background: linear-gradient(to top, #eee 0%, #eee 80%, #fff 100%) !important;
+    padding: 0 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 3px #ccc !important;
+    font-size: 1.15em;
+    position: relative;
+}
+
+.random-article-block a {
+    display: block;
+    padding: 10px 19px 10px 39px;
+}
+
+.random-article-block a:hover {
+    text-decoration: none !important;
+}
+
+.random-article-block .menu-item {
+    margin: 0 !important;
+}
+
+.random-article-block .menu-item:first-child::before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    content: "\f01e";
+    position: absolute;
+    left: 15px;
+    top: 10px;
+    font-size: 14px;
+}
+
+.random-article-block .menu-item:last-child::before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    content: "\f002";
+    position: absolute;
+    left: 15px;
+    top: 10px;
+    font-size: 14px;
+}
+
+.random-article-block .menu-item:first-child:hover {
+    background: linear-gradient(to top, #732717 0%, #732717 80%, #cb4536 100%) !important;
+    color: white !important;
+    border-top-left-radius: 8px !important;
+    border-top-right-radius: 8px !important;
+}
+
+.random-article-block .menu-item:first-child {
+    border-bottom: 1px solid #ccc;
+}
+
+.random-article-block .menu-item:last-child:hover {
+    background: linear-gradient(to top, #732717 0%, #732717 80%) !important;
+    color: white !important;
+    border-bottom-left-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+}
+
+.random-article-block .menu-item {
+    position: relative;
+}
+
+.random-article-block>.menu-item a {
+    color: #404040 !important;
+    text-transform: uppercase;
+    font-weight: 600 !important;
+    z-index: 99;
+    position: relative;
+    font-size: 14px;
+}
+
+.random-article-block>.menu-item:hover a {
+    color: white !important;
+}
+
+.collapsible-side {
+    padding: 0 !important;
+}
+
+.collapsible-side .collapsible-block-folded::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 20px;
+    height: 100%;
+    background-color: #901;
+    clip-path: polygon(0 0, 0% 100%, 80% 50%);
+    transition: all .3s;
+}
+
+.collapsible-side .collapsible-block-folded {
+    text-align: center;
+    position: relative;
+    padding: 0px;
+    background: linear-gradient(to left, white 50%, #901 50%) right;
+    background-size: 200% 100%;
+    transition: all .3s;
+}
+
+.collapsible-side .collapsible-block-unfolded-link {
+    background: #901;
+}
+
+.collapsible-side .collapsible-block-unfolded-link a {
+    color: white;
+}
+
+.collapsible-side .collapsible-block-folded:hover {
+    background-position: left;
+}
+
+.collapsible-side .collapsible-block-folded:hover .collapsible-block-link {
+    color: white;
+}
+
+.collapsible-side .collapsible-block-link {
+    text-transform: uppercase;
+    font-size: 14px;
+    font-weight: 600;
+    display: block;
+    padding: 10px;
+    position: relative;
+    z-index: 99;
+    transition: all .3s;
+}
+
+.collapsible-side .collapsible-block-unfolded {
+    text-align: center;
+    position: relative;
+    padding: 0px;
+}
+
+.collapsible-side .collapsible-block-content {
+    text-align: left !important;
+    padding: 10px;
+}
+
+.new-side-block h6 p {
+    margin-top: 0 !important;
+}
+
+.new-side-block h6 a {
+    color: #404040 !important;
+    font-family: "Inter";
+    text-transform: uppercase;
+    font-size: 85%;
+}
+
+@media (max-width: 767px) {
+    .random-article-block a {
+        padding: 10px 5px 10px 35px;
+    }
+
+    .random-article-block {
+        box-shadow: none !important;
+    }
+}
