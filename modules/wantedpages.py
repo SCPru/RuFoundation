@@ -17,7 +17,7 @@ def allow_api():
     return True
 
 def render(context, params):
-    if 'category_from' in params and 'category' not in params:
+    if 'category_from' in params:
         params['category'] = params['category_from']
     if 'limit' in params:
         params['limit'] = None
@@ -36,19 +36,16 @@ def render(context, params):
         'p': page_str
     })
 
-    filtered_pages, _, _, _, _ = query_pages(context.article, params, context.user, allow_pagination=False)
+    filtered_pages, _, _, _, _ = query_pages(context.article, params, context.user, allow_pagination=False, always_query=True)
 
-    if isinstance(filtered_pages, list):
-        filtered_pages_names = [page.full_name if page.category != '_default' else f'{page.category}:{page.name}' for page in filtered_pages]
-    else:
-        filtered_pages_names = filtered_pages.annotate(full_name=Concat('category', V(':'), 'name', output_field=CITextField())).values('full_name')
+    filtered_pages_names = filtered_pages.annotate(full_name=Concat('category', V(':'), 'name', output_field=CITextField())).values('full_name')
     
     all_articles = Article.objects.values('name', 'category', 'title') \
       .annotate(full_name=Concat('category', V(':'), 'name', output_field=CITextField()))
     q = ExternalLink.objects.filter(link_type='link') \
       .annotate(link_from_complete=Case(When(~Q(link_from__contains=':'), then=Concat(V('_default:'), 'link_from', output_field=CITextField())), default='link_from')) \
       .filter(link_from_complete__in=filtered_pages_names) \
-      .annotate(link_to_complete=Case(When(~Q(link_to__contains=':'), then=Concat(V('_default:'), 'link_to', output_field=CITextField())), default='link_to')) \
+      .annotate(link_to_complete=Case(When(~Q(link_to__contains=':'), then=Concat(V('_default:'), 'link_to', output_field=CITextField())), default='link_to'))
 
     q = q.exclude(link_to_complete__in=all_articles.values('full_name'))
 
@@ -73,9 +70,6 @@ def render(context, params):
     links = links.annotate(title=Subquery(all_articles.filter(full_name=OuterRef('link_from_complete')).values('title')))
 
     max_page: int = max(1, int(math.ceil(total_links / per_page)))
-
-    if page > max_page:
-        page = max_page
 
     return render_template_from_string(
                 """
