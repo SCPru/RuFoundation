@@ -44,7 +44,7 @@ def render(context, params):
       .annotate(full_name=Concat('category', V(':'), 'name', output_field=CITextField()))
     q = ExternalLink.objects.filter(link_type='link') \
       .annotate(link_from_complete=Case(When(~Q(link_from__contains=':'), then=Concat(V('_default:'), 'link_from', output_field=CITextField())), default='link_from')) \
-      .filter(link_from_complete__in=filtered_pages_names) \
+      .filter(link_from_complete__in=Subquery(filtered_pages_names)) \
       .annotate(link_to_complete=Case(When(~Q(link_to__contains=':'), then=Concat(V('_default:'), 'link_to', output_field=CITextField())), default='link_to'))
 
     q = q.exclude(link_to_complete__in=all_articles.values('full_name'))
