@@ -134,7 +134,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
 
     if not parsed_params.is_valid():
         if always_query:
-            return Article.objects.none(), 0, 1, 1, 1
+            return Article.objects.none(), 0, 1, 1, 0
         return [], 0, 1, 1, 0
 
     article_param = parsed_params.get_type(param.Article)
