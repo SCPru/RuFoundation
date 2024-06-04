@@ -58,8 +58,7 @@ def render_var(var, page_vars, page):
             return page_vars['updated_at']
     return None
 
-
-def page_to_listpages_vars(page: Article, template, index, total):
+def get_page_vars(page: Article):
     updated_by = None
 
     def get_updated_by():
@@ -70,7 +69,7 @@ def page_to_listpages_vars(page: Article, template, index, total):
         return updated_by
 
     _, votes, popularity, _ = articles.get_rating(page)
-
+    
     page_vars = LazyDict({
         'name': lambda: page.name,
         'category': lambda: page.category,
@@ -83,8 +82,6 @@ def page_to_listpages_vars(page: Article, template, index, total):
         'rating_votes': lambda: str(votes),
         'popularity': lambda: str(popularity),
         'revisions': lambda: str(len(ArticleLogEntry.objects.filter(article=page))),
-        'index': lambda: str(index),
-        'total': lambda: str(total),
         'created_by': lambda: render_user_to_text(page.author),
         'created_by_linked': lambda: ('[[*user %s]]' % page.author.username) if page.author and 'username' in page.author.__dict__ else render_user_to_text(page.author),
         'updated_by': lambda: render_user_to_text(get_updated_by()),
@@ -100,17 +97,28 @@ def page_to_listpages_vars(page: Article, template, index, total):
         'updated_at': lambda: '[[date %d]]' % int(page.updated_at.timestamp()),
         # commented_at, commented_by, commented_by_unix, commented_by_id, commented_by_linked = not yet
     })
+
     if page.parent_id is not None:
         page_vars['parent_name'] = lambda: page.parent.name
         page_vars['parent_category'] = lambda: page.parent.category
         page_vars['parent_fullname'] = lambda: articles.get_full_name(page.parent)
         page_vars['parent_title'] = lambda: page.parent.title
         page_vars['parent_title_linked'] = lambda: '[[[%s|%s]]]' % (articles.get_full_name(page.parent), page.parent.title)
+
+    return page_vars
+
+def page_to_listpages_vars(page: Article, template, index, total, page_vars=None):
+    if page_vars is None:
+        page_vars = get_page_vars(page)
+
+    page_vars['index'] = lambda: str(index)
+    page_vars['total'] = lambda: str(total)
+    
     template = apply_template(template, lambda name: render_var(name, page_vars, page))
     return template
 
 
-def query_pages(article, params, viewer=None, path_params=None, allow_pagination=True):
+def query_pages(article, params, viewer=None, path_params=None, allow_pagination=True, always_query=False):
     if path_params is None:
         path_params = {}
 
@@ -125,14 +133,23 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
     parsed_params = ListPagesParams(article, viewer, params, path_params)
 
     if not parsed_params.is_valid():
+        if always_query:
+            return Article.objects.none(), 0, 1, 1, 1
         return [], 0, 1, 1, 0
 
     article_param = parsed_params.get_type(param.Article)
     if article_param:
+        if always_query:
+            q = Article.objects.filter(id=article_param[0].article.id)
+            return q, 0, 1, 1, 1
         return [article_param[0].article], 0, 1, 1, 1
 
     full_name_param = parsed_params.get_type(param.FullName)
     if full_name_param:
+        if always_query:
+            category, name = articles.get_name(full_name_param)
+            q = Article.objects.filter(category__iexact=category, name__iexact=name)
+            return q, 0, 1, 1, int(q.count() > 0)
         article = articles.get_article(full_name_param[0].full_name)
         if article:
             return [article], 0, 1, 1, 1
