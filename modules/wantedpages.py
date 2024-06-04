@@ -80,7 +80,7 @@ def render(context, params):
                 {{ pagination }}
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>Исходная страница</th><th>Отсутствующие ссылки</th></tr>
+                        <tr><th>Исходная страница</th><th>Отсутствующая ссылка</th></tr>
                         {% for record in records %}
                         <tr>
                             <td><a href="/{{ record.link_from }}">{{ record.title }}</a></td>
