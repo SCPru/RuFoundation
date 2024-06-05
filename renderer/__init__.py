@@ -8,7 +8,7 @@ from django.utils.safestring import SafeString
 import modules
 from system.models import User
 from web import threadvars
-from web.models.articles import ArticleVersion, Article, Tag
+from web.models.articles import ArticleVersion, Article
 from web.models.sites import get_current_site
 from . import expression
 from .parser import RenderContext
@@ -16,10 +16,6 @@ from .utils import render_user_to_html, render_template_from_string
 
 from modules.listpages import get_page_vars
 from renderer.templates import apply_template
-
-
-import os
-
 
 # FTML is not imported globally to prevent loading DLL for commands that don't require it
 
