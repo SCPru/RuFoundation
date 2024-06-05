@@ -90,6 +90,8 @@ def callbacks_with_context(context):
         def fetch_includes(self, include_refs: list[ftml.IncludeRef]) -> list[ftml.FetchedPage]:
             from web.controllers import articles
 
+            page_vars = get_page_vars(self.context.article)
+
             refs_as_dumb = [self._page_name_to_dumb(x.full_name) for x in include_refs]
             included = ArticleVersion.objects\
                 .select_related('article')\
@@ -99,7 +101,7 @@ def callbacks_with_context(context):
                 .distinct('article__id')
             included_map = {}
             for item in included:
-                included_map[item.full_name] = item.source
+                included_map[item.full_name] = apply_template(item.source, lambda param: get_this_page_params(page_vars, param))
             result = []
             new_includes = []
             is_include_overflow = threadvars.get('include_level', MAX_INCLUDE_LEVEL) <= 0
@@ -185,14 +187,17 @@ def single_pass_render(source, context=None, mode='article') -> str:
     from ftml import ftml
 
     with threadvars.context():
-        html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
         page_vars = get_page_vars(context.article)
-        html_body = apply_template(html.body, lambda param: get_this_page_params(page_vars, param))
-        return SafeString(html_body)
+        source = apply_template(source, lambda param: get_this_page_params(page_vars, param))
+        html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
+        return SafeString(html.body)
 
 
 def single_pass_render_with_excerpt(source, context=None, mode='article') -> [str, str, Optional[str]]:
     from ftml import ftml
+
+    page_vars = get_page_vars(context.article)
+    source = apply_template(source, lambda param: get_this_page_params(page_vars, param))
 
     with threadvars.context():
         html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
@@ -204,10 +209,7 @@ def single_pass_render_with_excerpt(source, context=None, mode='article') -> [st
     if len(text) > 384:
         text = text[:384] + '...'
 
-    page_vars = get_page_vars(context.article)
-    html_body = apply_template(html.body, lambda param: get_this_page_params(page_vars, param))
-
-    return SafeString(html_body), text, None
+    return SafeString(html.body), text, None
 
 
 def single_pass_fetch_backlinks(source, context=None, mode='article') -> tuple[list[str], list[str]]:
