@@ -14,6 +14,10 @@ from . import expression
 from .parser import RenderContext
 from .utils import render_user_to_html, render_template_from_string
 
+from modules.listpages import get_page_vars
+from renderer.templates import apply_template
+
+
 import os
 
 
@@ -170,13 +174,21 @@ def page_info_from_context(context: RenderContext):
         tags=tags
     )
 
+def get_this_page_params(page_vars: dict[str, str], param: str):
+        if param.startswith('this|'):
+            k = param[5:].lower()
+            if k in page_vars:
+                return page_vars[k]
+        return '%%' + param + '%%'
 
 def single_pass_render(source, context=None, mode='article') -> str:
     from ftml import ftml
 
     with threadvars.context():
         html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
-        return SafeString(html.body)
+        page_vars = get_page_vars(context.article)
+        html_body = apply_template(html.body, lambda param: get_this_page_params(page_vars, param))
+        return SafeString(html_body)
 
 
 def single_pass_render_with_excerpt(source, context=None, mode='article') -> [str, str, Optional[str]]:
@@ -191,7 +203,11 @@ def single_pass_render_with_excerpt(source, context=None, mode='article') -> [st
     text = re.sub(r'\n+', '\n', text)
     if len(text) > 384:
         text = text[:384] + '...'
-    return SafeString(html.body), text, None
+
+    page_vars = get_page_vars(context.article)
+    html_body = apply_template(html.body, lambda param: get_this_page_params(page_vars, param))
+
+    return SafeString(html_body), text, None
 
 
 def single_pass_fetch_backlinks(source, context=None, mode='article') -> tuple[list[str], list[str]]:

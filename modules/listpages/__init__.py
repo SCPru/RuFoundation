@@ -59,6 +59,9 @@ def render_var(var, page_vars, page):
     return None
 
 def get_page_vars(page: Article):
+    if page is None:
+        return dict()
+    
     updated_by = None
 
     def get_updated_by():

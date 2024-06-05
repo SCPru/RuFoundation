@@ -12,7 +12,7 @@ from web.controllers import articles, permissions
 
 from renderer import single_pass_render, single_pass_render_with_excerpt
 from renderer.parser import RenderContext
-from modules.listpages import page_to_listpages_vars, get_page_vars
+from modules.listpages import page_to_listpages_vars
 
 from typing import Optional, Tuple
 import json
@@ -56,12 +56,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         return ""
 
     @staticmethod
-    def get_this_page_params(path_params: dict[str, str], page_vars: dict[str, str], param: str):
-        if param.startswith('this|'):
-            k = param[5:].lower()
-            if k in page_vars:
-                return page_vars[k]
-        elif param.startswith('path|'):
+    def get_this_page_params(path_params: dict[str, str], param: str):
+        if param.startswith('path|'):
             k = param[5:].lower()
             if k in path_params:
                 return path_params[k]
@@ -97,10 +93,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                     if template:
                         template_source = articles.get_latest_source(template)
 
-                page_vars = get_page_vars(article)
-
-                source = page_to_listpages_vars(article, template_source, index=1, total=1, page_vars=page_vars)
-                source = apply_template(source, lambda param: self.get_this_page_params(path_params, page_vars, param))
+                source = page_to_listpages_vars(article, template_source, index=1, total=1)
+                source = apply_template(source, lambda param: self.get_this_page_params(path_params, param))
                 context = RenderContext(article, article, path_params, self.request.user)
                 content, excerpt, image = single_pass_render_with_excerpt(source, context)
                 redirect_to = context.redirect_to
