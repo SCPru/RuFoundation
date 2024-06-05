@@ -115,6 +115,7 @@ class ListPagesParams:
                 categories = []
                 not_allowed = []
                 for category in f_category.split(' '):
+                    category = category.split(':', 1)[0]
                     if not category:
                         continue
                     if category == '.':

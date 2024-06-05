@@ -14,8 +14,9 @@ export function makeWantedPages(node: HTMLElement) {
     (node as any)._wantedpages = true;
     // end hack
 
-    const wpBasePathParams = JSON.parse(node.dataset.wantedPagesPathParams);
-    const wpBaseParams = JSON.parse(node.dataset.wantedPagesParams);
+    const wpBasePathParams = JSON.parse(node.dataset.wantedPagesPathParams!);
+    const wpBaseParams = JSON.parse(node.dataset.wantedPagesParams!);
+    const wpPageId = node.dataset.wantedPagesPageId;
 
     // display loader when needed.
     const loaderInto = document.createElement('div');
@@ -44,6 +45,7 @@ export function makeWantedPages(node: HTMLElement) {
         try {
             const { result: rendered } = await callModule<ModuleRenderResponse>({
                 module: 'wantedpages',
+                pageId: wpPageId,
                 method: 'render',
                 pathParams: Object.assign(wpBasePathParams, {p: page}),
                 params: wpBaseParams,
@@ -53,8 +55,8 @@ export function makeWantedPages(node: HTMLElement) {
             loaderInto.style.display = 'none';
             const tmp = document.createElement('div');
             tmp.innerHTML = rendered;
-            const newNode = tmp.firstElementChild;
-            node.parentNode.replaceChild(newNode, node);
+            const newNode = tmp.firstElementChild!;
+            node.parentNode!.replaceChild(newNode, node);
         } catch (e) {
             ReactDOM.unmountComponentAtNode(loaderInto);
             loaderInto.innerHTML = '';
@@ -65,8 +67,8 @@ export function makeWantedPages(node: HTMLElement) {
 
     // handle page switch
     const pagers = node.querySelectorAll(':scope > .pager');
-    pagers.forEach(pager => pager.querySelectorAll('*[data-pagination-target]').forEach((node: HTMLElement) => {
-        node.addEventListener('click', (e) => switchPage(e, node.dataset.paginationTarget));
+    pagers.forEach(pager => pager.querySelectorAll<HTMLElement>('*[data-pagination-target]').forEach((node: HTMLElement) => {
+        node.addEventListener('click', (e) => switchPage(e, node.dataset.paginationTarget!));
     }));
 
 }

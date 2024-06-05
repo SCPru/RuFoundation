@@ -1,13 +1,14 @@
 import json, math
 
-from modules.listpages import render_pagination
+from modules.listpages import param, query_pages, render_pagination
+from modules.listpages.params import ListPagesParams
 from renderer.utils import render_template_from_string
 
+from web.controllers import articles
 from web.models.articles import ExternalLink, Article
-from django.db.models import Q, Value, Case, When
+from django.db.models import Q, Value as V, Case, When, Subquery, OuterRef
 from django.contrib.postgres.fields import CITextField
-from django.db.models.functions import Concat
-
+from django.db.models.functions import Concat, Substr, StrIndex
 
 def has_content():
     return False
@@ -16,65 +17,85 @@ def allow_api():
     return True
 
 def render(context, params):
-    target_page: str = params.get('target')
-    category_from: str = params.get('category_from')
-    category_to: str = params.get('category_to')
-    limit_str: str = params.get('limit', '20')
-    page_str: str = context.path_params.get('p', '1')
+    if 'category_from' in params:
+        params['category'] = params['category_from']
+    if 'limit' in params:
+        params['limit'] = None
+    if 'offset' in params:
+        params['offset'] = None
 
-    all_links = Article.objects.values_list('name', 'category').annotate(full_name=Concat('category', Value(':'), 'name', output_field=CITextField())).values_list('full_name', flat=True)
-    q = ExternalLink.objects.filter(link_type='link').annotate(link_to_complete=Case(When(~Q(link_to__contains=':'), then=Concat(Value('_default:'), 'link_to', output_field=CITextField())), default='link_to'))
+    category_to   : str = params.get('category_to', '*')
+    per_page_str  : str = params.get('perpage')
+    page_str      : str = context.path_params.get('p')
+
+    parsed_params = ListPagesParams(context.article, context.user, {
+        'category': category_to,
+        'perpage' : per_page_str
+    },
+    {
+        'p': page_str
+    })
+
+    filtered_pages, _, _, _, _ = query_pages(context.article, params, context.user, allow_pagination=False, always_query=True)
+
+    filtered_pages_names = filtered_pages.annotate(full_name=Concat('category', V(':'), 'name', output_field=CITextField())).values('full_name')
     
-    if target_page not in (None, '*'):
-        q = q.filter(link_from=target_page)
-    if category_from not in (None, '*'):
-        q = q.annotate(link_from_complete=Case(When(~Q(link_from__contains=':'), then=Concat(Value('_default:'), 'link_from', output_field=CITextField())), default='link_from'))\
-             .filter(link_from_complete__startswith=category_from)
-    if category_to not in (None, '*'):
-        q = q.filter(link_to_complete__startswith=category_to)
+    all_articles = Article.objects.values('name', 'category', 'title') \
+      .annotate(full_name=Concat('category', V(':'), 'name', output_field=CITextField()))
+    q = ExternalLink.objects.filter(link_type='link') \
+      .annotate(link_from_complete=Case(When(~Q(link_from__contains=':'), then=Concat(V('_default:'), 'link_from', output_field=CITextField())), default='link_from')) \
+      .filter(link_from_complete__in=Subquery(filtered_pages_names)) \
+      .annotate(link_to_complete=Case(When(~Q(link_to__contains=':'), then=Concat(V('_default:'), 'link_to', output_field=CITextField())), default='link_to'))
+
+    q = q.exclude(link_to_complete__in=all_articles.values('full_name'))
+
+    for p in parsed_params.params:
+        match p:
+            case param.Category(allowed=allowed, not_allowed=not_allowed):
+                q = q.annotate(category_to=Case(When(~Q(link_to__contains=':'), then=V('_default')), default=Substr('link_to', 1, StrIndex('link_to', V(':')) - 1)))
+                if allowed:
+                    q = q.filter(category_to__in=allowed)
+                if not_allowed:
+                    q = q.filter(~Q(category_to__in=not_allowed))
+
+            case param.Pagination(page=page, per_page=per_page):
+                    page = page
+                    per_page = min(per_page, 250)
     
-    q = q.exclude(link_to_complete__in=all_links)
     total_links: int = q.count()
 
-    page: int = 1
-    
-    if page_str.isnumeric():
-        page = max(1, int(page_str))
-    
-    limit: int = min(max(1, int(limit_str)) if limit_str.isnumeric() else 20, 500)
-    offset: int = (page-1)*limit
+    offset: int = (page - 1) * per_page
+    links = q[offset : offset + per_page]
 
-    links = q[offset : offset + limit]
+    links = links.annotate(title=Subquery(all_articles.filter(full_name=OuterRef('link_from_complete')).values('title')))
 
-    max_page: int = max(1, int(math.ceil(total_links / limit)))
-    if page > max_page:
-        page = max_page
+    max_page: int = max(1, int(math.ceil(total_links / per_page)))
 
     return render_template_from_string(
                 """
                 <div class="w-wanted-pages"
                 data-wanted-pages-path-params="{{ data_path_params }}"
-                data-wanted-pages-params="{{ data_params }}">
-                {% if has_content %}
+                data-wanted-pages-params="{{ data_params }}"
+                data-wanted-pages-page-id="{{ data_page_id }}">
                 {{ pagination }}
                 <table class="form grid" style="margin: 1em auto;">
                     <tbody>
-                        <tr><th>Исходная страница</th><th>Вожделенные единицы информации</th></tr>
+                        <tr><th>Исходная страница</th><th>Отсутствующая ссылка</th></tr>
                         {% for record in records %}
-                            <tr>
-                                <td><a href="/{{ record.link_from }}">{{ record.link_from }}</a></td>
-                                <td><a href="/{{ record.link_to }}">{{ record.link_to }}</a></td>
-                            </tr>
+                        <tr>
+                            <td><a href="/{{ record.link_from }}">{{ record.title }}</a></td>
+                            <td><a href="/{{ record.link_to }}" class="newpage">{{ record.link_to }}</a></td>
+                        </tr>
+
                         {% endfor %}
                     </tbody>
                 </table>
                 {{ pagination }}
-                {% endif %}
                 </div>
                 """,
                 records=links,
-                has_content=total_links > 0,
                 data_path_params=json.dumps(context.path_params),
                 data_params=json.dumps(params),
+                data_page_id=articles.get_full_name(context.article) or '',
                 pagination=render_pagination(None, page, max_page) if max_page != 1 else ''
             )

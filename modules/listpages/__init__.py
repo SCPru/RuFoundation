@@ -110,7 +110,7 @@ def page_to_listpages_vars(page: Article, template, index, total):
     return template
 
 
-def query_pages(article, params, viewer=None, path_params=None, allow_pagination=True):
+def query_pages(article, params, viewer=None, path_params=None, allow_pagination=True, always_query=False):
     if path_params is None:
         path_params = {}
 
@@ -125,14 +125,23 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
     parsed_params = ListPagesParams(article, viewer, params, path_params)
 
     if not parsed_params.is_valid():
+        if always_query:
+            return Article.objects.none(), 0, 1, 1, 0
         return [], 0, 1, 1, 0
 
     article_param = parsed_params.get_type(param.Article)
     if article_param:
+        if always_query:
+            q = Article.objects.filter(id=article_param[0].article.id)
+            return q, 0, 1, 1, 1
         return [article_param[0].article], 0, 1, 1, 1
 
     full_name_param = parsed_params.get_type(param.FullName)
     if full_name_param:
+        if always_query:
+            category, name = articles.get_name(full_name_param)
+            q = Article.objects.filter(category__iexact=category, name__iexact=name)
+            return q, 0, 1, 1, int(q.count() > 0)
         article = articles.get_article(full_name_param[0].full_name)
         if article:
             return [article], 0, 1, 1, 1
