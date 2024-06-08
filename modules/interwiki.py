@@ -94,6 +94,7 @@ def api_render_for_languages(context, params):
         if url == url_to_check or url.startswith(domain_to_check):
             continue
         language_name = '???'
+        language_native = '???'
         language_code = '??'
         language = [x for x in language_mapping if url.startswith(x['url'])]
         if language:
@@ -101,15 +102,18 @@ def api_render_for_languages(context, params):
             language_code = language['language']
             if language['language'] not in uncertain_languages:
                 language_name = translate_language(language['language'], params.get('language', ''))
+                language_native = translate_language(language['language'], '')
             else:
                 language_name = language['displayName']
                 if ' - ' in language_name:
                     language_name = language_name.split(' - ', 1)[1]
+                language_native = language_name
         if language_code.lower() == params.get('omitlanguage', ''):
             continue
         rendered_articles.append({
             'url': url,
             'language': language_name,
+            'language_native': language_native,
             'language_code': language_code
         })
     rendered_articles = sorted(rendered_articles, key=lambda x: x['language'])
