@@ -84,6 +84,9 @@ def callbacks_with_context(context):
             return ('_default:%s' % name).lower() if ':' not in name else name.lower()
 
         def fetch_includes(self, include_refs: list[ftml.IncludeRef]) -> list[ftml.FetchedPage]:
+            if not self.context:
+                return []
+
             from web.controllers import articles
 
             page_vars = get_page_vars(self.context.article)
@@ -172,18 +175,20 @@ def page_info_from_context(context: RenderContext):
         tags=tags
     )
 
+
 def get_this_page_params(page_vars: dict[str, str], param: str):
-        if param.startswith('this|'):
-            k = param[5:].lower()
-            if k in page_vars:
-                return page_vars[k]
-        return '%%' + param + '%%'
+    if param.startswith('this|'):
+        k = param[5:].lower()
+        if k in page_vars:
+            return page_vars[k]
+    return '%%' + param + '%%'
+
 
 def single_pass_render(source, context=None, mode='article') -> str:
     from ftml import ftml
 
     with threadvars.context():
-        page_vars = get_page_vars(context.article)
+        page_vars = get_page_vars(context.article) if context else {}
         source = apply_template(source, lambda param: get_this_page_params(page_vars, param))
         html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
         return SafeString(html.body)

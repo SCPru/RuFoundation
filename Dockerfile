@@ -51,4 +51,4 @@ USER scpwiki
 RUN python manage.py collectstatic
 
 EXPOSE 8000
-CMD ["gunicorn", "scpdev.wsgi", "-w", "8", "-t", "300", "-b", "0.0.0.0:8000", "--preload"]
+CMD ["gunicorn", "scpdev.wsgi", "-w", "32", "-t", "300", "-b", "0.0.0.0:8000", "--preload"]

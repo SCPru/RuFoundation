@@ -23,6 +23,7 @@ import {makeDate} from './articles/date'
 import {makeFootnote} from './articles/footnote'
 import {makeCodeBlock} from "./articles/codeblock";
 import {makeRefForm} from './articles/ref-form'
+import {makeInterwiki} from './articles/interwiki'
 
 
 function renderTo(where: HTMLElement, what: any) {
@@ -75,6 +76,8 @@ window.addEventListener('DOMContentLoaded', () => {
             makeCodeBlock(node);
         } else if (node.classList.contains('w-ref-form')) {
             makeRefForm(node);
+        } else if (node.classList.contains('w-interwiki')) {
+            makeInterwiki(node);
         }
     };
 

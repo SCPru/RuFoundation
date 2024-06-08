@@ -10,7 +10,7 @@ from renderer.templates import apply_template
 from renderer.utils import render_user_to_text, render_template_from_string, get_boolean_param
 from renderer.parser import RenderContext
 from web.controllers import articles
-from web.models.articles import Article, Vote, ArticleLogEntry, Tag
+from web.models.articles import Article, ArticleLogEntry
 from web.models.settings import Settings
 from django.db.models import Q, Value as V, F, Count, Sum, Avg, Case, When, CharField, IntegerField, FloatField
 from django.db.models.functions import Concat, Random, Coalesce, Round, Cast
