@@ -69,40 +69,18 @@ def api_render_for_languages(context, params):
     domain_to_check = 'http://%s' % site.domain
     url_to_check = '%s/%s' % (domain_to_check, urllib.parse.quote(article_name))
 
-    all_sites = requests.post(
+    translations = requests.post(
         'https://api.crom.avn.sh/graphql',
         data=json.dumps({
             'query': """
-            query {
+            query InterwikiQuery($url: URL!) {
               sites {
                 language
                 url
                 type
                 displayName
               }
-            }
-            """
-        }),
-        headers={
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        timeout=10
-    ).json()
 
-    try:
-        language_mapping = [x for x in all_sites['data']['sites'] if x['type'].upper() == wiki_type]
-    except (KeyError, TypeError, ValueError):
-        logging.error('InterWiki: Failed to load sites from response %s' % json.dumps(all_sites))
-        return {'result': ''}
-
-    uncertain_languages = set([x['language'] for x in language_mapping if len([y for y in language_mapping if y['language'] == x['language']]) > 1])
-
-    translations = requests.post(
-        'https://api.crom.avn.sh/graphql',
-        data=json.dumps({
-            'query': """
-            query InterwikiQuery($url: URL!) {
               page(url: $url) {
                 translations {
                   url
@@ -128,6 +106,14 @@ def api_render_for_languages(context, params):
     ).json()
 
     try:
+        language_mapping = [x for x in translations['data']['sites'] if x['type'].upper() == wiki_type]
+    except (KeyError, TypeError, ValueError):
+        logging.error('InterWiki: Failed to load sites from response %s' % json.dumps(all_sites))
+        return {'result': ''}
+
+    uncertain_languages = set([x['language'] for x in language_mapping if len([y for y in language_mapping if y['language'] == x['language']]) > 1])
+
+    try:
         all_urls = set()
         for page in translations['data']['page']['translations']:
             all_urls.add(page['url'])
@@ -140,7 +126,6 @@ def api_render_for_languages(context, params):
     except (KeyError, TypeError, ValueError):
         logging.error('InterWiki: Failed to load languages from response %s' % json.dumps(translations))
         return {'result': ''}
-
 
     rendered_articles = []
     for url in all_urls:
