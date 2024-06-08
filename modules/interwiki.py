@@ -82,12 +82,12 @@ def api_render_for_languages(context, params):
         return {'result': ''}
 
     try:
-        language_mapping = [x for x in translations['sites'] if [y for y in all_urls if y.startswith(x['url'])]]
+        language_mapping = translations['sites']
     except (KeyError, TypeError, ValueError):
         logging.error('InterWiki: Failed to load sites from response %s' % json.dumps(translations))
         return {'result': ''}
 
-    uncertain_languages = set([x['language'] for x in language_mapping if len([y for y in language_mapping if y['language'] == x['language']]) > 1])
+    uncertain_languages = set([x['language'] for x in language_mapping if len([y for y in language_mapping if y['language'] == x['language'] and y['type'] == x['type']]) > 1])
 
     rendered_articles = []
     for url in all_urls:
