@@ -16,7 +16,6 @@ def has_content():
 
 def render(context, params, content=''):
     # params:
-    # - type: one of SCP_WIKI, WANDERERS_LIBRARY, BACKROOMS
     # - article: article name
     # - prependline: FTML to render before everything
     # - appendline: FTML to render after everything
@@ -61,21 +60,12 @@ def translate_language(language, in_language=''):
 
 
 def api_render_for_languages(context, params):
-    wiki_type = params.get('type', 'SCP_WIKI').upper()
     site = get_current_site(required=True)
     article_name = params.get('article', '')
     domain_to_check = 'http://%s' % site.domain
     url_to_check = '%s/%s' % (domain_to_check, articles.normalize_article_name(article_name))
 
     translations = interwiki_batcher.query_interwiki(url_to_check)
-
-    try:
-        language_mapping = [x for x in translations['sites'] if x['type'].upper() == wiki_type]
-    except (KeyError, TypeError, ValueError):
-        logging.error('InterWiki: Failed to load sites from response %s' % json.dumps(translations))
-        return {'result': ''}
-
-    uncertain_languages = set([x['language'] for x in language_mapping if len([y for y in language_mapping if y['language'] == x['language']]) > 1])
 
     try:
         all_urls = set()
@@ -90,6 +80,14 @@ def api_render_for_languages(context, params):
     except (KeyError, TypeError, ValueError):
         logging.error('InterWiki: Failed to load languages from response %s' % json.dumps(translations))
         return {'result': ''}
+
+    try:
+        language_mapping = [x for x in translations['sites'] if [y for y in all_urls if y.startswith(x['url'])]]
+    except (KeyError, TypeError, ValueError):
+        logging.error('InterWiki: Failed to load sites from response %s' % json.dumps(translations))
+        return {'result': ''}
+
+    uncertain_languages = set([x['language'] for x in language_mapping if len([y for y in language_mapping if y['language'] == x['language']]) > 1])
 
     rendered_articles = []
     for url in all_urls:
