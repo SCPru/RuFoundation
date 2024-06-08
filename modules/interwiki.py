@@ -65,8 +65,7 @@ def api_render_for_languages(context, params):
     wiki_type = params.get('type', 'SCP_WIKI').upper()
     site = get_current_site(required=True)
     article_name = params.get('article', '')
-    #domain_to_check = 'http://%s' % site.domain
-    domain_to_check = 'http://scpfoundation.net'
+    domain_to_check = 'http://%s' % site.domain
     url_to_check = '%s/%s' % (domain_to_check, urllib.parse.quote(article_name))
     print(url_to_check)
 
