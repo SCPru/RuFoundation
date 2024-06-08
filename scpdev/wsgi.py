@@ -14,8 +14,9 @@ import django
 django.setup()
 
 from django.core.wsgi import get_wsgi_application
-from shared_data import shared_articles
+from shared_data import shared_articles, interwiki_batcher
 
 shared_articles.init()
+interwiki_batcher.init()
 
 application = get_wsgi_application()

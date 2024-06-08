@@ -8,6 +8,7 @@ import renderer
 from renderer.templates import apply_template
 from renderer.utils import render_template_from_string
 from web.models.sites import get_current_site
+from shared_data import interwiki_batcher
 
 
 def has_content():
@@ -61,63 +62,27 @@ def translate_language(language, in_language=''):
 
 
 def api_render_for_languages(context, params):
-    # format:
-    # [{'language': 'en', 'url': '...'}]
     wiki_type = params.get('type', 'SCP_WIKI').upper()
     site = get_current_site(required=True)
     article_name = params.get('article', '')
     domain_to_check = 'http://%s' % site.domain
     url_to_check = '%s/%s' % (domain_to_check, urllib.parse.quote(article_name))
 
-    translations = requests.post(
-        'https://api.crom.avn.sh/graphql',
-        data=json.dumps({
-            'query': """
-            query InterwikiQuery($url: URL!) {
-              sites {
-                language
-                url
-                type
-                displayName
-              }
-
-              page(url: $url) {
-                translations {
-                  url
-                }
-                translationOf {
-                  url
-                  translations {
-                    url
-                  }
-                }
-              }
-            }
-            """,
-            'variables': {
-                'url': url_to_check
-            }
-        }),
-        headers={
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        timeout=10
-    ).json()
+    translations = interwiki_batcher.query_interwiki(url_to_check)
 
     try:
-        language_mapping = [x for x in translations['data']['sites'] if x['type'].upper() == wiki_type]
+        language_mapping = [x for x in translations['sites'] if x['type'].upper() == wiki_type]
     except (KeyError, TypeError, ValueError):
-        logging.error('InterWiki: Failed to load sites from response %s' % json.dumps(all_sites))
+        logging.error('InterWiki: Failed to load sites from response %s' % json.dumps(translations))
         return {'result': ''}
 
     uncertain_languages = set([x['language'] for x in language_mapping if len([y for y in language_mapping if y['language'] == x['language']]) > 1])
 
     try:
         all_urls = set()
-        for page in translations['data']['page']['translations']:
+        for page in translations['page']['translations']:
             all_urls.add(page['url'])
-        translation_of = translations['data']['page'].get('translationOf')
+        translation_of = translations['page'].get('translationOf')
         if translation_of:
             all_urls.add(translation_of['url'])
             for page in translation_of['translations']:

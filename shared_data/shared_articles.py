@@ -1,4 +1,3 @@
-import os
 import logging
 import multiprocessing
 import threading
@@ -10,12 +9,14 @@ from web.controllers import articles
 from web.models.articles import ArticleLogEntry, Article
 from web.models.sites import Site, get_current_site
 
+
 BACKGROUND_RELOAD_DELAY = 60 * 15
+
 
 # These default values are used in dev server.
 # When running via multiprocessing, this should be replaced with Manager by calling init() before forking.
-state = {}
-lock = threading.RLock()
+state = None
+lock = None
 
 
 def background_reload():
@@ -37,15 +38,15 @@ def background_reload():
                             'pageId': article.full_name,
                             'title': article.title,
                             'canonicalUrl': '//%s/%s' % (site.domain, article.full_name),
-                            'createdAt': article.created_at,
-                            'updatedAt': article.updated_at,
+                            'createdAt': article.created_at.isoformat(),
+                            'updatedAt': article.updated_at.isoformat(),
                             'createdBy': render_user_to_json(article.author),
                             'updatedBy': render_user_to_json(last_event.user),
                             'rating': {
                                 'value': rating,
                                 'votes': rating_votes,
                                 'popularity': popularity,
-                                'mode': rating_mode
+                                'mode': str(rating_mode)
                             },
                             'tags': articles.get_tags(article)
                         })

@@ -616,7 +616,7 @@ def get_tag(full_name_or_tag_id: _FullNameOrTag, create: bool = False) -> Option
 def get_tags(full_name_or_article: _FullNameOrArticle) -> Sequence[str]:
     article = get_article(full_name_or_article)
     if article:
-        return sorted([x.full_name.lower() for x in article.tags.prefetch_related("category")])
+        return list(sorted([x.full_name.lower() for x in article.tags.prefetch_related("category")]))
     return []
 
 
