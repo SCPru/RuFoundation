@@ -1,9 +1,8 @@
 import json
 from langcodes import Language
-import requests
-import urllib.parse
 import logging
 
+from web.controllers import articles
 import renderer
 from renderer.templates import apply_template
 from renderer.utils import render_template_from_string
@@ -66,7 +65,7 @@ def api_render_for_languages(context, params):
     site = get_current_site(required=True)
     article_name = params.get('article', '')
     domain_to_check = 'http://%s' % site.domain
-    url_to_check = '%s/%s' % (domain_to_check, urllib.parse.quote(article_name))
+    url_to_check = '%s/%s' % (domain_to_check, articles.normalize_article_name(article_name))
 
     translations = interwiki_batcher.query_interwiki(url_to_check)
 
