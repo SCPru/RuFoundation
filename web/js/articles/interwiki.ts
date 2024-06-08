@@ -4,16 +4,8 @@ interface InterwikiConfiguration {
     params: Record<string, any>
     content: string
     loading: string
-}
-
-/*export interface ModuleRequest {
-    module: string
     pageId?: string
-    method: string
-    pathParams?: Record<string, any>
-    params?: Record<string, any>
-    content?: string
-}*/
+}
 
 async function load(configuration: InterwikiConfiguration, node: HTMLElement) {
     node.innerHTML = configuration.loading || ''
@@ -21,12 +13,13 @@ async function load(configuration: InterwikiConfiguration, node: HTMLElement) {
     const response = await callModule<ModuleRenderResponse>({
         module: 'interwiki',
         method: 'render_for_languages',
+        pageId: configuration.pageId,
         params: {
             ...configuration.params,
             content: configuration.content
         }
     })
-    
+
     node.innerHTML = response.result
 }
 

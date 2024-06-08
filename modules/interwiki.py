@@ -40,7 +40,8 @@ def render(context, params, content=''):
         params=json.dumps({
             'params': params,
             'content': content,
-            'loading': loading_rendered
+            'loading': loading_rendered,
+            'pageId': context.article.full_name if context and context.article else None
         }),
         loading_rendered=loading_rendered
     )
