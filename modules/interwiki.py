@@ -116,7 +116,15 @@ def api_render_for_languages(context, params):
             'language_native': language_native,
             'language_code': language_code
         })
-    rendered_articles = sorted(rendered_articles, key=lambda x: x['language'])
+
+    p_sort = params.get('order', 'language').split(' ')
+    sort_by = p_sort[0]
+    sort_desc = p_sort[1:] == ['desc']
+
+    if not len(rendered_articles) or sort_by not in rendered_articles[0].keys():
+        sort_by = 'language'
+
+    rendered_articles = sorted(rendered_articles, key=lambda x: x[sort_by], reverse=sort_desc)
 
     if rendered_articles:
         source = params.get('prependline', '')+'\n'
