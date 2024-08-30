@@ -18,6 +18,13 @@ def _eval_ast(node):
         return True
     elif isinstance(node, ast.BinOp):  # <left> <operator> <right>
         return operators[type(node.op)](_eval_ast(node.left), _eval_ast(node.right))
+    elif isinstance(node, ast.BoolOp):  # <values> <operator>
+        evaluated_values = [_eval_ast(x) for x in node.values]
+        if isinstance(node.op, ast.And):
+            return len([x for x in evaluated_values if not x]) == 0
+        elif isinstance(node.op, ast.Or):
+            return len([x for x in evaluated_values if x]) > 0
+        raise ValueError(node.op)
     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
         return operators[type(node.op)](_eval_ast(node.operand))
     elif isinstance(node, ast.Module):  # root
@@ -43,6 +50,11 @@ def _eval_ast(node):
             if len(args) != 1:
                 raise ValueError(args)
             return round(args[0])
+        elif id == 'unset':
+            if len(args) != 1:
+                raise ValueError(args)
+            s = str(args[0])
+            return s.startswith('%%') and s.endswith('%%')
         elif id == 'lower':
             if len(args) != 1 or not isinstance(args[0], str):
                 raise ValueError(args)
@@ -61,4 +73,5 @@ def evaluate_expression(expression):
     try:
         return _eval_ast(ast.parse(expression))
     except:
+        raise
         return None
