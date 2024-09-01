@@ -9,7 +9,7 @@ from web.controllers import articles
 
 from web.views.article import ArticleView
 from renderer.templates import apply_template
-from modules.listpages import page_to_listpages_vars
+from modules.listpages import page_to_listpages_vars, get_page_vars
 
 class PreviewView(APIView):
     def _validate_preview_data(self):
@@ -30,7 +30,17 @@ class PreviewView(APIView):
         title = data["title"] if "title" in data else ""
         source = data["source"]
 
-        source = page_to_listpages_vars(article, source, index=1, total=1)
+        template_page_vars = get_page_vars(article)
+        template_page_vars['content'] = source
+
+        template_source = '%%content%%'
+
+        if article is not None and article.name != '_template':
+            template = articles.get_article('%s:_template' % article.category)
+            if template:
+                template_source = articles.get_latest_source(template)
+
+        source = page_to_listpages_vars(article, template_source, index=1, total=1, page_vars=template_page_vars)
         source = apply_template(source, lambda param: ArticleView.get_this_page_params(path_params, param))
         context = RenderContext(article, article, path_params, self.request.user)
         return self.render_json(200, {"title": title, "content": single_pass_render(source, context)})
