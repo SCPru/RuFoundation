@@ -73,5 +73,4 @@ def evaluate_expression(expression):
     try:
         return _eval_ast(ast.parse(expression))
     except:
-        raise
         return None
