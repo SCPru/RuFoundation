@@ -1,5 +1,5 @@
 :root {
-    --link-color: #901;
+    --new-side-bar-color: #901;
 }
 
 .new-side-block {
@@ -32,8 +32,8 @@
 .corner-side::before {
     left: -3.5px;
     top: -4px;
-    border-left: 7px solid var(--link-color);
-    border-top: 7px solid var(--link-color);
+    border-left: 7px solid var(--new-side-bar-color);
+    border-top: 7px solid var(--new-side-bar-color);
 }
 
 .corner-side::before {
@@ -132,7 +132,7 @@
     top: 0;
     width: 20px;
     height: 100%;
-    background-color: var(--link-color);
+    background-color: var(--new-side-bar-color);
     clip-path: polygon(0 0, 0% 100%, 80% 50%);
     transition: all .3s;
 }
@@ -141,13 +141,13 @@
     text-align: center;
     position: relative;
     padding: 0px;
-    background: linear-gradient(to left, white 50%, var(--link-color) 50%) right;
+    background: linear-gradient(to left, white 50%, var(--new-side-bar-color) 50%) right;
     background-size: 200% 100%;
     transition: all .3s;
 }
 
 .collapsible-side .collapsible-block-unfolded-link {
-    background: var(--link-color);
+    background: var(--new-side-bar-color);
 }
 
 .collapsible-side .collapsible-block-unfolded-link a {
