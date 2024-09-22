@@ -76,7 +76,13 @@ def render_user_to_json(user: User, avatar=True):
     if user is None:
         return {'type': 'system'}
     if isinstance(user, AnonymousUser):
-        return {'type': 'anonymous', 'avatar': None, 'name': 'Anonymous User', 'username': None, 'showAvatar': avatar}
+        return {
+            'type': 'anonymous',
+            'avatar': None,
+            'name': 'Anonymous User',
+            'username': None,
+            'showAvatar': avatar
+        }
     user_type = 'user'
     if user.type != User.UserType.Normal:
         user_type = user.type
@@ -85,7 +91,18 @@ def render_user_to_json(user: User, avatar=True):
         displayname = 'wd:'+user.wikidot_username
     staff = user.is_staff
     admin = user.is_superuser
-    return {'type': user_type, 'id': user.id, 'avatar': user.get_avatar(), 'name': displayname, 'username': user.username, 'showAvatar': avatar, 'staff': staff, 'admin': admin}
+    return {
+        'type': user_type,
+        'id': user.id,
+        'avatar': user.get_avatar(),
+        'name': displayname,
+        'username': user.username,
+        'showAvatar': avatar,
+        'staff': staff,
+        'admin': admin,
+        'visualGroup': user.visual_group.name if user.visual_group else None,
+        'visualGroupIndex': user.visual_group.index if user.visual_group else None
+    }
 
 
 def filter_url(url):

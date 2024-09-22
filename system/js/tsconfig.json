@@ -4,5 +4,8 @@
     "compilerOptions": {
        "module": "nodenext"
     }
+  },
+  "compilerOptions": {
+    "jsx": "react"
   }
 }

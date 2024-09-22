@@ -19,6 +19,18 @@ class StrictUsernameValidator(RegexValidator):
     flags = re.ASCII
 
 
+class VisualUserGroup(auto_prefetch.Model):
+    class Meta(auto_prefetch.Model.Meta):
+        verbose_name = "Визуальная группа"
+        verbose_name_plural = "Визуальные группы"
+
+    name = models.TextField(unique=True, verbose_name='Название группы', blank=False, null=False)
+    index = models.IntegerField(verbose_name='Порядок в списках', blank=False, null=False, default=0)
+
+    def __str__(self):
+        return self.name
+
+
 class User(AbstractUser):
     class Meta:
         verbose_name = "Пользователь"
@@ -54,6 +66,8 @@ class User(AbstractUser):
     inactive_until = models.DateTimeField(verbose_name='Деактивировать до', null=True)
 
     is_editor = models.BooleanField(verbose_name='Статус участника', default=False)
+
+    visual_group = auto_prefetch.ForeignKey(VisualUserGroup, on_delete=models.SET_NULL, verbose_name="Визуальная группа", null=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

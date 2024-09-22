@@ -247,8 +247,60 @@ class ArticleRating extends Component<Props, State> {
         )
     }
 
+    sortVotes(votes: ModuleRateVote[]) {
+        const groups: Array<{ name: string, index: number, votes: ModuleRateVote[], isUngrouped: boolean }> = []
+        votes.forEach(vote => {
+            if (vote.visualGroup) {
+                const existingGroup = groups.find(x => x.name === vote.visualGroup)
+                if (!existingGroup) {
+                    groups.push({
+                        name: vote.visualGroup,
+                        index: vote.visualGroupIndex || 0,
+                        votes: [vote],
+                        isUngrouped: false
+                    })
+                } else {
+                    existingGroup.votes.push(vote)
+                }
+            }
+        })
+        groups.sort((a, b) => {
+            if (a.index < b.index) return -1
+            if (a.index > b.index) return 1
+            return a.name.localeCompare(b.name)
+        })
+        const ungroupedVotes = votes.filter(x => !x.visualGroup)
+        if (ungroupedVotes.length) {
+            groups.push({
+                name: 'Голоса пользователей',
+                index: -1,
+                votes: ungroupedVotes,
+                isUngrouped: true
+            })
+        }
+        return groups
+    }
+
+    renderCombinedVoteRating(votes: ModuleRateVote[]) {
+        const { mode } = this.state
+
+        if (mode === 'updown') {
+            return votes.reduce((acc, vote) => acc + vote.value > 0 ? 1 : -1, 0)
+        } else if (mode === 'stars') {
+            const votesCount = votes.length
+            const votesTotal = votes.reduce((acc, vote) => acc + vote.value, 0)
+            if (!votesCount) {
+                return '—'
+            }
+            return sprintf('%.1f', votesTotal / votesCount)
+        } else {
+            return '—'
+        }
+    }
+
     render() {
         const { error, loading, votes } = this.state;
+        const groupedVotes = this.sortVotes(votes);
         return (
             <Styles>
                 { error && (
@@ -267,12 +319,16 @@ class ArticleRating extends Component<Props, State> {
                 </span>
                 <div id="who-rated-page-area" className={`${loading?'loading':''}`}>
                     { loading && <Loader className="loader" /> }
-                    { !!(votes && votes.length) && <h2>Список голосовавших за страницу</h2>}
-                    { votes.map((vote, i) => (
+                    {groupedVotes.map((group, i) => (
                         <React.Fragment key={i}>
-                            <UserView data={vote.user} />&nbsp;{this.renderUserVote(vote.value)}{this.renderVoteDate(vote.date)}<br/>
+                            <h2>{group.name} ({this.renderCombinedVoteRating(group.votes)})</h2>
+                            { group.votes.map((vote, i) => (
+                                <React.Fragment key={i}>
+                                    <UserView data={vote.user} />&nbsp;{this.renderUserVote(vote.value)}{this.renderVoteDate(vote.date)}<br/>
+                                </React.Fragment>
+                            )) }
                         </React.Fragment>
-                    )) }
+                    ))}
                 </div>
             </Styles>
         )

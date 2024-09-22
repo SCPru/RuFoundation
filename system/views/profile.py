@@ -33,6 +33,8 @@ class ProfileView(DetailView):
             ctx['subtitle'] = 'Участник'
         else:
             ctx['subtitle'] = 'Читатель'
+        if user.visual_group:
+            ctx['subtitle'] += ' (%s)' % user.visual_group.name
         ctx['bio_rendered'] = single_pass_render(user.bio, RenderContext(article=None, source_article=None, path_params=None, user=self.request.user), 'inline')
         return ctx
 

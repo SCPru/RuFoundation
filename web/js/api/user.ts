@@ -7,4 +7,6 @@ export interface UserData {
     showAvatar: boolean
     staff?: boolean
     admin?: boolean
+    visualGroup?: string
+    visualGroupIndex?: number
 }

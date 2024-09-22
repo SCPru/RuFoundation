@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+from system.models import VisualUserGroup
 from django.conf import settings
 from django.contrib.postgres.fields import CITextField
 import auto_prefetch
@@ -199,6 +200,7 @@ class Vote(SiteLimitedModel):
     user = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
     rate = models.FloatField(verbose_name="Оценка")
     date = models.DateTimeField(verbose_name="Дата голоса", auto_now_add=True, null=True)
+    visual_group = auto_prefetch.ForeignKey(VisualUserGroup, on_delete=models.SET_NULL, verbose_name="Визуальная группа", null=True)
 
     def __str__(self) -> str:
         return f"{self.article}: {self.user} - {self.rate}"

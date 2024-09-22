@@ -22,6 +22,7 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
         ('Пользователи и группы', (
             {'model': Group},
             {'model': system.models.User},
+            {'model': system.models.VisualUserGroup},
         )),
         ('Статьи', (
             {'model': web.models.sites.Site},

@@ -3,10 +3,11 @@ from django.contrib.auth.forms import UserChangeForm
 from django.contrib import admin
 from django.urls import path
 from django import forms
+from guardian.admin import GuardedModelAdmin
 
 from .views.invite import InviteView
 from .views.bot import CreateBotView
-from .models import User
+from .models import User, VisualUserGroup
 
 
 class AdvancedUserChangeForm(UserChangeForm):
@@ -26,7 +27,7 @@ class AdvancedUserAdmin(UserAdmin):
     readonly_fields = ["api_key"]
 
     fieldsets = UserAdmin.fieldsets
-    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'is_editor', 'is_staff', 'is_superuser', 'groups', 'user_permissions')
+    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'is_editor', 'is_staff', 'is_superuser', 'visual_group', 'groups', 'user_permissions')
     fieldsets[1][1]["fields"] += ("bio", "avatar")
     fieldsets[0][1]["fields"] += ("type", "wikidot_username", "api_key")
 
@@ -51,3 +52,20 @@ class AdvancedUserAdmin(UserAdmin):
             if not_required_field in form.base_fields:
                 form.base_fields[not_required_field].required = False
         return form
+
+
+class VisualUserGroupForm(forms.ModelForm):
+    class Meta:
+        model = VisualUserGroup
+        widgets = {
+            'name': forms.TextInput,
+        }
+        fields = '__all__'
+
+
+@admin.register(VisualUserGroup)
+class VisualUserGroupAdmin(GuardedModelAdmin):
+    form = VisualUserGroupForm
+    fieldsets = (
+        (None, {"fields": ('name', 'index')}),
+    )

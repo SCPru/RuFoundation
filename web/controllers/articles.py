@@ -714,7 +714,7 @@ def add_vote(full_name_or_article: _FullNameOrArticle, user: settings.AUTH_USER_
 
     Vote.objects.filter(article=article, user=user).delete()
     if rate is not None:
-        Vote(article=article, user=user, rate=rate).save()
+        Vote(article=article, user=user, rate=rate, visual_group=user.visual_group).save()
 
 
 # Set article lock status
