@@ -29,6 +29,18 @@
 
     <script src="{% md5url "app.js" %}" type="text/javascript"></script>
     <link rel="stylesheet" type="text/css" href="{% md5url "app.css" %}">
+
+    {% if google_tag_id %}
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_tag_id }}"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', '{{ google_tag_id|escapejs }}');
+        </script>
+    {% endif %}
 </head>
 <body id="html-body">
     <div id="skrollr-body">

@@ -238,6 +238,9 @@ else:
     raise ValueError('Unknown email engine "%s"' % mail_backend)
 
 
+GOOGLE_TAG_ID = os.environ.get('GOOGLE_TAG_ID', None)
+
+
 AUTH_USER_MODEL = "system.User"
 
 LOGGING = {
