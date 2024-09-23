@@ -91,6 +91,7 @@ def render_user_to_json(user: User, avatar=True):
         displayname = 'wd:'+user.wikidot_username
     staff = user.is_staff
     admin = user.is_superuser
+    editor = user.is_editor
     return {
         'type': user_type,
         'id': user.id,
@@ -100,6 +101,7 @@ def render_user_to_json(user: User, avatar=True):
         'showAvatar': avatar,
         'staff': staff,
         'admin': admin,
+        'editor': editor,
         'visualGroup': user.visual_group.name if user.visual_group else None,
         'visualGroupIndex': user.visual_group.index if user.visual_group else None
     }

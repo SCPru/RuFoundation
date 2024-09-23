@@ -269,12 +269,21 @@ class ArticleRating extends Component<Props, State> {
             if (a.index > b.index) return 1
             return a.name.localeCompare(b.name)
         })
-        const ungroupedVotes = votes.filter(x => !x.visualGroup)
-        if (ungroupedVotes.length) {
+        const editorVotes = votes.filter(x => !x.visualGroup && x.user.editor)
+        const readerVotes = votes.filter(x => !x.visualGroup && !x.user.editor)
+        if (editorVotes.length) {
             groups.push({
-                name: 'Голоса пользователей',
+                name: 'Голоса участников',
                 index: -1,
-                votes: ungroupedVotes,
+                votes: editorVotes,
+                isUngrouped: true
+            })
+        }
+        if (readerVotes.length) {
+            groups.push({
+                name: 'Голоса читателей',
+                index: -1,
+                votes: readerVotes,
                 isUngrouped: true
             })
         }
