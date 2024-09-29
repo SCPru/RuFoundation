@@ -81,6 +81,16 @@ def get_full_name(full_name_or_article: _FullNameOrArticle) -> str:
     return full_name_or_article.full_name
 
 
+def deduplicate_name(full_name: str, allowed_article: Optional[Article] = None) -> str:
+    i = 0
+    while True:
+        i += 1
+        name_to_try = '%s-%d' % (full_name, i) if i > 1 else full_name
+        article2 = get_article(name_to_try)
+        if not article2 or (allowed_article and article2.id == allowed_article.id):
+            return name_to_try
+
+
 # Creates article with specified id. Does not add versions
 def create_article(full_name: str, user: Optional[_UserType] = None) -> Article:
     category, name = get_name(full_name)

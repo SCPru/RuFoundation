@@ -69,11 +69,13 @@ class FetchOrUpdateView(ArticleView):
         if article is None:
             raise APIError('Страница не найдена', 404)
 
-        # latest source
+        return self.render_article(article)
+
+    def render_article(self, article):
         source = articles.get_latest_source(article)
 
         return self.render_json(200, {
-            'pageId': full_name,
+            'pageId': articles.get_full_name(article),
             'title': article.title,
             'source': source,
             'tags': articles.get_tags(article),
@@ -97,10 +99,12 @@ class FetchOrUpdateView(ArticleView):
 
         # check if renaming
         if data['pageId'] != full_name:
-            article2 = articles.get_article(data['pageId'])
-            if article2 is not None:
+            new_name = articles.normalize_article_name(data['pageId'])
+            article2 = articles.get_article(new_name)
+            if article2 is not None and article2.id != article.id and not data.get('forcePageId'):
                 raise APIError('Страница с таким ID уже существует', 409)
-            articles.update_full_name(article, articles.normalize_article_name(data['pageId']), request.user)
+            new_name = articles.deduplicate_name(new_name, article)
+            articles.update_full_name(article, new_name, request.user)
 
         # check if changing title
         if 'title' in data and data['title'] != article.title:
@@ -127,7 +131,8 @@ class FetchOrUpdateView(ArticleView):
                 else:
                     raise APIError('Недостаточно прав', 403)
 
-        return self.render_json(200, {'status': 'ok'})
+        article.refresh_from_db()
+        return self.render_article(article)
 
     def delete(self, request: HttpRequest, full_name: str) -> HttpResponse:
         # find page

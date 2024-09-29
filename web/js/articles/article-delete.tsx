@@ -80,12 +80,15 @@ class ArticleDelete extends Component<Props, State> {
         const { permanent, new_name } = this.state;
         this.setState({ saving: true, error: null, savingSuccess: false });
         try {
+            let actualNewName = new_name
             if (!permanent) {
                 const input = {
                     pageId: new_name,
-                    tags: []
+                    tags: [],
+                    forcePageId: true
                 };
-                await updateArticle(pageId, input);
+                const result = await updateArticle(pageId, input);
+                actualNewName = result.pageId
             } else {
                 await deleteArticle(pageId)
             }
@@ -94,7 +97,7 @@ class ArticleDelete extends Component<Props, State> {
             this.setState({ savingSuccess: false });
             window.scrollTo(window.scrollX, 0);
             if (!permanent) {
-                window.location.href = `/${new_name}`;
+                window.location.href = `/${actualNewName}`;
             } else {
                 window.location.reload();
             }
@@ -134,6 +137,19 @@ class ArticleDelete extends Component<Props, State> {
     render() {
         const { pageId, canDelete } = this.props;
         const { permanent, new_name, loading, saving, savingSuccess, error } = this.state;
+
+        if (pageId.toLowerCase().startsWith('deleted:') && !canDelete) {
+            return (
+                <Styles>
+                    <a className="action-area-close btn btn-danger" href="#" onClick={this.onCancel}>Закрыть</a>
+                    <h1>Удалить страницу</h1>
+                    <p>
+                        Эта страница уже считается удалённой, поскольку находится в категории "deleted". Вы не можете удалить её ещё сильнее.
+                    </p>
+                </Styles>
+            )
+        }
+
         return (
             <Styles>
                 { saving && <WikidotModal isLoading><p>Сохранение...</p></WikidotModal> }
@@ -145,64 +161,47 @@ class ArticleDelete extends Component<Props, State> {
                 ) }
                 <a className="action-area-close btn btn-danger" href="#" onClick={this.onCancel}>Закрыть</a>
                 <h1>Удалить страницу</h1>
-                <p>Вы можете удалить страницу, либо переместив её в категорию "deleted", либо удалить её навсегда (это безвозвратно, будьте осторожны).</p>
+                {canDelete ? (
+                    <p>Вы можете удалить страницу, либо переместив её в категорию "deleted", либо удалить её навсегда (это безвозвратно, будьте осторожны).</p>
+                ) : (
+                    <p>Вы можете удалить страницу, переместив её в категорию "deleted". Полное удаление недоступно.</p>
+                )}
 
-
-                <table className="form">
+                {canDelete&&<table className="form">
                     <tbody>
                     <tr>
                         <td>
                             Что делать?
                         </td>
                         <td>
-                            <input type="checkbox" name="permanent" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-rename-input" checked={!permanent||!canDelete} disabled={loading||saving||!canDelete}/>
+                            <input type="checkbox" name="permanent" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-rename-input" checked={!permanent} disabled={loading||saving||!canDelete}/>
                             <label htmlFor="page-rename-input">Переименовать</label>
                         </td>
                     </tr>
-                    {canDelete&&<tr>
+                    <tr>
                         <td>
                         </td>
                         <td>
                             <input type="checkbox" name="permanent" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-permanent-input" checked={permanent} disabled={loading||saving}/>
                             <label htmlFor="page-permanent-input">Удалить навсегда</label>
                         </td>
-                    </tr>}
+                    </tr>
                     </tbody>
-                </table>
+                </table>}
 
                 {!permanent ? (
                     <form method="POST" onSubmit={this.onSubmit}>
-                        <p>Установив странице префикс "deleted:" вы переместите её в другую категорию(пространство имен). Это более-менее эквивалентно удалению, но информация не будет потеряна.</p>
-                        <table className="form">
-                            <tbody>
-                            <tr>
-                                <td>
-                                    Название страницы:
-                                </td>
-                                <td>
-                                    {pageId}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Новое название страницы:
-                                </td>
-                                <td>
-                                    <input type="text" name="new_name" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-rename-input" defaultValue={new_name} disabled={loading||saving}/>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
+                        <p>Установив странице префикс "deleted:" вы переместите её в другую категорию (пространство имён). Это более-менее эквивалентно удалению, но информация не будет потеряна.</p>
                         <div className="buttons form-actions">
-                            <input type="button" className="btn btn-danger" value="Закрыть" onClick={this.onCancel} />
-                            <input type="button" className="btn btn-primary" value="Переименовать/переместить" onClick={this.onSubmit}/>
+                            <input type="button" className="btn btn-danger" value="Отмена" onClick={this.onCancel} />
+                            <input type="button" className="btn btn-primary" value={'Переместить в категорию "deleted"'} onClick={this.onSubmit}/>
                         </div>
                     </form>
                 ) : (
                     <form method="POST" onSubmit={this.onSubmit}>
                         <p>Это приведет к полному удалению страницы и невозможности восстановления данных. Вы уверены, что хотите это сделать?</p>
                         <div className="buttons form-actions">
-                            <input type="button" className="btn btn-danger" value="Закрыть" onClick={this.onCancel} />
+                            <input type="button" className="btn btn-danger" value="Отмена" onClick={this.onCancel} />
                             <input type="button" className="btn btn-primary" value="Удалить" onClick={this.onSubmit}/>
                         </div>
                     </form>
