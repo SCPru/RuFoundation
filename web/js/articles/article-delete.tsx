@@ -138,7 +138,9 @@ class ArticleDelete extends Component<Props, State> {
         const { pageId, canDelete } = this.props;
         const { permanent, new_name, loading, saving, savingSuccess, error } = this.state;
 
-        if (pageId.toLowerCase().startsWith('deleted:') && !canDelete) {
+        const isAlreadyDeleted = pageId.toLowerCase().startsWith('deleted:')
+
+        if (isAlreadyDeleted && !canDelete) {
             return (
                 <Styles>
                     <a className="action-area-close btn btn-danger" href="#" onClick={this.onCancel}>Закрыть</a>
@@ -192,9 +194,10 @@ class ArticleDelete extends Component<Props, State> {
                 {!permanent ? (
                     <form method="POST" onSubmit={this.onSubmit}>
                         <p>Установив странице префикс "deleted:" вы переместите её в другую категорию (пространство имён). Это более-менее эквивалентно удалению, но информация не будет потеряна.</p>
+                        {isAlreadyDeleted && <p><strong>Внимание:</strong> Статья уже находится в категории "deleted". Если вы хотите удалить её ещё сильнее, воспользуйтесь опцией "Удалить навсегда".</p>}
                         <div className="buttons form-actions">
                             <input type="button" className="btn btn-danger" value="Отмена" onClick={this.onCancel} />
-                            <input type="button" className="btn btn-primary" value={'Переместить в категорию "deleted"'} onClick={this.onSubmit}/>
+                            {!isAlreadyDeleted && <input type="button" className="btn btn-primary" value={'Переместить в категорию "deleted"'} onClick={this.onSubmit}/>}
                         </div>
                     </form>
                 ) : (
