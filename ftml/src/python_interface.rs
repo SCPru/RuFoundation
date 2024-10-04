@@ -37,7 +37,8 @@ fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, call
         let includer = PythonCallbacks{ callbacks: Box::new(callbacks.clone()) };
         let mut current_text = included_text;
         preprocess(&mut current_text);
-        let (l_text, l_included_pages) = include(&current_text, &settings, includer, || panic!("Bad includer return")).unwrap_or((current_text.to_owned(), vec![]));
+        let text_with_allowed_no_include = remove_noincludes(&current_text);
+        let (l_text, l_included_pages) = include(&text_with_allowed_no_include, &settings, includer, || panic!("Bad includer return")).unwrap_or((current_text.to_owned(), vec![]));
         included_text = l_text;
         included_pages.append(&mut page_refs_to_owned(&l_included_pages));
         if l_included_pages.is_empty() {

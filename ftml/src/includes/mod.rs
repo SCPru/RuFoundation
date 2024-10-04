@@ -31,8 +31,6 @@ mod parse;
 pub use self::include_ref::IncludeRef;
 pub use self::includer::{DebugIncluder, FetchedPage, Includer, NullIncluder};
 
-use std::borrow::Cow;
-
 use self::parse::parse_include_block;
 use crate::data::PageRef;
 use crate::settings::WikitextSettings;
@@ -69,6 +67,12 @@ lazy_static! {
         Regex::new(r"\{\$(?P<name>[a-zA-Z0-9_\-]+)\}").unwrap();
 }
 
+pub fn remove_noincludes<'t>(input: &'t str) -> String {
+    let no_include_regex = NO_INCLUDE_REGEX.deref();
+    let input_stripped_of_no_include = no_include_regex.replace_all(input, "${1}").to_owned();
+    String::from(input_stripped_of_no_include)
+}
+
 pub fn include<'t, I, E, F>(
     input: &'t str,
     settings: &WikitextSettings,
@@ -100,10 +104,8 @@ where
 
     let no_include_regex = NO_INCLUDE_REGEX.deref();
 
-    let input_stripped_of_no_include = no_include_regex.replace_all(input, "${1}");
-
     // Get include references
-    for mtch in regex.find_iter(input_stripped_of_no_include.as_ref()) {
+    for mtch in regex.find_iter(input) {
         let start = mtch.start();
 
         debug!(
@@ -115,7 +117,7 @@ where
         match parse_include_block(&input[start..], start, settings) {
             Ok((include, end)) => {
                 ranges.push(start..end);
-                includes.push(include);
+                includes.push(include.to_owned());
             }
             Err(_) => warn!("Unable to parse include regex match"),
         }
@@ -142,7 +144,7 @@ where
     // Borrowing from the original text and doing in-place insertions
     // will not work here. We are trying to both return the page names
     // (slices from the input string), and replace it with new content.
-    let mut output = String::from(input_stripped_of_no_include);
+    let mut output = String::from(input);
     let mut pages = Vec::new();
 
     for ((range, include), fetched) in joined_iter {
