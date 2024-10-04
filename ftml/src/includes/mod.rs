@@ -31,6 +31,8 @@ mod parse;
 pub use self::include_ref::IncludeRef;
 pub use self::includer::{DebugIncluder, FetchedPage, Includer, NullIncluder};
 
+use std::borrow::Cow;
+
 use self::parse::parse_include_block;
 use crate::data::PageRef;
 use crate::settings::WikitextSettings;
@@ -49,6 +51,14 @@ lazy_static! {
     };
     static ref INCLUDE_COMPAT_REGEX: Regex = {
         RegexBuilder::new(r"^\[\[\s*include\s+")
+            .case_insensitive(true)
+            .multi_line(true)
+            .dot_matches_new_line(true)
+            .build()
+            .unwrap()
+    };
+    static ref NO_INCLUDE_REGEX: Regex = {
+        RegexBuilder::new(r"^\[\[\s*noinclude\s*\]\]\s*\n(.*?)\n\[\[/\s*noinclude\s*\]\]\s*$")
             .case_insensitive(true)
             .multi_line(true)
             .dot_matches_new_line(true)
@@ -88,8 +98,12 @@ where
         INCLUDE_REGEX.deref()
     };
 
+    let no_include_regex = NO_INCLUDE_REGEX.deref();
+
+    let input_stripped_of_no_include = no_include_regex.replace_all(input, "${1}");
+
     // Get include references
-    for mtch in regex.find_iter(input) {
+    for mtch in regex.find_iter(input_stripped_of_no_include.as_ref()) {
         let start = mtch.start();
 
         debug!(
@@ -128,7 +142,7 @@ where
     // Borrowing from the original text and doing in-place insertions
     // will not work here. We are trying to both return the page names
     // (slices from the input string), and replace it with new content.
-    let mut output = String::from(input);
+    let mut output = String::from(input_stripped_of_no_include);
     let mut pages = Vec::new();
 
     for ((range, include), fetched) in joined_iter {
@@ -156,11 +170,13 @@ where
             None => includer.no_such_include(&page_ref)?,
         };
 
+        let replace_with_no_includes = no_include_regex.replace_all(replace_with.as_ref(), "");
+
         // Append page to final list
         pages.push(page_ref);
 
         // Perform the substitution
-        output.replace_range(range, &replace_with);
+        output.replace_range(range, &replace_with_no_includes);
     }
 
     // Since we iterate in reverse order, the pages are reversed.
