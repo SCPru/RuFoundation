@@ -263,7 +263,7 @@ class PageOptions extends Component<Props, State> {
                                       previewBodyElement={document.getElementById('page-content')} />;
 
             case 'rating':
-                return <ArticleRating pageId={pageId} rating={rating} onClose={this.onCancelSubView} />;
+                return <ArticleRating pageId={pageId} rating={rating} canEdit={editable} onClose={this.onCancelSubView} />;
 
             case 'tags':
                 return <ArticleTags pageId={pageId} onClose={this.onCancelSubView} canCreateTags={canCreateTags} />;

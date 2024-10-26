@@ -13,6 +13,7 @@ import {deleteArticleVotes} from '../api/articles'
 interface Props {
     pageId: string
     rating: number
+    canEdit: boolean
     onClose: () => void
 }
 
@@ -245,6 +246,7 @@ class ArticleRating extends Component<Props, State> {
     }
 
     renderRating() {
+        const { canEdit } = this.props;
         const { mode } = this.state;
 
         let ratingElement: React.ReactNode;
@@ -264,8 +266,12 @@ class ArticleRating extends Component<Props, State> {
         return (
             <div>
                 {ratingElement}
-                <br/>
-                <button className="w-rating-clear-rating-button" onClick={this.onAskClearRating}>Сбросить рейтинг</button>
+                {canEdit && (
+                    <>
+                        <br/>
+                        <button className="w-rating-clear-rating-button" onClick={this.onAskClearRating}>Сбросить рейтинг</button>
+                    </>
+                )}
             </div>
         )
     }
