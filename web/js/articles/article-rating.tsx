@@ -24,6 +24,7 @@ interface State {
     votes?: Array<ModuleRateVote>
     popularity?: number
     error?: string
+    deleting?: boolean
 }
 
 
@@ -100,13 +101,21 @@ class ArticleRating extends Component<Props, State> {
 
     onClearRating = async () => {
         const { pageId } = this.props;
-        this.setState({ loading: true, error: null });
+        this.setState({ loading: true, error: null, deleting: false });
         try {
             const rating = await deleteArticleVotes(pageId)
             this.setState({ loading: false, error: null, votes: rating.votes, rating: rating.rating, popularity: rating.popularity, mode: rating.mode });
         } catch (e) {
             this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' });
         }
+    }
+
+    onAskClearRating = () => {
+        this.setState({ deleting: true })
+    }
+
+    onCancelClearRating = () => {
+        this.setState({ deleting: false })
     }
 
     onClose = (e) => {
@@ -256,7 +265,7 @@ class ArticleRating extends Component<Props, State> {
             <div>
                 {ratingElement}
                 <br/>
-                <button className="w-rating-clear-rating-button" onClick={this.onClearRating}>Сбросить рейтинг</button>
+                <button className="w-rating-clear-rating-button" onClick={this.onAskClearRating}>Сбросить рейтинг</button>
             </div>
         )
     }
@@ -349,13 +358,19 @@ class ArticleRating extends Component<Props, State> {
     }
 
     render() {
-        const { error, loading, votes } = this.state;
+        const { error, loading, votes, deleting } = this.state;
         const groupedVotes = this.sortVotes(votes);
         return (
             <Styles>
                 { error && (
                     <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
                         <p><strong>Ошибка:</strong> {error}</p>
+                    </WikidotModal>
+                ) }
+                { deleting && (
+                    <WikidotModal buttons={[{title: 'Отмена', onClick: this.onCancelClearRating}, {title: 'Да, сбросить', onClick: this.onClearRating}]}>
+                        <h1>Сбросить рейтинг страницы?</h1>
+                        <p>Обратите внимание, что данную операцию можно будет откатить через историю правок.</p>
                     </WikidotModal>
                 ) }
                 <a className="action-area-close btn btn-danger" href="#" onClick={this.onClose}>Закрыть</a>
