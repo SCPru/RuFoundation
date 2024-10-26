@@ -41,6 +41,7 @@ export function makeStarsRateModule(node: HTMLElement) {
     const callback = function (votesData) {
         updateRating(number, votes, popularity, control, votesData);
         originalRateWidth = control.style.width;
+        window.postMessage({'type': 'rate_updated'});
     };
 
     rateWrapper.addEventListener('mousemove', (e) => {

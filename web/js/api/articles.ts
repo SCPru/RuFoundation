@@ -1,5 +1,6 @@
 import {wFetch} from "../util/fetch-util";
 import {UserData} from "./user";
+import {ModuleRateVotesResponse} from './rate'
 
 export interface ArticleData {
     pageId: string
@@ -75,4 +76,12 @@ export interface ArticleBacklinks {
 
 export async function fetchArticleBacklinks(pageId: string): Promise<ArticleBacklinks> {
     return await wFetch<ArticleBacklinks>(`/api/articles/${pageId}/links`)
+}
+
+export async function fetchArticleVotes(pageId: string): Promise<ModuleRateVotesResponse> {
+    return await wFetch<ModuleRateVotesResponse>(`/api/articles/${pageId}/votes`)
+}
+
+export async function deleteArticleVotes(pageId: string): Promise<ModuleRateVotesResponse> {
+    return await wFetch<ModuleRateVotesResponse>(`/api/articles/${pageId}/votes`, { method: 'DELETE' })
 }

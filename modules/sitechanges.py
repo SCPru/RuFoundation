@@ -12,9 +12,9 @@ import math
 import renderer
 from system.models import User
 
-from web.controllers import articles, permissions
+from web.controllers import articles
 from web.models.articles import ArticleLogEntry, Article
-from web.models.forum import ForumCategory, ForumSection, ForumPost
+from web.models.settings import Settings
 
 
 def has_content():
@@ -67,6 +67,7 @@ def log_entry_type_name(entry: ArticleLogEntry.LogEntryType) -> (str, str):
         ArticleLogEntry.LogEntryType.FileAdded: ('F', 'файл добавлен'),
         ArticleLogEntry.LogEntryType.FileDeleted: ('F', 'файл удалён'),
         ArticleLogEntry.LogEntryType.FileRenamed: ('F', 'файл переименован'),
+        ArticleLogEntry.LogEntryType.VotesDeleted: ('V', 'голоса изменены'),
         ArticleLogEntry.LogEntryType.Wikidot: ('W', 'правка, портированная с Wikidot')
     }
     return mapping.get(entry, ('?', '?'))
@@ -111,6 +112,14 @@ def log_entry_default_comment(entry: ArticleLogEntry) -> str:
 
     if entry.type == ArticleLogEntry.LogEntryType.FileRenamed:
         return 'Переименован файл: "%s" в "%s"' % (entry.meta['prev_name'], entry.meta['name'])
+
+    if entry.type == ArticleLogEntry.LogEntryType.VotesDeleted:
+        rating_str = 'n/a'
+        if entry.meta['rating_mode'] == Settings.RatingMode.UpDown:
+            rating_str = '%+d' % int(entry.meta['rating'])
+        elif entry.meta['rating_mode'] == Settings.RatingMode.Stars:
+            rating_str = '%.1f' % float(entry.meta['rating'])
+        return 'Сброшен рейтинг страницы: %s (голосов: %d, популярность: %d%%)' % (rating_str, entry.meta['votes_count'], entry.meta['popularity'])
 
     if entry.type == ArticleLogEntry.LogEntryType.Revert:
         return 'Откат страницы к версии №%d' % (entry.meta['rev_number'])

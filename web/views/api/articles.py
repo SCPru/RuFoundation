@@ -14,6 +14,8 @@ import json
 
 from ...models.articles import ExternalLink, Article
 
+from modules import rate, ModuleError
+
 
 class AllArticlesView(APIView):
     def get(self, request: HttpRequest):
@@ -254,3 +256,26 @@ class FetchExternalLinks(APIView):
                 links_links.append(article_record)
 
         return self.render_json(200, {'children': links_children, 'includes': links_include, 'links': links_links})
+
+class FetchOrUpdateVotesView(APIView):
+    def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        article = articles.get_article(full_name)
+        if not article:
+            raise APIError('Страница не найдена', 404)
+
+        try:
+            return self.render_json(200, rate.api_get_votes(RenderContext(article=article, source_article=article, user=request.user), {}))
+        except ModuleError as e:
+            raise APIError(e.message, 500)
+
+    def delete(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        article = articles.get_article(full_name)
+        if not article:
+            raise APIError('Страница не найдена', 404)
+
+        if not permissions.check(request.user, "edit", article):
+            raise APIError('Недостаточно прав', 403)
+
+        articles.delete_article_votes(article, user=request.user)
+
+        return self.get(request, full_name)

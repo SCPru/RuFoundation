@@ -173,6 +173,7 @@ class ArticleLogEntry(SiteLimitedModel):
         FileAdded = 'file_added'
         FileDeleted = 'file_deleted'
         FileRenamed = 'file_renamed'
+        VotesDeleted = 'votes_deleted'
         Wikidot = 'wikidot'
         Revert = 'revert'
 

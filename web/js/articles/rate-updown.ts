@@ -34,7 +34,8 @@ export function makeUpDownRateModule(node: HTMLElement) {
     const cancel: HTMLElement = node.querySelector('.cancel a');
 
     const callback = function (votesData) {
-        updateRating(number, votesData)
+        updateRating(number, votesData);
+        window.postMessage({'type': 'rate_updated'});
     };
 
     rateup.addEventListener('click', (e) => onClick(e, pageId, 1).then(callback));

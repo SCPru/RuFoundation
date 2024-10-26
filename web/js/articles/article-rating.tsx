@@ -7,6 +7,7 @@ import {fetchPageVotes, ModuleRateVote, RatingMode} from "../api/rate";
 import UserView from "../util/user-view";
 import {sprintf} from 'sprintf-js'
 import formatDate from '../util/date-format'
+import {deleteArticleVotes} from '../api/articles'
 
 
 interface Props {
@@ -52,6 +53,9 @@ const Styles = styled.div<{loading?: boolean}>`
   font-style: italic;
   opacity: 0.5;
 }
+.w-rating-clear-rating-button {
+  width: 100%;
+}
 `;
 
 
@@ -68,7 +72,12 @@ class ArticleRating extends Component<Props, State> {
     }
 
     componentDidMount() {
+        window.addEventListener('message', this.onRatingUpdated);
         this.loadRating();
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('message', this.onRatingUpdated);
     }
 
     async loadRating() {
@@ -76,6 +85,24 @@ class ArticleRating extends Component<Props, State> {
         this.setState({ loading: true, error: null });
         try {
             const rating = await fetchPageVotes(pageId);
+            this.setState({ loading: false, error: null, votes: rating.votes, rating: rating.rating, popularity: rating.popularity, mode: rating.mode });
+        } catch (e) {
+            this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' });
+        }
+    }
+
+    onRatingUpdated = (message: MessageEvent) => {
+        if (message.data?.type !== 'rate_updated') {
+            return;
+        }
+        this.loadRating();
+    }
+
+    onClearRating = async () => {
+        const { pageId } = this.props;
+        this.setState({ loading: true, error: null });
+        try {
+            const rating = await deleteArticleVotes(pageId)
             this.setState({ loading: false, error: null, votes: rating.votes, rating: rating.rating, popularity: rating.popularity, mode: rating.mode });
         } catch (e) {
             this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' });
@@ -211,13 +238,27 @@ class ArticleRating extends Component<Props, State> {
     renderRating() {
         const { mode } = this.state;
 
+        let ratingElement: React.ReactNode;
+
         if (mode === 'updown') {
-            return this.renderUpDownRating();
+            ratingElement = this.renderUpDownRating();
         } else if (mode === 'stars') {
-            return this.renderStarsRating();
+            ratingElement = this.renderStarsRating();
         } else {
             return null;
         }
+
+        if (!ratingElement) {
+            return null;
+        }
+
+        return (
+            <div>
+                {ratingElement}
+                <br/>
+                <button className="w-rating-clear-rating-button" onClick={this.onClearRating}>Сбросить рейтинг</button>
+            </div>
+        )
     }
 
     renderRatingDistribution() {

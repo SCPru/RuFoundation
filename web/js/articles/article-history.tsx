@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Component } from 'react';
 import {ArticleLogEntry, fetchArticleLog, fetchArticleVersion} from "../api/articles";
 import WikidotModal, {showRevertModal} from "../util/wikidot-modal";
-import sleep from "../util/async-sleep";
 import styled from "styled-components";
 import Loader from "../util/loader";
 import formatDate from "../util/date-format";
@@ -10,10 +9,8 @@ import UserView from "../util/user-view";
 import {showVersionMessage} from "../util/wikidot-message";
 import ArticleSource from "./article-source";
 import Pagination from '../util/pagination'
-import {Simulate} from "react-dom/test-utils";
-import change = Simulate.change;
 import ArticleDiffView from "./article-diff";
-import {find} from "styled-components/test-utils";
+import {sprintf} from 'sprintf-js'
 
 
 interface Props {
@@ -247,6 +244,9 @@ class ArticleHistory extends Component<Props, State> {
                 case 'file_renamed':
                     return <span className="spantip" title="файл переименован">F</span>
 
+                case 'votes_deleted':
+                    return <span className="spantip" title="голоса изменены">V</span>
+
                 case 'wikidot':
                     return <span className="spantip" title="правка, портированная с Wikidot">W</span>
             }
@@ -323,6 +323,16 @@ class ArticleHistory extends Component<Props, State> {
 
             case 'file_renamed':
                 return <>Переименован файл: "<em>{entry.meta.prev_name}</em>" в "<em>{entry.meta.name}</em>"</>;
+
+            case 'votes_deleted': {
+                let ratingStr = 'n/a'
+                if (entry.meta.rating_mode === 'updown') {
+                    ratingStr = sprintf('%+d', entry.meta.rating)
+                } else if (entry.meta.rating_mode === 'stars') {
+                    ratingStr = sprintf('%.1f', entry.meta.rating)
+                }
+                return <>Сброшен рейтинг страницы: {ratingStr} (голосов: {entry.meta.votes_count}, популярность: {entry.meta.popularity}%)</>
+            }
 
             case 'revert':
                 return <>Откат страницы к версии №{entry.meta.rev_number}</>
