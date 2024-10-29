@@ -2,7 +2,7 @@ use super::prelude::*;
 use regex::Regex;
 
 lazy_static! {
-    static ref WS_VARIABLE_REGEX: Regex = Regex::new(r"\{@(.+)\}").unwrap();
+    static ref WS_VARIABLE_REGEX: Regex = Regex::new(r"\{@([a-zA-Z0-9_\-]+)\}").unwrap();
 }
 
 pub const RULE_WS_VARIABLE: Rule = Rule {

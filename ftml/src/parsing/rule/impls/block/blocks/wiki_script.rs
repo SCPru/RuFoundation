@@ -42,8 +42,8 @@ fn parse_scope<'r, 't>(
     in_head: bool,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Parsing scope block (name {name}, in-head {in_head})");
-    assert!(!flag_star, "Scopes doesn't allow star flag");
-    assert!(!flag_score, "Scopes doesn't allow score flag");
+    assert!(!flag_star, "WikiScript scopes doesn't allow star flag");
+    assert!(!flag_score, "WikiScript scopes doesn't allow score flag");
 
     // syntax:
     // [[scope]]
@@ -80,7 +80,7 @@ fn parse_var<'r, 't>(
     in_head: bool,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Parsing WikiScript variable block (name {name}, in-head {in_head})");
-    assert!(!flag_score, "WikiScript variables WikiScript doesn't allow score flag");
+    assert!(!flag_score, "WikiScript variables doesn't allow score flag");
 
     // syntax: [[declare name value]]
     //         [[set name value]]
