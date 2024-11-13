@@ -114,7 +114,7 @@ token = _{
 
 // Text {{{
 
-identifier = @{ (ASCII_ALPHANUMERIC | "-" | "_" )+ }
+identifier = @{ (ASCII_ALPHANUMERIC)+ }
 
 email = @{
     (!(" " | "\t" | NEWLINE) ~ ANY)+ ~
@@ -134,7 +134,7 @@ url = @{
 // Symbols {{{
 
 raw = @{ "@@" ~ !"<" }
-html_entity = @{ "&" ~ "#"? ~ (ASCII_ALPHANUMERIC | ASCII_DIGIT)+ ~ ";"?}
+html_entity = @{ "&" ~ "#"? ~ (ASCII_ALPHANUMERIC)+ ~ ";"?}
 left_raw = @{ "@<" }
 right_raw = @{ ">@" }
 
@@ -196,15 +196,10 @@ table_column_title = @{ "||~" }
 
 // }}}
 
-// Variable {{{
+// Variables {{{
 
-variable = @{ "{$" ~ identifier ~ "}" }
-
-// }}}
-
-// WSVariable {{{
-
-ws_variable = @{ "{@" ~ identifier ~ "}" }
+variable = @{ "{$" ~ (ASCII_ALPHANUMERIC | "-" | "_" )+ ~ "}" }
+ws_variable = @{ "{@" ~ (ASCII_ALPHANUMERIC | "-" | "_" )+ ~ "}" }
 
 // }}}
 
