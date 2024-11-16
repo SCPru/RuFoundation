@@ -95,7 +95,7 @@ fn parse_fn<'r, 't>(
         _ => unreachable!()
     };
 
-    let parser_tx = &mut parser.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC);
+    let parser_tx = &mut parser.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC | ParserTransactionFlags::Scopes);
 
     let truthy_raw = collect_consume_keep(
         parser_tx,
@@ -114,7 +114,7 @@ fn parse_fn<'r, 't>(
         parser_tx.rollback();
     }
 
-    let falsey_tx = &mut parser_tx.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC);
+    let falsey_tx = &mut parser_tx.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC | ParserTransactionFlags::Scopes);
 
     let falsey = match truthy_raw.item.1.token {
         Token::Pipe => collect_consume(
@@ -190,7 +190,7 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
             _ => unreachable!()
         };
 
-    let parser_tx = &mut parser.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC);
+    let parser_tx = &mut parser.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC | ParserTransactionFlags::Scopes);
 
     // Get body content, never with paragraphs
     let (truthy, truthy_exceptions, _) =
@@ -222,7 +222,7 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
         parser_tx.rollback();
     }
 
-    let falsey_tx = &mut parser_tx.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC);
+    let falsey_tx = &mut parser_tx.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC | ParserTransactionFlags::Scopes);
 
     let falsey = if has_else {
         let (falsey, _, _) = falsey_tx.get_body_elements(rule, name, false)?.into();

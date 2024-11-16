@@ -24,6 +24,11 @@ Note: this is what I tested with, your mileage may differ.
   - `python manage.py migrate`
   - `python manage.py runserver --watch`
 
+## Creating admin account
+
+- Run `python manage.py createsuperuser --username Admin --email "" --skip-checks`
+- Follow instructions in terminal
+
 ## Seeding the database
 
 To start working, the following objects are required:
