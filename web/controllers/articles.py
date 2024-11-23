@@ -315,7 +315,7 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
     tags_added_meta = []
     tags_removed_meta = []
 
-    tags = list(get_tags(article))
+    tags = [x.id for x in get_tags_internal(article)]
     for tag in new_props.get('removed_tags', []):
         try:
             tags.remove(tag)
@@ -325,7 +325,8 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
     for tag in new_props.get('added_tags', []):
         tags.append(tag)
         tags_added_meta.append(tag)
-    set_tags(article, tags, user, False)
+    new_tags = list(Tag.objects.filter(id__in=tags))
+    set_tags_internal(article, new_tags, user, False)
 
     if tags_added_meta or tags_removed_meta:
         subtypes.append(ArticleLogEntry.LogEntryType.Tags)
@@ -685,11 +686,6 @@ def get_tag(full_name_or_tag_id: _FullNameOrTag, create: bool = False) -> Option
             return Tag.objects.get(category=category, name=name)
         except (Tag.DoesNotExist, TagsCategory.DoesNotExist):
             return None
-    if type(full_name_or_tag_id) == int:
-        try:
-            return Tag.objects.get(id=full_name_or_tag_id)
-        except Tag.DoesNotExist:
-            return None
     if not isinstance(full_name_or_tag_id, Tag):
         raise ValueError('Expected str or Tag')
     return full_name_or_tag_id
@@ -697,9 +693,13 @@ def get_tag(full_name_or_tag_id: _FullNameOrTag, create: bool = False) -> Option
 
 # Get tags from article
 def get_tags(full_name_or_article: _FullNameOrArticle) -> Sequence[str]:
+    return list(sorted([x.full_name.lower() for x in get_tags_internal(full_name_or_article)]))
+
+
+def get_tags_internal(full_name_or_article: _FullNameOrArticle) -> Sequence[Tag]:
     article = get_article(full_name_or_article)
     if article:
-        return list(sorted([x.full_name.lower() for x in article.tags.prefetch_related("category")]))
+        return article.tags.prefetch_related("category")
     return []
 
 
@@ -712,12 +712,18 @@ def get_tags_categories(full_name_or_article: _FullNameOrArticle) -> Dict[TagsCa
 
 
 # Set tags for article
-def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[Union[str, int]], user: Optional[_UserType] = None, log: bool = True):
+def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[Union[str]], user: Optional[_UserType] = None, log: bool = True):
     article = get_article(full_name_or_article)
-    article_tags = article.tags.all()
 
     allow_creating = article.get_settings().creating_tags_allowed
-    tags = list(filter(lambda x: x is not None, [get_tag(x, create=allow_creating) for x in tags if isinstance(x, int) or is_tag_name_allowed(x)]))
+    tags = list(filter(lambda x: x is not None, [get_tag(x, create=allow_creating) for x in tags if is_tag_name_allowed(x)]))
+
+    return set_tags_internal(article, tags, user=user, log=log)
+
+
+def set_tags_internal(full_name_or_article: _FullNameOrArticle, tags: Sequence[Tag], user: Optional[_UserType] = None, log: bool = True):
+    article = get_article(full_name_or_article)
+    article_tags = article.tags.all()
 
     removed_tags = []
     added_tags = []
