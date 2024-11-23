@@ -1569,7 +1569,7 @@ td {
     }
  
     #edit-page-title {
-        max-width: 90%;
+        width: 90%;
     }
  
     .content-panel.left-column, .content-panel.right-column {
