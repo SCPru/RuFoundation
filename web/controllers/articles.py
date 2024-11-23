@@ -317,12 +317,18 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
 
     tags = [x.id for x in get_tags_internal(article)]
     for tag in new_props.get('removed_tags', []):
+        # safety: some outdated revisions have string tags here
+        if not isinstance(tag, int):
+            continue
         try:
             tags.remove(tag)
             tags_removed_meta.append(tag)
         except ValueError:
             pass
     for tag in new_props.get('added_tags', []):
+        # safety: some outdated revisions have string tags here
+        if not isinstance(tag, int):
+            continue
         tags.append(tag)
         tags_added_meta.append(tag)
     new_tags = list(Tag.objects.filter(id__in=tags))

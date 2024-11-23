@@ -33,7 +33,7 @@ Each of them has special format of metadata field; these are detailed below.
 
 ## `LogEntryType.Source`
 
-```json
+```javascript
 {
   "version_id": int /* ArticleVersion ID */
 }
@@ -41,7 +41,7 @@ Each of them has special format of metadata field; these are detailed below.
 
 ## `LogEntryType.Title`
 
-```json
+```javascript
 {
   "title": string,
   "prev_title": string
@@ -50,7 +50,7 @@ Each of them has special format of metadata field; these are detailed below.
 
 ## `LogEntryType.Name`
 
-```json
+```javascript
 {
   "name": string, /* full slug, including category */
   "prev_name": string /* full slug, including category */
@@ -59,7 +59,7 @@ Each of them has special format of metadata field; these are detailed below.
 
 ## `LogEntryType.Tags`
 
-```json
+```javascript
 {
   "added_tags": [{
     "id": int, /* Tag ID */
@@ -78,7 +78,7 @@ These values are _usually_ not used, just present tracking.
 
 This is because reverting revisions is done by undoing the change, and you can't undo the "new" revision.
 
-```json
+```javascript
 {
   "version_id": int, /* ArticleVersion ID */ 
   "title": string /* initial title of article */
@@ -87,7 +87,7 @@ This is because reverting revisions is done by undoing the change, and you can't
 
 ## `LogEntryType.Parent`
 
-```json
+```javascript
 {
   "parent": string, /* full slug, including category; used only for visuals */
   "prev_parent": string, /* full slug, including category; used only for visuals */
@@ -98,7 +98,7 @@ This is because reverting revisions is done by undoing the change, and you can't
 
 ## `LogEntryType.FileAdded`
 
-```json
+```javascript
 {
   "id": int, /* File ID */
   "name": string
@@ -107,7 +107,7 @@ This is because reverting revisions is done by undoing the change, and you can't
 
 ## `LogEntryType.FileDeleted`
 
-```json
+```javascript
 {
   "id": int, /* File ID */
   "name": string
@@ -116,7 +116,7 @@ This is because reverting revisions is done by undoing the change, and you can't
 
 ## `LogEntryType.FileRenamed`
 
-```json
+```javascript
 {
   "id": int, /* File ID */
   "name": string,
@@ -128,7 +128,7 @@ This is because reverting revisions is done by undoing the change, and you can't
 
 The system stores votes that were present at the moment of deletion.
 
-```json
+```javascript
 {
   "rating_mode": string, /* Settings.RatingMode enum */
   "rating": int | float, /* sum or average, depending on rating mode */
@@ -147,7 +147,7 @@ The system stores votes that were present at the moment of deletion.
 
 Note that metadata fields here are optional depending on specific revert subtypes.
 
-```json
+```javascript
 {
   "subtypes": [string], /* LogEntryType enum */
   "rev_number": int, /* revision index that was reverted to */
