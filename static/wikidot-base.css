@@ -552,7 +552,7 @@ table.wiki-content-table th{
 	text-align: center;
 }
 
-#toc #toc-action-bar{
+#toc .toc-action-bar{
 	padding: 2px;
 }
 
