@@ -47,7 +47,7 @@ pub const URL_SCHEMES: [&str; 20] = [
 
 lazy_static! {
     static ref URL_REGEX: Regex = {
-        RegexBuilder::new(r"^([A-Z0-9_\-]+:.*|[^:]+)$")
+        RegexBuilder::new(r"^([A-Z0-9_\-]+:.*|[^:]+|/.*|//.*)$")
             .build()
             .unwrap()
     };
