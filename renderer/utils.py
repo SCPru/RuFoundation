@@ -5,6 +5,7 @@ from django.template import Context, Template
 from system.models import User
 
 import threading
+import urllib.parse
 
 
 _templates = dict()
@@ -107,12 +108,22 @@ def render_user_to_json(user: User, avatar=True):
     }
 
 
-def filter_url(url):
+def validate_url(url):
     url = url.strip()
-    test_url = url.lower()
-    if test_url.startswith('javascript:') or test_url.startswith('data:'):
-        return '#invalid-url'
+    try:
+        r = urllib.parse.urlparse(url)
+        if r.scheme.lower() in ['javascript', 'data']:
+            raise ValueError(repr(url))
+    except:
+        raise ValueError(repr(url))
     return url
+
+
+def filter_url(url):
+    try:
+        return validate_url(url)
+    except ValueError:
+        return '#invalid-url'
 
 
 def get_boolean_param(params: dict, key, default=False):
