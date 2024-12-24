@@ -77,6 +77,7 @@ class FetchOrUpdateView(ArticleView):
         source = articles.get_latest_source(article)
 
         return self.render_json(200, {
+            'uid': article.id,
             'pageId': articles.get_full_name(article),
             'title': article.title,
             'source': source,

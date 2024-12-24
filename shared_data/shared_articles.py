@@ -35,6 +35,7 @@ def background_reload():
                         last_event = ArticleLogEntry.objects.filter(article=article).order_by('-rev_number')[0]
                         rating, rating_votes, popularity, rating_mode = articles.get_rating(article)
                         stored_articles.append({
+                            'uid': article.id,
                             'pageId': article.full_name,
                             'title': article.title,
                             'canonicalUrl': '//%s/%s' % (site.domain, article.full_name),
