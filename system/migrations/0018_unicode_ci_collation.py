@@ -10,12 +10,12 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunSQL(
             sql="""
-                CREATE COLLATION IF NOT EXISTS en_ci (
+                CREATE COLLATION IF NOT EXISTS unicode_ci (
                     provider = 'icu',
                     locale = 'en-u-ks-level2',
                     deterministic = false
                 );
             """,
-            reverse_sql="DROP COLLATION IF EXISTS en_ci;"
+            reverse_sql="DROP COLLATION IF EXISTS unicode_ci;"
         ),
     ]

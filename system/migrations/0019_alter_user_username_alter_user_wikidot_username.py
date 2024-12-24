@@ -7,18 +7,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('system', '0018_en_ci_collation'),
+        ('system', '0018_unicode_ci_collation'),
     ]
 
     operations = [
         migrations.AlterField(
             model_name='user',
             name='username',
-            field=models.TextField(db_collation='en_ci', error_messages={'unique': 'Пользователь с данным именем уже существует'}, max_length=150, unique=True, validators=[system.models.StrictUsernameValidator()], verbose_name='Имя пользователя'),
+            field=models.TextField(db_collation='unicode_ci', error_messages={'unique': 'Пользователь с данным именем уже существует'}, max_length=150, unique=True, validators=[system.models.StrictUsernameValidator()], verbose_name='Имя пользователя'),
         ),
         migrations.AlterField(
             model_name='user',
             name='wikidot_username',
-            field=models.TextField(db_collation='en_ci', max_length=150, null=True, unique=True, validators=[system.models.StrictUsernameValidator()], verbose_name='Имя пользователя на Wikidot'),
+            field=models.TextField(db_collation='unicode_ci', max_length=150, null=True, unique=True, validators=[system.models.StrictUsernameValidator()], verbose_name='Имя пользователя на Wikidot'),
         ),
     ]

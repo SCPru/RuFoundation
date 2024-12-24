@@ -13,11 +13,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='externallink',
             name='link_from',
-            field=models.TextField(db_collation='en_ci', verbose_name='Ссылающаяся статья'),
+            field=models.TextField(db_collation='unicode_ci', verbose_name='Ссылающаяся статья'),
         ),
         migrations.AlterField(
             model_name='externallink',
             name='link_to',
-            field=models.TextField(db_collation='en_ci', verbose_name='Целевая статья'),
+            field=models.TextField(db_collation='unicode_ci', verbose_name='Целевая статья'),
         ),
     ]

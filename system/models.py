@@ -43,14 +43,14 @@ class User(AbstractUser):
 
     username = models.TextField(
         max_length=150, validators=[StrictUsernameValidator()], unique=True,
-        db_collation="en_ci",
+        db_collation="unicode_ci",
         verbose_name="Имя пользователя",
         error_messages={
             "unique": "Пользователь с данным именем уже существует",
         },
     )
 
-    wikidot_username = models.TextField(unique=True, db_collation="en_ci", max_length=150, validators=[StrictUsernameValidator()], verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
+    wikidot_username = models.TextField(unique=True, db_collation="unicode_ci", max_length=150, validators=[StrictUsernameValidator()], verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
 
     type = models.TextField(choices=UserType.choices, default=UserType.Normal, verbose_name="Тип")
 
