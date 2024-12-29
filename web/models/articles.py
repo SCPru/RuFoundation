@@ -2,7 +2,6 @@ from uuid import uuid4
 
 from system.models import VisualUserGroup
 from django.conf import settings
-from django.contrib.postgres.fields import CITextField
 import auto_prefetch
 from django.db import models
 from .sites import SiteLimitedModel
@@ -223,6 +222,6 @@ class ExternalLink(SiteLimitedModel):
         Include = 'include'
         Link = 'link'
 
-    link_from = CITextField(verbose_name="Ссылающаяся статья", null=False)
-    link_to = CITextField(verbose_name="Целевая статья", null=False)
+    link_from = models.TextField(verbose_name="Ссылающаяся статья", db_collation="unicode_ci", null=False)
+    link_to = models.TextField(verbose_name="Целевая статья", db_collation="unicode_ci", null=False)
     link_type = models.TextField(choices=Type.choices, verbose_name="Тип ссылки", null=False)
