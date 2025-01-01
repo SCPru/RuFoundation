@@ -11,9 +11,20 @@
 Note: this is what I tested with, your mileage may differ.
 
 - Windows 10
+- PostrgeSQL 17.2
 - NodeJS v17.3.0
 - Python 3.10.1
 - Rust 1.63
+
+## PostgreSQL configuration
+Defaults is:
+- Username: `postgress` (`POSTGRES_USER`)
+- Password: `zaq123` (`POSTGRES_PASSWORD`)
+- DB name: `scpwiki` (`POSTGRES_DB`)
+- DB host: `localhost` (`DB_PG_HOST`)
+- DB port: `5432` (`DB_PG_PORT`)
+
+You can change it with given environment variables.
 
 ## How to launch
 
