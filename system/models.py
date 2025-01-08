@@ -1,4 +1,5 @@
 import auto_prefetch
+from system.fields import CITextField
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser
@@ -41,16 +42,15 @@ class User(AbstractUser):
         System = 'system'
         Bot = 'bot'
 
-    username = models.TextField(
+    username = CITextField(
         max_length=150, validators=[StrictUsernameValidator()], unique=True,
-        db_collation="unicode_ci",
         verbose_name="Имя пользователя",
         error_messages={
             "unique": "Пользователь с данным именем уже существует",
         },
     )
 
-    wikidot_username = models.TextField(unique=True, db_collation="unicode_ci", max_length=150, validators=[StrictUsernameValidator()], verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
+    wikidot_username = CITextField(unique=True, max_length=150, validators=[StrictUsernameValidator()], verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
 
     type = models.TextField(choices=UserType.choices, default=UserType.Normal, verbose_name="Тип")
 

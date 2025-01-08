@@ -4,9 +4,10 @@ from modules.listpages import param, query_pages, render_pagination
 from modules.listpages.params import ListPagesParams
 from renderer.utils import render_template_from_string
 
+from system.fields import CITextField
 from web.controllers import articles
 from web.models.articles import ExternalLink, Article
-from django.db.models import Q, Value as V, Case, When, Subquery, OuterRef, TextField
+from django.db.models import Q, Value as V, Case, When, Subquery, OuterRef
 from django.db.models.functions import Concat, Substr, StrIndex
 
 def has_content():
@@ -37,14 +38,14 @@ def render(context, params):
 
     filtered_pages, _, _, _, _ = query_pages(context.article, params, context.user, allow_pagination=False, always_query=True)
 
-    filtered_pages_names = filtered_pages.annotate(full_name=Concat('category', V(':'), 'name', output_field=TextField(db_collation="unicode_ci"))).values('full_name')
+    filtered_pages_names = filtered_pages.annotate(full_name=Concat('category', V(':'), 'name', output_field=CITextField())).values('full_name')
     
     all_articles = Article.objects.values('name', 'category', 'title') \
-      .annotate(full_name=Concat('category', V(':'), 'name', output_field=TextField(db_collation="unicode_ci")))
+      .annotate(full_name=Concat('category', V(':'), 'name', output_field=CITextField()))
     q = ExternalLink.objects.filter(link_type='link') \
-      .annotate(link_from_complete=Case(When(~Q(link_from__contains=':'), then=Concat(V('_default:'), 'link_from', output_field=TextField(db_collation="unicode_ci"))), default='link_from')) \
+      .annotate(link_from_complete=Case(When(~Q(link_from__contains=':'), then=Concat(V('_default:'), 'link_from', output_field=CITextField())), default='link_from')) \
       .filter(link_from_complete__in=Subquery(filtered_pages_names)) \
-      .annotate(link_to_complete=Case(When(~Q(link_to__contains=':'), then=Concat(V('_default:'), 'link_to', output_field=TextField(db_collation="unicode_ci"))), default='link_to'))
+      .annotate(link_to_complete=Case(When(~Q(link_to__contains=':'), then=Concat(V('_default:'), 'link_to', output_field=CITextField())), default='link_to'))
 
     q = q.exclude(link_to_complete__in=all_articles.values('full_name'))
 
