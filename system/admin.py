@@ -1,6 +1,8 @@
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib import admin
+from django.db.models.functions import Collate
+from django.db.models import Q
 from django.urls import path
 from django import forms
 from guardian.admin import GuardedModelAdmin
@@ -53,6 +55,17 @@ class AdvancedUserAdmin(UserAdmin):
             if not_required_field in form.base_fields:
                 form.base_fields[not_required_field].required = False
         return form
+    
+    def get_search_results(self, request, queryset, search_term):
+        if search_term:
+            query = Q()
+            for field in self.search_fields:
+                query |= Q(**{f"det_{field}__icontains": search_term})
+
+            queryset = queryset.annotate(**{f'det_{field}': Collate(field, 'und-x-icu') for field in self.search_fields})
+            queryset = queryset.filter(query)
+
+        return queryset, False
 
 
 class VisualUserGroupForm(forms.ModelForm):
