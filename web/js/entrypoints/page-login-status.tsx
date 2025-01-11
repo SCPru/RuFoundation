@@ -53,7 +53,7 @@ class PageLoginStatus extends Component<Props, State> {
         if (user.type === 'anonymous') {
             return (
                 <>
-                    <a className="login-status-create-account btn" href="/system:join">Создать учётную запись</a> или <a className="login-status-sign-in btn btn-primary" href={`/-/login?to=${encodeURIComponent(window.location.href)}`}>Вход</a>
+                    <a className="login-status-create-account btn" href="/system:join">Создать учётную запись</a> <span>или</span> <a className="login-status-sign-in btn btn-primary" href={`/-/login?to=${encodeURIComponent(window.location.href)}`}>Вход</a>
                 </>
             );
         } else {
