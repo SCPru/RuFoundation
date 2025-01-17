@@ -30,7 +30,7 @@ class AdvancedUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets
     fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'is_editor', 'is_staff', 'is_superuser', 'visual_group', 'groups', 'user_permissions')
     fieldsets[1][1]["fields"] += ("bio", "avatar")
-    fieldsets[0][1]["fields"] += ("type", "wikidot_username", "api_key")
+    fieldsets[0][1]["fields"] = ("username", "wikidot_username", "type", "password", "api_key")
 
     inlines = []
 
@@ -67,6 +67,7 @@ class VisualUserGroupForm(forms.ModelForm):
 @admin.register(VisualUserGroup)
 class VisualUserGroupAdmin(GuardedModelAdmin):
     form = VisualUserGroupForm
+    search_fields = ['name']
     fieldsets = (
         (None, {"fields": ('name', 'index')}),
     )
