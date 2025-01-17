@@ -5,11 +5,11 @@ from system.fields import CITextField
 from django.conf import settings
 import auto_prefetch
 from django.db import models
-from .sites import SiteLimitedModel
 from .settings import Settings
+from .sites import Site
 
 
-class TagsCategory(SiteLimitedModel):
+class TagsCategory(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Категория тегов"
         verbose_name_plural = "Категории тегов"
@@ -35,7 +35,7 @@ class TagsCategory(SiteLimitedModel):
         return super(TagsCategory, self).save(*args, **kwargs)
 
 
-class Tag(SiteLimitedModel):
+class Tag(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Тег"
         verbose_name_plural = "Теги"
@@ -60,7 +60,7 @@ class Tag(SiteLimitedModel):
         return super(Tag, self).save(*args, **kwargs)
 
 
-class Category(SiteLimitedModel):
+class Category(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Настройки категории"
         verbose_name_plural = "Настройки категорий"
@@ -91,11 +91,11 @@ class Category(SiteLimitedModel):
     # if neither is set, falls back to defaults defined in Settings class.
     def get_settings(self):
         category_settings = Settings.objects.filter(category=self).first() or Settings.get_default_settings()
-        site_settings = Settings.objects.filter(site=self.site).first() or Settings.get_default_settings()
+        site_settings = Site.objects.get().get_settings() or Settings.get_default_settings()
         return Settings.get_default_settings().merge(site_settings).merge(category_settings)
 
 
-class Article(SiteLimitedModel):
+class Article(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Статья"
         verbose_name_plural = "Статьи"
@@ -123,7 +123,8 @@ class Article(SiteLimitedModel):
             category_as_object = Category.objects.get(name__iexact=self.category)
             return category_as_object.get_settings()
         except Category.DoesNotExist:
-            return Settings.get_default_settings().merge(self.site.get_settings())
+            site_settings = Site.objects.get().get_settings()
+            return Settings.get_default_settings().merge(site_settings)
 
     @property
     def full_name(self) -> str:
@@ -139,7 +140,7 @@ class Article(SiteLimitedModel):
         return f"{self.title} ({self.full_name})"
 
 
-class ArticleVersion(SiteLimitedModel):
+class ArticleVersion(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Версия статьи"
         verbose_name_plural = "Версии статей"
@@ -156,7 +157,7 @@ class ArticleVersion(SiteLimitedModel):
         return f"{self.created_at.strftime('%Y-%m-%d, %H:%M:%S')} - {self.article}"
 
 
-class ArticleLogEntry(SiteLimitedModel):
+class ArticleLogEntry(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Запись в журнале изменений"
         verbose_name_plural = "Записи в журнале изменений"
@@ -189,7 +190,7 @@ class ArticleLogEntry(SiteLimitedModel):
         return f"№{self.rev_number} - {self.article}"
 
 
-class Vote(SiteLimitedModel):
+class Vote(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Оценка"
         verbose_name_plural = "Оценки"
@@ -207,7 +208,7 @@ class Vote(SiteLimitedModel):
         return f"{self.article}: {self.user} - {self.rate}"
 
 
-class ExternalLink(SiteLimitedModel):
+class ExternalLink(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Связь"
         verbose_name_plural = "Связи"

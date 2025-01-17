@@ -3,12 +3,12 @@ import auto_prefetch
 from django.db import models
 
 from .articles import Article
-from .sites import SiteLimitedModel, get_current_site
+from .sites import get_current_site
 
 import urllib.parse
 
 
-class File(SiteLimitedModel):
+class File(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Файл"
         verbose_name_plural = "Файлы"

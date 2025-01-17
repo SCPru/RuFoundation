@@ -11,3 +11,4 @@ beautifulsoup4==4.12.3
 django-auto-prefetch==1.11.0
 langcodes==3.4.0
 requests==2.32.3
+django-solo==2.4.0

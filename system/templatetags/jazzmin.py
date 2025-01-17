@@ -1,5 +1,6 @@
 import copy
 
+from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.template import Context
 from jazzmin.templatetags import jazzmin
@@ -10,6 +11,7 @@ import web
 
 register = jazzmin.register
 
+admin.site.site_header = 'Админка'
 
 # This fixes categories in side menu
 @register.simple_tag(takes_context=True)
@@ -24,7 +26,7 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
             {'model': system.models.User},
             {'model': system.models.VisualUserGroup},
         )),
-        ('Статьи', (
+        ('Структура', (
             {'model': web.models.sites.Site},
             {'model': web.models.articles.Category},
             {'model': web.models.articles.TagsCategory},
