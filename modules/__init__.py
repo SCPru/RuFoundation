@@ -2,6 +2,7 @@ import pkgutil
 import sys
 import logging
 from types import ModuleType
+from importlib.util import module_from_spec
 
 from django.db import transaction
 
@@ -30,7 +31,9 @@ def get_all_modules():
             if fullname in sys.modules:
                 m = sys.modules[fullname]
             else:
-                m = importer.find_module(fullname).load_module(fullname)
+                spec = importer.find_spec(fullname)
+                m = module_from_spec(spec)
+                spec.loader.exec_module(m)
         except:
             logging.error('Failed to load module \'%s\':', modname.lower(), exc_info=True)
             continue
