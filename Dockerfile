@@ -31,7 +31,7 @@ RUN yarn install
 RUN yarn run build
 
 # Python stuff
-FROM python:3.10
+FROM python:3.12.7
 
 WORKDIR /app
 
