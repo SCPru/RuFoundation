@@ -48,7 +48,7 @@ pub fn render_table_of_contents(
             .contents(|ctx| {
                 ctx.html()
                     .div()
-                    .attr(attr!("class" => "toc-action-bar"))
+                    .attr(attr!("id" => "toc-action-bar", "class" => "toc-action-bar"))
                     .contents(|ctx| {
                         ctx.html()
                             .a()
