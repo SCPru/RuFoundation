@@ -9,7 +9,7 @@ import modules
 from system.models import User
 from web import threadvars
 from web.models.articles import ArticleVersion, Article
-from web.models.sites import get_current_site
+from web.models.site import get_current_site
 from . import expression
 from .parser import RenderContext
 from .utils import render_user_to_html, render_template_from_string

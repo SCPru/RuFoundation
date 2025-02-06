@@ -6,7 +6,7 @@ from django.conf import settings
 import auto_prefetch
 from django.db import models
 from .settings import Settings
-from .sites import Site
+from .site import Site
 
 
 class TagsCategory(auto_prefetch.Model):

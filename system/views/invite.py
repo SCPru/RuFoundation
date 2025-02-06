@@ -12,7 +12,7 @@ from django.contrib.admin import site
 from django.contrib import messages
 
 from system.forms import InviteForm
-from web.models.sites import get_current_site
+from web.models.site import get_current_site
 
 
 User = get_user_model()

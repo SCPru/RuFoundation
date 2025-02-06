@@ -5,7 +5,7 @@ from django import forms
 
 from .models.articles import *
 from .models.forum import *
-from .models.sites import Site
+from .models.site import Site
 
 class TagsCategoryForm(forms.ModelForm):
     class Meta:

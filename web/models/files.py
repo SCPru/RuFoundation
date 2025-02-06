@@ -3,7 +3,7 @@ import auto_prefetch
 from django.db import models
 
 from .articles import Article
-from .sites import get_current_site
+from .site import get_current_site
 
 import urllib.parse
 

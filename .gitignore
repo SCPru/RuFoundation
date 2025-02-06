@@ -12,3 +12,4 @@ archive
 *.env
 venv
 .DS_Store
+TODOtions.txt

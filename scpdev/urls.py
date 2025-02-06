@@ -23,7 +23,7 @@ import os.path
 import django.views.static
 
 from web.controllers import articles
-from web.models.sites import get_current_site
+from web.models.site import get_current_site
 
 
 def partial_quote(url):

@@ -6,7 +6,7 @@ from web.controllers import articles
 import renderer
 from renderer.templates import apply_template
 from renderer.utils import render_template_from_string
-from web.models.sites import get_current_site
+from web.models.site import get_current_site
 from shared_data import interwiki_batcher
 
 

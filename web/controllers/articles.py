@@ -9,7 +9,7 @@ from django.db.models.functions import Coalesce, Concat, Lower
 import renderer
 from renderer import RenderContext
 from system.models import User
-from web.models.sites import get_current_site
+from web.models.site import get_current_site
 from web.models.articles import *
 from web.models.files import *
 
@@ -558,9 +558,10 @@ def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user:
 
 def delete_article(full_name_or_article: _FullNameOrArticle):
     article = get_article(full_name_or_article)
+    site = get_current_site()
     ExternalLink.objects.filter(link_from__iexact=get_full_name(full_name_or_article)).delete()
     article.delete()
-    file_storage = Path(settings.MEDIA_ROOT) / article.site.slug / article.media_name
+    file_storage = Path(settings.MEDIA_ROOT) / site.slug / article.media_name
     # this may have race conditions with file upload, because filesystem does not know about database transactions
     for i in range(3):
         try:

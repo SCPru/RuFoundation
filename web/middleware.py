@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db.models import Q
 from django.http import HttpResponseRedirect
-from web.models.sites import Site
+from web.models.site import Site
 from web import threadvars
 import django.middleware.csrf
 import urllib.parse
