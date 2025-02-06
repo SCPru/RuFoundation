@@ -7,7 +7,7 @@ from renderer.utils import render_user_to_json
 from web import threadvars
 from web.controllers import articles
 from web.models.articles import ArticleLogEntry, Article
-from web.models.sites import Site, get_current_site
+from web.models.site import Site, get_current_site
 
 
 BACKGROUND_RELOAD_DELAY = 60 * 15

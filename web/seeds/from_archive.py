@@ -23,7 +23,7 @@ from scpdev import urls
 from web import threadvars
 from web.models.articles import ArticleVersion, ArticleLogEntry, Article
 from web.models.files import File
-from web.models.sites import get_current_site
+from web.models.site import get_current_site
 from system.models import User
 from uuid import uuid4
 

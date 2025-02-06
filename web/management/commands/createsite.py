@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from web.models.settings import Settings
-from web.models.sites import Site
+from web.models.site import Site
 
 
 class Command(BaseCommand):

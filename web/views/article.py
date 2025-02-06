@@ -19,7 +19,7 @@ from modules.listpages import page_to_listpages_vars
 from typing import Optional, Tuple
 import json
 
-from web.models.sites import get_current_site
+from web.models.site import get_current_site
 
 import re
 

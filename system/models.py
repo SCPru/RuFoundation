@@ -1,21 +1,20 @@
 import auto_prefetch
-from system.fields import CITextField
+import re
+
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db import models
-from datetime import datetime
-from zoneinfo import ZoneInfo
-import re
 
+from system.fields import CITextField
 
 class StrictUsernameValidator(RegexValidator):
     regex = r"^[\w.-]+\Z"
-    message = (
-        "Enter a valid username. This value may contain only English letters, "
-        "numbers, and ./-/_ characters."
-    )
+    message = 'Имя пользователя может содержать только английские буквы, цифры и символы [.-_] (без скобок).'
     flags = re.ASCII
 
 
@@ -37,10 +36,10 @@ class User(AbstractUser):
         verbose_name_plural = "Пользователи"
 
     class UserType(models.TextChoices):
-        Normal = 'normal'
-        Wikidot = 'wikidot'
-        System = 'system'
-        Bot = 'bot'
+        Normal = ('normal', 'Обычный')
+        Wikidot = ('wikidot', 'Пользователь Wikidot')
+        System = ('system', 'Системный')
+        Bot = ('bot', 'Бот')
 
     username = CITextField(
         max_length=150, validators=[StrictUsernameValidator()], unique=True,

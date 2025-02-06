@@ -9,7 +9,7 @@ from django.db.models.functions import Coalesce, Concat, Lower
 import renderer
 from renderer import RenderContext
 from system.models import User
-from web.models.sites import get_current_site
+from web.models.site import get_current_site
 from web.models.articles import *
 from web.models.files import *
 
@@ -558,9 +558,10 @@ def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user:
 
 def delete_article(full_name_or_article: _FullNameOrArticle):
     article = get_article(full_name_or_article)
+    site = get_current_site()
     ExternalLink.objects.filter(link_from__iexact=get_full_name(full_name_or_article)).delete()
     article.delete()
-    file_storage = Path(settings.MEDIA_ROOT) / article.site.slug / article.media_name
+    file_storage = Path(settings.MEDIA_ROOT) / site.slug / article.media_name
     # this may have race conditions with file upload, because filesystem does not know about database transactions
     for i in range(3):
         try:
@@ -762,7 +763,7 @@ def set_tags_internal(full_name_or_article: _FullNameOrArticle, tags: Sequence[T
 
 # Get article comment info
 # This may actually create a thread if it does not exist yet
-def get_comment_info(full_name_or_article: _FullNameOrArticle) -> (int, int):
+def get_comment_info(full_name_or_article: _FullNameOrArticle) -> tuple[int, int]:
     article = get_article(full_name_or_article)
     if not article:
         return 0, 0
@@ -772,7 +773,7 @@ def get_comment_info(full_name_or_article: _FullNameOrArticle) -> (int, int):
 
 
 # Get article rating
-def get_rating(full_name_or_article: _FullNameOrArticle) -> (int | float, int, int, Settings.RatingMode):
+def get_rating(full_name_or_article: _FullNameOrArticle) -> tuple[int | float, int, int, Settings.RatingMode]:
     article = get_article(full_name_or_article)
     if not article:
         return 0, 0, 0, Settings.RatingMode.Disabled
@@ -804,7 +805,7 @@ def get_formatted_rating(full_name_or_article: _FullNameOrArticle) -> str:
         return '%d' % rating
 
 
-def add_vote(full_name_or_article: _FullNameOrArticle, user: settings.AUTH_USER_MODEL, rate: int | float | None):
+def add_vote(full_name_or_article: _FullNameOrArticle, user: settings.AUTH_USER_MODEL, rate: int | float | None): # type: ignore
     article = get_article(full_name_or_article)
 
     Vote.objects.filter(article=article, user=user).delete()
@@ -855,7 +856,7 @@ def add_file_to_article(full_name_or_article: _FullNameOrArticle, file: File, us
     add_log_entry(article, log)
 
 
-def get_file_space_usage() -> (int, int):
+def get_file_space_usage() -> tuple[int, int]:
     current_files_size = File.objects.filter(deleted_at=None).aggregate(size=Sum('size')).get('size') or 0
     absolute_files_size = File.objects.aggregate(size=Sum('size')).get('size') or 0
     return current_files_size, absolute_files_size
