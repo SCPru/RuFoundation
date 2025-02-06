@@ -36,7 +36,7 @@ class TagForm(forms.ModelForm):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     form = TagForm
-    search_fields = ['name', 'category']
+    search_fields = ['name', 'category__name']
     list_filter = ['category']
     list_display = ['name', 'category']
 
@@ -83,12 +83,13 @@ class SiteForm(forms.ModelForm):
     class Meta:
         model = Site
         widgets = {
-            'slug': forms.TextInput,
+            'slug': forms.TextInput(attrs=dict(readonly=True, disabled=True)),
             'title': forms.TextInput,
             'headline': forms.TextInput,
             'domain': forms.TextInput,
             'media_domain': forms.TextInput
         }
+        
         fields = '__all__'
 
 
@@ -121,6 +122,6 @@ class ForumCategoryForm(forms.ModelForm):
 @admin.register(ForumCategory)
 class ForumCategoryAdmin(admin.ModelAdmin):
     form = ForumCategoryForm
-    search_fields = ['name', 'slug', 'description']
+    search_fields = ['name', 'description']
     list_filter = ['section']
     list_display = ['name', 'section']

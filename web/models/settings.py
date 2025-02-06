@@ -8,15 +8,15 @@ class Settings(auto_prefetch.Model):
         verbose_name_plural = "Настройки"
 
     class RatingMode(models.TextChoices):
-        Default = 'default'
-        Disabled = 'disabled'
-        UpDown = 'updown'
-        Stars = 'stars'
+        Default = ('default', 'По умолчанию')
+        Disabled = ('disabled', 'Отключено')
+        UpDown = ('updown', 'Апвоуты')
+        Stars = ('stars', 'Звёзды')
 
     class UserCreateTagsMode(models.TextChoices):
-        Default = 'default'
-        Disabled = 'disabled'
-        Enabled = 'enabled'
+        Default = ('default', 'По умолчанию')
+        Disabled = ('disabled', 'Запрещено')
+        Enabled = ('enabled', 'Разрешено')
 
     site = auto_prefetch.OneToOneField('Site', on_delete=models.CASCADE, null=True, related_name='_settings')
     category = auto_prefetch.OneToOneField('Category', on_delete=models.CASCADE, null=True, related_name='_settings')

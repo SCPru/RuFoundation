@@ -1,12 +1,21 @@
+import re
+import auto_prefetch
+
 from uuid import uuid4
+from django.core.validators import RegexValidator
+from django.conf import settings
+from django.db import models
 
 from system.models import VisualUserGroup
 from system.fields import CITextField
-from django.conf import settings
-import auto_prefetch
-from django.db import models
 from .settings import Settings
 from .site import Site
+
+
+class TagsCategorySlugValidator(RegexValidator):
+    regex = r"^[a-zа-я0-9.-_]+\Z"
+    message = "Идентификатор категории тега может содержать только строчные буквы, цифры и символы [.-_] (без скобок)."
+    flags = re.ASCII
 
 
 class TagsCategory(auto_prefetch.Model):
@@ -20,7 +29,7 @@ class TagsCategory(auto_prefetch.Model):
     name = models.TextField(verbose_name="Полное название")
     description = models.TextField(blank=True, verbose_name="Описание")
     priority = models.PositiveIntegerField(null=True, blank=True, unique=True, verbose_name="Порядковый номер")
-    slug = models.TextField(verbose_name="Наименование", unique=True)
+    slug = models.TextField(verbose_name="Идентификатор", unique=True, validators=[TagsCategorySlugValidator()])
 
     def __str__(self):
         return f"{self.name} ({self.slug})"
@@ -165,18 +174,18 @@ class ArticleLogEntry(auto_prefetch.Model):
         constraints = [models.UniqueConstraint(fields=['article', 'rev_number'], name='%(app_label)s_%(class)s_unique')]
 
     class LogEntryType(models.TextChoices):
-        Source = 'source'
-        Title = 'title'
-        Name = 'name'
-        Tags = 'tags'
-        New = 'new'
-        Parent = 'parent'
-        FileAdded = 'file_added'
-        FileDeleted = 'file_deleted'
-        FileRenamed = 'file_renamed'
-        VotesDeleted = 'votes_deleted'
-        Wikidot = 'wikidot'
-        Revert = 'revert'
+        Source = ('source', 'Изменение содержимого')
+        Title = ('title', 'Изменение заголовка')
+        Name = ('name', 'Изменение адреса страницы')
+        Tags = ('tags', 'Изменение тегов')
+        New = ('new', 'Создание страницы')
+        Parent = ('parent', 'Изменение родителя')
+        FileAdded = ('file_added', 'Добавление файлов')
+        FileDeleted = ('file_deleted', 'Удаление файлов')
+        FileRenamed = ('file_renamed', 'Переименование файлов')
+        VotesDeleted = ('votes_deleted', 'Сброс рейтинга')
+        Wikidot = ('wikidot', 'Правка с Wikidot')
+        Revert = ('revert', 'Откат правки')
 
     article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
     user = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
