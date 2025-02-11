@@ -8,7 +8,7 @@ from django.db.models.functions import Coalesce, Concat, Lower
 
 import renderer
 from renderer import RenderContext
-from system.models import User
+from web.models.users import User
 from web.models.site import get_current_site
 from web.models.articles import *
 from web.models.files import *

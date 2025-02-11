@@ -1,0 +1,31 @@
+{% load md5url %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %} - RuFoundation</title>
+
+    <link rel="stylesheet" type="text/css" href="{% md5url "fontawesome/css/all.css" %}">
+
+    <script src="{% md5url "app.js" %}" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="{% md5url "system.css" %}">
+
+    {% block head %}{% endblock %}
+</head>
+<body class="system">
+    <div class="system-container">
+        {% block back_link %}
+        <a class="back-link" href="/"><span class="fa fa-arrow-left"></span> Назад на сайт</a>
+        {% endblock %}
+        <div class="system-content">
+            {% block before %}{% endblock %}
+            <div class="heading">
+                <h1 id="title">{% block h1 %}{% endblock %}</h1>
+            </div>
+            <div class="content">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

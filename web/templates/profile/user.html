@@ -1,0 +1,31 @@
+{% extends "system_base.html" %}
+
+{% block title %}
+    {{ displayname }}
+{% endblock %}
+
+{% block h1 %}
+    <img class="system-heading-avatar" src="{{ avatar }}" alt="{{ displayname }}">
+    {{ displayname }}
+    {% if subtitle %}
+        <div class="user-heading-subtitle">
+            {{ subtitle }}
+        </div>
+    {% endif %}
+    {% if request.user == object %}
+        <div class="edit-button">
+            <a href="{% url "profile_edit" %}" title="Редактирование" class="icon"><span>Edit</span> <i class="fas fa-pen"></i></a>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="profile-form">
+        {% if object.type == 'wikidot' %}<p><b>Важно:</b> Пользователь мигрирован с платформы Wikidot и не является активным.<br><br></p>{% endif %}
+        {% if object.type == 'bot' %}<p><b>Важно:</b> Пользователь является ботом.<br><br></p>{% endif %}
+        {% if object.first_name %}<p><b>Имя:</b> {{ object.first_name }}</p>{% endif %}
+        {% if object.last_name %}<p><b>Фамилия:</b> {{ object.last_name }}</p>{% endif %}
+        {% if object.bio %}<p><b>Описание:</b> {{ bio_rendered }}</p>{% endif %}
+        <p><b>Участник сайта:</b> c {{ object.date_joined }}</p>
+    </div>
+{% endblock %}

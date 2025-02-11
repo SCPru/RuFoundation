@@ -25,11 +25,6 @@ COPY web/js .
 RUN yarn install
 RUN yarn run build
 
-WORKDIR /build/system/js
-COPY system/js .
-RUN yarn install
-RUN yarn run build
-
 # Python stuff
 FROM python:3.12.7
 

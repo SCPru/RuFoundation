@@ -7,7 +7,6 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('system', '0020_alter_user_username_alter_user_wikidot_username'),
         ('web', '0040_alter_externallink_link_from_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]

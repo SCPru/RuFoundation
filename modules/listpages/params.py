@@ -4,7 +4,7 @@ import calendar
 from datetime import datetime, timezone
 
 from web.controllers import articles
-from system.models import User
+from web.models.users import User
 from web.models.articles import Article, Tag
 from . import param
 

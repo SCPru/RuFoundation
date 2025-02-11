@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from web import seeds, threadvars
 from web.models.site import Site
@@ -9,11 +9,15 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("-a", "--archive", required=False, help="Seeds from specified archive")
-        parser.add_argument("-s", "--site-slug", required=True, help="Slug for site that items will be added to")
+        # parser.add_argument("-o", "--fetch-from", required=False, help="Fetch from existing site, running on RuFoundation Engine.\nMake sure that the site engine version matches your version")
         parser.add_argument("-f", "--forum", required=False, action='store_true', help="Seeds the forum (only applicable for Archive)")
 
     def handle(self, *args, **options):
-        site = Site.objects.get(slug=options["site_slug"])
+        if not Site.objects.exists():
+            raise CommandError("You must create new site to run this command")
+
+        site = Site.objects.get()
+        
         with threadvars.context():
             threadvars.put('current_site', site)
             if options["archive"]:

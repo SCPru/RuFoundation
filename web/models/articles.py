@@ -6,8 +6,8 @@ from django.core.validators import RegexValidator
 from django.conf import settings
 from django.db import models
 
-from system.models import VisualUserGroup
-from system.fields import CITextField
+from web.fields import CITextField
+from .users import VisualUserGroup
 from .settings import Settings
 from .site import Site
 

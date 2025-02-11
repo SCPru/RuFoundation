@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AnonymousUser
 
-from system.models import User
+from web.models.users import User
 from web.models.articles import Article, Category
 from web.models.forum import ForumSection, ForumCategory, ForumThread, ForumPost
 

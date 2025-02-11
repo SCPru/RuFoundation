@@ -4,7 +4,7 @@ from modules.listpages import param, query_pages, render_pagination
 from modules.listpages.params import ListPagesParams
 from renderer.utils import render_template_from_string
 
-from system.fields import CITextField
+from web.fields import CITextField
 from web.controllers import articles
 from web.models.articles import ExternalLink, Article
 from django.db.models import Q, Value as V, Case, When, Subquery, OuterRef

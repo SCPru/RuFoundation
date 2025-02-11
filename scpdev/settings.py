@@ -29,7 +29,7 @@ DEBUG = os.environ.get('DEBUG', 'true') == 'true'
 
 ALLOWED_HOSTS = ['*']
 
-SILENCED_SYSTEM_CHECKS = ['templates.E003']
+# SILENCED_SYSTEM_CHECKS = ['templates.E003']
 
 
 # Application definition
@@ -45,7 +45,6 @@ INSTALLED_APPS = [
 
     'guardian',
 
-    'system',
     'web',
 
     'django.contrib.staticfiles',
@@ -62,7 +61,7 @@ MIDDLEWARE = [
     'web.middleware.DropWikidotAuthMiddleware',
     'web.middleware.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'system.middleware.BotAuthTokenMiddleware',
+    'web.middleware.BotAuthTokenMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'web.middleware.MediaHostMiddleware'
 ]
@@ -241,7 +240,7 @@ else:
 GOOGLE_TAG_ID = os.environ.get('GOOGLE_TAG_ID', None)
 
 
-AUTH_USER_MODEL = "system.User"
+AUTH_USER_MODEL = "web.User"
 
 LOGGING = {
     'version': 1,
@@ -266,4 +265,7 @@ LOGGING = {
 
 JAZZMIN_SETTINGS = {
     "user_avatar": "avatar",
+
+    "site_title": "RuFoundation",
+    "site_brand": "Админка",
 }

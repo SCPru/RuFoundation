@@ -1,10 +1,28 @@
 from django.conf import settings
 from django.db.models import Q
 from django.http import HttpResponseRedirect
+from django.contrib.auth import get_user_model
+
 from web.models.site import Site
 from web import threadvars
+
 import django.middleware.csrf
 import urllib.parse
+
+
+User = get_user_model()
+
+class BotAuthTokenMiddleware(object):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if "Authorization" in request.headers and request.headers["Authorization"].startswith("Bearer "):
+            try:
+                request.user = User.objects.get(type="bot", api_key=request.headers["Authorization"][7:])
+            except User.DoesNotExist:
+                pass
+        return self.get_response(request)
 
 
 class FixRawPathMiddleware(object):

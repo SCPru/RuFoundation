@@ -6,7 +6,7 @@ from django.db.models.functions import Concat, Lower
 from django.utils.safestring import SafeString
 
 import modules
-from system.models import User
+from web.models.users import User
 from web import threadvars
 from web.models.articles import ArticleVersion, Article
 from web.models.site import get_current_site
