@@ -2,14 +2,8 @@
 from django.db import migrations
 
 
-# def migrate_or_create_user():
-
-
-
 class Migration(migrations.Migration):
-
-    initial = True
-
+    
     dependencies = [
         ('web', '0042_alter_articlelogentry_type_and_more'),
     ]
