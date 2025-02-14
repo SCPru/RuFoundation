@@ -13,6 +13,7 @@ from .models.users import User, VisualUserGroup
 from .views.invite import InviteView
 from .views.bot import CreateBotView
 
+
 class TagsCategoryForm(forms.ModelForm):
     class Meta:
         model = TagsCategory
@@ -89,7 +90,6 @@ class SiteForm(forms.ModelForm):
     class Meta:
         model = Site
         widgets = {
-            'slug': forms.TextInput(attrs=dict(readonly=True, disabled=True)),
             'title': forms.TextInput,
             'headline': forms.TextInput,
             'domain': forms.TextInput,
@@ -103,6 +103,9 @@ class SiteForm(forms.ModelForm):
 class SiteAdmin(GuardedModelAdmin, SingletonModelAdmin):
     form = SiteForm
     inlines = [SettingsAdmin]
+    readonly_fields = ['slug']
+    fields = ['slug', 'title', 'headline', 'domain', 'media_domain']
+
 
 class ForumSectionForm(forms.ModelForm):
     class Meta:
@@ -112,10 +115,12 @@ class ForumSectionForm(forms.ModelForm):
         }
         fields = '__all__'
 
+
 @admin.register(ForumSection)
 class ForumSectionAdmin(admin.ModelAdmin):
     form = ForumSectionForm
     search_fields = ['name', 'description']
+
 
 class ForumCategoryForm(forms.ModelForm):
     class Meta:
@@ -124,6 +129,7 @@ class ForumCategoryForm(forms.ModelForm):
             'name': forms.TextInput,
         }
         fields = '__all__'
+
 
 @admin.register(ForumCategory)
 class ForumCategoryAdmin(admin.ModelAdmin):
@@ -135,6 +141,7 @@ class ForumCategoryAdmin(admin.ModelAdmin):
 
 class AdvancedUserChangeForm(UserChangeForm):
     class Meta:
+        # fix username and wikidot_username input fields type
         widgets = {
             'username': forms.TextInput(attrs={'class': 'vTextField'}),
             'wikidot_username': forms.TextInput(attrs={'class': 'vTextField'})
@@ -145,23 +152,23 @@ class AdvancedUserChangeForm(UserChangeForm):
 class AdvancedUserAdmin(UserAdmin):
     form = AdvancedUserChangeForm
 
-    list_filter = ['is_superuser', 'is_staff', 'is_active', 'visual_group']
+    list_filter = ['is_superuser', 'is_staff', 'is_editor', 'is_active', 'visual_group']
     list_display = ['username_or_wd', 'email']
     search_fields = ['username', 'wikidot_username', 'email']
-    readonly_fields = ["api_key"]
+    readonly_fields = ['api_key']
 
     fieldsets = UserAdmin.fieldsets
     fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'is_editor', 'is_staff', 'is_superuser', 'visual_group', 'groups', 'user_permissions')
-    fieldsets[1][1]["fields"] += ("bio", "avatar")
-    fieldsets[0][1]["fields"] = ("username", "wikidot_username", "type", "password", "api_key")
+    fieldsets[1][1]['fields'] += ('bio', 'avatar')
+    fieldsets[0][1]['fields'] = ('username', 'wikidot_username', 'type', 'password', 'api_key')
 
     inlines = []
 
     def get_urls(self):
         urls = super(AdvancedUserAdmin, self).get_urls()
-        urls.insert(0, path("invite/", InviteView.as_view()))
-        urls.insert(0, path("newbot/", CreateBotView.as_view()))
-        urls.insert(0, path("<id>/activate/", InviteView.as_view()))
+        urls.insert(0, path('invite/', InviteView.as_view()))
+        urls.insert(0, path('newbot/', CreateBotView.as_view()))
+        urls.insert(0, path('<id>/activate/', InviteView.as_view()))
         return urls
 
     def username_or_wd(self, obj):

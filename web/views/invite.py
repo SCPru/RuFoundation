@@ -29,7 +29,7 @@ account_activation_token = TokenGenerator()
 @method_decorator(staff_member_required, name='dispatch')
 class InviteView(FormView):
     form_class = InviteForm
-    template_name = "admin/system/user/invite.html"
+    template_name = "admin/web/user/user_action.html"
     email_template_name = "mails/invite_email.txt"
     user = None
 
@@ -46,9 +46,11 @@ class InviteView(FormView):
     def get_context_data(self, **kwargs):
         context = super(InviteView, self).get_context_data(**kwargs)
         context["title"] = "Пригласить пользователя"
+        context["submit_btn"] = "Отправить"
         user = self.get_user()
         if user:
             context["title"] = "Активировать пользователя wd:%s" % user.wikidot_username
+            context["submit_btn"] = "Активировать"
         context.update(site._wrapped.each_context(self.request))
         return context
 
