@@ -15,7 +15,7 @@ User = get_user_model()
 @method_decorator(staff_member_required, name='dispatch')
 class CreateBotView(FormView):
     form_class = CreateBotForm
-    template_name = "admin/system/user/invite.html"
+    template_name = "admin/web/user/user_action.html"
 
     def get_initial(self):
         initial = super(CreateBotView, self).get_initial()
@@ -24,6 +24,7 @@ class CreateBotView(FormView):
     def get_context_data(self, **kwargs):
         context = super(CreateBotView, self).get_context_data(**kwargs)
         context["title"] = "Создать бота"
+        context["submit_btn"] = "Создать"
         context.update(site._wrapped.each_context(self.request))
         return context
 

@@ -1,7 +1,9 @@
 {% extends "admin/submit_line.html" %}
 
 {% block extra-actions %}
+{% if original.type == "wikidot" and not original.is_active %}
 <div class="form-group">
     <a href="../activate/" class="btn btn-outline-success form-control">Активировать</a>
 </div>
+{% endif %}
 {% endblock %}
