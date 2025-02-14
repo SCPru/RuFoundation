@@ -10,7 +10,7 @@ from renderer import RenderContext, render_template_from_string, render_user_to_
 import math
 
 import renderer
-from system.models import User
+from web.models.users import User
 
 from web.controllers import articles
 from web.models.articles import ArticleLogEntry, Article

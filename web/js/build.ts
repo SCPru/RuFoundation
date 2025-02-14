@@ -22,6 +22,15 @@ async function build() {
         plugins: [sassPlugin()]
     };
 
+    const baseConfigSystemCSS = {
+        entryPoints: ['system.scss'],
+        outfile: '../../static/system.css',
+        bundle: true,
+        minify: true,
+        sourcemap: true,
+        plugins: [sassPlugin()]
+    };
+
     if (watch) {
         const createWatchLogger = (type: string) => ({
             onRebuild(error: any, result: any) {
@@ -32,11 +41,13 @@ async function build() {
 
         esbuild.build(Object.assign(baseConfigJS, { watch: createWatchLogger('JS'), minify: false }));
         esbuild.build(Object.assign(baseConfigCSS, { watch: createWatchLogger('CSS'), minify: false }));
+        esbuild.build(Object.assign(baseConfigSystemCSS, { watch: createWatchLogger('CSS'), minify: false }));
     } else {
         console.log('Building JS...');
         await esbuild.build(baseConfigJS);
         console.log('Building CSS...');
         await esbuild.build(baseConfigCSS);
+        await esbuild.build(baseConfigSystemCSS);
     }
 }
 

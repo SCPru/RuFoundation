@@ -2,7 +2,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.conf import settings
 from django.template import Context, Template
 
-from system.models import User
+from web.models.users import User
 
 import threading
 import urllib.parse

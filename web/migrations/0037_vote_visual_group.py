@@ -8,7 +8,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('system', '0016_visualusergroup_index'),
         ('web', '0036_externallink_web_externa_link_fr_92155a_idx_and_more'),
     ]
 
@@ -16,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='vote',
             name='visual_group',
-            field=auto_prefetch.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='system.visualusergroup', verbose_name='Визуальная группа'),
+            field=auto_prefetch.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='web.visualusergroup', verbose_name='Визуальная группа'),
         ),
     ]

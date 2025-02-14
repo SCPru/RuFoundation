@@ -1,5 +1,5 @@
 from typing import Literal
-from system.models import User
+from web.models.users import User
 from datetime import datetime
 import web.models.articles
 

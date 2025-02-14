@@ -24,7 +24,7 @@ from web import threadvars
 from web.models.articles import ArticleVersion, ArticleLogEntry, Article
 from web.models.files import File
 from web.models.site import get_current_site
-from system.models import User
+from web.models.users import User
 from uuid import uuid4
 
 
