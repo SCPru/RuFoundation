@@ -12,6 +12,7 @@ from .models.site import Site
 from .models.users import User, VisualUserGroup
 from .views.invite import InviteView
 from .views.bot import CreateBotView
+from .controllers import articles
 
 
 class TagsCategoryForm(forms.ModelForm):
@@ -90,6 +91,7 @@ class SiteForm(forms.ModelForm):
     class Meta:
         model = Site
         widgets = {
+            'slug': forms.TextInput,
             'title': forms.TextInput,
             'headline': forms.TextInput,
             'domain': forms.TextInput,
@@ -103,8 +105,12 @@ class SiteForm(forms.ModelForm):
 class SiteAdmin(GuardedModelAdmin, SingletonModelAdmin):
     form = SiteForm
     inlines = [SettingsAdmin]
-    readonly_fields = ['slug']
     fields = ['slug', 'title', 'headline', 'domain', 'media_domain']
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if change and 'slug' in form.changed_data and form.cleaned_data.get('slug'):
+            articles.change_slug_for_local_files(form.initial['slug'], form.cleaned_data['slug'])
 
 
 class ForumSectionForm(forms.ModelForm):

@@ -955,3 +955,8 @@ def fetch_articles_by_names(original_names):
         dumb_name = ('_default:%s' % name).lower() if ':' not in name else name.lower()
         articles_dict[name] = ret_map[dumb_name]
     return articles_dict
+
+
+def change_slug_for_local_files(old_slug: str, new_slug: str):
+    media_root = Path(settings.MEDIA_ROOT)
+    os.rename(media_root / old_slug, media_root / new_slug)

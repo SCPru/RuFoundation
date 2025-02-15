@@ -1,0 +1,164 @@
+[[div class="top-bar"]]
+* [# Обновления]
+ * [[[news|Новости]]]
+ * [[[most-recently-created|Новые статьи]]]
+ * [[[system:recent-changes|Свежие правки]]]
+ * [[[/forum:recent-posts|Новые сообщения]]]
+* [# Правила сайта]
+ * [[[system:join|Регистрация]]]
+ * [[[sandbox:main|Правила публикации]]]
+ * [[[contacts|Контакты администрации]]]
+ * [[[faq|Часто задаваемые вопросы (FAQ)]]]
+* [# Автору]
+ * [[[how-to-write-an-scp |Как написать SCP-объект]]]
+ * [[[scp-template |Оформление]]]
+ * [[[wiki-syntax-guide |Техническое руководство по викиразметке]]]
+ * [[[tag-guide|Руководство по тегам]]]
+ * [[[the-big-list-of-overdone-scp-cliches|Список наиболее раскрытых тем]]]
+ * [[[essays|Очерки]]]
+ * [[[themes-hub|Хаб визуальных тем]]]
+ * [[[licensing-ru|Список авторства]]]
+ * [[[authors-pages|Авторские страницы]]]
+* [# Переводчику]
+ * [[[glossary |Глоссарий]]]
+ * [[[translations-planning|Планы на перевод]]]
+ * [[[sandbox:not-translated|Объекты без перевода]]]
+ * [[[tag-guide|Руководство по тегам]]]
+ * [[[essays#toc19|Очерки]]]
+ * [[[themes-hub|Хаб визуальных тем]]]
+ * [[[licensing|Список авторства]]]
+* [# Архивы]
+ * [https://scpsandbox.wikidot.com/ Старый Полигон]
+ * [[[archived-scps|Архив статей]]]
+ * [[[contests|Архив конкурсов]]]
+ * [[[news-archive|Архив новостей]]]
+ * [[[site-7-midnight-radio|Site 7 Midnight Radio]]]
+ * [[[site-7-media-archive|Site 7 Media Archive]]]
+* [# Общение]
+ * [[[chat|Чат]]]
+ * [[[/forum/start|Форум]]]
+ * [[[/forum/s-3/obsuzdenie-i-znakomstvo|Обсуждения]]]
+ * [[[/forum/s-4/idei-i-tvorcestvo| Идеи и творчество]]]
+ * [[[/forum/s-5/voprosi-perevoda| Вопросы перевода]]]
+ * [[[/forum/s-2/tehniceskoe| Техническое]]]
+ [!-- * [https://trello.com/invite/b/98wilQnG/73499cc0aec552a756dfc3e98793345d/scp-ru-public-board Трелло] --]
+[[/div]]
+
+[[div class="mobile-top-bar"]]
+[[div class="open-menu"]]
+[#side-bar ≡]
+[[/div]]
+* [# Обновления]
+ * [[[news|Новости]]]
+ * [[[most-recently-created|Новые статьи]]]
+ * [[[system:recent-changes|Свежие правки]]]
+ * [[[/forum:recent-posts|Новые сообщения]]]
+* [# Правила сайта]
+ * [[[system:join|Регистрация]]]
+ * [[[sandbox:main|Правила публикации]]]
+ * [[[contacts|Контакты администрации]]]
+ * [[[faq|Часто задаваемые вопросы (FAQ)]]]
+* [# Автору]
+ * [[[how-to-write-an-scp |Как написать SCP-объект]]]
+ * [[[scp-template |Оформление]]]
+ * [[[wiki-syntax-guide |Техническое руководство по викиразметке]]]
+ * [[[tag-guide|Руководство по тегам]]]
+ * [[[the-big-list-of-overdone-scp-cliches|Список избитых штампов]]]
+ * [[[essays|Очерки]]]
+ * [[[licensing-ru|Список авторства]]]
+ * [[[authors-pages|Авторские страницы]]]
+* [# Переводчику]
+ * [[[glossary |Глоссарий]]]
+ * [[[translations-planning|Планы на перевод]]]
+ * [[[sandbox:not-translated|Объекты без перевода]]]
+ * [[[tag-guide|Руководство по тегам]]]
+ * [[[essays#toc19|Очерки]]]
+ * [[[themes-hub|Хаб визуальных тем]]]
+ * [[[licensing|Список авторства]]]
+* [# Архивы]
+ * [https://scpsandbox.wikidot.com/ Старый Полигон]
+ * [[[archived-scps|Архив статей]]]
+ * [[[contests|Архив конкурсов]]]
+ * [[[news-archive|Архив новостей]]]
+ * [[[site-7-midnight-radio|Site 7 Midnight Radio]]]
+ * [[[site-7-media-archive|Site 7 Media Archive]]]
+* [# Общение]
+ * [[[chat|Чат]]]
+ * [[[/forum/start|Форум]]]
+ * [[[/forum/s-3/obsuzdenie-i-znakomstvo|Обсуждения]]]
+ * [[[/forum/s-4/idei-i-tvorcestvo| Идеи и творчество]]]
+ * [[[/forum/s-5/voprosi-perevoda| Вопросы перевода]]]
+ * [[[/forum/s-2/tehniceskoe| Техническое]]]
+ [!-- * [https://trello.com/invite/b/98wilQnG/73499cc0aec552a756dfc3e98793345d/scp-ru-public-board Трелло] --]
+[[/div]]
+
+[!--[[module CSS]]
+.site-in-dev-warning {
+	 background: #4e00bf;
+	 margin-left: auto;
+	 width: min(calc(100% - 16px), 800px);
+	 box-sizing: border-box;
+	 border: 2px solid white;
+	 box-shadow: 0 0 0 3px #4e00bf;
+	 color: white;
+	 display: flex;
+	 align-items: center;
+	 padding: 8px;
+	 margin-top: 48px;
+         position: absolute;
+         z-index: -1;
+         right: 0;
+}
+.site-in-dev-warning a {
+         text-decoration: underline !important;
+}
+.site-in-dev-warning img {
+	 width: 48px;
+	 height: 48px;
+}
+.site-in-dev-warning > div {
+	 margin-left: 16px;
+}
+.site-in-dev-warning h4 {
+	 margin: 0;
+	 padding: 0;
+}
+.site-in-dev-warning .text {
+	 margin: 0;
+	 margin-top: 8px;
+	 padding: 0;
+	 font-size: 12px;
+}
+ @media (max-width: 849px) {
+	 .site-in-dev-warning {
+		 max-width: none;
+		 margin-top: 40px;
+	}
+}
+#main-content {
+        padding-top: 240px !important;
+}
+/* убрать после 1 апреля если это сообщение будет использоваться ещё зачем-то */
+@media (max-width: 844px) {
+  .site-in-dev-warning {
+    display: none;
+  }
+  #main-content {
+        padding-top: 0 !important;
+  }
+}
+[[/module]]
+
+[[div_ class="site-in-dev-warning"]]
+[[image in-dev.png]]
+[[div_]]
+++++ **ВНИМАНИЕ!**
+[[div_ class="text"]]
+В итоге длительных и непростых обсуждений среди АМС, было принято решение **отказаться от поддержки собственного сайта**. Это связано с тем, что для его развития и поддержки требуются технические специалисты, а их в проекте критически недостаточно.
+[[div]][[/div]]
+В связи с этим мы **возвращаемся на платформу Wikidot**. В данный момент исследуется возможность переноса форумных сообщений. Закрытие текущего сайта запланировано на **24 апреля, 16:04 по Красноярску**.
+[[div]][[/div]]
+[[a href="https://ru.wikipedia.org/wiki/%D0%94%D0%B5%D0%BD%D1%8C_%D1%81%D0%BC%D0%B5%D1%85%D0%B0" target="_blank"]]Узнать больше[[/a]]
+[[/div]]
+[[/div]]
+[[/div]]--]

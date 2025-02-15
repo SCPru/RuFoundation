@@ -1,0 +1,290 @@
+[[div_ class="cimg banner-block"]]
+[[html]]
+<div class="banner-single">
+  <a href="#" class="nav-btn btn-left" id="ctl-left"></a>
+  <a href="#" class="nav-btn btn-right" id="ctl-right"></a>
+  <div class="controller" id="ctl"></div>
+  <div class="banner-scroll" id="scroller">
+
+    <!-- НОВЫЕ КАРТИНКИ БАННЕРА ДОБАВЛЯТЬ НИЖЕ -->
+
+
+    <a href="/remake-contest" target="_top">
+      <img src="/local--files/fragment:main-banner/con_head(1).png">
+    </a>
+
+    <a href="/least-rated-pages" target="_top">
+      <img src="/local--files/fragment:main-banner/banner-6.webp">
+    </a>
+
+    <a href="/private-contest-oakk" target="_top">
+      <img src="/local--files/fragment:main-banner/oakk.png">
+    </a>
+
+    <a href="https://boosty.to/scpfanpage" target="_top">
+      <img src="/local--files/fragment:main-banner/banner-boost.jpg">
+    </a>
+
+    <a href="/least-rated-ru-pages" target="_top">
+      <img src="/local--files/fragment:main-banner/banner-3.jpg">
+    </a>
+
+    <!--/ НОВЫЕ КАРТИНКИ БАННЕРА ДОБАВЛЯТЬ ВЫШЕ -->
+
+  </div>
+</div>
+<style>
+html, body {
+  overflow: hidden;
+}
+
+.banner-single {
+  user-select: none;
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+.banner-scroll {
+  display: flex;
+  position: relative;
+  align-items: center;
+  z-index: 0;
+}
+.smooth-scroll {
+  transition: all 0.5s ease-in-out;
+}
+.banner-scroll a {
+  display: block;
+  width: 100%;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+.banner-scroll a img {
+  width: 100%;
+  min-height: 100%;
+  display: block;
+}
+.nav-btn {
+  background: #99999999;
+  border: 1px solid #999999;
+  opacity: 0.75;
+  border-radius: 100%;
+  width: 32px;
+  height: 32px;
+  display: block;
+  position: absolute;
+  top: calc(50% - 16px);
+  z-index: 1;
+}
+.nav-btn:hover {
+  opacity: 1;
+}
+.nav-btn::before {
+  content: '';
+  background: #999999;
+  width: 16px;
+  height: 8px;
+  display: block;
+  clip-path: polygon(0 90%, 50% 0, 100% 90%, 90% 100%, 50% 15%, 10% 100%);
+  position: absolute;
+  left: calc(50% - 8px);
+  top: calc(50% - 4px);
+}
+.nav-btn.btn-left {
+  left: -16px;
+}
+.nav-btn.btn-left::before {
+  transform: rotate(-90deg);
+  left: calc(50% - 3px);
+}
+.nav-btn.btn-right {
+  right: -16px;
+}
+.nav-btn.btn-right::before {
+  transform: rotate(90deg);
+  left: auto;
+  right: calc(50% - 3px);
+}
+.controller {
+  position: absolute;
+  z-index: 1;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0;
+}
+.controller a {
+  display: block;
+  width: 6px;
+  height: 6px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  background: #999999;
+  opacity: 0.75;
+  margin: 0 3px;
+  border-radius: 100%;
+}
+.controller a:hover, .controller a.active {
+  opacity: 1;
+  transform: scale(1.4);
+}
+@media (max-width: 640px) {
+  .controller a {
+    width: 3px;
+    height: 3px;
+    margin: 0 2px;
+  }
+  .controller {
+    padding: 8px 0;
+  }
+}
+</style>
+<script>
+let currentItem = 0;
+let scroller = null;
+let itemCount = 0;
+const posItems = [];
+let paused = false;
+const events = [];
+
+// touchscreen events
+let touchX, touchY;
+let touchEndX, touchEndY;
+
+function handleEvent(e) {
+  scroller.classList.add('smooth-scroll');
+  let index = e.index;
+  if (e.prefer === 'right' && e.index < currentItem) {
+    index = itemCount * 2 + e.index;
+  } else if (e.prefer === 'left' && e.index > currentItem) {
+    index = e.index;
+  } else {
+    index = itemCount + e.index;
+  }
+  const percentage = (-100 * index);
+  currentItem = e.index;
+  posItems.forEach(function(item) { item.classList.remove('active'); });
+  posItems[currentItem].classList.add('active');
+  scroller.style.left = `${percentage}%`;
+  setTimeout(function() {
+    scroller.classList.remove('smooth-scroll');
+    const finalPercentage = (-100 * (itemCount + e.index));
+    scroller.style.left = `${finalPercentage}%`;
+    setTimeout(nextEvent, 10);
+  }, 500);
+}
+
+function awaitNextEvent() {
+  if (events.length) {
+    nextEvent();
+  } else {
+    window.requestAnimationFrame(awaitNextEvent);
+  }
+}
+
+function nextEvent() {
+  if (events.length) {
+    const e = events[events.length-1];
+    events.splice(0, events.length);
+    handleEvent(e);
+  } else {
+    awaitNextEvent();
+  }
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  scroller = document.querySelector('#scroller');
+  const items = Array.from(scroller.querySelectorAll('a'));
+  itemCount = items.length;
+  scroller.style.left = `${-100 * itemCount}%`;
+  // duplicate items;
+  items.forEach(function(item) {
+    const clone = item.cloneNode(true);
+    item.parentNode.insertBefore(clone, items[0])
+    const clone2 = item.cloneNode(true);
+    item.parentNode.appendChild(clone2);
+  });
+  scroller.parentElement.addEventListener('mouseover', function() {
+    paused = true;
+  });
+  scroller.parentElement.addEventListener('mouseout', function() {
+    paused = false;
+  });
+  scroller.parentElement.addEventListener('touchstart', function(e) {
+    touchX = e.touches[0].clientX;
+    touchY = e.touches[0].clientY;
+  });
+  scroller.parentElement.addEventListener('touchmove', function(e) {
+    touchEndX = e.touches[0].clientX;
+    touchEndY = e.touches[0].clientY;
+  });
+  scroller.parentElement.addEventListener('touchend', function(e) {
+    const delta = touchX - touchEndX;
+    if (delta > 64) {
+      events.push({index: (currentItem+1) % itemCount, prefer: 'right'});
+    } else if (delta < -64) {
+      events.push({index: currentItem ? (currentItem-1) : (itemCount-1), prefer: 'left'});
+    }
+  });
+  document.querySelector('#ctl-left').addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    events.push({index: currentItem ? (currentItem-1) : (itemCount-1), prefer: 'left'});
+  });
+  document.querySelector('#ctl-right').addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    events.push({index: (currentItem+1) % itemCount, prefer: 'right'});
+  });
+  const controller = document.querySelector('#ctl');
+  for (let i = 0; i < itemCount; i++) {
+    const c = document.createElement('a');
+    c.setAttribute('href', '#');
+    if (!i) c.classList.add('active');
+    c.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      events.push({index: i});
+    });
+    controller.appendChild(c);
+    posItems.push(c);
+  }
+
+  setInterval(function() {
+    if (paused) return;
+    events.push({index: (currentItem + 1) % itemCount, prefer: 'right'});
+  }, 5000);
+  nextEvent();
+});
+</script>
+[[/html]][[span]]Актуальные события[[/span]]
+[[/div]]
+[[module CSS]]
+.banner-block {
+  width: 100%;
+  box-sizing: border-box;
+}
+.banner-block iframe {
+  display: block;
+  box-sizing: border-box;
+}
+[[/module]]
+[[module CSS]]
+.banner-block {
+  text-align: center;
+  font-size: 10pt;
+  text-transform: uppercase;
+  font-weight: normal;
+  background: linear-gradient(0deg, #d8d8d8 0%, #ececec 12%);
+  border: 1px solid #dcdcdc;
+  box-shadow: 0 2px 3px #ccc;
+}
+.banner-block span {
+  padding: 4px 24px;
+  border-top: none;
+}
+[[/module]]
