@@ -1,0 +1,75 @@
+[[ifexpr "%%this|category%%"=="wl"]] 
+[[include nav:side-wl]]
+[[else]] 
+[[div class="new-bar"]]
+[[include nav:side-impl | collapsible=collapsible-side | random=random-article-block | corner=corner-side | head=new-heading | new=new-side-block | sandbox=sandbox-heading]]
+[[/div]]
+[[div class="old-bar"]]
+[[include nav:side-impl]]
+[[/div]]
+[[/ifexpr]]
+
+[!-- Для АМС: сами элементы находятся на странице nav:side-impl, то есть все ссылки и прочее прочее, чтобы не нужно было менять дважды/трижды, как у нас сделано на верхней менюшке. На странице nav:side-wl находятся отдельные элементы для левого меню у Библиотеки Странников -]]
+
+[!-- сокрытие интерики
+
+[[div class="scpnet-interwiki-wrapper interwiki-stylable"]]
+  [[module ListPages range="." limit="1"]]
+    [[ifexpr "%%category%%" == "sandbox"]]
+      [[iframe https://interwiki.scpwiki.com/interwikiFrame.html?lang=ru&community=scp&pagename=%%name%% class="scpnet-interwiki-frame"]]
+    [[else]]
+      [[iframe https://interwiki.scpwiki.com/interwikiFrame.html?lang=ru&community=scp&pagename=%%fullname%% class="scpnet-interwiki-frame"]]
+    [[/ifexpr]]
+  [[/module]]
+[[/div]]
+
+[[iframe https://interwiki.scpwiki.com/styleFrame.html?priority=0.01&theme=https://scpfoundation.net/-/static/scp-base.css%3Fv%3Dnavside3 style="display: none"]]
+
+[[iframe https://interwiki.scpwiki.com/styleFrame.html?priority=0.02&theme=https://files.scpfoundation.net/local--files/nav:side/ru-bullet-fix.css%3Fv%3Dnavside3 style="display: none"]]
+
+[[iframe https://interwiki.scpwiki.com/styleFrame.html?priority=0.03&theme=https://files.scpfoundation.net/local--files/nav:side/trans.css%3Fv%3Dnavside3 style="display: none"]]
+
+[[iframe https://interwiki.scpwiki.com/styleFrame.html?priority=0.04&theme=https://scpfoundation.net/local--files/draft:necanon/interwiki-new.css%3Fv%3Dnavside3 style="display: none"]]
+
+--]
+
+[[module CSS]]
+
+.menu-article-list {
+    display: flex;
+    justify-content: stretch;
+    width: 100%;
+}
+
+.menu-article-list a {
+    flex-grow: 1;
+    text-align: center;
+    display: block;
+}
+
+.side-flag-icons img {
+    filter: none !important;
+}
+
+iframe.scpnet-interwiki-frame {
+  width: 18em !important;
+}
+div.scpnet-interwiki-wrapper {
+  width: 18em !important;
+}
+
+.side-block .collapsible-block-link {
+  font-weight: bold;
+}
+@media (max-width: 767px) {
+  #side-bar:target {
+      overflow-x: hidden;
+  }
+}
+.old-bar {
+   display: none;
+}
+#side-bar br {
+   display: none;
+}
+[[/module]]
