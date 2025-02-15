@@ -1,6 +1,7 @@
 from django.conf import settings
 import auto_prefetch
 from django.db import models
+from pathlib import Path
 
 from .articles import Article
 from .site import get_current_site
@@ -45,4 +46,4 @@ class File(auto_prefetch.Model):
     @property
     def local_media_path(self) -> str:
         site = get_current_site()
-        return '%s/%s/%s/%s' % (settings.MEDIA_ROOT, self.escape_media_name(site.slug), self.escape_media_name(self.article.media_name), self.escape_media_name(self.media_name))
+        return (Path(settings.MEDIA_ROOT) / self.escape_media_name(site.slug) / self.escape_media_name(self.article.media_name) / self.escape_media_name(self.media_name)).as_posix()
