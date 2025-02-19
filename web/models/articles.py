@@ -34,6 +34,11 @@ class TagsCategory(auto_prefetch.Model):
     def __str__(self):
         return f"{self.name} ({self.slug})"
 
+    @staticmethod
+    def get_or_create_default_tags_category():
+        category, _ = TagsCategory.objects.get_or_create(slug="_default", defaults=dict(name="Default"))
+        return category.pk
+
     @property
     def is_default(self) -> bool:
         return self.slug == "_default"
@@ -52,7 +57,7 @@ class Tag(auto_prefetch.Model):
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['category', 'name'])]
 
-    category = auto_prefetch.ForeignKey(TagsCategory, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Категория")
+    category = auto_prefetch.ForeignKey(TagsCategory, null=False, blank=False, on_delete=models.CASCADE, verbose_name="Категория", default=TagsCategory.get_or_create_default_tags_category)
     name = models.TextField(verbose_name="Название")
 
     def __str__(self):
