@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
+import useConstCallback from '../util/const-callback';
 import ArticleEditor from "../articles/article-editor";
 import ArticleHistory from "../articles/article-history";
 import ArticleSource from "../articles/article-source";
@@ -24,7 +25,6 @@ interface Props {
     lockable?: boolean
     rating?: number
     ratingVotes?: number
-    ratingPopularity?: number
     ratingMode?: RatingMode
     pathParams?: { [key: string]: string }
     canRate?: boolean
@@ -36,163 +36,151 @@ interface Props {
 }
 
 
-interface State {
-    subView: 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'child' | 'lock' | 'rename' | 'files' | 'delete' | 'backlinks' | null
-    extOptions: boolean
-    isNewEditor: boolean
-    onCancelNewEditor?: () => void
-}
+type SubViewType = 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'child' | 'lock' | 'rename' | 'files' | 'delete' | 'backlinks' | null;
 
+const PageOptions: React.FC<Props> = ({ pageId, optionsEnabled, editable, lockable, rating, ratingVotes, ratingMode, pathParams, canRate, canDelete, canComment, commentThread, commentCount, canCreateTags }: Props) => {
+    const [subView, setSubView] = useState<SubViewType>(null);
+    const [extOptions, setExtOptions] = useState(false);
+    const [isNewEditor, setIsNewEditor] = useState(false);
+    const [onCancelNewEditor, setOnCancelNewEditor] = useState<() => void>();
 
-class PageOptions extends Component<Props, State> {
-    constructor(props) {
-        super(props)
-        this.state = {
-            subView: null,
-            extOptions: false,
-            isNewEditor: false
-        };
-    }
-
-    componentDidMount() {
-        const { pathParams, optionsEnabled } = this.props;
+    useEffect(() => {
         (window as any)._openNewEditor = (func?: () => void) => {
             setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 0);
+            setOnCancelNewEditor(func);
             if (optionsEnabled) {
-                this.setState({subView: 'edit', onCancelNewEditor: func});
+                setSubView('edit');
             } else {
-                this.setState({ isNewEditor: true, onCancelNewEditor: func });
+                setIsNewEditor(true);
             }
         };
         if (pathParams["edit"])
             (window as any)._openNewEditor();
-    }
+    }, []);
 
-    onEdit = (e) => {
+    const onEdit = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ subView: 'edit' });
+        setSubView('edit');
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         }, 1);
-    };
+    });
 
-    onRate = (e) => {
+    const onRate = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ subView: 'rating' });
+        setSubView('rating');
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         }, 1);
-    }
+    });
 
-    onTags = (e) => {
+    const onTags = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ subView: 'tags' });
+        setSubView('tags');
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         }, 1);
-    };
+    });
 
-    onCancelSubView = () => {
-        const { isNewEditor, onCancelNewEditor } = this.state;
+    const onCancelSubView = useConstCallback(() => {
         if (isNewEditor && onCancelNewEditor) {
             onCancelNewEditor();
         }
-        this.setState({ subView: null, isNewEditor: false });
-    };
+        setSubView(null);
+        setIsNewEditor(false);
+    });
 
-    onHistory = (e) => {
+    const onHistory = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ subView: 'history' });
+        setSubView('history');
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         });
-    };
+    });
 
-    onFiles = (e) => {
+    const onFiles = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ subView: 'files' });
+        setSubView('files');
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         });
-    };
+    });
 
-    onSource = (e) => {
+    const onSource = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ subView: 'source' });
+        setSubView('source');
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         });
-    };
+    });
 
-    onParent = (e) => {
+    const onParent = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ subView: 'parent' });
+        setSubView('parent');
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         });
-    };
+    });
 
-    onChild = (e) => {
+    const onChild = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ subView: 'child' });
+        setSubView('child');
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         });
-    };
+    });
 
-    onLock = (e) => {
+    const onLock = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ subView: 'lock' });
+        setSubView('lock');
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         });
-    };
+    });
 
-    onRename = (e) => {
+    const onRename = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ subView: 'rename' });
+        setSubView('rename');
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         });
-    };
+    });
 
-    onDelete = (e) => {
+    const onDelete = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ subView: 'delete' });
+        setSubView('delete');
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         });
-    };
+    });
 
-    onBacklinks = (e) => {
+    const onBacklinks = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ subView: 'backlinks' });
+        setSubView('backlinks');
         setTimeout(() => {
             window.scrollTo(window.scrollX, document.body.scrollHeight);
         });
-    };
+    });
 
-    toggleExtOptions = (e) => {
+    const toggleExtOptions = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ extOptions: !this.state.extOptions });
-    };
+        setExtOptions(!extOptions);
+    });
 
-    renderRating() {
-        const { rating, ratingMode, ratingVotes } = this.props;
-
+    const renderRating = useConstCallback(() => {
         if (ratingMode === 'updown') {
             return sprintf("%+d", rating)
         } else if (ratingMode === 'stars') {
@@ -200,105 +188,97 @@ class PageOptions extends Component<Props, State> {
         } else {
             return 'n/a'
         }
-    }
+    });
 
-    render() {
-        const { optionsEnabled, editable, lockable, canComment, canRate, pageId, pathParams, commentThread, commentCount } = this.props;
-        const { extOptions, isNewEditor } = this.state;
+    const renderSubView = useConstCallback(() => {
+        return ReactDOM.createPortal(pickSubView(), document.getElementById('action-area'));
+    });
 
-        if (isNewEditor) {
-            return (
-                <ArticleEditor pageId={pageId}
-                               isNew
-                               pathParams={pathParams}
-                               onClose={this.onCancelSubView}
-                               previewTitleElement={document.getElementById('page-title')}
-                               previewBodyElement={document.getElementById('page-content')} />
-            )
-        }
-
-        if (!optionsEnabled) {
-            return null
-        }
-
-        return (
-            <>
-                <div id="page-options-bottom" className="page-options-bottom">
-                    { editable && <a id="edit-button" className="btn btn-default" href="#" onClick={this.onEdit}>Редактировать</a> }
-                    <a id="pagerate-button" className="btn btn-default" href="#" onClick={this.onRate}>{canRate?'Оценить':'Оценки'} ({this.renderRating()})</a>
-                    { editable && <a id="tags-button" className="btn btn-default" href="#" onClick={this.onTags}>Теги</a> }
-                    { canComment && <a id="discuss-button" className="btn btn-default" href={commentThread||'/forum/start'}>Обсудить ({commentCount||0})</a> }
-                    <a id="history-button" className="btn btn-default" href="#" onClick={this.onHistory}>История</a>
-                    <a id="files-button" className="btn btn-default" href="#" onClick={this.onFiles}>Файлы</a>
-                    <a id="more-options-button" className="btn btn-default" href="#" onClick={this.toggleExtOptions}>{extOptions?'- Опции':'+ Опции'}</a>
-                </div>
-                { extOptions && <div id="page-options-bottom-2" className="page-options-bottom form-actions">
-                    <a id="backlinks-button" className="btn btn-default" href="#" onClick={this.onBacklinks}>Обратные ссылки</a>
-                    <a id="view-source-button" className="btn btn-default" href="#" onClick={this.onSource}>Исходник страницы</a>
-                    { editable && <a id="parent-page-button" className="btn btn-default" href="#" onClick={this.onParent}>Родитель</a> }
-                    { editable && <a id="child-page-button" className="btn btn-default" href="#" onClick={this.onChild}>Создать дочернюю страницу</a> }
-                    { lockable && <a id="page-block-button" className="btn btn-default" href="#" onClick={this.onLock}>Заблокировать страницу</a> }
-                    { editable && <a id="rename-move-button" className="btn btn-default" href="#" onClick={this.onRename}>Переименовать</a> }
-                    { editable && <a id="delete-button" className="btn btn-default" href="#" onClick={this.onDelete}>Удалить</a> }
-                </div> }
-                { this.renderSubView() }
-            </>
-        )
-    }
-
-    renderSubView() {
-        return ReactDOM.createPortal(this.pickSubView(), document.getElementById('action-area'));
-    }
-
-    pickSubView() {
-        const { subView } = this.state;
-        const { pageId, rating, pathParams, editable, canDelete, canCreateTags } = this.props;
-
+    const pickSubView = useConstCallback(() => {
         switch (subView) {
             case 'edit':
                 return <ArticleEditor pageId={pageId}
                                       pathParams={pathParams}
-                                      onClose={this.onCancelSubView}
+                                      onClose={onCancelSubView}
                                       previewTitleElement={document.getElementById('page-title')}
                                       previewBodyElement={document.getElementById('page-content')} />;
 
             case 'rating':
-                return <ArticleRating pageId={pageId} rating={rating} canEdit={editable} onClose={this.onCancelSubView} />;
+                return <ArticleRating pageId={pageId} rating={rating} canEdit={editable} onClose={onCancelSubView} />;
 
             case 'tags':
-                return <ArticleTags pageId={pageId} onClose={this.onCancelSubView} canCreateTags={canCreateTags} />;
+                return <ArticleTags pageId={pageId} onClose={onCancelSubView} canCreateTags={canCreateTags} />;
 
             case 'history':
-                return <ArticleHistory pageId={pageId} pathParams={pathParams} onClose={this.onCancelSubView} />;
+                return <ArticleHistory pageId={pageId} pathParams={pathParams} onClose={onCancelSubView} />;
 
             case 'source':
-                return <ArticleSource pageId={pageId} onClose={this.onCancelSubView} />;
+                return <ArticleSource pageId={pageId} onClose={onCancelSubView} />;
 
             case 'parent':
-                return <ArticleParent pageId={pageId} onClose={this.onCancelSubView} />;
+                return <ArticleParent pageId={pageId} onClose={onCancelSubView} />;
 
             case 'child':
-                return <ArticleChild pageId={pageId} onClose={this.onCancelSubView} />;
+                return <ArticleChild pageId={pageId} onClose={onCancelSubView} />;
 
             case 'lock':
-                return <ArticleLock pageId={pageId} onClose={this.onCancelSubView} />;
+                return <ArticleLock pageId={pageId} onClose={onCancelSubView} />;
 
             case 'rename':
-                return <ArticleRename pageId={pageId} onClose={this.onCancelSubView} />;
+                return <ArticleRename pageId={pageId} onClose={onCancelSubView} />;
 
             case 'files':
-                return <ArticleFiles pageId={pageId} onClose={this.onCancelSubView} editable={editable} />;
+                return <ArticleFiles pageId={pageId} onClose={onCancelSubView} editable={editable} />;
 
             case 'delete':
-                return <ArticleDelete pageId={pageId} canDelete={canDelete} onClose={this.onCancelSubView} />;
+                return <ArticleDelete pageId={pageId} canDelete={canDelete} onClose={onCancelSubView} />;
 
             case 'backlinks':
-                return <ArticleBacklinksView pageId={pageId} onClose={this.onCancelSubView} />;
+                return <ArticleBacklinksView pageId={pageId} onClose={onCancelSubView} />;
 
             default:
                 return null
         }
+    });
+
+    if (isNewEditor) {
+        return (
+            <ArticleEditor pageId={pageId}
+                           isNew
+                           pathParams={pathParams}
+                           onClose={onCancelSubView}
+                           previewTitleElement={document.getElementById('page-title')}
+                           previewBodyElement={document.getElementById('page-content')} />
+        )
     }
+
+    if (!optionsEnabled) {
+        return null
+    }
+
+    return (
+        <>
+            <div id="page-options-bottom" className="page-options-bottom">
+                { editable && <a id="edit-button" className="btn btn-default" href="#" onClick={onEdit}>Редактировать</a> }
+                <a id="pagerate-button" className="btn btn-default" href="#" onClick={onRate}>{canRate?'Оценить':'Оценки'} ({renderRating()})</a>
+                { editable && <a id="tags-button" className="btn btn-default" href="#" onClick={onTags}>Теги</a> }
+                { canComment && <a id="discuss-button" className="btn btn-default" href={commentThread||'/forum/start'}>Обсудить ({commentCount||0})</a> }
+                <a id="history-button" className="btn btn-default" href="#" onClick={onHistory}>История</a>
+                <a id="files-button" className="btn btn-default" href="#" onClick={onFiles}>Файлы</a>
+                <a id="more-options-button" className="btn btn-default" href="#" onClick={toggleExtOptions}>{extOptions?'- Опции':'+ Опции'}</a>
+            </div>
+            { extOptions && <div id="page-options-bottom-2" className="page-options-bottom form-actions">
+                <a id="backlinks-button" className="btn btn-default" href="#" onClick={onBacklinks}>Обратные ссылки</a>
+                <a id="view-source-button" className="btn btn-default" href="#" onClick={onSource}>Исходник страницы</a>
+                { editable && <a id="parent-page-button" className="btn btn-default" href="#" onClick={onParent}>Родитель</a> }
+                { editable && <a id="child-page-button" className="btn btn-default" href="#" onClick={onChild}>Создать дочернюю страницу</a> }
+                { lockable && <a id="page-block-button" className="btn btn-default" href="#" onClick={onLock}>Заблокировать страницу</a> }
+                { editable && <a id="rename-move-button" className="btn btn-default" href="#" onClick={onRename}>Переименовать</a> }
+                { editable && <a id="delete-button" className="btn btn-default" href="#" onClick={onDelete}>Удалить</a> }
+            </div> }
+            { renderSubView() }
+        </>
+    )
 }
 
 

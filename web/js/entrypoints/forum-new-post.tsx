@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Component } from 'react';
+import { useState } from 'react';
+import useConstCallback from '../util/const-callback';
 import {UserData} from '../api/user';
 import ForumPostEditor, {ForumPostPreviewData, ForumPostSubmissionData} from '../forum/forum-post-editor';
 import {createForumPost, ForumNewPostRequest} from '../api/forum'
@@ -13,36 +14,26 @@ interface Props {
 }
 
 
-interface State {
-    preview?: ForumPostPreviewData
-    open: boolean
-}
+const ForumNewPost: React.FC<Props> = ({ user, threadId, threadName }) => {
+    const [preview, setPreview] = useState<ForumPostPreviewData>();
+    const [open, setOpen] = useState(false);
 
-
-class ForumNewPost extends Component<Props, State> {
-    constructor(props) {
-        super(props);
-        this.state = {
-            open: false
-        };
-    }
-
-    onOpen = (e) => {
+    const onOpen = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
         const closeCurrent = (window as any)._closePostEditor;
         if (closeCurrent) {
             closeCurrent();
         }
-        this.setState({ open: true, preview: undefined });
-    };
+        setOpen(true);
+        setPreview(undefined);
+    });
 
-    onClose = async () => {
-        this.setState({ open: false });
-    };
+    const onClose = useConstCallback(async () => {
+        setOpen(false);
+    });
 
-    onSubmit = async (input: ForumPostSubmissionData) => {
-        const { threadId } = this.props;
+    const onSubmit = useConstCallback(async (input: ForumPostSubmissionData) => {
         const request: ForumNewPostRequest = {
             threadId,
             name: input.name,
@@ -50,32 +41,28 @@ class ForumNewPost extends Component<Props, State> {
         };
         const { url } = await createForumPost(request);
         window.location.href = url;
-        this.setState({ open: false });
-    };
+        setOpen(false);
+    });
 
-    onPreview = (input: ForumPostPreviewData) => {
-        this.setState({ preview: input })
-    };
+    const onPreview = useConstCallback((input: ForumPostPreviewData) => {
+        setPreview(input);
+    });
 
-    render() {
-        const { user, threadName } = this.props;
-        const { open, preview } = this.state;
-        return (!open) ? (
-            <div className="new-post">
-                <a href="#" onClick={this.onOpen}>Новое сообщение</a>
-            </div>
-        ) : (
-            <>
-                { preview && <ForumPostPreview preview={preview} user={user} /> }
-                <ForumPostEditor isNew
-                                 onClose={this.onClose}
-                                 onSubmit={this.onSubmit}
-                                 onPreview={this.onPreview}
-                                 initialTitle={'Re: '+threadName}
-                />
-            </>
-        )
-    }
+    return (!open) ? (
+        <div className="new-post">
+            <a href="#" onClick={onOpen}>Новое сообщение</a>
+        </div>
+    ) : (
+        <>
+            { preview && <ForumPostPreview preview={preview} user={user} /> }
+            <ForumPostEditor isNew
+                             onClose={onClose}
+                             onSubmit={onSubmit}
+                             onPreview={onPreview}
+                             initialTitle={'Re: '+threadName}
+            />
+        </>
+    )
 }
 
 

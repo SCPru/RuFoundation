@@ -1,6 +1,5 @@
 {
   "ts-node": {
-    "esm": true,
     "compilerOptions": {
        "module": "nodenext"
     }

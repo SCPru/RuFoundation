@@ -177,7 +177,7 @@ class ArticleHistory extends Component<Props, State> {
                             </tr>
                             { entries.map(entry => {
                                 return (
-                                    <tr key={entry.revNumber} id={`revision-row-${entry.revNumber}`}> {/* BHL has CSS selector that says tr[id*="evision-row"] */}
+                                    <tr key={entry.revNumber} id={`revision-row-${entry.revNumber}`}>{/* BHL has CSS selector that says tr[id*="evision-row"] */}
                                         <td>
                                             {entry.revNumber}.
                                         </td>

@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Component } from 'react';
+import { useState } from 'react';
+import useConstCallback from '../util/const-callback';
 import {UserData} from '../api/user';
 import ForumPostEditor, {ForumPostPreviewData, ForumPostSubmissionData} from '../forum/forum-post-editor';
 import {createForumThread, ForumNewThreadRequest} from '../api/forum';
@@ -13,26 +14,14 @@ interface Props {
 }
 
 
-interface State {
-    preview?: ForumPostPreviewData
-}
+const ForumNewThread: React.FC<Props> = ({ user, categoryId, cancelUrl }) => {
+    const [preview, setPreview] = useState<ForumPostPreviewData>();
 
-
-class ForumNewThread extends Component<Props, State> {
-    constructor(props) {
-        super(props);
-        this.state = {
-
-        };
-    }
-
-    onClose = async () => {
-        const { cancelUrl } = this.props;
+    const onClose = useConstCallback(async () => {
         window.location.href = cancelUrl || '/forum/start';
-    };
+    });
 
-    onSubmit = async (input: ForumPostSubmissionData) => {
-        const { categoryId } = this.props;
+    const onSubmit = useConstCallback(async (input: ForumPostSubmissionData) => {
         const request: ForumNewThreadRequest = {
             categoryId,
             name: input.name,
@@ -41,27 +30,23 @@ class ForumNewThread extends Component<Props, State> {
         };
         const { url } = await createForumThread(request);
         window.location.href = url;
-    };
+    });
 
-    onPreview = (input: ForumPostPreviewData) => {
-        this.setState({ preview: input })
-    };
+    const onPreview = useConstCallback((input: ForumPostPreviewData) => {
+        setPreview(input);
+    });
 
-    render() {
-        const { user } = this.props;
-        const { preview } = this.state;
-        return (
-            <>
-                { preview && <ForumPostPreview preview={preview} user={user} /> }
-                <ForumPostEditor isThread
-                                 isNew
-                                 onClose={this.onClose}
-                                 onSubmit={this.onSubmit}
-                                 onPreview={this.onPreview}
-                />
-            </>
-        )
-    }
+    return (
+        <>
+            { preview && <ForumPostPreview preview={preview} user={user} /> }
+            <ForumPostEditor isThread
+                             isNew
+                             onClose={onClose}
+                             onSubmit={onSubmit}
+                             onPreview={onPreview}
+            />
+        </>
+    )
 }
 
 

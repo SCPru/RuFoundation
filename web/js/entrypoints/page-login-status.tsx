@@ -1,91 +1,79 @@
 import * as React from 'react';
-import { Component } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import useConstCallback from '../util/const-callback';
 import {UserData} from "../api/user";
-import {DEFAULT_AVATAR} from '../util/user-view'
+import {DEFAULT_AVATAR} from '../util/user-view';
 
 
 interface Props {
     user: UserData
 }
 
-interface State {
-    isOpen: boolean
-}
 
+const PageLoginStatus: React.FC<Props> = ({ user }: Props) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>();
 
-class PageLoginStatus extends Component<Props, State> {
-    state: State = {
-        isOpen: false
-    };
+    useEffect(() => {
+        window.addEventListener('click', onPageClick);
 
-    menuRef: any = null;
+        return () => {
+            window.removeEventListener('click', onPageClick);
+        }
+    }, []);
 
-    componentDidMount() {
-        window.addEventListener('click', this.onPageClick);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('click', this.onPageClick);
-    }
-
-    onPageClick = (e) => {
+    const onPageClick = useConstCallback((e) => {
         let p = e.target;
         while (p) {
-            if (p === this.menuRef) {
+            if (p === menuRef) {
                 return;
             }
             p = p.parentNode;
         }
-        this.setState({ isOpen: false });
-    };
+        setIsOpen(false);
+    });
 
-    toggleMenu = (e) => {
+    const toggleMenu = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        this.setState({ isOpen: !this.state.isOpen });
-    };
+        setIsOpen(!isOpen);
+    });
 
-    render() {
-        const { user } = this.props;
-        const { isOpen } = this.state;
-
-        if (user.type === 'anonymous') {
-            return (
-                <>
-                    <a className="login-status-create-account btn" href="/system:join">Создать учётную запись</a> <span>или</span> <a className="login-status-sign-in btn btn-primary" href={`/-/login?to=${encodeURIComponent(window.location.href)}`}>Вход</a>
-                </>
-            );
-        } else {
-            return (
-                <>
-                    <span className="printuser w-user">
-                        <a href={`/-/profile`}>
-                            <img className="small" src={user.avatar || DEFAULT_AVATAR} alt={user.username} />
-                        </a>
-                        {user.username}
-                    </span>{
-                    (user.admin || user.staff) && (
-                        <>
-                            {'\u00a0'}|{'\u00a0'}<a id="w-admin-link" href={`/-/admin`}>
-                            Админ-панель
-                        </a>
-                        </>
-                    )}{'\u00a0|\u00a0'}<a id="my-account" href={`/-/users/${user.id}-${user.username}`}>
-                        Мой профиль
+    if (user.type === 'anonymous') {
+        return (
+            <>
+                <a className="login-status-create-account btn" href="/system:join">Создать учётную запись</a> <span>или</span> <a className="login-status-sign-in btn btn-primary" href={`/-/login?to=${encodeURIComponent(window.location.href)}`}>Вход</a>
+            </>
+        );
+    } else {
+        return (
+            <>
+                <span className="printuser w-user">
+                    <a href={`/-/profile`}>
+                        <img className="small" src={user.avatar || DEFAULT_AVATAR} alt={user.username} />
                     </a>
-                    <a id="account-topbutton" href="#" onClick={this.toggleMenu}>▼</a>
-                    { isOpen && <div id="account-options" ref={r => this.menuRef = r} style={{ display: 'block' }}>
-                        <ul>
-                            <li><a href={`/-/profile/edit`}>Настройки</a></li>
-                            <li><a href={`/-/logout?to=${encodeURIComponent(window.location.href)}`}>Выход</a></li>
-                        </ul>
-                    </div> }
-                </>
-            )
-        }
+                    {user.username}
+                </span>{
+                (user.admin || user.staff) && (
+                    <>
+                        {'\u00a0'}|{'\u00a0'}<a id="w-admin-link" href={`/-/admin`}>
+                        Админ-панель
+                    </a>
+                    </>
+                )}{'\u00a0|\u00a0'}<a id="my-account" href={`/-/users/${user.id}-${user.username}`}>
+                    Мой профиль
+                </a>
+                <a id="account-topbutton" href="#" onClick={toggleMenu}>▼</a>
+                { isOpen && <div id="account-options" ref={menuRef} style={{ display: 'block' }}>
+                    <ul>
+                        <li><a href={`/-/profile/edit`}>Настройки</a></li>
+                        <li><a href={`/-/logout?to=${encodeURIComponent(window.location.href)}`}>Выход</a></li>
+                    </ul>
+                </div> }
+            </>
+        )
     }
-
 }
 
 
