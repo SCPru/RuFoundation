@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
+import useConstCallback from '../util/const-callback';
 import WikidotModal from "../util/wikidot-modal";
 import styled from "styled-components";
 import Loader from "../util/loader";
@@ -58,83 +59,136 @@ const Styles = styled.div<{loading?: boolean}>`
 .w-rating-clear-rating-button {
   width: 100%;
 }
+.article-rating-widgets-area {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 25px;
+}
+.w-rate-dist {
+  font-family: sans-serif;
+  overflow-wrap: normal;
+  font-weight: bold;
+  max-width: 100%;
+}
+.w-rate-row {
+  display: grid;
+  align-items: center;
+  grid-template-columns: max-content max-content max-content;
+}
+.w-rate-bar {
+  width: 236px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #eee;
+}
+.w-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background-color: #4e6b6b;
+}
+.w-rate-num {
+  width: 25px;
+}
+.w-rate-stat {
+  display: grid;
+  grid-template-columns: auto auto;
+}
+.w-v-count {
+  padding: 0 5px;
+  width: 25px;
+}
+.w-afterstar {
+  &:after {
+    font-family: "Font Awesome 5 Free";
+    content: "\f005";
+    font-weight: 600;
+    color: #f0ac00;
+  }
+}
 `;
 
 
-class ArticleRating extends Component<Props, State> {
+const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdit, onClose: onCloseDelegate }) => {
+    const [loading, setLoading] = useState(false);
+    const [rating, setRating] = useState(originalRating);
+    const [mode, setMode] = useState<RatingMode>('disabled');
+    const [votes, setVotes] = useState<Array<ModuleRateVote>>([]);
+    const [popularity, setPopularity] = useState(0);
+    const [error, setError] = useState('');
+    const [deleting, setDeleting] = useState(false);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            loading: false,
-            votes: [],
-            mode: 'disabled',
-            rating: props.rating
-        };
-    }
+    useEffect(() => {
+        window.addEventListener('message', onRatingUpdated);
+        loadRating();
 
-    componentDidMount() {
-        window.addEventListener('message', this.onRatingUpdated);
-        this.loadRating();
-    }
+        return () => {
+            window.removeEventListener('message', onRatingUpdated);
+        }
+    }, []);
 
-    componentWillUnmount() {
-        window.removeEventListener('message', this.onRatingUpdated);
-    }
-
-    async loadRating() {
-        const { pageId } = this.props;
-        this.setState({ loading: true, error: null });
+    const loadRating = useConstCallback(async () => {
+        setLoading(true);
+        setError(undefined);
         try {
             const rating = await fetchPageVotes(pageId);
-            this.setState({ loading: false, error: null, votes: rating.votes, rating: rating.rating, popularity: rating.popularity, mode: rating.mode });
+            setLoading(false);
+            setVotes(rating.votes);
+            setRating(rating.rating);
+            setPopularity(rating.popularity);
+            setMode(rating.mode);
         } catch (e) {
-            this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' });
+            setLoading(false);
+            setError(e.error || 'Ошибка связи с сервером');
         }
-    }
+    });
 
-    onRatingUpdated = (message: MessageEvent) => {
+    const onRatingUpdated = useConstCallback((message: MessageEvent) => {
         if (message.data?.type !== 'rate_updated') {
             return;
         }
-        this.loadRating();
-    }
+        loadRating();
+    });
 
-    onClearRating = async () => {
-        const { pageId } = this.props;
-        this.setState({ loading: true, error: null, deleting: false });
+    const onClearRating = useConstCallback(async () => {
+        setLoading(true);
+        setError(undefined);
+        setDeleting(false);
         try {
-            const rating = await deleteArticleVotes(pageId)
-            this.setState({ loading: false, error: null, votes: rating.votes, rating: rating.rating, popularity: rating.popularity, mode: rating.mode });
+            const rating = await deleteArticleVotes(pageId);
+            setLoading(false);
+            setVotes(rating.votes);
+            setRating(rating.rating);
+            setPopularity(rating.popularity);
+            setMode(rating.mode);
         } catch (e) {
-            this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' });
+            setLoading(false);
+            setError(e.error || 'Ошибка связи с сервером');
         }
+    });
+
+    const onAskClearRating = useConstCallback(() => {
+        setDeleting(true);
+    });
+
+    const onCancelClearRating = () => {
+        setDeleting(false);
     }
 
-    onAskClearRating = () => {
-        this.setState({ deleting: true })
-    }
-
-    onCancelClearRating = () => {
-        this.setState({ deleting: false })
-    }
-
-    onClose = (e) => {
+    const onClose = useConstCallback((e) => {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
-        if (this.props.onClose)
-            this.props.onClose();
-    };
+        if (onCloseDelegate)
+            onCloseDelegate();
+    });
 
-    onCloseError = () => {
-        this.setState({error: null});
-        this.onClose(null);
-    };
+    const onCloseError = useConstCallback(() => {
+        setError(undefined);
+        onClose(null);
+    });
 
-    renderUserVote(vote) {
-        const { mode } = this.state;
+    const renderUserVote = useConstCallback((vote) => {
         if (mode === 'updown') {
             return vote > 0 ? '+' : '-';
         } else if (mode === 'stars') {
@@ -142,12 +196,9 @@ class ArticleRating extends Component<Props, State> {
         } else {
             return null;
         }
-    }
+    });
 
-    renderUpDownRating() {
-        const { pageId } = this.props;
-        const { rating } = this.state;
-
+    const renderUpDownRating = useConstCallback(() => {
         return (
             <div className="w-rate-module page-rate-widget-box" data-page-id={pageId}>
                 <span className="rate-points">рейтинг:&nbsp;<span className="number prw54353">{rating>=0?`+${rating}`:rating}</span></span>
@@ -156,12 +207,9 @@ class ArticleRating extends Component<Props, State> {
                 <span className="cancel btn btn-default"><a title="Отменить голос" href="#">X</a></span>
             </div>
         )
-    }
+    });
 
-    renderStarsRating() {
-        const { pageId } = this.props;
-        const { rating, votes, popularity } = this.state;
-
+    const renderStarsRating = useConstCallback(() => {
         return (
             <div className="w-stars-rate-module" data-page-id={pageId}>
                 <div className="w-stars-rate-rating">рейтинг:&nbsp;<span className="w-stars-rate-number">{votes.length ? sprintf('%.1f', rating) : '—'}</span></div>
@@ -175,11 +223,9 @@ class ArticleRating extends Component<Props, State> {
                 </div>
             </div>
         )
-    }
+    });
 
-    renderUpDownRatingDistribution() {
-        const { votes } = this.state;
-
+    const renderUpDownRatingDistribution = useConstCallback(() => {
         let votesCount = [0, 0];
 
         votes?.forEach(vote => {
@@ -207,13 +253,10 @@ class ArticleRating extends Component<Props, State> {
                 )) }
             </div>
         )
-    }
+    });
 
-    renderStarsRatingDistribution() {
-        const { votes } = this.state;
-
+    const renderStarsRatingDistribution = useConstCallback(() => {
         let votesCount = [0, 0, 0, 0, 0, 0];
-        let votesPercent = [0, 0, 0, 0, 0, 0];
 
         votes?.forEach(vote => {
             let minCount = Math.floor(vote.value);
@@ -231,7 +274,7 @@ class ArticleRating extends Component<Props, State> {
             <div className="w-rate-dist">
                 { !!(votesCount && votesCount.length) }
                 { votesCount.map((stat, i) => (
-                    <div className="w-rate-row">
+                    <div className="w-rate-row" key={i}>
                         <div className="w-rate-num w-afterstar">{ 5 - i }</div>
                         <div className="w-rate-bar">
                             <div className="w-bar-fill" style={{ width: `${maxCount > 0 ? votesCount[5-i] * 100 / maxCount : '0'}%` }}></div>
@@ -243,18 +286,15 @@ class ArticleRating extends Component<Props, State> {
                 )) }
             </div>
         )
-    }
+    });
 
-    renderRating() {
-        const { canEdit } = this.props;
-        const { mode } = this.state;
-
+    const renderRating = useConstCallback(() => {
         let ratingElement: React.ReactNode;
 
         if (mode === 'updown') {
-            ratingElement = this.renderUpDownRating();
+            ratingElement = renderUpDownRating();
         } else if (mode === 'stars') {
-            ratingElement = this.renderStarsRating();
+            ratingElement = renderStarsRating();
         } else {
             return null;
         }
@@ -269,26 +309,24 @@ class ArticleRating extends Component<Props, State> {
                 {canEdit && (
                     <>
                         <br/>
-                        <button className="w-rating-clear-rating-button" onClick={this.onAskClearRating}>Сбросить рейтинг</button>
+                        <button className="w-rating-clear-rating-button" onClick={onAskClearRating}>Сбросить рейтинг</button>
                     </>
                 )}
             </div>
         )
-    }
+    });
 
-    renderRatingDistribution() {
-        const { mode } = this.state;
-
+    const renderRatingDistribution = useConstCallback(() => {
         if (mode === 'updown') {
-            return this.renderUpDownRatingDistribution();
+            return renderUpDownRatingDistribution();
         } else if (mode === 'stars') {
-            return this.renderStarsRatingDistribution();
+            return renderStarsRatingDistribution();
         } else {
             return null;
         }
-    }
+    });
 
-    renderVoteDate(date?: string) {
+    const renderVoteDate = useConstCallback((date?: string) => {
         if (!date) {
             return null
         }
@@ -301,9 +339,9 @@ class ArticleRating extends Component<Props, State> {
                 </span>
             </>
         )
-    }
+    });
 
-    sortVotes(votes: ModuleRateVote[]) {
+    const sortVotes = useConstCallback((votes: ModuleRateVote[]) => {
         const groups: Array<{ name: string, index: number, votes: ModuleRateVote[], isUngrouped: boolean }> = []
         votes.forEach(vote => {
             if (vote.visualGroup) {
@@ -344,11 +382,9 @@ class ArticleRating extends Component<Props, State> {
             })
         }
         return groups
-    }
+    });
 
-    renderCombinedVoteRating(votes: ModuleRateVote[]) {
-        const { mode } = this.state
-
+    const renderCombinedVoteRating = useConstCallback((votes: ModuleRateVote[]) => {
         if (mode === 'updown') {
             return votes.reduce((acc, vote) => acc + vote.value > 0 ? 1 : -1, 0)
         } else if (mode === 'stars') {
@@ -361,49 +397,45 @@ class ArticleRating extends Component<Props, State> {
         } else {
             return '—'
         }
-    }
+    });
 
-    render() {
-        const { error, loading, votes, deleting } = this.state;
-        const groupedVotes = this.sortVotes(votes);
-        return (
-            <Styles>
-                { error && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
-                        <p><strong>Ошибка:</strong> {error}</p>
-                    </WikidotModal>
-                ) }
-                { deleting && (
-                    <WikidotModal buttons={[{title: 'Отмена', onClick: this.onCancelClearRating}, {title: 'Да, сбросить', onClick: this.onClearRating}]}>
-                        <h1>Сбросить рейтинг страницы?</h1>
-                        <p>Обратите внимание, что данную операцию можно будет откатить через историю правок.</p>
-                    </WikidotModal>
-                ) }
-                <a className="action-area-close btn btn-danger" href="#" onClick={this.onClose}>Закрыть</a>
-                <h1>Рейтинг страницы</h1>
-                <span>
-                    Оценить страницу:<br/><br/>
-                    <div className="article-rating-widgets-area">
-                        {this.renderRating()}
-                        {this.renderRatingDistribution()}
-                    </div>
-                </span>
-                <div id="who-rated-page-area" className={`${loading?'loading':''}`}>
-                    { loading && <Loader className="loader" /> }
-                    {groupedVotes.map((group, i) => (
-                        <React.Fragment key={i}>
-                            <h2>{group.name} ({this.renderCombinedVoteRating(group.votes)})</h2>
-                            { group.votes.map((vote, i) => (
-                                <React.Fragment key={i}>
-                                    <UserView data={vote.user} />&nbsp;{this.renderUserVote(vote.value)}{this.renderVoteDate(vote.date)}<br/>
-                                </React.Fragment>
-                            )) }
-                        </React.Fragment>
-                    ))}
+    return (
+        <Styles>
+            { error && (
+                <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]} isError>
+                    <p><strong>Ошибка:</strong> {error}</p>
+                </WikidotModal>
+            ) }
+            { deleting && (
+                <WikidotModal buttons={[{title: 'Отмена', onClick: onCancelClearRating}, {title: 'Да, сбросить', onClick: onClearRating}]}>
+                    <h1>Сбросить рейтинг страницы?</h1>
+                    <p>Обратите внимание, что данную операцию можно будет откатить через историю правок.</p>
+                </WikidotModal>
+            ) }
+            <a className="action-area-close btn btn-danger" href="#" onClick={onClose}>Закрыть</a>
+            <h1>Рейтинг страницы</h1>
+            <span>
+                Оценить страницу:<br/><br/>
+                <div className="article-rating-widgets-area">
+                    {renderRating()}
+                    {renderRatingDistribution()}
                 </div>
-            </Styles>
-        )
-    }
+            </span>
+            <div id="who-rated-page-area" className={`${loading?'loading':''}`}>
+                { loading && <Loader className="loader" /> }
+                {sortVotes(votes).map((group, i) => (
+                    <React.Fragment key={i}>
+                        <h2>{group.name} ({renderCombinedVoteRating(group.votes)})</h2>
+                        { group.votes.map((vote, i) => (
+                            <React.Fragment key={i}>
+                                <UserView data={vote.user} />&nbsp;{renderUserVote(vote.value)}{renderVoteDate(vote.date)}<br/>
+                            </React.Fragment>
+                        )) }
+                    </React.Fragment>
+                ))}
+            </div>
+        </Styles>
+    )
 }
 
 
