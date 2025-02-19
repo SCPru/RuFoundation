@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Component } from 'react';
+import { useState } from 'react';
+import useConstCallback from '../util/const-callback';
 
 
 interface Props {
@@ -7,47 +8,34 @@ interface Props {
     pathParams?: { [key: string]: string }
 }
 
-interface State {
-    isCreate: boolean
-}
 
+const Page404: React.FC<Props> = ({ pageId, pathParams }: Props) => {
+    const [isCreate, setIsCreate] = useState(!!pathParams['edit']);
 
-class Page404 extends Component<Props, State> {
-    constructor(props) {
-        super(props)
-        this.state = {
-            isCreate: !!this.props.pathParams['edit'],
-        };
-    }
-
-    onCreate = (e) => {
+    const onCreate = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({isCreate: true});
+        setIsCreate(true);
         (window as any)._openNewEditor(() => {
-            this.setState({isCreate: false});
+            setIsCreate(false);
         });
-    };
+    });
 
-    render() {
-        const { isCreate } = this.state;
-        const { pageId } = this.props;
-        if (!isCreate) {
-            return (
-                <>
-                    <p id="404-message">
-                        Запрашиваемая вами страница <em>{pageId}</em> не существует.
-                    </p>
-                    <ul id="create-it-now-link">
-                        <li>
-                            <a href="#" onClick={this.onCreate}>Создать страницу</a>
-                        </li>
-                    </ul>
-                </>
-            )
-        } else {
-            return <></>
-        }
+    if (!isCreate) {
+        return (
+            <>
+                <p id="404-message">
+                    Запрашиваемая вами страница <em>{pageId}</em> не существует.
+                </p>
+                <ul id="create-it-now-link">
+                    <li>
+                        <a href="#" onClick={onCreate}>Создать страницу</a>
+                    </li>
+                </ul>
+            </>
+        )
+    } else {
+        return <></>
     }
 }
 

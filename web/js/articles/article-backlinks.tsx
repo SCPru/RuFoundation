@@ -1,8 +1,10 @@
 import * as React from 'react';
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
+import useConstCallback from '../util/const-callback';
 import styled from "styled-components";
 import WikidotModal from "../util/wikidot-modal";
 import { ArticleBacklinks, fetchArticleBacklinks } from "../api/articles"
+import Loader from '../util/loader';
 
 
 interface Props {
@@ -10,12 +12,6 @@ interface Props {
     onClose?: () => void
 }
 
-interface State {
-    loading: boolean
-    data: ArticleBacklinks
-    error?: string
-    fatalError?: boolean
-}
 
 const Styles = styled.div`
 .text {  
@@ -40,98 +36,91 @@ const Styles = styled.div`
 }
 `;
 
-class ArticleBacklinksView extends Component<Props, State> {
-    constructor(props) {
-        super(props);
-        this.state = {
-            loading: true,
-            data: {
-                children: [],
-                links: [],
-                includes: []
-            }
-        }
-    }
+const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
+    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState<ArticleBacklinks>(null);
+    const [error, setError] = useState<string>('');
+    const [fatalError, setFatalError] = useState(false);
 
-    async componentDidMount() {
-        const { pageId } = this.props;
-        this.setState({ loading: true });
-        try {
-            const data = await fetchArticleBacklinks(pageId);
-            this.setState({ loading: false, data });
-        } catch (e) {
-            this.setState({ loading: false, fatalError: true, error: e.error || 'Ошибка связи с сервером' });
-        }
-    }
+    useEffect(() => {
+        setLoading(true);
+        fetchArticleBacklinks(pageId)
+        .then(data => {
+            setLoading(false);
+            setData(data);
+        })
+        .catch(e => {
+            setLoading(false);
+            setFatalError(true);
+            setError(e.error || 'Ошибка связи с сервером');
+        });
+    }, []);
 
-    onCancel = (e) => {
+    const onCancel = useConstCallback((e) => {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
-        if (this.props.onClose)
-            this.props.onClose()
-    };
+        if (onClose)
+            onClose()
+    });
 
-    onCloseError = () => {
-        const { fatalError } = this.state;
-        this.setState({error: null});
+    const onCloseError = useConstCallback(() => {
+        setError(undefined);
         if (fatalError) {
-            this.onCancel(null);
+            onCancel(null);
         }
-    };
+    });
 
-    render() {
-        const { loading, data, error } = this.state;
-        return (
-            <Styles>
-                { error && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
-                        <p><strong>Ошибка:</strong> {error}</p>
-                    </WikidotModal>
-                ) }
-                <a className="action-area-close btn btn-danger" href="#" onClick={this.onCancel}>Закрыть</a>
-                <h1>Другие страницы, зависимые от этой</h1>
-                { data?.links?.length ? (
-                    <>
-                        <h2>Обратные ссылки</h2>
-                        <ul>
-                            { data.links.map((x, i) => (
-                                <li key={i}>
-                                    <a href={`/${x.id}`} className={x.exists?'':'newpage'}>{x.title||x.id} ({x.id})</a>
-                                </li>
-                            )) }
-                        </ul>
-                    </>
-                ) : null }
-                { data?.includes?.length ? (
-                    <>
-                        <h2>Включения (используя [[include]])</h2>
-                        <ul>
-                            { data.includes.map((x, i) => (
-                                <li key={i}>
-                                    <a href={`/${x.id}`} className={x.exists?'':'newpage'}>{x.title||x.id} ({x.id})</a>
-                                </li>
-                            )) }
-                        </ul>
-                    </>
-                ) : null }
-                { data?.children?.length ? (
-                    <>
-                        <h2>Дочерние страницы</h2>
-                        <ul>
-                            { data.children.map((x, i) => (
-                                <li key={i}>
-                                    <a href={`/${x.id}`} className={x.exists?'':'newpage'}>{x.title||x.id} ({x.id})</a>
-                                </li>
-                            )) }
-                        </ul>
-                    </>
-                ) : null }
-                { !data?.children?.length && !data?.links?.length && !data?.includes?.length && <p>На эту страницу нет обратных ссылок.</p> }
-            </Styles>
-        )
-    }
+    return (
+        <Styles>
+            { error && (
+                <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]} isError>
+                    <p><strong>Ошибка:</strong> {error}</p>
+                </WikidotModal>
+            ) }
+            <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>Закрыть</a>
+            <h1>Другие страницы, зависимые от этой</h1>
+            { loading && <Loader className="loader" /> }
+            { data?.links?.length ? (
+                <>
+                    <h2>Обратные ссылки</h2>
+                    <ul>
+                        { data.links.map((x, i) => (
+                            <li key={i}>
+                                <a href={`/${x.id}`} className={x.exists?'':'newpage'}>{x.title||x.id} ({x.id})</a>
+                            </li>
+                        )) }
+                    </ul>
+                </>
+            ) : null }
+            { data?.includes?.length ? (
+                <>
+                    <h2>Включения (используя [[include]])</h2>
+                    <ul>
+                        { data.includes.map((x, i) => (
+                            <li key={i}>
+                                <a href={`/${x.id}`} className={x.exists?'':'newpage'}>{x.title||x.id} ({x.id})</a>
+                            </li>
+                        )) }
+                    </ul>
+                </>
+            ) : null }
+            { data?.children?.length ? (
+                <>
+                    <h2>Дочерние страницы</h2>
+                    <ul>
+                        { data.children.map((x, i) => (
+                            <li key={i}>
+                                <a href={`/${x.id}`} className={x.exists?'':'newpage'}>{x.title||x.id} ({x.id})</a>
+                            </li>
+                        )) }
+                    </ul>
+                </>
+            ) : null }
+            { !data?.children?.length && !data?.links?.length && !data?.includes?.length && !loading && <p>На эту страницу нет обратных ссылок.</p> }
+        </Styles>
+    )
 }
 
 

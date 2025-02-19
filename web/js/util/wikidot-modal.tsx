@@ -1,9 +1,10 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {Component} from 'react';
+import { useState, useEffect } from 'react';
+import useConstCallback from './const-callback';
 import styled from 'styled-components';
 import { v4 as uuid4 } from 'uuid';
-import {ArticleLogEntry, revertArticleRevision} from "../api/articles";
+import { ArticleLogEntry, revertArticleRevision } from "../api/articles";
 
 
 interface Button {
@@ -19,33 +20,26 @@ interface Props {
     buttons?: Array<Button>
 }
 
-interface State {
-    modalId?: string
-}
 
+const WikidotModal: React.FC<Props> = ({ children, isLoading, isError, buttons }) => {
+    const [modalId, setModalId] = useState('');
 
-class WikidotModal extends Component<Props, State> {
-    state = {
-        modalId: null
-    };
+    useEffect(() => {
+        const newModalId = uuid4();
+        setModalId(newModalId);
+        addModalContainer(newModalId);
 
-    componentDidMount() {
-        const modalId = uuid4();
-        this.setState({modalId});
-        addModalContainer(modalId);
-    }
-
-    componentWillUnmount() {
-        removeModalContainer(this.state.modalId);
-    }
+        return () => {
+            removeModalContainer(newModalId);
+        }
+    }, []);
 
     // returning a portal without explicit "any" type results in compatibility issues with older stuff
-    render(): any {
-        const container = getModalContainer(this.state.modalId);
-        if (container)
-            return ReactDOM.createPortal(<WikidotModalWindow {...this.props} id={this.state.modalId} />, container);
-        return null;
-    }
+    
+    const container = getModalContainer(modalId);
+    if (container)
+        return ReactDOM.createPortal(<WikidotModalWindow children={children} isLoading={isLoading} isError={isError} buttons={buttons} id={modalId} />, container);
+    return null;
 }
 
 
@@ -83,39 +77,36 @@ const Styles = styled.div`
 `;
 
 
-class WikidotModalWindow extends Component<Props & {id: string}> {
-    handleCallback(e, callback) {
+const WikidotModalWindow: React.FC<Props & {id: string}> = ({ children, isLoading, isError, buttons, id }) => {
+    const handleCallback = useConstCallback((e, callback) => {
         e.preventDefault();
         e.stopPropagation();
         callback();
-    }
+    });
 
-    render() {
-        const { children, isLoading, isError, buttons, id } = this.props;
-        return (
-            <Styles>
-                <div className="odialog-container">
-                    <div id={`owindow-${id}`} className={`owindow ${isLoading?'owait':''} ${isError?'error':''}`}>
-                        <div className="content modal-body">
-                            { children }
-                            { buttons && (
-                                <>
-                                    <hr className="buttons-hr"/>
-                                    <div className="w-modal-buttons button-bar modal-footer">
-                                        { buttons.map((button, i) =>
-                                            <a key={i} className={`btn btn-${button.type || 'default'} button button-close-message`} href="javascript:;" onClick={(e) => this.handleCallback(e, button.onClick)}>
-                                                {button.title}
-                                            </a>
-                                        ) }
-                                    </div>
-                                </>
-                            ) }
-                        </div>
+    return (
+        <Styles>
+            <div className="odialog-container">
+                <div id={`owindow-${id}`} className={`owindow ${isLoading?'owait':''} ${isError?'error':''}`}>
+                    <div className="content modal-body">
+                        { children }
+                        { buttons && (
+                            <>
+                                <hr className="buttons-hr"/>
+                                <div className="w-modal-buttons button-bar modal-footer">
+                                    { buttons.map((button, i) =>
+                                        <a key={i} className={`btn btn-${button.type || 'default'} button button-close-message`} onClick={(e) => handleCallback(e, button.onClick)}>
+                                            {button.title}
+                                        </a>
+                                    ) }
+                                </div>
+                            </>
+                        ) }
                     </div>
                 </div>
-            </Styles>
-        )
-    }
+            </div>
+        </Styles>
+    )
 }
 
 

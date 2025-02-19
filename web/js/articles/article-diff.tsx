@@ -1,7 +1,8 @@
 import * as React from 'react';
+import { useEffect, useState } from 'react';
+import useConstCallback from '../util/const-callback';
 import ReactDiffViewer, { DiffMethod } from 'react-diff-viewer';
-import { Component } from 'react';
-import {ArticleLogEntry, fetchArticleVersion} from "../api/articles";
+import { ArticleLogEntry, fetchArticleVersion } from "../api/articles";
 import WikidotModal from "../util/wikidot-modal";
 import styled from "styled-components";
 import Loader from "../util/loader";
@@ -54,8 +55,13 @@ textarea {
 `;
 
 
-class ArticleDiffView extends Component<Props, State> {
-    diffStyles = {
+const ArticleDiffView: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseDelegate, firstEntry, secondEntry }) => {
+    const [loading, setLoading] = useState(false);
+    const [firstSource, setFirstSource] = useState('');
+    const [secondSource, setSecondSource] = useState('');
+    const [error, setError] = useState('');
+
+    const diffStyles = {
         variables: {
             light: {
                 emptyLineBackground: ''
@@ -73,86 +79,75 @@ class ArticleDiffView extends Component<Props, State> {
         }
     }
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            loading: false
-        };
-    }
+    useEffect(() => {
+        compareSource();
+    }, []);
 
-    componentDidMount() {
-        this.compareSource();
-    }
+    useEffect(() => {
+        compareSource();
+    }, [firstEntry, secondEntry]);
 
-    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
-        if (this.props.firstEntry !== prevProps.firstEntry || this.props.secondEntry !== prevProps.secondEntry) {
-            this.compareSource();
-        }
-    }
+    const compareSource = useConstCallback(async () => {
+        setLoading(true);
+        setError(undefined);
 
-    async compareSource() {
-        const { pageId, firstEntry, secondEntry, pathParams } = this.props;
-
-        this.setState({ loading: true, error: null });
         try {
             const first = await fetchArticleVersion(pageId, firstEntry.revNumber, pathParams);
             const second = await fetchArticleVersion(pageId, secondEntry.revNumber, pathParams);
 
-            this.setState({ loading: false, error: null, firstSource: first.source, secondSource: second.source });
+            setLoading(false);
+            setFirstSource(first.source);
+            setSecondSource(second.source);
         } catch (e) {
-            this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' });
+            setLoading(false);
+            setError(e.error || 'Ошибка связи с сервером');
         }
-    }
+    });
 
-    onClose = (e) => {
+    const onClose = useConstCallback((e) => {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
-        if (this.props.onClose)
-            this.props.onClose();
-    };
+        if (onCloseDelegate)
+            onCloseDelegate();
+    });
 
-    onCloseError = () => {
-        this.setState({error: null});
-        this.onClose(null);
-    };
+    const onCloseError = useConstCallback(() => {
+        setError(undefined);
+        onClose(null);
+    });
 
-    render() {
-        const { firstEntry, secondEntry } = this.props;
-        const { error, loading, firstSource, secondSource } = this.state;
-
-        return (
-            <Styles>
-                { error && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
-                        <p><strong>Ошибка:</strong> {error}</p>
-                    </WikidotModal>
-                ) }
-                <a className="action-area-close btn btn-danger" href="#" onClick={this.onClose}>Закрыть</a>
-                <h1>Сравнить ревизии страницы</h1>
-                <div className="diff-box">
-                    <table className="page-compare">
-                        <tbody>
-                        <tr>
-                            <th></th>
-                            <th>Правка {firstEntry.revNumber}</th>
-                            <th>Правка {secondEntry.revNumber}</th>
-                        </tr>
-                        <tr>
-                            <td>Создано:</td>
-                            <td>{formatDate(new Date(firstEntry.createdAt))}</td>
-                            <td>{formatDate(new Date(secondEntry.createdAt))}</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <h3>Изменение источника:</h3>
-                    { loading && <Loader className="loader" /> }
-                    <ReactDiffViewer oldValue={firstSource} newValue={secondSource} compareMethod={DiffMethod.WORDS} splitView={false} styles={this.diffStyles} />
-                </div>
-            </Styles>
-        )
-    }
+    return (
+        <Styles>
+            { error && (
+                <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]} isError>
+                    <p><strong>Ошибка:</strong> {error}</p>
+                </WikidotModal>
+            ) }
+            <a className="action-area-close btn btn-danger" href="#" onClick={onClose}>Закрыть</a>
+            <h1>Сравнить ревизии страницы</h1>
+            <div className="diff-box">
+                <table className="page-compare">
+                    <tbody>
+                    <tr>
+                        <th></th>
+                        <th>Правка {firstEntry.revNumber}</th>
+                        <th>Правка {secondEntry.revNumber}</th>
+                    </tr>
+                    <tr>
+                        <td>Создано:</td>
+                        <td>{formatDate(new Date(firstEntry.createdAt))}</td>
+                        <td>{formatDate(new Date(secondEntry.createdAt))}</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <h3>Изменение источника:</h3>
+                { loading && <Loader className="loader" /> }
+                <ReactDiffViewer oldValue={firstSource} newValue={secondSource} compareMethod={DiffMethod.WORDS} splitView={false} styles={diffStyles} />
+            </div>
+        </Styles>
+    )
 }
 
 

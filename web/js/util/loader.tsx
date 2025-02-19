@@ -1,13 +1,12 @@
 import * as React from 'react';
-import { Component } from 'react';
 import styled from 'styled-components';
 
 
 interface Props {
     size?: number
     borderSize?: number
-    className?: string
     color?: string
+    className? : string
 }
 
 
@@ -46,17 +45,14 @@ overflow: hidden;
 
 
 
-class Loader extends Component<Props> {
-    render() {
-        const { size, borderSize, color } = this.props;
-        return (
-            <LoaderStyle size={size || 32} borderSize={borderSize || 4} color={color || '#e15b64'} {...this.props}>
-                <div className="ldio">
-                    <div/>
-                </div>
-            </LoaderStyle>
-        )
-    }
+const Loader: React.FC<Props> = ({ className, size, borderSize, color }) =>{
+    return (
+        <LoaderStyle className={className} size={size || 32} borderSize={borderSize || 4} color={color || '#e15b64'}>
+            <div className="ldio">
+                <div/>
+            </div>
+        </LoaderStyle>
+    )
 }
 
 

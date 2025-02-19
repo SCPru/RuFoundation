@@ -10,12 +10,12 @@ interface Props {
     canCreateTags?: boolean
 }
 
+
 const TagEditorContainer = styled.div`
   * {
     box-sizing: border-box;
   }
 `
-
 
 const TagListContainer = styled.div`
   width: 100%;

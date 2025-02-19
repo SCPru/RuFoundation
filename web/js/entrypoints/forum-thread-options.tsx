@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Component } from 'react';
+import { useState } from 'react';
+import useConstCallback from '../util/const-callback';
 import {updateForumThread} from '../api/forum'
 import WikidotModal from '../util/wikidot-modal'
 
@@ -35,118 +36,116 @@ interface State {
 }
 
 
-class ForumThreadOptions extends Component<Props, State> {
-    constructor(props) {
-        super(props)
-        this.state = {
-            isLoading: false,
-            isEditing: false,
-            isMoving: false
-        };
-    }
+const ForumThreadOptions: React.FC<Props> = ({ threadId, threadName, threadDescription, canEdit, canPin, canMove, canLock, isLocked, isPinned, categoryId, moveTo }: Props) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string>();
+    const [isEditing, setIsEditing] = useState(false);
+    const [isMoving, setIsMoving] = useState(false);
+    const [editName, setEditName] = useState<string>();
+    const [editDescription, setEditDescription] = useState<string>();
+    const [moveCategoryId, setMoveCategoryId] = useState<number>();
 
-    componentDidMount() {
-    }
-
-    onEdit = async (e) => {
+    const onEdit = useConstCallback(async (e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const { threadName, threadDescription } = this.props;
+        setIsEditing(true);
+        setEditName(threadName);
+        setEditDescription(threadDescription);
+    });
 
-        this.setState({ isEditing: true, editName: threadName, editDescription: threadDescription });
-    };
-
-    onPin = async (e) => {
+    const onPin = useConstCallback(async (e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const { threadId, isPinned } = this.props;
-
-        this.setState({ isLoading: true, error: null });
+        setIsLoading(true);
+        setError(null);
 
         try {
             await updateForumThread({
                 threadId, isPinned: !isPinned
             });
         } catch (e) {
-            this.setState({ error: e.error || 'Ошибка связи с сервером' });
-            this.setState({ isLoading: false });
+            setError(e.error || 'Ошибка связи с сервером');
+            setIsLoading(false);
             return;
         }
 
-        this.setState({ isLoading: false });
+        setIsLoading(false);
         window.location.reload();
-    };
+    });
 
-    onLock = async (e) => {
+    const onLock = useConstCallback(async (e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const { threadId, isLocked } = this.props;
-
-        this.setState({ isLoading: true, error: null });
+        setIsLoading(true);
+        setError(null);
 
         try {
             await updateForumThread({
                 threadId, isLocked: !isLocked
             });
         } catch (e) {
-            this.setState({ error: e.error || 'Ошибка связи с сервером' });
-            this.setState({ isLoading: false });
+            setError(e.error || 'Ошибка связи с сервером');
+            setIsLoading(false);
             return;
         }
 
-        this.setState({ isLoading: false });
+        setIsLoading(false);
         window.location.reload();
-    };
+    });
 
-    onMove = async (e) => {
+    const onMove = useConstCallback(async (e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const { categoryId } = this.props;
+        setIsMoving(true);
+        setMoveCategoryId(categoryId);
+    });
 
-        this.setState({ isMoving: true, moveCategoryId: categoryId });
-    };
+    const onCloseError = useConstCallback(() => {
+        setError(null);
+    });
 
-    onCloseError = () => {
-        this.setState({ error: null });
-    };
+    const onEditCancel = useConstCallback(() => {
+        setIsLoading(false);
+    });
 
-    onEditCancel = () => {
-        this.setState({ isEditing: false });
-    };
-
-    onEditSave = async () => {
-        const { threadId } = this.props;
-        const { editName, editDescription } = this.state;
-
-        this.setState({ isLoading: true });
+    const onEditSave = useConstCallback(async () => {
+        setIsLoading(true);
 
         try {
             await updateForumThread({
                 threadId, name: editName, description: editDescription
             })
         } catch (e) {
-            this.setState({error: e.error || 'Ошибка связи с сервером'})
-            this.setState({ isLoading: false });
+            setError(e.error || 'Ошибка связи с сервером');
+            setIsLoading(false);
             return;
         }
 
-        this.setState({ isLoading: false });
+        setIsLoading(false);
         window.location.reload();
-    };
+    });
 
-    onChange(k: keyof State, v) {
-        this.setState({ [k]: v } as unknown)
-    }
+    const onChange = useConstCallback((k: keyof State, v) => {
+        switch (k) {
+            case 'editName':
+                setEditName(v);
+                break;
+            case 'editDescription':
+                setEditDescription(v);
+                break;
+            case 'moveCategoryId':
+                setMoveCategoryId(v);
+                break;
+        }
+    });
 
-    renderEdit() {
-        const { editName, editDescription } = this.state;
-
+    const renderEdit = useConstCallback(() => {
         return (
-            <WikidotModal buttons={[{title: 'Отмена', onClick: this.onEditCancel}, {title: 'Сохранить', onClick: this.onEditSave}]}>
+            <WikidotModal buttons={[{title: 'Отмена', onClick: onEditCancel}, {title: 'Сохранить', onClick: onEditSave}]}>
                 <h2>Редактировать название и описание темы</h2>
                 <hr className="buttons-hr" />
                 <table className="form">
@@ -154,51 +153,45 @@ class ForumThreadOptions extends Component<Props, State> {
                 <tr>
                     <td>Заголовок темы:</td>
                     <td>
-                        <input className="text form-control" type="text" value={editName} size={50} maxLength={99} onChange={e=>this.onChange('editName', e.target.value)} />
+                        <input className="text form-control" type="text" value={editName} size={50} maxLength={99} onChange={e=>onChange('editName', e.target.value)} />
                     </td>
                 </tr>
                 <tr>
                     <td>Описание:</td>
                     <td>
-                        <textarea cols={50} rows={2} className="form-control" value={editDescription} onChange={e=>this.onChange('editDescription', e.target.value)} />
+                        <textarea cols={50} rows={2} className="form-control" value={editDescription} onChange={e=>onChange('editDescription', e.target.value)} />
                     </td>
                 </tr>
                 </tbody>
                 </table>
             </WikidotModal>
         )
-    }
+    });
 
-    onMoveSave = async () => {
-        const { threadId } = this.props;
-        const { moveCategoryId } = this.state;
-
-        this.setState({ isLoading: true });
+    const onMoveSave = useConstCallback(async () => {
+        setIsLoading(true);
 
         try {
             await updateForumThread({
                 threadId, categoryId: moveCategoryId
             })
         } catch (e) {
-            this.setState({error: e.error || 'Ошибка связи с сервером'})
-            this.setState({ isLoading: false });
+            setError(e.error || 'Ошибка связи с сервером');
+            setIsLoading(false);
             return;
         }
 
-        this.setState({ isLoading: false });
+        setIsLoading(false);
         window.location.reload();
-    };
+    });
 
-    onMoveCancel = () => {
-        this.setState({ isMoving: false });
-    };
+    const onMoveCancel = useConstCallback(() => {
+        setIsMoving(false);
+    });
 
-    renderMove() {
-        const { moveTo, categoryId } = this.props;
-        const { moveCategoryId } = this.state;
-
+    const renderMove = useConstCallback(() => {
         return (
-            <WikidotModal buttons={[{title: 'Отмена', onClick: this.onMoveCancel}, {title: 'Сохранить', onClick: this.onMoveSave}]}>
+            <WikidotModal buttons={[{title: 'Отмена', onClick: onMoveCancel}, {title: 'Сохранить', onClick: onMoveSave}]}>
                 <h2>Переместить тему</h2>
                 <hr className="buttons-hr" />
                 <table className="form">
@@ -206,7 +199,7 @@ class ForumThreadOptions extends Component<Props, State> {
                     <tr>
                         <td>Укажите новый раздел:</td>
                         <td>
-                            <select className="form-control" value={moveCategoryId} onChange={e => this.onChange('moveCategoryId', Number.parseInt(e.target.value))}>
+                            <select className="form-control" value={moveCategoryId} onChange={e => onChange('moveCategoryId', Number.parseInt(e.target.value))}>
                                 {moveTo.map(c => (
                                     <option key={c.id} disabled={!c.canMove || c.id === categoryId} value={c.id}>{c.name}</option>
                                 ))}
@@ -217,37 +210,32 @@ class ForumThreadOptions extends Component<Props, State> {
                 </table>
             </WikidotModal>
         )
+    });
+
+
+    if (!canEdit && !canMove && !canLock && !canPin) {
+        return null;
     }
 
-    render() {
-        const { canEdit, canMove, canLock, canPin, isLocked, isPinned } = this.props;
-
-        if (!canEdit && !canMove && !canLock && !canPin) {
-            return null;
-        }
-
-        const { isLoading, error, isEditing, isMoving } = this.state;
-
-        return (
-            <>
-                {isEditing && this.renderEdit()}
-                {isMoving && this.renderMove()}
-                {isLoading && <WikidotModal isLoading><p>Сохранение...</p></WikidotModal>}
-                {error && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
-                        <p><strong>Ошибка:</strong> {error}</p>
-                    </WikidotModal>
-                )}
-                {canEdit && <a href="#" onClick={this.onEdit} className="btn btn-default btn-small btn-sm">Редактировать название и описание</a>}
-                {' '}
-                {canPin && <a href="#" onClick={this.onPin} className="btn btn-default btn-small btn-sm">{isPinned ? 'Открепить' : 'Закрепить'}</a>}
-                {' '}
-                {canLock && <a href="#" onClick={this.onLock} className="btn btn-default btn-small btn-sm">{isLocked ? 'Разблокировать' : 'Заблокировать'}</a>}
-                {' '}
-                {canMove && <a href="#" onClick={this.onMove} className="btn btn-default btn-small btn-sm">Переместить</a>}
-            </>
-        )
-    }
+    return (
+        <>
+            {isEditing && renderEdit()}
+            {isMoving && renderMove()}
+            {isLoading && <WikidotModal isLoading><p>Сохранение...</p></WikidotModal>}
+            {error && (
+                <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]} isError>
+                    <p><strong>Ошибка:</strong> {error}</p>
+                </WikidotModal>
+            )}
+            {canEdit && <a href="#" onClick={onEdit} className="btn btn-default btn-small btn-sm">Редактировать название и описание</a>}
+            {' '}
+            {canPin && <a href="#" onClick={onPin} className="btn btn-default btn-small btn-sm">{isPinned ? 'Открепить' : 'Закрепить'}</a>}
+            {' '}
+            {canLock && <a href="#" onClick={onLock} className="btn btn-default btn-small btn-sm">{isLocked ? 'Разблокировать' : 'Заблокировать'}</a>}
+            {' '}
+            {canMove && <a href="#" onClick={onMove} className="btn btn-default btn-small btn-sm">Переместить</a>}
+        </>
+    )
 }
 
 

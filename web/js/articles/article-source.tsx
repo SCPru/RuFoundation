@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
+import useConstCallback from '../util/const-callback';
 import {fetchArticle} from "../api/articles";
 import WikidotModal from "../util/wikidot-modal";
 import styled from "styled-components";
@@ -10,13 +11,6 @@ interface Props {
     pageId: string
     onClose: () => void
     source?: string
-}
-
-
-interface State {
-    loading: boolean
-    source?: string
-    error?: string
 }
 
 
@@ -49,65 +43,60 @@ textarea {
 `;
 
 
-class ArticleSource extends Component<Props, State> {
+const ArticleSource: React.FC<Props> = ({ pageId, onClose: onCloseDeligate, source: originalSource }) => {
+    const [loading, setLoading] = useState(false);
+    const [source, setSource] = useState(originalSource);
+    const [error, setError] = useState('');
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            loading: false,
-            source: this.props.source
-        };
-    }
+    useEffect(() => {
+        loadSource();
+    }, []);
 
-    componentDidMount() {
-        this.loadSource();
-    }
-
-    async loadSource() {
-        const { pageId, source } = this.props;
+    const loadSource = useConstCallback(async () => {
         if (!source) {
-            this.setState({ loading: true, error: null });
+            setLoading(true);
+            setError(null);
             try {
                 const article = await fetchArticle(pageId);
-                this.setState({ loading: false, error: null, source: article.source });
+                setLoading(false);
+                setError(null);
+                setSource(article.source);
             } catch (e) {
-                this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' });
+                setLoading(false);
+                setError(e.error || 'Ошибка связи с сервером');
             }
         }
-    }
+    });
 
-    onClose = (e) => {
+    const onClose = useConstCallback((e) => {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
-        if (this.props.onClose)
-            this.props.onClose();
-    };
+        if (onCloseDeligate)
+            onCloseDeligate();
+    });
 
-    onCloseError = () => {
-        this.setState({error: null});
-        this.onClose(null);
-    };
+    const onCloseError = useConstCallback(() => {
+        setError(null);
+        onClose(null);
+    });
 
-    render() {
-        const { error, loading, source } = this.state;
-        return (
-            <Styles>
-                { error && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
-                        <p><strong>Ошибка:</strong> {error}</p>
-                    </WikidotModal>
-                ) }
-                <a className="action-area-close btn btn-danger" href="#" onClick={this.onClose}>Закрыть</a>
-                <h1>Исходник страницы</h1>
-                <div id="source-code" className={`${loading?'loading':''}`}>
-                    { loading && <Loader className="loader" /> }
-                    <textarea value={source||''} readOnly />
-                </div>
-            </Styles>
-        )
-    }
+    return (
+        <Styles>
+            { error && (
+                <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]} isError>
+                    <p><strong>Ошибка:</strong> {error}</p>
+                </WikidotModal>
+            ) }
+            <a className="action-area-close btn btn-danger" href="#" onClick={onClose}>Закрыть</a>
+            <h1>Исходник страницы</h1>
+            <div id="source-code" className={`${loading?'loading':''}`}>
+                { loading && <Loader className="loader" /> }
+                <textarea value={source||''} readOnly />
+            </div>
+        </Styles>
+    )
 }
 
 

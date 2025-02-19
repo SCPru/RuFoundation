@@ -1,4 +1,5 @@
 import * as React from 'react'
+import useConstCallback from './const-callback';
 
 interface Props {
     maxPages: number
@@ -7,7 +8,7 @@ interface Props {
 }
 
 
-const Pagination: React.FC<Props> = ({page, maxPages, onChange}: Props) => {
+const Pagination: React.FC<Props> = ({ page, maxPages, onChange }) => {
 
     const aroundPages = 2;
     const leftFrom = 1;
@@ -32,7 +33,7 @@ const Pagination: React.FC<Props> = ({page, maxPages, onChange}: Props) => {
     const centerTo = Math.min(rightFrom - 1, page + aroundPages);
 
     const showLeftDots = (centerFrom > leftTo + 1);
-    const showRightDots =(centerTo < rightFrom - 1);
+    const showRightDots = (centerTo < rightFrom - 1);
 
     const leftPages = [];
     const centerPages = [];
@@ -62,11 +63,11 @@ const Pagination: React.FC<Props> = ({page, maxPages, onChange}: Props) => {
         }
     }
 
-    const onClick = (e, nextPage) => {
+    const onClick = useConstCallback((e, nextPage) => {
         e.preventDefault();
         e.stopPropagation();
         onChange(nextPage);
-    };
+    });
 
     return (
         <div className="pager">

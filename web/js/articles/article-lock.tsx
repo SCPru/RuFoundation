@@ -1,24 +1,17 @@
 import * as React from 'react';
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
+import useConstCallback from '../util/const-callback';
 import styled from "styled-components";
 import WikidotModal from "../util/wikidot-modal";
 import sleep from "../util/async-sleep";
 import {fetchArticle, updateArticle} from "../api/articles";
+import { setDefaultResultOrder } from 'dns';
 
 
 interface Props {
     pageId: string
     isNew?: boolean
     onClose?: () => void
-}
-
-interface State {
-    locked: boolean
-    loading: boolean
-    saving: boolean
-    savingSuccess?: boolean
-    error?: string
-    fatalError?: boolean
 }
 
 
@@ -46,116 +39,119 @@ const Styles = styled.div`
 `;
 
 
-class ArticleLock extends Component<Props, State> {
-    constructor(props) {
-        super(props);
-        this.state = {
-            locked: false,
-            loading: true,
-            saving: false
-        }
-    }
+const ArticleLock: React.FC<Props> = ({ pageId, isNew, onClose }) => {
+    const [locked, setLocked] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [savingSuccess, setSavingSuccess] = useState(false);
+    const [error, setError] = useState('');
+    const [fatalError, setFatalError] = useState(false);
 
-    async componentDidMount() {
-        const { pageId } = this.props;
-        this.setState({ loading: true });
-        try {
-            const data = await fetchArticle(pageId);
-            this.setState({ loading: false, locked: data.locked});
-            console.log(this.state)
-        } catch (e) {
-            this.setState({loading: false, fatalError: true, error: e.error || 'Ошибка связи с сервером'});
-        }
-    }
+    useEffect(() => {
+        setLoading(true);
+        fetchArticle(pageId)
+        .then(data => {
+            setLoading(false);
+            setLocked(data.locked);
+        })
+        .catch(e => {
+            setLoading(false);
+            setFatalError(true);
+            setError(e.error || 'Ошибка связи с сервером');
+        });
+    }, []);
 
-    onSubmit = async (e) => {
+    const onSubmit = useConstCallback(async (e) => {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
 
-        const { pageId } = this.props;
-        this.setState({ saving: true, error: null, savingSuccess: false });
+        setSaving(true);
+        setError(null);
+        setSavingSuccess(false);
+
         const input = {
             pageId: pageId,
-            locked: this.state.locked
+            locked: locked
         };
+
         try {
             await updateArticle(pageId, input);
-            this.setState({ saving: false, savingSuccess: true });
+            setSaving(false);
+            setSavingSuccess(true);
             await sleep(1000);
-            this.setState({ savingSuccess: false });
+            setSavingSuccess(false);
             window.scrollTo(window.scrollX, 0);
             window.location.reload();
         } catch (e) {
-            this.setState({ saving: false, fatalError: false, error: e.error || 'Ошибка связи с сервером' });
+            setSaving(false);
+            setFatalError(false);
+            setError(e.error || 'Ошибка связи с сервером');
         }
-    };
+    });
 
-    onCancel = (e) => {
+    const onCancel = useConstCallback((e) => {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
-        if (this.props.onClose)
-            this.props.onClose()
-    };
+        if (onClose)
+            onClose()
+    });
 
-    onChange = (e) => {
-        if(e.target.type === 'checkbox'){
-            // @ts-ignore
-            this.setState({ [e.target.name]: e.target.checked});
-        }
-        else {
-            // @ts-ignore
-            this.setState({ [e.target.name]: e.target.value});
-        }
-    };
+    const onChange = useConstCallback((e) => {
+        let value = e.target.value
+        if(e.target.type === 'checkbox')
+            value = e.target.checked
 
-    onCloseError = () => {
-        const { fatalError } = this.state;
-        this.setState({error: null});
+        switch (e.target.name) {
+            case 'locked':
+                setLocked(value);
+                break;
+        }
+    });
+
+    const onCloseError = useConstCallback(() => {
+        setError(null);
         if (fatalError) {
-            this.onCancel(null);
+            onCancel(null);
         }
-    };
+    });
 
-    render() {
-        const { locked, loading, saving, savingSuccess, error } = this.state;
-        return (
-            <Styles>
-                { saving && <WikidotModal isLoading><p>Сохранение...</p></WikidotModal> }
-                { savingSuccess && <WikidotModal><p>Успешно сохранено!</p></WikidotModal> }
-                { error && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
-                        <p><strong>Ошибка:</strong> {error}</p>
-                    </WikidotModal>
-                ) }
-                <a className="action-area-close btn btn-danger" href="#" onClick={this.onCancel}>Закрыть</a>
-                <h1>Заблокировать эту страницу</h1>
-                <p>Когда страница заблокирована (защищена) только модераторы и администраторы сайта могут её редактировать. Это иногда полезно, например, для стартовой страницы.</p>
+    return (
+        <Styles>
+            { saving && <WikidotModal isLoading><p>Сохранение...</p></WikidotModal> }
+            { savingSuccess && <WikidotModal><p>Успешно сохранено!</p></WikidotModal> }
+            { error && (
+                <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]} isError>
+                    <p><strong>Ошибка:</strong> {error}</p>
+                </WikidotModal>
+            ) }
+            <a className="action-area-close btn btn-danger" href="#" onClick={onCancel}>Закрыть</a>
+            <h1>Заблокировать эту страницу</h1>
+            <p>Когда страница заблокирована (защищена) только модераторы и администраторы сайта могут её редактировать. Это иногда полезно, например, для стартовой страницы.</p>
 
-                <form method="POST" onSubmit={this.onSubmit}>
-                    <table className="form">
-                        <tbody>
-                        <tr>
-                            <td>
-                                Страница защищена:
-                            </td>
-                            <td>
-                                <input type="checkbox" name="locked" className={`text ${loading?'loading':''}`} onChange={this.onChange} id="page-locked-input" checked={locked} disabled={loading||saving}/>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <div className="buttons form-actions">
-                        <input type="button" className="btn btn-danger" value="Закрыть" onClick={this.onCancel} />
-                        <input type="button" className="btn btn-primary" value="Сохранить" onClick={this.onSubmit}/>
-                    </div>
-                </form>
-            </Styles>
-        )
-    }
+            <form method="POST" onSubmit={onSubmit}>
+                <table className="form">
+                    <tbody>
+                    <tr>
+                        <td>
+                            Страница защищена:
+                        </td>
+                        <td>
+                            <input type="checkbox" name="locked" className={`text ${loading?'loading':''}`} onChange={onChange} id="page-locked-input" checked={locked} disabled={loading||saving}/>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div className="buttons form-actions">
+                    <input type="button" className="btn btn-danger" value="Закрыть" onClick={onCancel} />
+                    <input type="button" className="btn btn-primary" value="Сохранить" onClick={onSubmit}/>
+                </div>
+            </form>
+        </Styles>
+    )
 }
 
 

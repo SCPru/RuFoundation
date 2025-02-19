@@ -1,9 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {Component} from 'react';
+import useConstCallback from './const-callback';
 import styled from 'styled-components';
 import formatDate from "./date-format";
-import {UserData} from "../api/user";
+import { UserData } from "../api/user";
 import UserView from "./user-view";
 
 
@@ -30,34 +30,30 @@ const Styles = styled.div`
 }
 `;
 
-class WikidotMessage extends Component<Props> {
+const WikidotMessage:React.FC<Props> = ({ children, buttons, background }: Props) => {
 
-    handleCallback(e, callback) {
+    const handleCallback = useConstCallback((e, callback) => {
         e.preventDefault();
         e.stopPropagation();
         callback();
-    }
+    });
 
-    render() {
-        const { children, buttons, background } = this.props;
-
-        return (
-            <Styles>
-                <div className="w-message" style={{ background: background }}>
-                    { children }
-                    <br/>
-                    { buttons.map((button, i) =>
-                        <React.Fragment key={i}>
-                            <a onClick={(e) => this.handleCallback(e, button.onClick)}>
-                                {button.title}
-                            </a>
-                            {(i !== buttons.length-1) && ' | '}
-                        </React.Fragment>
-                    ) }
-                </div>
-            </Styles>
-        )
-    }
+    return (
+        <Styles>
+            <div className="w-message" style={{ background: background }}>
+                { children }
+                <br/>
+                { buttons.map((button, i) =>
+                    <React.Fragment key={i}>
+                        <a onClick={(e) => handleCallback(e, button.onClick)}>
+                            {button.title}
+                        </a>
+                        {(i !== buttons.length-1) && ' | '}
+                    </React.Fragment>
+                ) }
+            </div>
+        </Styles>
+    )
 }
 
 function getMessageContainer() {
