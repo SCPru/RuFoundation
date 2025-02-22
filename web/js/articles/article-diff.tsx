@@ -18,14 +18,6 @@ interface Props {
 }
 
 
-interface State {
-    loading: boolean
-    firstSource?: string
-    secondSource?: string
-    error?: string
-}
-
-
 const Styles = styled.div<{loading?: boolean}>`
 #source-code.loading {
   position: relative;

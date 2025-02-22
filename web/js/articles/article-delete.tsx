@@ -13,16 +13,6 @@ interface Props {
     canDelete?: boolean
 }
 
-interface State {
-    permanent: boolean
-    newName: string
-    loading: boolean
-    saving: boolean
-    savingSuccess?: boolean
-    error?: string
-    fatalError?: boolean
-}
-
 
 const Styles = styled.div`
 .text {  

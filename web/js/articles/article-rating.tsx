@@ -19,17 +19,6 @@ interface Props {
 }
 
 
-interface State {
-    loading: boolean
-    rating: number
-    mode: RatingMode
-    votes?: Array<ModuleRateVote>
-    popularity?: number
-    error?: string
-    deleting?: boolean
-}
-
-
 const Styles = styled.div<{loading?: boolean}>`
 #who-rated-page-area.loading {
   position: relative;
