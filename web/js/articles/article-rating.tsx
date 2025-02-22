@@ -120,14 +120,14 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
         setError(undefined);
         try {
             const rating = await fetchPageVotes(pageId);
-            setLoading(false);
             setVotes(rating.votes);
             setRating(rating.rating);
             setPopularity(rating.popularity);
             setMode(rating.mode);
         } catch (e) {
-            setLoading(false);
             setError(e.error || 'Ошибка связи с сервером');
+        } finally {
+            setLoading(false);
         }
     });
 
@@ -144,14 +144,14 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
         setDeleting(false);
         try {
             const rating = await deleteArticleVotes(pageId);
-            setLoading(false);
             setVotes(rating.votes);
             setRating(rating.rating);
             setPopularity(rating.popularity);
             setMode(rating.mode);
         } catch (e) {
-            setLoading(false);
             setError(e.error || 'Ошибка связи с сервером');
+        } finally {
+            setLoading(false);
         }
     });
 
