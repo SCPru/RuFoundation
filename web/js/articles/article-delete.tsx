@@ -13,16 +13,6 @@ interface Props {
     canDelete?: boolean
 }
 
-interface State {
-    permanent: boolean
-    newName: string
-    loading: boolean
-    saving: boolean
-    savingSuccess?: boolean
-    error?: string
-    fatalError?: boolean
-}
-
 
 const Styles = styled.div`
 .text {  
@@ -61,13 +51,14 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete }) => {
         setLoading(true);
         fetchArticle(pageId)
         .then(data => {
-            setLoading(false);
             setNewName("deleted:" + data.pageId);
         })
         .catch(e => {
-            setLoading(false);
             setFatalError(true);
             setError(e.error || 'Ошибка связи с сервером');
+        })
+        .finally(() => {
+            setLoading(false);
         });
     }, []);
 
@@ -94,7 +85,6 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete }) => {
             } else {
                 await deleteArticle(pageId)
             }
-            setSaving(false);
             setSavingSuccess(true);
             await sleep(1000);
             setSavingSuccess(false);
@@ -105,9 +95,10 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete }) => {
                 window.location.reload();
             }
         } catch (e) {
-            setSaving(false);
             setFatalError(false);
             setError(e.error || 'Ошибка связи с сервером');
+        } finally {
+            setSaving(false);
         }
     });
 

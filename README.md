@@ -13,7 +13,7 @@ Note: this is what I tested with, your mileage may differ.
 - Windows 10
 - PostrgeSQL 17.2
 - NodeJS v17.3.0
-- Python 3.12.7
+- Python 3.13.2
 - Rust 1.63
 
 ## PostgreSQL configuration

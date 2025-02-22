@@ -58,12 +58,12 @@ const ArticleSource: React.FC<Props> = ({ pageId, onClose: onCloseDeligate, sour
             setError(null);
             try {
                 const article = await fetchArticle(pageId);
-                setLoading(false);
                 setError(null);
                 setSource(article.source);
             } catch (e) {
-                setLoading(false);
                 setError(e.error || 'Ошибка связи с сервером');
+            } finally {
+                setLoading(false);
             }
         }
     });

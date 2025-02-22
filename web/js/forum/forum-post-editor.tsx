@@ -60,7 +60,7 @@ const ForumPostEditor: React.FC<Props> = ({ initialTitle, isThread, onSubmit: on
     const [name, setName] = useState(initialTitle || '');
     const [description, setDescription] = useState('');
     const [source, setSource] = useState('');
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [savingSuccess, setSavingSuccess] = useState(false);
     const [error, setError] = useState('');
@@ -82,17 +82,16 @@ const ForumPostEditor: React.FC<Props> = ({ initialTitle, isThread, onSubmit: on
             setLoading(true);
             fetchForumPost(postId)
             .then(data => {
-                setLoading(false);
                 setSource(data.source);
                 setName(data.name);
             })
             .catch(e => {
-                setLoading(false);
                 setFatalError(true);
                 setError(e.error || 'Ошибка связи с сервером');
+            })
+            .finally(() => {
+                setLoading(false);
             });
-        } else {
-            setLoading(false);
         }
 
         return () => {
@@ -115,16 +114,16 @@ const ForumPostEditor: React.FC<Props> = ({ initialTitle, isThread, onSubmit: on
             setSavingSuccess(false);
             try {
                 await onSubmitDelegate(input);
-                setSaving(false);
                 setError(null);
                 setSavingSuccess(false);
                 setSource('');
                 setName(initialTitle);
             } catch (e) {
                 setLoading(false);
-                setSaving(false);
                 setFatalError(false);
                 setError(e.message || e.error || 'Ошибка связи с сервером');
+            } finally {
+                setSaving(false);
             }
         }
     });

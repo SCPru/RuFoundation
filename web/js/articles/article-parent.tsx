@@ -49,13 +49,14 @@ const ArticleParent: React.FC<Props> = ({ pageId, onClose }) => {
         setLoading(true);
         fetchArticle(pageId)
         .then(data => {
-            setLoading(false);
             setParent(data.parent);
         })
         .catch(e => {
-            setLoading(false);
             setFatalError(true);
             setError(e.error || 'Ошибка связи с сервером');
+        })
+        .finally(() => {
+            setLoading(false);
         });
     }, []);
 
@@ -76,16 +77,16 @@ const ArticleParent: React.FC<Props> = ({ pageId, onClose }) => {
 
         try {
             await updateArticle(pageId, input);
-            setSaving(false);
             setSavingSuccess(true);
             await sleep(1000);
             setSavingSuccess(false);
             window.scrollTo(window.scrollX, 0);
             window.location.reload();
         } catch (e) {
-            setSaving(false);
             setFatalError(false);
             setError(e.error || 'Ошибка связи с сервером');
+        } finally {
+            setSaving(false);
         }
     });
 
