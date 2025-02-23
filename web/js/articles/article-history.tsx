@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
+import useConstCallback from '../util/const-callback';
 import {ArticleLogEntry, fetchArticleLog, fetchArticleVersion} from "../api/articles";
 import WikidotModal, {showRevertModal} from "../util/wikidot-modal";
 import styled from "styled-components";
@@ -17,20 +18,6 @@ interface Props {
     pageId: string
     pathParams?: { [key: string]: string }
     onClose: () => void
-}
-
-
-interface State {
-    loading: boolean
-    entries?: Array<ArticleLogEntry>
-    subarea?: JSX.Element
-    entryCount: number
-    page: number
-    perPage: number
-    error?: string
-    fatalError?: boolean
-    firstCompareEntry?: ArticleLogEntry
-    secondCompareEntry?: ArticleLogEntry
 }
 
 
@@ -86,135 +73,70 @@ const Styles = styled.div<{loading?: boolean}>`
 `;
 
 
-class ArticleHistory extends Component<Props, State> {
+const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseDelegate }) => {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            loading: false,
-            entries: null,
-            subarea: null,
-            entryCount: 0,
-            page: 1,
-            perPage: 25
-        };
-    }
+    const [loading, setLoading] = useState(false);
+    const [entries, setEntries] = useState<Array<ArticleLogEntry>>([]); 
+    const [subarea, setSubarea] = useState<JSX.Element>();
+    const [entryCount, setEntryCount] = useState(0);
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(25);
+    const [error, setError] = useState(0);
+    const [fatalError, setFatalError] = useState(false);
+    const [firstCompareEntry, setFirstCompareEntry] = useState<ArticleLogEntry>();
+    const [secondCompareEntry, setSecondCompareEntry] = useState<ArticleLogEntry>();
 
-    componentDidMount() {
-        this.loadHistory();
-    }
+    useEffect(() => {
+        loadHistory();
+    }, []);
 
-    async loadHistory(nextPage?: number) {
-        const { pageId } = this.props;
-        const { page, perPage, entries } = this.state;
-        this.setState({ loading: true, error: null });
-        try {
-            const realPage = nextPage || page;
-            const from = (realPage-1) * perPage;
-            const to = (realPage) * perPage;
-            const history = await fetchArticleLog(pageId, from, to);
-            this.setState({ loading: false, error: null, entries: history.entries, entryCount: history.count, page: realPage, firstCompareEntry: history.entries[1], secondCompareEntry: history.entries[0] });
-        } catch (e) {
-            this.setState({ loading: false, fatalError: entries === null, error: e.error || 'Ошибка связи с сервером' });
-        }
-    }
+    const loadHistory = useConstCallback(async (nextPage?: number) => {
+        setLoading(true);
+        setError(undefined);
+        
+        const realPage = nextPage || page;
+        const from = (realPage-1) * perPage;
+        const to = (realPage) * perPage;
 
-    onClose = (e) => {
+        fetchArticleLog(pageId, from, to)
+        .then(history => {
+            setEntries(history.entries);
+            setEntryCount(history.count);
+            setPage(page);
+            setFirstCompareEntry(history.entries[1]);
+            setSecondCompareEntry(history.entries[0]);
+        })
+        .catch(e => {
+            setFatalError(entries === null);
+            setError(e.error || 'Ошибка связи с сервером');
+        })
+        .finally(() => {
+            setLoading(false);
+        });
+    });
+
+    const onClose = useConstCallback((e) => {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
-        if (this.props.onClose)
-            this.props.onClose();
-    };
+        if (onCloseDelegate)
+            onCloseDelegate();
+    });
 
-    onCloseError = () => {
-        const { fatalError } = this.state;
-        this.setState({error: null});
+    const onCloseError = useConstCallback(() => {
+        setError(undefined);
         if (fatalError) {
-            this.onClose(null);
+            onClose(null);
         }
-    };
+    });
 
-    onChangePage = (nextPage) => {
-        this.loadHistory(nextPage);
-    }
+    const onChangePage = useConstCallback((nextPage) => {
+        loadHistory(nextPage);
+    });
 
-    render() {
-        const { error, entries, entryCount, page, perPage, subarea, loading } = this.state;
 
-        const totalPages = Math.ceil(entryCount / perPage);
-
-        return (
-            <Styles>
-                { error && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
-                        <p><strong>Ошибка:</strong> {error}</p>
-                    </WikidotModal>
-                ) }
-                <a className="action-area-close btn btn-danger" href="#" onClick={this.onClose}>Закрыть</a>
-                <h1>История изменений</h1>
-                <div id="revision-list" className={`${loading?'loading':''}`}>
-                    { loading && <Loader className="loader" /> }
-                    <div className="buttons">
-                        <input type="button" className="btn btn-default btn-sm" value="Обновить список" onClick={() => this.loadHistory()} />
-                            <input type="button" className="btn btn-default btn-sm" value="Сравнить редакции" name="compare" id="history-compare-button" onClick={this.displayVersionDiff} />
-                    </div>
-                    { entries && (totalPages>1) && (
-                        <Pagination page={page} maxPages={totalPages} onChange={this.onChangePage} />
-                    ) }
-                    { entries && (
-                        <table className="page-history">
-                            <tbody>
-                            <tr>
-                                <td>рев.</td>
-                                <td>&nbsp;</td>
-                                <td>флаги</td>
-                                <td>действия</td>
-                                <td>от</td>
-                                <td>дата</td>
-                                <td>комментарии</td>
-                            </tr>
-                            { entries.map(entry => {
-                                return (
-                                    <tr key={entry.revNumber} id={`revision-row-${entry.revNumber}`}>{/* BHL has CSS selector that says tr[id*="evision-row"] */}
-                                        <td>
-                                            {entry.revNumber}.
-                                        </td>
-                                        <td style={{ width: '5em' }}>
-                                            <input type="radio" name="from" value={entry.revNumber} onChange={() => {this.setState({firstCompareEntry: entry})}} defaultChecked={ (entries[1] === entry) } />
-			                                <input type="radio" name="to" value={entry.revNumber} onChange={() => {this.setState({secondCompareEntry: entry})}}  defaultChecked={ (entries[0] === entry) } />
-                                        </td>
-                                        <td>
-                                            {this.renderFlags(entry)}
-                                        </td>
-                                        <td className="optionstd" style={{ width: '5em' }}>
-                                            {this.renderActions(entry)}
-                                        </td>
-                                        <td style={{ width: '15em' }}>
-                                            {this.renderUser(entry)}
-                                        </td>
-                                        <td style={{ padding: '0 0.5em', width: '7em' }}>
-                                            {this.renderDate(entry)}
-                                        </td>
-                                        <td style={{ fontSize: '90%' }}>
-                                            {this.renderComment(entry)}
-                                        </td>
-                                    </tr>
-                                )
-                            }) }
-                            </tbody>
-                        </table>
-                    ) }
-                </div>
-                <div id="history-subarea">
-                    {subarea}
-                </div>
-            </Styles>
-        )
-    }
-
-    renderFlags(entry: ArticleLogEntry) {
+    const renderFlags = useConstCallback((entry: ArticleLogEntry) => {
         const renderType = (type) => {
             switch (type) {
                 case 'new':
@@ -257,28 +179,28 @@ class ArticleHistory extends Component<Props, State> {
         } else {
             return renderType(entry.type)
         }
-    }
+    });
 
-    renderActions (entry: ArticleLogEntry) {
+    const renderActions = useConstCallback((entry: ArticleLogEntry) => {
         if (entry.type === 'wikidot') {
             return null;
         }
         return <>
-            <a href="#" onClick={(e) => this.displayArticleVersion(e, entry)} title="Просмотр изменений страницы">V</a>
-            <a href="#" onClick={(e) => this.displayVersionSource(e, entry)} title="Просмотр источника изменений">S</a>
-            {this.state.entryCount !== (entry.revNumber+1) && <a href="#" onClick={(e) => this.revertArticleVersion(e, entry)} title="Вернуться к правке">R</a>}
+            <a href="#" onClick={(e) => displayArticleVersion(e, entry)} title="Просмотр изменений страницы">V</a>
+            <a href="#" onClick={(e) => displayVersionSource(e, entry)} title="Просмотр источника изменений">S</a>
+            {entryCount !== (entry.revNumber+1) && <a href="#" onClick={(e) => revertArticleVersion(e, entry)} title="Вернуться к правке">R</a>}
         </>;
-    }
+    });
 
-    renderUser (entry: ArticleLogEntry) {
+    const renderUser = useConstCallback((entry: ArticleLogEntry) => {
         return <UserView data={entry.user} />;
-    }
+    });
 
-    renderDate(entry: ArticleLogEntry) {
+    const renderDate = useConstCallback((entry: ArticleLogEntry) => {
         return formatDate(new Date(entry.createdAt));
-    }
+    })
 
-    renderComment(entry: ArticleLogEntry) {
+    const renderComment = useConstCallback((entry: ArticleLogEntry) => {
         if (entry.comment.trim()) {
             return entry.comment;
         }
@@ -337,64 +259,123 @@ class ArticleHistory extends Component<Props, State> {
             case 'revert':
                 return <>Откат страницы к версии №{entry.meta.rev_number}</>
         }
-    }
+    });
 
-    displayArticleVersion (e: React.MouseEvent, entry: ArticleLogEntry) {
+    const displayArticleVersion = useConstCallback((e: React.MouseEvent, entry: ArticleLogEntry) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const { pageId, pathParams } = this.props;
         fetchArticleVersion(pageId, entry.revNumber, pathParams).then(function (resp) {
             showVersionMessage(entry.revNumber, new Date(entry.createdAt), entry.user, pageId);
             document.getElementById("page-content").innerHTML = resp.rendered;
         })
-    }
+    });
 
-    displayVersionSource (e: React.MouseEvent, entry: ArticleLogEntry) {
+    const displayVersionSource = useConstCallback((e: React.MouseEvent, entry: ArticleLogEntry) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const { pageId, pathParams } = this.props;
-        let onClose = this.hideSubArea;
-        let show = this.showSubArea;
         fetchArticleVersion(pageId, entry.revNumber, pathParams).then(function (resp) {
-            onClose();
-            show(<ArticleSource pageId={pageId} onClose={onClose} source={resp.source} />);
+            hideSubArea();
+            showSubArea(<ArticleSource pageId={pageId} onClose={hideSubArea} source={resp.source} />);
         })
-    }
+    });
 
-    displayVersionDiff = (e: React.MouseEvent) => {
+    const displayVersionDiff = useConstCallback((e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const { pageId, pathParams } = this.props;
-        const { firstCompareEntry, secondCompareEntry } = this.state;
         if (firstCompareEntry && secondCompareEntry) {
-            let onClose = this.hideSubArea;
-            let show = this.showSubArea;
-
-            onClose();
-            show(<ArticleDiffView pageId={pageId} onClose={onClose} firstEntry={firstCompareEntry}
+            hideSubArea();
+            showSubArea(<ArticleDiffView pageId={pageId} onClose={hideSubArea} firstEntry={firstCompareEntry}
                                   secondEntry={secondCompareEntry} pathParams={pathParams}/>);
         }
-    }
+    });
 
-    showSubArea = (component: JSX.Element) => {
-        this.setState({subarea: component})
-    }
+    const showSubArea = useConstCallback((component: JSX.Element) => {
+        setSubarea(component);
+    });
 
-    hideSubArea =  () => {
-        this.setState({subarea: null})
-    }
+    const hideSubArea = useConstCallback(() => {
+        setSubarea(undefined);
+    });
 
-    revertArticleVersion (e: React.MouseEvent, entry: ArticleLogEntry) {
+    const revertArticleVersion = useConstCallback((e: React.MouseEvent, entry: ArticleLogEntry) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const {pageId} = this.props;
         showRevertModal(pageId, entry);
-    }
+    });
 
+    const totalPages = Math.ceil(entryCount / perPage);
+
+    return (
+        <Styles>
+            { error && (
+                <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]} isError>
+                    <p><strong>Ошибка:</strong> {error}</p>
+                </WikidotModal>
+            ) }
+            <a className="action-area-close btn btn-danger" href="#" onClick={onClose}>Закрыть</a>
+            <h1>История изменений</h1>
+            <div id="revision-list" className={`${loading?'loading':''}`}>
+                { loading && <Loader className="loader" /> }
+                <div className="buttons">
+                    <input type="button" className="btn btn-default btn-sm" value="Обновить список" onClick={() => loadHistory()} />
+                        <input type="button" className="btn btn-default btn-sm" value="Сравнить редакции" name="compare" id="history-compare-button" onClick={displayVersionDiff} />
+                </div>
+                { entries && (totalPages>1) && (
+                    <Pagination page={page} maxPages={totalPages} onChange={onChangePage} />
+                ) }
+                { entries && (
+                    <table className="page-history">
+                        <tbody>
+                        <tr>
+                            <td>рев.</td>
+                            <td>&nbsp;</td>
+                            <td>флаги</td>
+                            <td>действия</td>
+                            <td>от</td>
+                            <td>дата</td>
+                            <td>комментарии</td>
+                        </tr>
+                        { entries.map(entry => {
+                            return (
+                                <tr key={entry.revNumber} id={`revision-row-${entry.revNumber}`}>{/* BHL has CSS selector that says tr[id*="evision-row"] */}
+                                    <td>
+                                        {entry.revNumber}.
+                                    </td>
+                                    <td style={{ width: '5em' }}>
+                                        <input type="radio" name="from" value={entry.revNumber} onChange={() => {setFirstCompareEntry(entry)}} defaultChecked={ (entries[1] === entry) } />
+                                        <input type="radio" name="to" value={entry.revNumber} onChange={() => {setSecondCompareEntry(entry)}} defaultChecked={ (entries[0] === entry) } />
+                                    </td>
+                                    <td>
+                                        {renderFlags(entry)}
+                                    </td>
+                                    <td className="optionstd" style={{ width: '5em' }}>
+                                        {renderActions(entry)}
+                                    </td>
+                                    <td style={{ width: '15em' }}>
+                                        {renderUser(entry)}
+                                    </td>
+                                    <td style={{ padding: '0 0.5em', width: '7em' }}>
+                                        {renderDate(entry)}
+                                    </td>
+                                    <td style={{ fontSize: '90%' }}>
+                                        {renderComment(entry)}
+                                    </td>
+                                </tr>
+                            )
+                        }) }
+                        </tbody>
+                    </table>
+                ) }
+            </div>
+            <div id="history-subarea">
+                {subarea}
+            </div>
+        </Styles>
+    )
 }
 
 
