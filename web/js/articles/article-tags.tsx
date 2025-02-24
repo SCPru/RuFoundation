@@ -72,14 +72,15 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
         setLoading(true);
         Promise.all([fetchArticle(pageId), fetchAllTags()])
         .then(([data, allTags]) => {
-            setLoading(false);
             setTags(data.tags);
             setAllTags(allTags);
         })
         .catch(e => {
-            setLoading(false);
             setFatalError(true);
             setError(e.error || 'Ошибка связи с сервером');
+        })
+        .finally(() => {
+            setLoading(false);
         });
     }, []);
 
@@ -90,7 +91,7 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
         }
 
         setSaving(true);
-        setError(null);
+        setError(undefined);
         setSavingSuccess(false);
         
         const input = {
@@ -100,8 +101,8 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
 
         try {
             await updateArticle(pageId, input);
-            setSaving(false);
             setSavingSuccess(true);
+            setSaving(false);
             await sleep(1000);
             setSavingSuccess(false);
             window.scrollTo(window.scrollX, 0);
