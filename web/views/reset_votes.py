@@ -2,6 +2,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect, resolve_url
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.admin.models import LogEntry, CHANGE
 from django.views.generic import FormView
 from django.contrib.admin import site
 from django.contrib import messages
@@ -48,6 +50,15 @@ class ResetUserVotesView(FormView):
             messages.error(self.request, "Пользователь не существует")
         else:
             Vote.objects.filter(user=user).delete()
+
+        LogEntry.objects.log_action(
+            user_id=self.request.user.pk,
+            content_type_id=ContentType.objects.get_for_model(User).pk,
+            object_id=user.pk,
+            object_repr=str(user),
+            action_flag=CHANGE,
+            change_message='Голоса сброшены',
+        )
 
         messages.success(self.request, "Голоса успешно сброшены")
         return redirect(self.get_success_url())
