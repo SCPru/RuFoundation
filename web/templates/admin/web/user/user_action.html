@@ -21,8 +21,11 @@
                         {% csrf_token %}
                         {{ form }}
                         <input type="hidden" name="action" value="invite" />
+                        {% if after_text %}
+                            <p style="{{ after_text_style }}">{{ after_text }}</p>
+                        {% endif %}
                         <br>
-                        <input type="submit" name="apply" class="btn btn-outline-success" value={{ submit_btn }} />
+                        <input type="submit" name="apply" class="btn {% if is_danger %} btn-danger {% else %} btn-outline-success {% endif %}" value="{{ submit_btn }}"/>
                     </form>
                 </div>
             </div>
