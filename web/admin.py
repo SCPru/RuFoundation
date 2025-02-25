@@ -12,6 +12,7 @@ from .models.site import Site
 from .models.users import User, VisualUserGroup
 from .views.invite import InviteView
 from .views.bot import CreateBotView
+from .views.reset_votes import ResetUserVotesView
 from .controllers import articles
 
 
@@ -172,10 +173,13 @@ class AdvancedUserAdmin(UserAdmin):
 
     def get_urls(self):
         urls = super(AdvancedUserAdmin, self).get_urls()
-        urls.insert(0, path('invite/', InviteView.as_view()))
-        urls.insert(0, path('newbot/', CreateBotView.as_view()))
-        urls.insert(0, path('<id>/activate/', InviteView.as_view()))
-        return urls
+        new_urls = [
+            path('invite/', InviteView.as_view()),
+            path('newbot/', CreateBotView.as_view()),
+            path('<id>/activate/', InviteView.as_view()),
+            path('<id>/reset_votes/', ResetUserVotesView.as_view()),
+        ]
+        return new_urls + urls
 
     def username_or_wd(self, obj):
         if obj.type == User.UserType.Wikidot:
