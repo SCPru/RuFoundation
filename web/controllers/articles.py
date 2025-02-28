@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractUser as _UserType
 from django.db import transaction
 from django.db.models import QuerySet, Sum, Avg, Count, Max, TextField, Value, IntegerField, Q, F
 from django.db.models.functions import Coalesce, Concat, Lower
+from django.contrib.auth import get_user_model
 
 import renderer
 from renderer import RenderContext
@@ -23,10 +24,12 @@ import unicodedata
 from web.models.forum import ForumThread, ForumPost
 from web.util import lock_table
 
+
 _FullNameOrArticle = Optional[Union[str, Article]]
 _FullNameOrCategory = Optional[Union[str, Category]]
 _FullNameOrTag = Optional[Union[str, Tag]]
 
+User = get_user_model()
 
 # Returns (category, name) from a full name
 def get_name(full_name: str) -> Tuple[str, str]:
@@ -805,7 +808,7 @@ def get_formatted_rating(full_name_or_article: _FullNameOrArticle) -> str:
         return '%d' % rating
 
 
-def add_vote(full_name_or_article: _FullNameOrArticle, user: settings.AUTH_USER_MODEL, rate: int | float | None): # type: ignore
+def add_vote(full_name_or_article: _FullNameOrArticle, user: _UserType, rate: int | float | None):
     article = get_article(full_name_or_article)
 
     Vote.objects.filter(article=article, user=user).delete()
