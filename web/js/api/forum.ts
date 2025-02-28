@@ -1,5 +1,5 @@
-import {callModule, ModuleRenderResponse} from "./modules"
-import {UserData} from "./user";
+import { callModule, ModuleRenderResponse } from "./modules"
+import { UserData } from "./user";
 
 export interface ForumNewThreadRequest {
     categoryId: number

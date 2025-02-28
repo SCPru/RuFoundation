@@ -91,7 +91,7 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
         }
 
         setSaving(true);
-        setError(null);
+        setError(undefined);
         setSavingSuccess(false);
         
         const input = {
@@ -102,6 +102,7 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
         try {
             await updateArticle(pageId, input);
             setSavingSuccess(true);
+            setSaving(false);
             await sleep(1000);
             setSavingSuccess(false);
             window.scrollTo(window.scrollX, 0);

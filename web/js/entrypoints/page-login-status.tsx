@@ -57,7 +57,7 @@ const PageLoginStatus: React.FC<Props> = ({ user }: Props) => {
                 </span>{
                 (user.admin || user.staff) && (
                     <>
-                        {'\u00a0'}|{'\u00a0'}<a id="w-admin-link" href={`/-/admin`}>
+                        {'\u00a0'}|{'\u00a0'}<a id="w-admin-link" href={`/-/admin`} target="_blank">
                         Админ-панель
                     </a>
                     </>
