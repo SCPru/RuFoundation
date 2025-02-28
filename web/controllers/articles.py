@@ -29,7 +29,6 @@ _FullNameOrArticle = Optional[Union[str, Article]]
 _FullNameOrCategory = Optional[Union[str, Category]]
 _FullNameOrTag = Optional[Union[str, Tag]]
 
-User = get_user_model()
 
 # Returns (category, name) from a full name
 def get_name(full_name: str) -> Tuple[str, str]:
