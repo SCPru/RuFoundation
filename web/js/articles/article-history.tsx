@@ -1,17 +1,17 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import useConstCallback from '../util/const-callback';
-import {ArticleLogEntry, fetchArticleLog, fetchArticleVersion} from "../api/articles";
-import WikidotModal, {showRevertModal} from "../util/wikidot-modal";
+import { ArticleLogEntry, fetchArticleLog, fetchArticleVersion } from "../api/articles";
+import WikidotModal, { showRevertModal } from "../util/wikidot-modal";
 import styled from "styled-components";
 import Loader from "../util/loader";
 import formatDate from "../util/date-format";
 import UserView from "../util/user-view";
-import {showVersionMessage} from "../util/wikidot-message";
+import { showVersionMessage } from "../util/wikidot-message";
 import ArticleSource from "./article-source";
 import Pagination from '../util/pagination'
 import ArticleDiffView from "./article-diff";
-import {sprintf} from 'sprintf-js'
+import { sprintf } from 'sprintf-js'
 
 
 interface Props {
@@ -102,7 +102,7 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
         .then(history => {
             setEntries(history.entries);
             setEntryCount(history.count);
-            setPage(page);
+            setPage(realPage);
             setFirstCompareEntry(history.entries[1]);
             setSecondCompareEntry(history.entries[0]);
         })
