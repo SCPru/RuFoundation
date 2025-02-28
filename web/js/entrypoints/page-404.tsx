@@ -9,7 +9,7 @@ interface Props {
 }
 
 
-const Page404: React.FC<Props> = ({ pageId, pathParams }: Props) => {
+const Page404: React.FC<Props> = ({ pageId, pathParams }) => {
     const [isCreate, setIsCreate] = useState(!!pathParams['edit']);
 
     const onCreate = useConstCallback((e) => {

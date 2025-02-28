@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { Component } from 'react';
 import * as ReactDOM from 'react-dom';
-import {UserData} from '../api/user';
-import ForumPostEditor, {ForumPostPreviewData, ForumPostSubmissionData} from '../forum/forum-post-editor';
+import { useEffect, useState, useRef } from 'react';
+import useConstCallback from '../util/const-callback';
+import { UserData } from '../api/user';
+import ForumPostEditor, { ForumPostPreviewData, ForumPostSubmissionData } from '../forum/forum-post-editor';
 import {
     createForumPost,
     deleteForumPost, fetchForumPost, fetchForumPostVersions,
@@ -25,280 +26,260 @@ interface Props {
     canReply?: boolean
     canEdit?: boolean
     canDelete?: boolean
+    canReact?: boolean
     hasRevisions?: boolean
     lastRevisionDate?: string
     lastRevisionAuthor?: UserData
 }
 
 
-interface State {
-    isEditing: boolean
-    isReplying: boolean
-    open: boolean
-    originalPreviewTitle?: string
-    originalPreviewContent?: string
-    deleteError?: string
-    revisionsOpen: boolean
-    hasRevisions?: boolean
-    lastRevisionDate?: string
-    lastRevisionAuthor?: UserData
-    currentRevision?: string
-    revisions?: Array<ForumPostVersion>
-}
+const ForumPostOptions: React.FC<Props> = ({ user, threadId, threadName, postId, postName, canReply, canEdit, canDelete, canReact, hasRevisions, lastRevisionDate, lastRevisionAuthor }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [isReplying, setIsReplying] = useState(false);
+    const [open, setOpen] = useState(false);
+    const [originalPreviewTitle, setOriginalPreviewTitle] = useState('');
+    const [originalPreviewContent, setOriginalPreviewContent] = useState('');
+    const [deleteError, setDeleteError] = useState('');
+    const [revisionsOpen, setRevisionsOpen] = useState(false);
+    const [currentRevision, setCurrentRevision] = useState('');
+    const [revisions, setRevisions] = useState<Array<ForumPostVersion>>([]);
 
+    const refSelf = useRef<HTMLElement>();
+    const refPreviewTitle = useRef<HTMLElement>();
+    const refPreviewContent = useRef<HTMLElement>();
+    const refReplyPreview = useRef<HTMLElement>();
 
-class ForumPostOptions extends Component<Props, State> {
-    refSelf: HTMLElement = null;
-    refPreviewTitle: HTMLElement = null;
-    refPreviewContent: HTMLElement = null;
-    refReplyPreview: HTMLElement = null;
-
-    constructor(props: Props) {
-        super(props);
-        this.state = {
-            isEditing: false,
-            isReplying: false,
-            open: false,
-            revisionsOpen: false,
-            currentRevision: undefined,
-            hasRevisions: props.hasRevisions,
-            lastRevisionDate: props.lastRevisionDate,
-            lastRevisionAuthor: props.lastRevisionAuthor
-        };
-    }
-
-    componentDidMount() {
-        if (!this.refSelf) {
+    useEffect(() => {
+        if (!refSelf.current) {
             // something bad happened
             return
         }
-        const longPost = this.refSelf.parentNode;
-        this.refPreviewTitle = longPost.querySelector('.head .title');
-        this.refPreviewContent = longPost.querySelector('.content');
-        let refReplyPreview: HTMLElement = longPost.querySelector('.w-reply-preview');
-        if (!refReplyPreview) {
-            refReplyPreview = document.createElement('div');
-            refReplyPreview.className = 'w-reply-preview';
-            this.refSelf.parentNode.insertBefore(refReplyPreview, this.refSelf);
+        const longPost = refSelf.current.parentNode;
+        refPreviewTitle.current = longPost.querySelector('.head .title');
+        refPreviewContent.current = longPost.querySelector('.content');
+        let newRefReplyPreview: HTMLElement = longPost.querySelector('.w-reply-preview');
+        if (!newRefReplyPreview) {
+            newRefReplyPreview = document.createElement('div');
+            newRefReplyPreview.className = 'w-reply-preview';
+            refSelf.current.parentNode.insertBefore(newRefReplyPreview, refSelf.current);
         }
-        this.refReplyPreview = refReplyPreview;
-        this.setState({ originalPreviewTitle: this.refPreviewTitle.textContent, originalPreviewContent: this.refPreviewContent.innerHTML });
-    }
+        refReplyPreview.current = newRefReplyPreview;
+        setOriginalPreviewTitle(refPreviewTitle.current.textContent);
+        setOriginalPreviewContent(refPreviewContent.current.innerHTML);
+    }, []);
 
-    onReplyClose = () => {
-        this.setState({ isReplying: false });
-        if (this.refReplyPreview.firstChild) {
-            ReactDOM.unmountComponentAtNode(this.refReplyPreview);
-            this.refReplyPreview.innerHTML = '';
+    const onReplyClose = useConstCallback(() => {
+        setIsReplying(false);
+        if (refReplyPreview.current.firstChild) {
+            ReactDOM.unmountComponentAtNode(refReplyPreview.current);
+            refReplyPreview.current.innerHTML = '';
         }
-    };
+    });
 
-    onReplySubmit = async (input: ForumPostSubmissionData) => {
-        const { threadId, postId } = this.props;
+    const onReplySubmit = useConstCallback(async (input: ForumPostSubmissionData) => {
         const request: ForumNewPostRequest = {
             threadId,
             replyTo: postId,
             name: input.name,
             source: input.source
         };
+
         const { url } = await createForumPost(request);
-        this.onReplyClose();
+        onReplyClose();
+
         window.onhashchange = () => {
             window.location.reload();
         };
+
         window.location.href = url;
-    };
+    });
 
-    onReplyPreview = (input: ForumPostPreviewData) => {
-        const { user } = this.props;
-        ReactDOM.render(<ForumPostPreview preview={input} user={user}/>, this.refReplyPreview);
-    };
+    const onReplyPreview = useConstCallback((input: ForumPostPreviewData) => {
+        ReactDOM.render(<ForumPostPreview preview={input} user={user}/>, refReplyPreview.current);
+    });
 
-    onReply = (e) => {
+    const onReply = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
         const closeCurrent = (window as any)._closePostEditor;
         if (closeCurrent) {
             closeCurrent();
         }
-        this.setState({ isReplying: true });
-    };
+        setIsReplying(true);
+    });
 
-    onEditClose = () => {
-        const { originalPreviewTitle, originalPreviewContent } = this.state;
-        this.refPreviewTitle.textContent = originalPreviewTitle;
-        this.refPreviewContent.innerHTML = originalPreviewContent;
-        this.setState({ isEditing: false });
-    };
+    const onEditClose = useConstCallback(() => {
+        refPreviewTitle.current.textContent = originalPreviewTitle;
+        refPreviewContent.current.innerHTML = originalPreviewContent;
+        setIsEditing(false);
+    });
 
-    onEditSubmit = async (input: ForumPostSubmissionData) => {
-        const { postId } = this.props;
+    const onEditSubmit = useConstCallback(async (input: ForumPostSubmissionData) => {
         const request: ForumUpdatePostRequest = {
             postId,
             name: input.name,
             source: input.source
         };
         const result = await updateForumPost(request);
-        this.refPreviewTitle.textContent = result.name;
-        this.refPreviewContent.innerHTML = result.content;
-        this.setState({ originalPreviewTitle: result.name, originalPreviewContent: result.content });
-        this.onEditClose();
-    };
+        refPreviewTitle.current.textContent = result.name;
+        refPreviewContent.current.innerHTML = result.content;
+        setOriginalPreviewTitle(result.name);
+        setOriginalPreviewContent(result.content);
+        onEditClose();
+    });
 
-    onEditPreview = (input: ForumPostPreviewData) => {
-        this.refPreviewTitle.textContent = input.name;
-        this.refPreviewContent.innerHTML = input.content;
-        this.setState({ revisionsOpen: false, currentRevision: undefined });
-    };
+    const onEditPreview = useConstCallback((input: ForumPostPreviewData) => {
+        refPreviewTitle.current.textContent = input.name;
+        refPreviewContent.current.innerHTML = input.content;
+        setRevisionsOpen(false);
+        setCurrentRevision(undefined);
+    });
 
-    onEdit = (e) => {
+    const onEdit = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
         const closeCurrent = (window as any)._closePostEditor;
         if (closeCurrent) {
             closeCurrent();
         }
-        this.setState({ isEditing: true });
-    };
+        setIsEditing(true);
+    });
 
-    onDelete = async (e) => {
+    const onDelete = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        const { postId } = this.props;
-        try {
-            await deleteForumPost(postId);
-        } catch (e) {
-            this.setState({ deleteError: e.error || 'Ошибка связи с сервером' })
-            return
-        }
-        // successful deletion. reflect the changes (drop the current post / tree)
-        // first, unmount self. this makes sure any editors are taken care of
-        const post = this.refSelf.parentElement.parentElement; // should point to class .post
-        ReactDOM.unmountComponentAtNode(this.refSelf);
-        const parent = post.parentElement;
-        parent.removeChild(post);
-        if (parent.classList.contains('post-container') && parent.parentElement.classList.contains('post-container')) {
-            // check if parent element has no children anymore
-            if (!parent.firstElementChild) {
-                parent.parentNode.removeChild(parent);
+
+        deleteForumPost(postId)
+        .then(() => {
+            // successful deletion. reflect the changes (drop the current post / tree)
+            // first, unmount self. this makes sure any editors are taken care of
+            const post = refSelf.current.parentElement.parentElement; // should point to class .post
+            ReactDOM.unmountComponentAtNode(refSelf.current);
+            const parent = post.parentElement;
+            parent.removeChild(post);
+            if (parent.classList.contains('post-container') && parent.parentElement.classList.contains('post-container')) {
+                // check if parent element has no children anymore
+                if (!parent.firstElementChild) {
+                    parent.parentNode.removeChild(parent);
+                }
             }
-        }
-    };
+        })
+        .catch(e => {
+            setDeleteError(e.error || 'Ошибка связи с сервером');
+        })
+    });
 
-    onToggle = (e) => {
+    const onToggle = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        const { open } = this.state;
-        this.setState({ open: !open });
-    };
+        
+        setOpen(!open);
+    });
 
-    onCloseError = () => {
-        this.setState({deleteError: undefined});
-    };
+    const onCloseError = useConstCallback(() => {
+        setDeleteError(undefined);
+    });
 
-    onOpenRevisions = async (e) => {
+    const onOpenRevisions = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        try {
-            const {postId} = this.props;
-            const revisions = await fetchForumPostVersions(postId);
-            this.setState({ revisionsOpen: true, revisions: revisions.versions });
-        } catch (e) {
-            this.setState({ revisionsOpen: false, deleteError: e.error || 'Ошибка связи с сервером' });
-        }
+        
+        fetchForumPostVersions(postId)
+        .then(revisions => {
+            setRevisionsOpen(true);
+            setRevisions(revisions.versions);
+        })
+        .catch(e => {
+            setRevisionsOpen(false);
+            setDeleteError(e.error || 'Ошибка связи с сервером');
+        });
+    });
 
-    }
-
-    onCloseRevisions = (e) => {
+    const onCloseRevisions = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        const { originalPreviewTitle, originalPreviewContent, currentRevision } = this.state;
+        
         if (currentRevision) {
-            this.refPreviewTitle.textContent = originalPreviewTitle;
-            this.refPreviewContent.innerHTML = originalPreviewContent;
+            refPreviewTitle.current.textContent = originalPreviewTitle;
+            refPreviewContent.current.innerHTML = originalPreviewContent;
         }
-        this.setState({ revisionsOpen: false, currentRevision: undefined });
-    }
+        setRevisionsOpen(false);
+        setCurrentRevision(undefined);
+    });
 
-    onShowRevision = async (e, date) => {
+    const onShowRevision = useConstCallback((e, date) => {
         e.preventDefault();
         e.stopPropagation();
-        const { postId } = this.props;
-        const data = await fetchForumPost(postId, date);
-        this.setState({ currentRevision: date });
-        this.refPreviewTitle.textContent = data.name;
-        this.refPreviewContent.innerHTML = data.content;
-    }
+        
+        fetchForumPost(postId, date)
+        .then(data => {
+            setCurrentRevision(date);
+            refPreviewTitle.current.textContent = data.name;
+            refPreviewContent.current.innerHTML = data.content;
+        });
+    });
 
-    render() {
-        const { canReply, canEdit, canDelete, threadName, postName, postId } = this.props;
-        const {
-            open, isReplying, isEditing, deleteError,
-            lastRevisionAuthor, lastRevisionDate, hasRevisions, revisionsOpen, revisions, currentRevision
-        } = this.state;
-
-        return (
-            <>
-                {(hasRevisions && lastRevisionDate && lastRevisionAuthor && !revisionsOpen) && (
-                    <div className="changes" style={{ display: 'block' }}>
-                        Последнее редактирование <span className="odate" style={{ display: 'inline' }}>{formatDate(new Date(lastRevisionDate))}</span>
-                        {' '}от <UserView data={lastRevisionAuthor} hideAvatar />
-                        {' '}<a href="#" onClick={this.onOpenRevisions}><i className="icon-plus" /> Показать ещё</a>
-                    </div>
-                )}
-                {revisionsOpen && (
-                    <div className="revisions" style={{ display: 'block' }}>
-                        <a href="#" onClick={this.onCloseRevisions}>- Скрыть</a>
-                        <div className="title">Версии сообщения</div>
-                        <table className="table">
-                        <tbody>
-                        {(revisions||[]).map((rev, i) => (
-                            <tr className={(currentRevision===rev.createdAt||(i===0&&!currentRevision))?'active':''} key={i}>
-                                <td><UserView data={rev.author} hideAvatar /></td>
-                                <td>{formatDate(new Date(rev.createdAt))}</td>
-                                <td><a href="#" onClick={(e) => this.onShowRevision(e, rev.createdAt)}>Показать правки</a></td>
-                            </tr>
-                        ))}
-                        </tbody>
-                        </table>
-                    </div>
-                )}
-                <div style={{ display: 'none' }} ref={r=>this.refSelf=r?.parentElement} />
-                { deleteError && (
-                    <WikidotModal buttons={[{title: 'Закрыть', onClick: this.onCloseError}]} isError>
-                        <p><strong>Ошибка:</strong> {deleteError}</p>
-                    </WikidotModal>
-                ) }
-                {canReply && <strong><a href="#" onClick={this.onReply}>Ответить</a></strong>}
-                {' '}
-                {(canEdit || canDelete) && <a href="#" onClick={this.onToggle}>Опции</a>}
-                {open && (
-                    <div className="options">
-                        {canEdit && <a href="#" onClick={this.onEdit}>Редактировать</a>}
-                        {' '}
-                        {canDelete && <a href="#" onClick={this.onDelete}>Удалить</a>}
-                    </div>
-                )}
-                {isReplying && (
-                    <div className="post-container">
-                        <ForumPostEditor isNew
-                                         onClose={this.onReplyClose}
-                                         onSubmit={this.onReplySubmit}
-                                         onPreview={this.onReplyPreview}
-                                         initialTitle={'Re: '+(postName || threadName)}
-                        />
-                    </div>
-                )}
-                {isEditing && (
-                    <ForumPostEditor postId={postId}
-                                     onClose={this.onEditClose}
-                                     onSubmit={this.onEditSubmit}
-                                     onPreview={this.onEditPreview}
+    return (
+        <>
+            {(hasRevisions && lastRevisionDate && lastRevisionAuthor && !revisionsOpen) && (
+                <div className="changes" style={{ display: 'block' }}>
+                    Последнее редактирование <span className="odate" style={{ display: 'inline' }}>{formatDate(new Date(lastRevisionDate))}</span>
+                    {' '}от <UserView data={lastRevisionAuthor} hideAvatar />
+                    {' '}<a href="#" onClick={onOpenRevisions}><i className="icon-plus" /> Показать ещё</a>
+                </div>
+            )}
+            {revisionsOpen && (
+                <div className="revisions" style={{ display: 'block' }}>
+                    <a href="#" onClick={onCloseRevisions}>- Скрыть</a>
+                    <div className="title">Версии сообщения</div>
+                    <table className="table">
+                    <tbody>
+                    {(revisions||[]).map((rev, i) => (
+                        <tr className={(currentRevision===rev.createdAt||(i===0&&!currentRevision))?'active':''} key={i}>
+                            <td><UserView data={rev.author} hideAvatar /></td>
+                            <td>{formatDate(new Date(rev.createdAt))}</td>
+                            <td><a href="#" onClick={(e) => onShowRevision(e, rev.createdAt)}>Показать правки</a></td>
+                        </tr>
+                    ))}
+                    </tbody>
+                    </table>
+                </div>
+            )}
+            <div style={{ display: 'none' }} ref={r=>refSelf.current=r?.parentElement} />
+            { deleteError && (
+                <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]} isError>
+                    <p><strong>Ошибка:</strong> {deleteError}</p>
+                </WikidotModal>
+            ) }
+            {canReply && <strong><a href="#" onClick={onReply}>Ответить</a></strong>}
+            {' '}
+            {(canEdit || canDelete) && <a href="#" onClick={onToggle}>Опции</a>}
+            {open && (
+                <div className="options">
+                    {canEdit && <a href="#" onClick={onEdit}>Редактировать</a>}
+                    {' '}
+                    {canDelete && <a href="#" onClick={onDelete}>Удалить</a>}
+                </div>
+            )}
+            {isReplying && (
+                <div className="post-container">
+                    <ForumPostEditor isNew
+                                     onClose={onReplyClose}
+                                     onSubmit={onReplySubmit}
+                                     onPreview={onReplyPreview}
+                                     initialTitle={'Re: '+(postName || threadName)}
                     />
-                )}
-            </>
-        )
-    }
+                </div>
+            )}
+            {isEditing && (
+                <ForumPostEditor postId={postId}
+                                 onClose={onEditClose}
+                                 onSubmit={onEditSubmit}
+                                 onPreview={onEditPreview}
+                />
+            )}
+        </>
+    )
 }
 
 
