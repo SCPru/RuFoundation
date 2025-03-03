@@ -5,12 +5,15 @@ import renderer
 import re
 
 
+def allow_api():
+    return True
+
+
 def has_content():
     return True
 
 
-def render(context, params, content=None):
-    # do url params
+def api_get(context, params):
     for k, v in params.items():
         if v[:5].lower() == '@url|':
             default = v[5:]
@@ -25,6 +28,12 @@ def render(context, params, content=None):
         'total': total,
         'count': total,
     }
+
+    return tpl_vars 
+
+
+def render(context, params, content=None):
+    tpl_vars = api_get(context, params)
 
     template = apply_template((content or '').strip(), tpl_vars)
 

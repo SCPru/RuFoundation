@@ -5,11 +5,15 @@ from uuid import uuid4
 from django.core.validators import RegexValidator
 from django.conf import settings
 from django.db import models
+from django.contrib.auth import get_user_model
 
 from web.fields import CITextField
 from .users import VisualUserGroup
 from .settings import Settings
 from .site import Site
+
+
+User = get_user_model()
 
 
 class TagsCategorySlugValidator(RegexValidator):
@@ -123,7 +127,7 @@ class Article(auto_prefetch.Model):
 
     parent = auto_prefetch.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Родитель")
     tags = models.ManyToManyField(Tag, blank=True, related_name="articles", verbose_name="Тэги")
-    author = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Автор")
+    author = auto_prefetch.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Автор")
 
     locked = models.BooleanField(default=False, verbose_name="Страница защищена")
 
@@ -193,7 +197,7 @@ class ArticleLogEntry(auto_prefetch.Model):
         Revert = ('revert', 'Откат правки')
 
     article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
-    user = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
+    user = auto_prefetch.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
     type = models.TextField(choices=LogEntryType.choices, verbose_name="Тип")
     meta = models.JSONField(default=dict, blank=True, verbose_name="Мета")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
@@ -213,7 +217,7 @@ class Vote(auto_prefetch.Model):
         indexes = [models.Index(fields=['article'])]
 
     article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья", related_name='votes')
-    user = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
+    user = auto_prefetch.ForeignKey(User, null=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
     rate = models.FloatField(verbose_name="Оценка")
     date = models.DateTimeField(verbose_name="Дата голоса", auto_now_add=True, null=True)
     visual_group = auto_prefetch.ForeignKey(VisualUserGroup, on_delete=models.SET_NULL, verbose_name="Визуальная группа", null=True)

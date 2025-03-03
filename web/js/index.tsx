@@ -13,24 +13,25 @@ import {makePasswordToggle} from "./util/password";
 import PageLoginStatus from "./entrypoints/page-login-status";
 import {makeTOC} from "./articles/toc";
 import ForumNewThread from "./entrypoints/forum-new-thread";
-import ForumNewPost from './entrypoints/forum-new-post'
-import ForumPostOptions from './entrypoints/forum-post-options'
-import {makeForumThread} from './forum/thread-pagination'
-import ForumThreadOptions from './entrypoints/forum-thread-options'
-import {makeRecentPosts} from './forum/recent-posts-pagination'
-import {makeSiteChanges} from './articles/site-changes'
-import {makeDate} from './articles/date'
-import {makeFootnote} from './articles/footnote'
+import ForumNewPost from './entrypoints/forum-new-post';
+import ForumPostOptions from './entrypoints/forum-post-options';
+import {makeForumThread} from './forum/thread-pagination';
+import ForumThreadOptions from './entrypoints/forum-thread-options';
+import {makeRecentPosts} from './forum/recent-posts-pagination';
+import {makeSiteChanges} from './articles/site-changes';
+import {makeDate} from './articles/date';
+import {makeFootnote} from './articles/footnote';
 import {makeCodeBlock} from "./articles/codeblock";
-import {makeRefForm} from './articles/ref-form'
-import {makeInterwiki} from './articles/interwiki'
-
+import {makeRefForm} from './articles/ref-form';
+import {makeInterwiki} from './articles/interwiki';
+import {attachApiMessageListener} from './entrypoints/messages-api-interface';
 
 function renderTo(where: HTMLElement, what: any) {
     ReactDOM.render(what, where);
 
 }
 
+attachApiMessageListener();
 
 window.addEventListener('DOMContentLoaded', () => {
 

@@ -2,11 +2,15 @@ from django.conf import settings
 import auto_prefetch
 from django.db import models
 from pathlib import Path
+from django.contrib.auth import get_user_model
 
 from .articles import Article
 from .site import get_current_site
 
 import urllib.parse
+
+
+User = get_user_model()
 
 
 class File(auto_prefetch.Model):
@@ -25,10 +29,10 @@ class File(auto_prefetch.Model):
     mime_type = models.TextField(verbose_name="MIME-тип")
     size = models.PositiveBigIntegerField(verbose_name="Размер файла")
 
-    author = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name="Автор файла", null=True, related_name='created_files')
+    author = auto_prefetch.ForeignKey(User, on_delete=models.SET_NULL, verbose_name="Автор файла", null=True, related_name='created_files')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
 
-    deleted_by = auto_prefetch.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name="Пользователь, удаливший файл", blank=True, null=True, related_name='deleted_files')
+    deleted_by = auto_prefetch.ForeignKey(User, on_delete=models.SET_NULL, verbose_name="Пользователь, удаливший файл", blank=True, null=True, related_name='deleted_files')
     deleted_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self) -> str:

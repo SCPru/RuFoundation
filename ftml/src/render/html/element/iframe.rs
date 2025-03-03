@@ -54,6 +54,58 @@ pub fn render_html(ctx: &mut HtmlContext, contents: &str) {
         }}
         doFrame();
     }})();
+    async function callApi(target, payload) {{
+        const data = {{
+            type: "ApiCall",
+            target,
+            callId: Math.random(),
+            payload
+        }}
+        window.parent.postMessage(data, "*");
+        let result;
+        const responsePromise = new Promise((resolve) => {{
+            const listener = (e) => {{
+                if (!e.data.hasOwnProperty("type") || 
+                    !e.data.hasOwnProperty("target") || 
+                    !e.data.hasOwnProperty("callId") || 
+                    !e.data.hasOwnProperty("response") || 
+                    e.data.type !== "ApiResponse" ||
+                    e.data.callId !== data.callId)
+                    return;
+                window.removeEventListener("message", listener);
+                result = e.data.response;
+                resolve();
+            }}
+            window.addEventListener("message", listener);
+        }});
+        await responsePromise;
+        return result;
+    }}
+    async function callModule(module, method, params={{}}) {{
+        const data = {{
+            type: "ModuleCall",
+            callId: Math.random(),
+            payload: {{module, method, params: params}}
+        }}
+        window.parent.postMessage(data, "*");
+        let result;
+        const responsePromise = new Promise((resolve) => {{
+            const listener = (e) => {{
+                if (!e.data.hasOwnProperty("type") || 
+                    !e.data.hasOwnProperty("callId") || 
+                    !e.data.hasOwnProperty("response") || 
+                    e.data.type !== "ModuleResponse" ||
+                    e.data.callId !== data.callId)
+                    return;
+                window.removeEventListener("message", listener);
+                result = e.data.response;
+                resolve();
+            }}
+            window.addEventListener("message", listener);
+        }});
+        await responsePromise;
+        return result;
+    }}
     </script>
     <style>
       body {{ margin: 0; }}
