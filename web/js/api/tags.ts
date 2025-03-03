@@ -1,5 +1,4 @@
-import {callModule} from './modules'
-import {ForumNewThreadRequest, ForumNewThreadResponse} from './forum'
+import {callModule} from './modules';
 
 export interface Category {
     id: number
