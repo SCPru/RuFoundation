@@ -34,7 +34,7 @@ def api_get(context, params):
 def render(context, params, content=None):
     # all params are ignored. always current user
 
-    if not context.user.is_authenticated or not get_boolean_param(params, 'always'):
+    if not context.user.is_authenticated and not get_boolean_param(params, 'always'):
         return ''
     
     tpl_vars = api_get(context, params)
