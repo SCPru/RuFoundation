@@ -11,51 +11,48 @@ function onApiMessage(e) {
     if (!e.data.hasOwnProperty("type") || 
         !e.data.hasOwnProperty("target") || 
         !e.data.hasOwnProperty("callId") ||
-        !e.data.hasOwnProperty("payload") || 
          e.data.type !== "ApiCall")
         return;
 
+    const avaliableModules = ["listpages", "listusers", "countpages", "interwiki"];
+
+    const callModuleWrapper = (module, method, data) => {
+        if (!avaliableModules.includes(module))
+            throw new Error(`Unexpected or restricted module name: ${module}`);
+        return callModule({module, method, ...data});
+    }
+
     const avaliableApiCalls = {
-        fetchArticle: [fetchArticle, ["pageId"]],
-        fetchArticleLog: [fetchArticleLog, ["pageId", "from", "to"]],
-        fetchArticleVersion: [fetchArticleVersion, ["pageId", "revNum", "pathParams"]],
-        fetchArticleVotes: [fetchArticleVotes, ["pageId"]],
-        fetchArticleBacklinks: [fetchArticleBacklinks, ["pageId"]],
-        fetchArticleFiles: [fetchArticleFiles, ["pageId"]],
-        previewForumPost: [previewForumPost, ["source"]],
-        fetchForumPost: [fetchForumPost, ["postId", "atDate"]],
-        fetchForumPostVersions: [fetchForumPostVersions, ["postId"]],
-        makePreview: [makePreview, ["data"]],
-        fetchPageRating: [fetchPageRating, ["pageId"]],
-        fetchPageVotes: [fetchPageVotes, ["pageId"]],
-        fetchAllTags: [fetchAllTags, []]
+        fetchArticle,                       // pageId
+        fetchArticleLog,                    // pageId, from?, to?
+        fetchArticleVersion,                // pageId, revNumber, pathParams?
+        fetchArticleVotes,                  // pageId
+        fetchArticleBacklinks,              // pageId
+        fetchArticleFiles,                  // pageId
+        previewForumPost,                   // source
+        fetchForumPost,                     // postId, atDate?
+        fetchForumPostVersions,             // postId
+        makePreview,                        // data
+        fetchPageRating,                    // pageId
+        fetchPageVotes,                     // pageId
+        fetchAllTags,                       // [no args]
+        callModule: callModuleWrapper,      // module, method, data?
     }
 
     if (!avaliableApiCalls.hasOwnProperty(e.data.target)) {
         console.error(`Unexpected ApiCall target: ${e.data.target}`);
         return;
     }
-    
-    const [target, args] = avaliableApiCalls[e.data.target];
 
-    let callParams = [];
-    for (const i in args) {
-        const arg = args[i]
-        if (e.data.payload.hasOwnProperty(arg)) 
-            callParams.push(e.data.payload[arg]);
-        else
-            break;
-    }
-
-    target(...callParams)
-    .then(result => {
-        const response = {
+    avaliableApiCalls[e.data.target](...e.data.args)
+    .then(response => {
+        const data = {
             type: "ApiResponse",
             target: e.data.target,
             callId: e.data.callId,
-            response: result
+            response
         }
-        e.source.postMessage(response, "*");
+        e.source.postMessage(data, "*");
     })
     .catch(err  => {
         console.error("ApiCall error with target:", e.data.target, err);
@@ -63,36 +60,6 @@ function onApiMessage(e) {
 }
 
 
-function onModuleMessage(e) {
-    if (!e.data.hasOwnProperty("type") || 
-        !e.data.hasOwnProperty("callId") ||
-        !e.data.hasOwnProperty("payload") || 
-         e.data.type !== "ModuleCall")
-        return;
-
-    const avaliableModules = ["listpages", "listusers", "countpages", "interwiki"]
-
-    if (!avaliableModules.includes(e.data.payload.module)) {
-        console.error(`Unexpected or restricted module name: ${e.data.payload.module}`);
-        return;
-    }
-
-    callModule(e.data.payload)
-    .then(result => {
-        const response = {
-            type: "ModuleResponse",
-            callId: e.data.callId,
-            response: result
-        }
-        e.source.postMessage(response, "*");
-    })
-    .catch(err  => {
-        console.error("ModuleCall error with target:", e.data.target, err);
-    })    
-}
-
-
 export function attachApiMessageListener() {
     window.addEventListener("message", onApiMessage, false);
-    window.addEventListener("message", onModuleMessage, false);
 }
