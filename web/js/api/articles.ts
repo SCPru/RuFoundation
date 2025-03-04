@@ -34,10 +34,10 @@ export interface CromUserData {
 }
 
 export interface CromPageRating {
-    value: number,
+    value: number
     votes: number
     popularity: number
-    mode: "stars" | "updown" | "disabled"
+    mode: 'stars' | 'updown' | 'disabled'
 }
 
 export interface CromArticleData {
