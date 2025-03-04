@@ -1,4 +1,4 @@
-import { fetchArticle, fetchArticleLog, fetchArticleVersion, fetchArticleVotes, fetchArticleBacklinks } from "../api/articles";
+import { fetchArticle, fetchArticleLog, fetchArticleVersion, fetchArticleVotes, fetchArticleBacklinks, fetchAllArticles } from "../api/articles";
 import { fetchArticleFiles } from "../api/files";
 import { fetchForumPost, fetchForumPostVersions, previewForumPost } from "../api/forum";
 import { callModule } from "../api/modules";
@@ -23,6 +23,7 @@ function onApiMessage(e) {
     }
 
     const avaliableApiCalls = {
+        fetchAllArticles,                   // [no args]
         fetchArticle,                       // pageId
         fetchArticleLog,                    // pageId, from?, to?
         fetchArticleVersion,                // pageId, revNumber, pathParams?
