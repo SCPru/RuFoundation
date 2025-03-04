@@ -1,7 +1,6 @@
 import {wFetch} from "../util/fetch-util";
 import {UserData} from "./user";
-import {ModuleRateVotesResponse} from './rate'
-import { callModule } from "./modules";
+import {ModuleRateVotesResponse} from './rate';
 
 export interface ArticleData {
     pageId: string
@@ -18,6 +17,44 @@ export interface ArticleUpdateRequest extends ArticleData {
 
 export async function createArticle(data: ArticleData) {
     await wFetch(`/api/articles/new`, {method: 'POST', sendJson: true, body: data});
+}
+
+export interface CromUserData {
+    type: string
+    id: number
+    avatar: string | null
+    name: string
+    username: string
+    showAvatar: boolean
+    staff: boolean
+    admin: boolean
+    editor: boolean
+    visualGroup: string | null
+    visualGroupIndex: number | null
+}
+
+export interface CromPageRating {
+    value: number,
+    votes: number
+    popularity: number
+    mode: "stars" | "updown" | "disabled"
+}
+
+export interface CromArticleData {
+    uid: number
+    pageId: string
+    title: string
+    canonicalUrl: string
+    createdAt: string
+    updatedAt: string
+    createdBy: CromUserData
+    updatedBy: CromUserData
+    rating: string
+    tags: string[]
+}
+
+export function fetchAllArticles(): Promise<CromArticleData[]> {
+    return wFetch<CromArticleData[]>('/api/articles');
 }
 
 export function fetchArticle(pageId: string): Promise<ArticleData> {
