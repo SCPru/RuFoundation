@@ -376,6 +376,10 @@ div.curved {
 iframe.scpnet-interwiki-frame, div.scpnet-interwiki-wrapper {
      width: 18em;
 }
+
+#page-content div.footer-wikiwalk-nav {
+    font-size: 90%;
+}
  
 /*
     SCP Sigma 9
