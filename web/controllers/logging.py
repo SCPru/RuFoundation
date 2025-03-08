@@ -26,7 +26,7 @@ def add_action_log(user: _UserType, type: ActionLogEntry.ActionType, meta):
 
 
 def _mark_safe_all(data: dict):
-    return {k: mark_safe(v) for k, v in data.items()}
+    return {k: mark_safe(v) if isinstance(v, str) else v for k, v in data.items()}
 
 
 def _make_post_preview(post_id, author_id, title, source):
@@ -83,9 +83,9 @@ def get_action_log_entry_description(log_entry: ActionLogEntry):
                 m = _mark_safe_all(m)
                 if m['is_new']:
                     return f'На страницу {m['article']} добавлена оценка {m['new_vote']}'
-                if m['is_remove']:
+                elif m['is_remove']:
                     return f'Со страницы {m['article']} удалена оценка {m['old_vote']}'
-                if m['is_change']:
+                elif m['is_change']:
                     return f'Оценка на странице {m['article']} изменена с {m['old_vote']} на {m['new_vote']}'
             case ActionType.NewArticle:
                 m = _mark_safe_all(m)
