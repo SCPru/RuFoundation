@@ -10,10 +10,11 @@ from .models.articles import *
 from .models.forum import *
 from .models.site import Site
 from .models.users import User, VisualUserGroup
+from .models.logs import ActionLogEntry
 from .views.invite import InviteView
 from .views.bot import CreateBotView
 from .views.reset_votes import ResetUserVotesView
-from .controllers import articles
+from .controllers import articles, logging
 
 
 class TagsCategoryForm(forms.ModelForm):
@@ -211,3 +212,36 @@ class VisualUserGroupAdmin(GuardedModelAdmin):
     fieldsets = (
         (None, {"fields": ('name', 'index')}),
     )
+
+
+class ActionsLogForm(forms.ModelForm):
+    class Meta:
+        model = ActionLogEntry
+        exclude = ['meta']
+
+
+@admin.register(ActionLogEntry)
+class ActionsLogAdmin(admin.ModelAdmin):
+    form = ActionsLogForm
+    list_filter = ['user', 'type', 'created_at', 'origin_ip']
+    list_display = ['user_or_name', 'type', 'info', 'created_at', 'origin_ip']
+    search_fields = ['meta']
+
+    @admin.display(description=User.Meta.verbose_name)
+    def user_or_name(self, obj):
+        if obj.user == None:
+            return f'{obj.stale_username} (удален)'
+        return obj.user
+    
+    @admin.display(description='Подробности')
+    def info(self, obj):
+        return logging.get_action_log_entry_description(obj)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        return False

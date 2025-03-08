@@ -1,0 +1,31 @@
+{% extends "admin/change_list.html" %}
+{% load admin_list md5url %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% md5url "fontawesome/css/all.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% md5url "wikidot-base.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% md5url "scp-base.css" %}">
+    <style>
+        img.small {
+            box-sizing: unset;
+        }
+        .post-versions li {
+            display: inline-block;
+        }
+        .post-versions li.selected a {
+            color: black !important;
+            text-decoration: none;
+            pointer-events: none;
+        }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    {{ block.super }}
+    <script src="{% md5url "app.js" %}" type="text/javascript"></script>
+{% endblock %}
+
+{% block result_list %}
+    {% result_list cl %}
+{% endblock %}

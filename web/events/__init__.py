@@ -1,5 +1,4 @@
 import re
-
 from dataclasses import dataclass
 
 
@@ -17,7 +16,8 @@ class EventBase:
     event_type = None
 
     def __init_subclass__(cls, **kwargs):
-        event_type = kwargs.pop("name", None)
+        event_type = kwargs.pop('name', None)
+        is_abstract = kwargs.pop('is_abstract', False)
 
         dataclass_params = {
             key: kwargs.pop(key)
@@ -27,10 +27,8 @@ class EventBase:
         
         cls = dataclass(**dataclass_params)(cls)
         
-        if cls.event_type is None:
+        if not is_abstract and cls.event_type is None:
             cls.event_type = event_type or camel_to_snake(cls.__name__)
-        
-        super().__init_subclass__(**kwargs)
 
 
     def emit(self):

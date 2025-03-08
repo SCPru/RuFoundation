@@ -133,10 +133,27 @@ class DropWikidotAuthMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
-        rsp = self.get_response(request)
+        response = self.get_response(request)
         for cookie in request.COOKIES:
             if cookie in ['wikidot_token7', 'wikidot_udsession', 'WIKIDOT_SESSION_ID']:
-                rsp.delete_cookie(cookie, path='/')
+                response.delete_cookie(cookie, path='/')
             if cookie.startswith('WIKIDOT_SESSION_ID_'):
-                rsp.delete_cookie(cookie, path='/')
-        return rsp
+                response.delete_cookie(cookie, path='/')
+        return response
+
+
+class SpyRequestMiddleware(object):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        with threadvars.context():
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip = x_forwarded_for.split(',')[0]
+            else:
+                ip = request.META.get('REMOTE_ADDR')
+
+            threadvars.put('current_request', request)
+            threadvars.put('current_client_ip', ip)
+            return self.get_response(request)

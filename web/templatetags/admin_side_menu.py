@@ -5,7 +5,7 @@ from django.template import Context
 from jazzmin.templatetags import jazzmin
 from jazzmin.settings import get_settings
 
-import web
+from web import models
 
 register = jazzmin.register
 
@@ -20,18 +20,19 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
     structure = (
         ('Пользователи и группы', (
             {'model': Group},
-            {'model': web.models.users.User},
-            {'model': web.models.users.VisualUserGroup},
+            {'model': models.users.User},
+            {'model': models.users.VisualUserGroup},
         )),
         ('Структура', (
-            {'model': web.models.site.Site},
-            {'model': web.models.articles.Category},
-            {'model': web.models.articles.TagsCategory},
-            {'model': web.models.articles.Tag},
+            {'model': models.site.Site},
+            {'model': models.logs.ActionLogEntry},
+            {'model': models.articles.Category},
+            {'model': models.articles.TagsCategory},
+            {'model': models.articles.Tag},
         )),
         ('Форум', (
-            {'model': web.models.forum.ForumSection},
-            {'model': web.models.forum.ForumCategory},
+            {'model': models.forum.ForumSection},
+            {'model': models.forum.ForumCategory},
         ))
     )
 

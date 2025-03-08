@@ -3,8 +3,15 @@ from datetime import datetime, timezone
 from modules import ModuleError
 from renderer import RenderContext, single_pass_render
 
+from web.events import EventBase
 from web.controllers import articles, permissions
 from web.models.forum import ForumThread, ForumPost, ForumPostVersion
+
+
+class OnForumNewPost(EventBase):
+    post: ForumPost
+    title: str
+    source: str
 
 
 def has_content():
@@ -58,6 +65,8 @@ def api_submit(context, params):
     post.save()
     post.updated_at = post.created_at
     post.save()
+
+    OnForumNewPost(post, title, source).emit()
 
     first_post_content = ForumPostVersion(post=post, source=source, author=context.user)
     first_post_content.save()
