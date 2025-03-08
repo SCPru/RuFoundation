@@ -4,8 +4,22 @@ from renderer import RenderContext, single_pass_render
 from datetime import datetime, timezone
 
 from renderer.utils import render_user_to_json
+from web.events import EventBase
 from web.controllers import permissions
 from web.models.forum import ForumPost, ForumPostVersion
+
+
+class OnForumEditPost(EventBase):
+    post: ForumPost
+    title: str
+    prev_source: str
+    source: str
+
+
+class OnForumDeletePost(EventBase):
+    post: ForumPost
+    title: str
+    source: str
 
 
 def has_content():
@@ -79,6 +93,8 @@ def api_update(context, params):
 
     post.save()
 
+    OnForumEditPost(post, title, prev_source, source).emit()
+
     content = single_pass_render(source, RenderContext(None, None, {}, context.user), 'message')
 
     return {
@@ -101,6 +117,10 @@ def api_delete(context, params):
 
     if not permissions.check(context.user, 'delete', post):
         raise ModuleError('Недостаточно прав для удаления сообщения')
+    
+    latest_version = ForumPostVersion.objects.filter(post=post).order_by('-created_at').first()
+    
+    OnForumDeletePost(post, post.name, latest_version.source).emit()
 
     post.delete()
 

@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 
 import renderer
 from renderer import RenderContext
+from web.events import EventBase
 from web.models.users import User
 from web.models.site import get_current_site
 from web.models.articles import *
@@ -29,6 +30,54 @@ _FullNameOrArticle = Optional[Union[str, Article]]
 _FullNameOrCategory = Optional[Union[str, Category]]
 _FullNameOrTag = Optional[Union[str, Tag]]
 
+
+class AbstractArticleEvent(EventBase, is_abstract=True):
+    user: _UserType | None
+    full_name_or_article: _FullNameOrArticle
+
+    @property
+    def fullname(self):
+        if isinstance(self.full_name_or_article, Article):
+            return self.full_name_or_article.full_name
+        return self.full_name_or_article
+    
+    @property
+    def article(self):
+        if isinstance(self.full_name_or_article, str):
+            self.full_name_or_article = get_article(self.full_name_or_article)
+        return self.full_name_or_article
+
+
+class OnVote(AbstractArticleEvent):
+    old_vote: Vote | None
+    new_vote: Vote | None
+
+    @property
+    def is_new(self):
+        return self.new_vote != None and self.old_vote == None
+    
+    @property
+    def is_change(self):
+        return self.new_vote != None and self.old_vote != None
+    
+    @property
+    def is_remove(self):
+        return self.new_vote == None and self.old_vote != None
+    
+
+class OnCreateArticle(AbstractArticleEvent):
+    pass
+
+class OnDeleteArticle(AbstractArticleEvent):
+    pass
+
+
+class OnEditArticle(AbstractArticleEvent):
+    log_entry: ArticleLogEntry
+
+    @property
+    def is_new(self):
+        return self.log_entry.type == ArticleLogEntry.LogEntryType.New
 
 # Returns (category, name) from a full name
 def get_name(full_name: str) -> Tuple[str, str]:
@@ -105,6 +154,7 @@ def create_article(full_name: str, user: Optional[_UserType] = None) -> Article:
         author=user
     )
     article.save()
+    OnCreateArticle(user, article).emit()
     return article
 
 
@@ -123,6 +173,8 @@ def add_log_entry(full_name_or_article: _FullNameOrArticle, log_entry: ArticleLo
                 max_rev_number = -1
             log_entry.rev_number = max_rev_number + 1
             log_entry.save()
+
+            OnEditArticle(log_entry.user, article, log_entry).emit()
 
             article.updated_at = log_entry.created_at
             article.save()
@@ -810,9 +862,17 @@ def get_formatted_rating(full_name_or_article: _FullNameOrArticle) -> str:
 def add_vote(full_name_or_article: _FullNameOrArticle, user: _UserType, rate: int | float | None):
     article = get_article(full_name_or_article)
 
-    Vote.objects.filter(article=article, user=user).delete()
+    old_vote_query = Vote.objects.filter(article=article, user=user)
+    old_vote = old_vote_query.first()
+    old_vote_query.delete()
+
+    new_vote = None
     if rate is not None:
-        Vote(article=article, user=user, rate=rate, visual_group=user.visual_group).save()
+        new_vote = Vote(article=article, user=user, rate=rate, visual_group=user.visual_group)
+        new_vote.save()
+
+    OnVote(user, article, old_vote, new_vote).emit()
+    
 
 
 # Set article lock status

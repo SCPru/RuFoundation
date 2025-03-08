@@ -146,6 +146,7 @@ class FetchOrUpdateView(ArticleView):
         if not permissions.check(request.user, "delete", article):
             raise APIError('Недостаточно прав', 403)
 
+        articles.OnDeleteArticle(request.user, article).emit()
         articles.delete_article(article)
 
         return self.render_json(200, {'status': 'ok'})
