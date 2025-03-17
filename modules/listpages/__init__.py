@@ -181,6 +181,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
         if sorting_param.column == 'votes':
             has_votes = True
         if sorting_param.column == 'popularity':
+            has_votes = True
             has_popularity = True
 
     has_tags = parsed_params.has_type(param.Tags)
