@@ -1,3 +1,5 @@
+from typing import Optional
+
 import json
 import urllib.parse
 import math
@@ -10,6 +12,7 @@ from renderer.templates import apply_template
 from renderer.utils import render_user_to_text, render_template_from_string, get_boolean_param
 from renderer.parser import RenderContext
 from web.controllers import articles
+from web.models.users import User
 from web.models.articles import Article, ArticleLogEntry
 from web.models.settings import Settings
 from django.db.models import Q, Value as V, F, Count, Sum, Avg, Case, When, CharField, IntegerField, FloatField
@@ -61,6 +64,10 @@ def render_var(var, page_vars, page):
 def get_page_vars(page: Article):
     if page is None:
         return dict()
+
+    current_user = threadvars.get('current_user', None)
+    if not isinstance(current_user, User):
+        current_user = None
     
     updated_by = None
 
@@ -83,6 +90,7 @@ def get_page_vars(page: Article):
         'content': lambda: articles.get_latest_source(page),
         'rating': lambda: articles.get_formatted_rating(page),
         'rating_votes': lambda: str(votes),
+        'current_user_voted': lambda: 'True' if page.votes.filter(user=current_user).exists() else 'False',
         'popularity': lambda: str(popularity),
         'revisions': lambda: str(len(ArticleLogEntry.objects.filter(article=page))),
         'created_by': lambda: render_user_to_text(page.author),

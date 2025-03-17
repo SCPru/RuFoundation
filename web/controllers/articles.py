@@ -833,10 +833,10 @@ def get_rating(full_name_or_article: _FullNameOrArticle) -> tuple[int | float, i
         return 0, 0, 0, Settings.RatingMode.Disabled
     obj_settings = article.get_settings()
     if obj_settings.rating_mode == Settings.RatingMode.UpDown:
-        data = Vote.objects.filter(article=article).aggregate(sum=Coalesce(Sum('rate'), 0, output_field=IntegerField()), count=Count('rate'), good=Count('rate', filter=Q(rate=1)))
+        data = article.votes.aggregate(sum=Coalesce(Sum('rate'), 0, output_field=IntegerField()), count=Count('rate'), good=Count('rate', filter=Q(rate=1)))
         return data['sum'] or 0, data['count'] or 0, round((data['good'] or 0) / (data['count'] or 1) * 100), obj_settings.rating_mode
     elif obj_settings.rating_mode == Settings.RatingMode.Stars:
-        data = Vote.objects.filter(article=article).aggregate(avg=Coalesce(Avg('rate'), 0.0), count=Count('rate'), good=Count('rate', filter=Q(rate__gte=3)))
+        data = article.votes.aggregate(avg=Coalesce(Avg('rate'), 0.0), count=Count('rate'), good=Count('rate', filter=Q(rate__gte=3)))
         return round(data['avg'], 1) or 0.0, data['count'] or 0, round((data['good'] or 0) / (data['count'] or 1) * 100), obj_settings.rating_mode
     elif obj_settings.rating_mode == Settings.RatingMode.Disabled:
         return 0, 0, 0, obj_settings.rating_mode

@@ -1,5 +1,6 @@
 # This file implements global variables per thread
 # This is so that the state doesn't need to be passed down to each and every handler.
+# note: todo: replace this with Python's threading.Local objects eventually
 import threading
 import copy
 

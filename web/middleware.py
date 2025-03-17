@@ -92,6 +92,15 @@ class MediaHostMiddleware(object):
             return response
 
 
+class UserContextMiddleware(object):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        threadvars.put('current_user', request.user)
+        return self.get_response(request)
+
+
 class CsrfViewMiddleware(django.middleware.csrf.CsrfViewMiddleware):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
