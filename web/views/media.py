@@ -74,7 +74,7 @@ class MediaView(View):
         full_path = document_root / dir_path
 
         if not full_path.exists():
-            raise  Http404('Not found')
+            raise Http404('Not found')
 
         stat = full_path.stat()
 
