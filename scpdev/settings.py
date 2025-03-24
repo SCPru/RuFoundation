@@ -270,3 +270,16 @@ JAZZMIN_SETTINGS = {
     "site_title": "RuFoundation",
     "site_brand": "Админка",
 }
+
+
+# Dict of supported ranged content-types in format: MIME, CHUNK_SIZE_IN_BYTES
+RANGED_CONTENT_SERVING = {
+    "audio/*": 2097152,                   # 2 MB
+    "video/*": 4194304,                   # 4 MB
+    # "image/*": 524288,                    # 512 KB  ### Some shit will happen if you try to uncomment this option
+    "application/octet-stream": 4194304,  # 4 MB
+    "application/zip": 8388608,           # 8 MB
+    "application/gzip": 8388608,          # 8 MB
+    "application/x-tar": 8388608,         # 8 MB
+    "application/pdf": 1048576,           # 1 MB
+}
