@@ -194,7 +194,7 @@ def single_pass_render(source, context=None, mode='article') -> str:
         return SafeString(html.body)
 
 
-def single_pass_render_with_excerpt(source, context=None, mode='article') -> [str, str, Optional[str]]:
+def single_pass_render_with_excerpt(source, context=None, mode='article') -> tuple[str, str, Optional[str]]:
     from ftml import ftml
 
     page_vars = get_page_vars(context.article)
