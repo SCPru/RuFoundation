@@ -18,14 +18,6 @@ interface Props {
 }
 
 
-interface State {
-    loading: boolean
-    firstSource?: string
-    secondSource?: string
-    error?: string
-}
-
-
 const Styles = styled.div<{loading?: boolean}>`
 #source-code.loading {
   position: relative;
@@ -95,12 +87,13 @@ const ArticleDiffView: React.FC<Props> = ({ pageId, pathParams, onClose: onClose
             const first = await fetchArticleVersion(pageId, firstEntry.revNumber, pathParams);
             const second = await fetchArticleVersion(pageId, secondEntry.revNumber, pathParams);
 
-            setLoading(false);
             setFirstSource(first.source);
             setSecondSource(second.source);
         } catch (e) {
-            setLoading(false);
+            
             setError(e.error || 'Ошибка связи с сервером');
+        } finally {
+            setLoading(false);
         }
     });
 

@@ -64,7 +64,8 @@ MIDDLEWARE = [
     'web.middleware.BotAuthTokenMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'web.middleware.MediaHostMiddleware',
-    'web.middleware.SpyRequestMiddleware'
+    'web.middleware.UserContextMiddleware',
+    'web.middleware.SpyRequestMiddleware',
 ]
 
 ROOT_URLCONF = 'scpdev.urls'

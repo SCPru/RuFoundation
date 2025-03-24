@@ -108,9 +108,10 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
             window.scrollTo(window.scrollX, 0);
             window.location.reload();
         } catch (e) {
-            setSaving(false);
             setFatalError(false);
             setError(e.error || 'Ошибка связи с сервером');
+        } finally {
+            setSaving(false);
         }
     });
 

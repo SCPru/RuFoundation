@@ -46,13 +46,14 @@ const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
         setLoading(true);
         fetchArticleBacklinks(pageId)
         .then(data => {
-            setLoading(false);
             setData(data);
         })
         .catch(e => {
-            setLoading(false);
             setFatalError(true);
             setError(e.error || 'Ошибка связи с сервером');
+        })
+        .finally(() => {
+            setLoading(false);
         });
     }, []);
 

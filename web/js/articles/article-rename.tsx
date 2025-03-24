@@ -50,13 +50,14 @@ const ArticleRename: React.FC<Props> = ({ pageId, isNew, onClose }) => {
         setLoading(true);
         fetchArticle(pageId)
         .then(data => {
-            setLoading(false);
             setNewName(data.pageId);
         })
         .catch(e => {
-            setLoading(false);
             setFatalError(true);
             setError(e.error || 'Ошибка связи с сервером');
+        })
+        .finally(() => {
+            setLoading(false);
         });
     }, []);
 
@@ -76,16 +77,16 @@ const ArticleRename: React.FC<Props> = ({ pageId, isNew, onClose }) => {
 
         try {
             await updateArticle(pageId, input);
-            setSaving(false);
             setSavingSuccess(true);
             await sleep(1000);
             setSavingSuccess(false);
             window.scrollTo(window.scrollX, 0);
             window.location.href = `/${newName}`;
         } catch (e) {
-            setSaving(false);
             setFatalError(false);
             setError(e.error || 'Ошибка связи с сервером');
+        } finally {
+            setSaving(false);
         }
     });
 
