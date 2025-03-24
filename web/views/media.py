@@ -73,6 +73,8 @@ class MediaView(View):
         dir_path = '/'.join([self._partial_quote(x) for x in dir_path_split])
         full_path = document_root / dir_path
 
+        print(full_path)
+
         if not full_path.exists():
             raise Http404('Not found')
 
@@ -81,6 +83,8 @@ class MediaView(View):
         if not content_type:
             content_type, encoding = mimetypes.guess_type(str(full_path))
             content_type = content_type or 'application/octet-stream'
+            if encoding:
+                response["Content-Encoding"] = encoding
 
         range = request.headers.get('Range')
         chunk_size = self._get_mime_chunk_size(content_type)
