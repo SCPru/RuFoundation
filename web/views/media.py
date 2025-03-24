@@ -73,8 +73,6 @@ class MediaView(View):
         dir_path = '/'.join([self._partial_quote(x) for x in dir_path_split])
         full_path = document_root / dir_path
 
-        print(full_path)
-
         if not full_path.exists():
             raise Http404('Not found')
 
@@ -103,6 +101,7 @@ class MediaView(View):
         response = HttpResponse(content_type=content_type)
         response['Last-Modified'] = http_date(stat.st_mtime)
         response['Content-Length'] = content_length
+        response['Access-Control-Expose-Headers'] = 'Content-Length, Content-Range'
         response['Content-Disposition'] = 'inline'
         response['Accept-Ranges'] = 'bytes'
 
