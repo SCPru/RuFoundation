@@ -17,6 +17,7 @@
     border-bottom: 0 !important;
     text-transform: uppercase;
     color: #404040 !important;
+    font-size: .8em !important;
 }
 
 .sandbox-heading {
@@ -49,7 +50,7 @@
     border: 1px solid #ccc !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 3px #ccc !important;
-    font-size: 1.15em;
+    font-size: 1.1em;
     position: relative;
 }
 
@@ -73,7 +74,6 @@
     position: absolute;
     left: 15px;
     top: 10px;
-    font-size: 14px;
 }
 
 .random-article-block .menu-item:last-child::before {
@@ -83,7 +83,6 @@
     position: absolute;
     left: 15px;
     top: 10px;
-    font-size: 14px;
 }
 
 .random-article-block .menu-item:first-child:hover {
@@ -114,7 +113,6 @@
     font-weight: 600 !important;
     z-index: 99;
     position: relative;
-    font-size: 14px;
 }
 
 .random-article-block>.menu-item:hover a {
@@ -164,8 +162,8 @@
 
 .collapsible-side .collapsible-block-link {
     text-transform: uppercase;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 1.1em;
+    font-weight: 700;
     display: block;
     padding: 10px;
     position: relative;
@@ -192,7 +190,7 @@
     color: #404040 !important;
     font-family: "Inter";
     text-transform: uppercase;
-    font-size: 85%;
+    font-size: .9em;
 }
 
 @media (max-width: 767px) {
