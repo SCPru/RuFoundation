@@ -1162,6 +1162,11 @@ div.sexy-box div.image-container img {
     box-shadow: inset 2px 3px 6px rgba(0, 0, 0, .15);
     border-radius: 5px 5px 0 0;
 }
+
+.post-container .post-container {
+    border-left: 2px solid rgba(0,0,0,.25);
+    padding-left: .75rem;
+}
  
 /* Hide Forum Signatures */
 .signature {
