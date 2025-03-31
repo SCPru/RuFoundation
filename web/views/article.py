@@ -58,7 +58,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         return ""
 
     @staticmethod
-    def get_this_page_params(path_params: dict[str, str], param: str):
+    def get_this_page_params(path_params: dict[str, str], param: str, more_params: dict[str, str]):
         if param.startswith('path|'):
             k = param[5:].lower()
             if k in path_params:
@@ -73,9 +73,11 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             if k in path_params:
                 return urllib.parse.quote(path_params[k], safe='')
             return urllib.parse.quote('%%' + param + '%%', safe='')
+        elif param in more_params:
+            return more_params[param]
         return '%%' + param + '%%'
 
-    def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str]) -> Tuple[str, int, Optional[str], str, Optional[str], str, int, Optional[datetime.datetime]]:
+    def render(self, fullname: str, article: Optional[Article], path_params: dict[str, str], canonical_url: str) -> Tuple[str, int, Optional[str], str, Optional[str], str, int, Optional[datetime.datetime]]:
         excerpt = ''
         image = None
         rev_number = 0
@@ -96,7 +98,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                         template_source = articles.get_latest_source(template)
 
                 source = page_to_listpages_vars(article, template_source, index=1, total=1)
-                source = apply_template(source, lambda param: self.get_this_page_params(path_params, param))
+                source = apply_template(source, lambda param: self.get_this_page_params(path_params, param, {'canonical_url': canonical_url}))
                 context = RenderContext(article, article, path_params, self.request.user)
                 content, excerpt, image = single_pass_render_with_excerpt(source, context)
                 redirect_to = context.redirect_to
@@ -161,7 +163,10 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         nav_top = self._render_nav("nav:top", article, path_params)
         nav_side = self._render_nav("nav:side", article, path_params)
 
-        content, status, redirect_to, excerpt, image, title, rev_number, updated_at = self.render(article_name, article, path_params)
+        site = get_current_site()
+        canonical_url = '//%s/%s%s' % (site.domain, article.full_name if article else article_name, encoded_params)
+
+        content, status, redirect_to, excerpt, image, title, rev_number, updated_at = self.render(article_name, article, path_params, canonical_url)
 
         context = super(ArticleView, self).get_context_data(**kwargs)
 
@@ -169,10 +174,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'user': render_user_to_json(self.request.user)
         }
 
-        site = get_current_site()
         article_rating, article_votes, article_popularity, article_rating_mode = articles.get_rating(article)
-
-        canonical_url = '//%s/%s%s' % (site.domain, article.full_name if article else article_name, encoded_params)
 
         options_config = {
             'optionsEnabled': article is not None,
