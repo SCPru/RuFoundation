@@ -58,7 +58,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         return ""
 
     @staticmethod
-    def get_this_page_params(path_params: dict[str, str], param: str, more_params: dict[str, str]):
+    def get_this_page_params(path_params: dict[str, str], param: str, more_params: Optional[dict[str, str]]=None):
         if param.startswith('path|'):
             k = param[5:].lower()
             if k in path_params:
@@ -73,7 +73,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             if k in path_params:
                 return urllib.parse.quote(path_params[k], safe='')
             return urllib.parse.quote('%%' + param + '%%', safe='')
-        elif param in more_params:
+        elif more_params is not None and param in more_params:
             return more_params[param]
         return '%%' + param + '%%'
 
