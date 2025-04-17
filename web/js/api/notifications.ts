@@ -14,6 +14,10 @@ interface BaseNotification {
   is_viewed: boolean
 }
 
+interface NotificationWelcome extends BaseNotification {
+  type: 'welcome'
+}
+
 interface NotificationNewArticleRevision extends BaseNotification {
   type: 'new_article_revision'
   user: UserData
@@ -50,13 +54,7 @@ interface NotificationNewPostReply extends BaseNotification {
   message: string
 }
 
-interface NotificationGeneric extends BaseNotification {
-  type: 'generic'
-  title: string
-  message: string
-}
-
-export type Notification = NotificationNewPostReply | NotificationNewThreadPost | NotificationGeneric | NotificationNewArticleRevision
+export type Notification = NotificationNewPostReply | NotificationNewThreadPost | NotificationWelcome | NotificationNewArticleRevision
 
 export interface NotificationsResponse {
   cursor: number

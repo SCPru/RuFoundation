@@ -12,14 +12,7 @@ interface Props {
 
 const Notification: React.FC<Props> = ({ notification }) => {
   const notificationContent = useMemo(() => {
-    if (notification.type === 'generic') {
-      return (
-        <>
-          <div dangerouslySetInnerHTML={{ __html: notification.title }}></div>
-          <div dangerouslySetInnerHTML={{ __html: notification.message }}></div>
-        </>
-      )
-    } else if (notification.type === 'new_post_reply' || notification.type === 'new_thread_post') {
+    if (notification.type === 'new_post_reply' || notification.type === 'new_thread_post') {
       return (
         <>
           <Styled.TypeName>{notification.type === 'new_post_reply' ? 'Ответ на ваше сообщение' : 'Новое сообщение форума'}</Styled.TypeName>
@@ -72,6 +65,10 @@ const Notification: React.FC<Props> = ({ notification }) => {
             )}
           </Styled.RevisionComment>
         </>
+      )
+    } else if (notification.type === 'welcome') {
+      return (
+        <Styled.TypeName>Добро пожаловать на сайт!</Styled.TypeName>
       )
     } else {
       return 'Ошибка отрисовки уведомления'
