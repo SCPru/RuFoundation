@@ -1,4 +1,8 @@
 import re
+import sys
+import pkgutil
+import logging
+from importlib.util import module_from_spec
 from dataclasses import dataclass
 
 
@@ -60,3 +64,16 @@ def emit_event(event: EventBase):
     
     for handler in handlers:
         handler(event)
+
+
+def preload_events():
+    package = sys.modules[__name__]
+    for importer, modname, ispkg in pkgutil.iter_modules(package.__path__):
+        try:
+            spec = importer.find_spec(modname)
+            m = module_from_spec(spec)
+            spec.loader.exec_module(m)
+            logging.info('Loaded events collection \'%s\'', modname.lower())
+        except:
+            logging.error('Failed to load events collection \'%s\':', modname.lower(), exc_info=True)
+            continue

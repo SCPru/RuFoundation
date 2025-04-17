@@ -1,9 +1,9 @@
 from django.forms.models import model_to_dict
 
-from . import on_trigger
 from modules.forumpost import OnForumDeletePost, OnForumEditPost
 from modules.forumnewpost import OnForumNewPost
 
+from web.events import on_trigger
 from web.controllers.logging import add_action_log
 from web.controllers.articles import OnVote, OnCreateArticle, OnDeleteArticle, OnEditArticle, get_rating
 from web.models.logs import ActionLogEntry
@@ -33,7 +33,7 @@ def log_create_article(e: OnCreateArticle):
 
 
 @on_trigger(OnDeleteArticle)
-def log_delete_article(e: OnCreateArticle):
+def log_delete_article(e: OnDeleteArticle):
     rating, votes, popularity, _ = get_rating(e.article)
     meta = {
         'article': str(e.article),
@@ -66,7 +66,7 @@ def log_forum_new_post(e: OnForumNewPost):
     meta = {
         'author_id': e.post.author.id,
         'post': model_to_dict(e.post),
-        'title': e.title,
+        'title': e.post.name,
         'source': e.source
     }
     

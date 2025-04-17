@@ -23,8 +23,9 @@ from django.contrib import admin
 
 from .views import profile, signup, login
 
-from web.views.api import articles, preview, module, files
+from web.views.api import articles, preview, module, files, notifications
 from web.views.article import ArticleView
+from web.views.reactive import reactive_view
 
 
 _PathType = Union[URLPattern, URLResolver]
@@ -35,6 +36,10 @@ def make_path(url: str, *args, **kwargs) -> List[_PathType]:
         path(f"{url}/", *args, **kwargs),
         path(url, RedirectView.as_view(url=f"/-/{url}/", permanent=True)),
     ]
+
+
+def make_reactive(routes: list[str]):
+    return [path(route, reactive_view) for route in routes]
 
 
 api_patterns = [
@@ -52,7 +57,16 @@ api_patterns = [
     path('preview', preview.PreviewView.as_view()),
 
     path('modules', module.ModuleView.as_view()),
+
+    path('notifications', notifications.NotificationsView.as_view()),
+    path('notifications/subscribe', notifications.NotificationsSubscribeView.as_view()),
 ]
+
+
+reactive_pages = [
+    'notifications'
+]
+
 
 sys_patterns = [
     path("login", login.LoginView.as_view(), name='login'),
@@ -72,7 +86,9 @@ sys_patterns = [
     path('accept/<uidb64>/<token>', signup.AcceptInvitationView.as_view(), name="accept"),
 
     *make_path("admin", admin.site.urls),
+    *make_reactive(reactive_pages)
 ]
+
 
 urlpatterns = [
     path("-/", include(sys_patterns)),

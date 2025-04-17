@@ -67,6 +67,7 @@ const PageLoginStatus: React.FC<Props> = ({ user }: Props) => {
                 <a id="account-topbutton" href="#" onClick={toggleMenu}>▼</a>
                 { isOpen && <div id="account-options" ref={menuRef} style={{ display: 'block' }}>
                     <ul>
+                        <li><a href={`/-/notifications`}>Уведомления</a></li>
                         <li><a href={`/-/profile/edit`}>Настройки</a></li>
                         <li><a href={`/-/logout?to=${encodeURIComponent(window.location.href)}`}>Выход</a></li>
                     </ul>

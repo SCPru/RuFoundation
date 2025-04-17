@@ -213,6 +213,20 @@ def single_pass_render_with_excerpt(source, context=None, mode='article') -> tup
     return SafeString(html.body), text, None
 
 
+def single_pass_render_text(source, context=None, mode='article') -> str:
+    from ftml import ftml
+
+    page_vars = get_page_vars(context.article)
+    source = apply_template(source, lambda param: get_this_page_params(page_vars, param))
+
+    text = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context), mode).body
+
+    text = '\n'.join([x.strip() for x in text.split('\n')])
+    text = re.sub(r'\n+', '\n', text)
+
+    return text
+
+
 def single_pass_fetch_backlinks(source, context=None, mode='article') -> tuple[list[str], list[str]]:
     from ftml import ftml
 

@@ -10,7 +10,7 @@ import urllib.parse
 from renderer.templates import apply_template
 from renderer.utils import render_user_to_json
 from web.models.articles import Article
-from web.controllers import articles, permissions
+from web.controllers import articles, permissions, notifications
 
 from renderer import single_pass_render, single_pass_render_with_excerpt
 from renderer.parser import RenderContext
@@ -192,6 +192,11 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'commentCount': comment_count,
             'canDelete': permissions.check(self.request.user, "delete", article),
             'canCreateTags': site.get_settings().creating_tags_allowed,
+            'canWatch': not self.request.user.is_anonymous,
+            'isWatching': not self.request.user.is_anonymous and (
+                notifications.is_subscribed(self.request.user, article=article) or \
+                notifications.is_subscribed(self.request.user, forum_thread=path_params.get("t"))
+            ),
         }
 
         tags_categories = articles.get_tags_categories(article)
