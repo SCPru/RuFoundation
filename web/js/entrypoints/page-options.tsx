@@ -2,20 +2,23 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { useEffect, useState } from 'react';
 import useConstCallback from '../util/const-callback';
-import ArticleEditor from "../articles/article-editor";
-import ArticleHistory from "../articles/article-history";
-import ArticleSource from "../articles/article-source";
-import ArticleTags from "../articles/article-tags";
-import ArticleRating from "../articles/article-rating";
-import ArticleParent from "../articles/article-parent";
-import ArticleChild from "../articles/article-child";
-import ArticleRename from "../articles/article-rename";
-import ArticleLock from "../articles/article-lock";
-import ArticleFiles from "../articles/article-files";
-import ArticleDelete from "../articles/article-delete";
+import ArticleEditor from '../articles/article-editor';
+import ArticleHistory from '../articles/article-history';
+import ArticleSource from '../articles/article-source';
+import ArticleTags from '../articles/article-tags';
+import ArticleRating from '../articles/article-rating';
+import ArticleParent from '../articles/article-parent';
+import ArticleChild from '../articles/article-child';
+import ArticleRename from '../articles/article-rename';
+import ArticleLock from '../articles/article-lock';
+import ArticleFiles from '../articles/article-files';
+import ArticleDelete from '../articles/article-delete';
+import { subscribeToNotifications, unsubscribeFromNotifications, NotificationSubscriptionData } from '../api/notifications';
 import { RatingMode } from '../api/rate'
 import { sprintf } from 'sprintf-js'
 import ArticleBacklinksView from '../articles/article-backlinks'
+import WikidotModal from '../util/wikidot-modal';
+import sleep from '../util/async-sleep';
 
 
 interface Props {
@@ -33,15 +36,20 @@ interface Props {
     commentThread?: string
     commentCount?: number
     canCreateTags?: boolean
+    canWatch?: boolean
+    isWatching?: boolean
 }
 
 
 type SubViewType = 'edit' | 'rating' | 'tags' | 'history' | 'source' | 'parent' | 'child' | 'lock' | 'rename' | 'files' | 'delete' | 'backlinks' | null;
 
-const PageOptions: React.FC<Props> = ({ pageId, optionsEnabled, editable, lockable, rating, ratingVotes, ratingMode, pathParams, canRate, canDelete, canComment, commentThread, commentCount, canCreateTags }: Props) => {
+const PageOptions: React.FC<Props> = ({ pageId, optionsEnabled, editable, lockable, rating, ratingVotes, ratingMode, pathParams, canRate, canDelete, canComment, commentThread, commentCount, canCreateTags, canWatch, isWatching }: Props) => {
     const [subView, setSubView] = useState<SubViewType>(null);
     const [extOptions, setExtOptions] = useState(false);
     const [isNewEditor, setIsNewEditor] = useState(false);
+    const [isNowWatching, setIsNowWatching] = useState(isWatching);
+    const [isSaving, setSaving] = useState(false);
+    const [error, setError] = useState('');
     const [onCancelNewEditor, setOnCancelNewEditor] = useState<() => void>();
 
     useEffect(() => {
@@ -54,7 +62,7 @@ const PageOptions: React.FC<Props> = ({ pageId, optionsEnabled, editable, lockab
                 setIsNewEditor(true);
             }
         };
-        if (pathParams["edit"])
+        if (pathParams['edit'])
             (window as any)._openNewEditor();
     }, []);
 
@@ -174,6 +182,37 @@ const PageOptions: React.FC<Props> = ({ pageId, optionsEnabled, editable, lockab
         });
     });
 
+    const onWatch = useConstCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        let request: NotificationSubscriptionData = {};
+        
+        if (e.target.id === 'watchPage')
+            request = { pageId };
+        else if (e.target.id === 'watchThread')
+            request = { forumThreadId: +pathParams.t };
+
+        const action = isNowWatching ? unsubscribeFromNotifications : subscribeToNotifications;
+
+        let loadDelay = setTimeout(() => {setSaving(true)}, 1000);
+        action(request)
+        .then(() => {
+            setIsNowWatching(!isNowWatching);
+        })
+        .catch((e) => {
+            setError(e.error || 'Ошибка связи с сервером');
+        })
+        .finally(() => {
+            clearTimeout(loadDelay);
+            setSaving(false);
+        });
+    });
+
+    const onCloseError = useConstCallback(() => {
+        setError('');
+    });
+
     const toggleExtOptions = useConstCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -182,9 +221,9 @@ const PageOptions: React.FC<Props> = ({ pageId, optionsEnabled, editable, lockab
 
     const renderRating = useConstCallback(() => {
         if (ratingMode === 'updown') {
-            return sprintf("%+d", rating)
+            return sprintf('%+d', rating)
         } else if (ratingMode === 'stars') {
-            return ratingVotes ? sprintf("%.1f", rating) : '—'
+            return ratingVotes ? sprintf('%.1f', rating) : '—'
         } else {
             return 'n/a'
         }
@@ -258,23 +297,39 @@ const PageOptions: React.FC<Props> = ({ pageId, optionsEnabled, editable, lockab
 
     return (
         <>
-            <div id="page-options-bottom" className="page-options-bottom">
-                { editable && <a id="edit-button" className="btn btn-default" href="#" onClick={onEdit}>Редактировать</a> }
-                <a id="pagerate-button" className="btn btn-default" href="#" onClick={onRate}>{canRate?'Оценить':'Оценки'} ({renderRating()})</a>
-                { editable && <a id="tags-button" className="btn btn-default" href="#" onClick={onTags}>Теги</a> }
-                { canComment && <a id="discuss-button" className="btn btn-default" href={commentThread||'/forum/start'}>Обсудить ({commentCount||0})</a> }
-                <a id="history-button" className="btn btn-default" href="#" onClick={onHistory}>История</a>
-                <a id="files-button" className="btn btn-default" href="#" onClick={onFiles}>Файлы</a>
-                <a id="more-options-button" className="btn btn-default" href="#" onClick={toggleExtOptions}>{extOptions?'- Опции':'+ Опции'}</a>
+            { canWatch && (
+                <div className='page-watch-options'>
+                    { pageId === 'forum:thread' && (
+                        <a href='#' id='watchThread' onClick={onWatch}>{isNowWatching?'Прекратить':'Начать'} наблюдение за веткой</a>
+                    )}
+                    { !pageId.startsWith('forum:') && (
+                        <a href='#' id='watchPage' onClick={onWatch}>{isNowWatching?'Прекратить':'Начать'} наблюдение за страницей</a>
+                    )}
+                </div> 
+            )}
+            { isSaving && <WikidotModal isLoading><p>Сохранение...</p></WikidotModal> }
+            { error && (
+                <WikidotModal buttons={[{title: 'Закрыть', onClick: onCloseError}]} isError>
+                    <p><strong>Ошибка:</strong> {error}</p>
+                </WikidotModal>
+            )}
+            <div id='page-options-bottom' className='page-options-bottom'>
+                { editable && <a id='edit-button' className='btn btn-default' href='#' onClick={onEdit}>Редактировать</a> }
+                <a id='pagerate-button' className='btn btn-default' href='#' onClick={onRate}>{canRate?'Оценить':'Оценки'} ({renderRating()})</a>
+                { editable && <a id='tags-button' className='btn btn-default' href='#' onClick={onTags}>Теги</a> }
+                { canComment && <a id='discuss-button' className='btn btn-default' href={commentThread||'/forum/start'}>Обсудить ({commentCount||0})</a> }
+                <a id='history-button' className='btn btn-default' href='#' onClick={onHistory}>История</a>
+                <a id='files-button' className='btn btn-default' href='#' onClick={onFiles}>Файлы</a>
+                <a id='more-options-button' className='btn btn-default' href='#' onClick={toggleExtOptions}>{extOptions?'- Опции':'+ Опции'}</a>
             </div>
-            { extOptions && <div id="page-options-bottom-2" className="page-options-bottom form-actions">
-                <a id="backlinks-button" className="btn btn-default" href="#" onClick={onBacklinks}>Обратные ссылки</a>
-                <a id="view-source-button" className="btn btn-default" href="#" onClick={onSource}>Исходник страницы</a>
-                { editable && <a id="parent-page-button" className="btn btn-default" href="#" onClick={onParent}>Родитель</a> }
-                { editable && <a id="child-page-button" className="btn btn-default" href="#" onClick={onChild}>Создать дочернюю страницу</a> }
-                { lockable && <a id="page-block-button" className="btn btn-default" href="#" onClick={onLock}>Заблокировать страницу</a> }
-                { editable && <a id="rename-move-button" className="btn btn-default" href="#" onClick={onRename}>Переименовать</a> }
-                { editable && <a id="delete-button" className="btn btn-default" href="#" onClick={onDelete}>Удалить</a> }
+            { extOptions && <div id='page-options-bottom-2' className='page-options-bottom form-actions'>
+                <a id='backlinks-button' className='btn btn-default' href='#' onClick={onBacklinks}>Обратные ссылки</a>
+                <a id='view-source-button' className='btn btn-default' href='#' onClick={onSource}>Исходник страницы</a>
+                { editable && <a id='parent-page-button' className='btn btn-default' href='#' onClick={onParent}>Родитель</a> }
+                { editable && <a id='child-page-button' className='btn btn-default' href='#' onClick={onChild}>Создать дочернюю страницу</a> }
+                { lockable && <a id='page-block-button' className='btn btn-default' href='#' onClick={onLock}>Заблокировать страницу</a> }
+                { editable && <a id='rename-move-button' className='btn btn-default' href='#' onClick={onRename}>Переименовать</a> }
+                { editable && <a id='delete-button' className='btn btn-default' href='#' onClick={onDelete}>Удалить</a> }
             </div> }
             { renderSubView() }
         </>

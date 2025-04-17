@@ -1,10 +1,11 @@
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AbstractUser as _UserType
 from django.utils.decorators import method_decorator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from django.contrib.auth import get_user_model
-from django.http import HttpResponseRedirect
+from django.http import HttpRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth import login
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
@@ -13,9 +14,15 @@ import re
 
 from web.models.users import UsedToken
 from .invite import account_activation_token
+from web.events import EventBase
+
 
 User = get_user_model()
 
+
+class OnUserSignUp(EventBase, name='on_user_signup'):
+    request: HttpRequest
+    user: _UserType
 
 class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
     template_name = "signup/accept.html"
@@ -86,5 +93,6 @@ class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
         user.save()
         UsedToken.mark_used(self.kwargs['token'], is_case_sensitive=True)
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        OnUserSignUp(request, user).emit()
         return HttpResponseRedirect(redirect_to=settings.LOGIN_REDIRECT_URL)
 

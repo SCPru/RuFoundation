@@ -68,6 +68,7 @@ class OnVote(AbstractArticleEvent):
 class OnCreateArticle(AbstractArticleEvent):
     pass
 
+
 class OnDeleteArticle(AbstractArticleEvent):
     pass
 
@@ -78,6 +79,7 @@ class OnEditArticle(AbstractArticleEvent):
     @property
     def is_new(self):
         return self.log_entry.type == ArticleLogEntry.LogEntryType.New
+
 
 # Returns (category, name) from a full name
 def get_name(full_name: str) -> Tuple[str, str]:

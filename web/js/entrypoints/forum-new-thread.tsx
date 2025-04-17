@@ -6,7 +6,6 @@ import ForumPostEditor, {ForumPostPreviewData, ForumPostSubmissionData} from '..
 import {createForumThread, ForumNewThreadRequest} from '../api/forum';
 import ForumPostPreview from '../forum/forum-post-preview';
 
-
 interface Props {
     user: UserData
     categoryId?: number

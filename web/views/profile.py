@@ -60,6 +60,7 @@ class MyProfileView(LoginRequiredMixin, ProfileView):
 
 class ChangeProfileView(LoginRequiredMixin, UpdateView):
     form_class = UserProfileForm
+    redirect_field_name = 'to'
 
     def get_success_url(self):
         return resolve_url("profile")

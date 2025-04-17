@@ -25,6 +25,7 @@ import {makeCodeBlock} from "./articles/codeblock";
 import {makeRefForm} from './articles/ref-form';
 import {makeInterwiki} from './articles/interwiki';
 import {attachApiMessageListener} from './entrypoints/messages-api-interface';
+import ReactivePage from './reactive/router';
 
 function renderTo(where: HTMLElement, what: any) {
     ReactDOM.render(what, where);
@@ -88,6 +89,11 @@ window.addEventListener('DOMContentLoaded', () => {
             processNode(node);
         }
     });
+
+    const reactiveRoot: HTMLElement = document.querySelector('#reactive-root');
+    if (reactiveRoot) {
+        renderTo(reactiveRoot, <ReactivePage/>);
+    }
 
     // establish watcher. will be used later for things like TabView too
     const observer = new MutationObserver((mutationList) => {
