@@ -31,6 +31,7 @@ export const Heading = styled.h1`
   font-weight: 600;
   text-shadow: 1px 1px 3px black;
   color: white;
+  margin: 0;
 `
 
 export const Border = styled.div`
@@ -39,4 +40,21 @@ export const Border = styled.div`
   border-top: 1px solid ${({ theme }) => theme.windowStrong};
   border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
   background: ${({ theme }) => theme.windowPadding};
+`
+
+export const GoBack = styled.a`
+  display: inline-block;
+  margin-top: 8px;
+
+  &:link,
+  &:visited,
+  &:hover,
+  &:active {
+    color: white;
+    text-decoration: none;
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
 `

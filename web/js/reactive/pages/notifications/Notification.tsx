@@ -67,9 +67,7 @@ const Notification: React.FC<Props> = ({ notification }) => {
         </>
       )
     } else if (notification.type === 'welcome') {
-      return (
-        <Styled.TypeName>Добро пожаловать на сайт!</Styled.TypeName>
-      )
+      return <Styled.TypeName>Добро пожаловать на сайт!</Styled.TypeName>
     } else {
       return 'Ошибка отрисовки уведомления'
     }
