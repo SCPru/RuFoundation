@@ -51,7 +51,7 @@ class ChangeProfileView(LoginRequiredMixin, UpdateView):
     redirect_field_name = 'to'
 
     def get_success_url(self):
-        return resolve_url("profile")
+        return "/-/profile/edit"
 
     def get_object(self, queryset=None):
         return self.request.user
