@@ -3,7 +3,7 @@ from typing import Iterable
 from django.contrib.auth.models import AbstractUser as _UserType
 
 from web.models.forum import ForumThread
-from web.models.notifications import UserNotification, UserNotificationMapping, UserNotificationSubscription, UserNotificationTemplate
+from web.models.notifications import UserNotification, UserNotificationMapping, UserNotificationSubscription
 from web.models.articles import Article
 
 
@@ -19,7 +19,7 @@ def send_user_notification(recipients: _UserType | Iterable[_UserType], type: Us
     if isinstance(recipients, _UserType):
         recipients = (recipients,)
 
-    notification_mapping = UserNotificationMapping.objects.bulk_create([
+    UserNotificationMapping.objects.bulk_create([
         UserNotificationMapping(
             notification=notification,
             recipient=recipient,
@@ -86,12 +86,3 @@ def get_notifications(user: _UserType, cursor=-1, limit=10, unread=True, mark_as
         related.update(is_viewed=True)
         
     return result
-
-
-def get_notification_templates() -> dict[str, tuple[str, str]]:
-    templates = UserNotificationTemplate.NOTIFICATION_DEFAULT_TEMPLATES
-
-    for template in UserNotificationTemplate.objects.all():
-        templates[template.template_type] = (template.title, template.message)
-
-    return templates

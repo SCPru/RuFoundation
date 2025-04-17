@@ -1,11 +1,10 @@
-from django.conf import settings
 from django.http import HttpRequest
 
 from renderer import single_pass_render
 from renderer.parser import RenderContext
-from web.controllers.notifications import get_notifications, get_notification_templates, subscribe_to_notifications, unsubscribe_from_notifications
-from web.models.articles import Article
+from web.controllers import articles, notifications
 from web.models.forum import ForumThread
+from web.models.notifications import UserNotification
 from web.views.api import APIError, APIView, takes_json, takes_url_params
 
 
@@ -16,27 +15,32 @@ class NotificationsView(APIView):
             text = text.replace(f'%%{param}%%', str(value))
         return text
 
+    def render_notification(self, notification: UserNotification, is_viewed: bool, render_context: RenderContext):
+        base_notification = dict(**{
+            'id': notification.id,
+            'type': notification.type,
+            'created_at': notification.created_at.isoformat(),
+            'referred_to': notification.referred_to,
+            'is_viewed': is_viewed,
+        }, **notification.meta)
+
+        if notification.type in [UserNotification.NotificationType.NewThreadPost, UserNotification.NotificationType.NewPostReply]:
+            base_notification['message'] = single_pass_render(base_notification['message_source'], render_context, mode='message'),
+
+        return base_notification
+
     @takes_url_params
     def get(self, request: HttpRequest, *, cursor: int=-1, limit: int=10, unread: bool=False, mark_as_viewed: bool=False):
         render_context = RenderContext(None, None, {}, request.user)
-        notification_templates = get_notification_templates()
-        notifications = []
+        all_notifications = []
 
-        notifications_batch = get_notifications(request.user, cursor=cursor, limit=limit, unread=unread, mark_as_viewed=mark_as_viewed)
+        notifications_batch = notifications.get_notifications(request.user, cursor=cursor, limit=limit, unread=unread, mark_as_viewed=mark_as_viewed)
 
         for notification, is_viewed in notifications_batch:
-            template = notification_templates[notification.type]
-            notifications.append({
-                'id': notification.id,
-                'title': single_pass_render(self._replace_params(template[0], notification.meta), render_context, mode='message'),
-                'message': single_pass_render(self._replace_params(template[1], notification.meta), render_context, mode='message'),
-                'created_at': notification.created_at.isoformat(),
-                'referred_to': notification.referred_to,
-                'is_viewed': is_viewed,
-            })
+            all_notifications.append(self.render_notification(notification, is_viewed, render_context))
         
         return self.render_json(
-            200, {'cursor': notifications[-1]['id'] if notifications else -1, 'notifications': notifications}
+            200, {'cursor': all_notifications[-1]['id'] if all_notifications else -1, 'notifications': all_notifications}
         )
 
 
@@ -49,7 +53,8 @@ class NotificationsSubscribeView(APIView):
         args = {}
 
         if article_name:
-            args.update({'article': Article.objects.filter(name=article_name).first()})
+            article = articles.get_article(article_name)
+            args.update({'article': article})
         elif thread_id:
             args.update({'forum_thread': ForumThread.objects.filter(id=thread_id).first()})
         else:
@@ -60,7 +65,7 @@ class NotificationsSubscribeView(APIView):
     @takes_json
     def post(self, request: HttpRequest, *args, **kwargs):
         args = self._get_subscription_info(self.json_input)
-        subscription = subscribe_to_notifications(request.user, **args)
+        subscription = notifications.subscribe_to_notifications(request.user, **args)
 
         if subscription:
             return self.render_json(200, {'status': 'ok'})
@@ -70,7 +75,7 @@ class NotificationsSubscribeView(APIView):
     @takes_json
     def delete(self, request: HttpRequest, *args, **kwargs):
         args = self._get_subscription_info(self.json_input)
-        subscription = unsubscribe_from_notifications(request.user, **args)
+        subscription = notifications.unsubscribe_from_notifications(request.user, **args)
 
         if subscription:
             return self.render_json(200, {'status': 'ok'})

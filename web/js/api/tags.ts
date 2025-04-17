@@ -1,22 +1,22 @@
-import {callModule} from './modules';
+import { callModule } from './modules'
 
 export interface Category {
-    id: number
-    name: string
-    description: string
-    slug: string
+  id: number
+  name: string
+  description: string
+  slug: string
 }
 
 export interface Tag {
-    categoryId: number
-    name: string
+  categoryId: number
+  name: string
 }
 
 export interface FetchAllTagsResponse {
-    categories: Array<Category>
-    tags: Array<Tag>
+  categories: Array<Category>
+  tags: Array<Tag>
 }
 
 export async function fetchAllTags() {
-    return await callModule<FetchAllTagsResponse>({module: 'tagcloud', method: 'list_tags'});
+  return await callModule<FetchAllTagsResponse>({ module: 'tagcloud', method: 'list_tags' })
 }

@@ -4,7 +4,7 @@ from django.http import HttpRequest, HttpResponse
 from shared_data import shared_articles
 from . import APIView, APIError, takes_json
 
-from web.controllers import articles, permissions
+from web.controllers import articles, permissions, notifications
 
 from renderer.utils import render_user_to_json
 from renderer import single_pass_render
@@ -60,6 +60,8 @@ class CreateView(ArticleView):
         
         if data.get('parent') is not None:
             articles.set_parent(article, articles.normalize_article_name(data['parent']), request.user)
+
+        notifications.subscribe_to_notifications(subscriber=request.user, article=article)
 
         return self.render_json(201, {'status': 'ok'})
 

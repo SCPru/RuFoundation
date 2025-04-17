@@ -26,7 +26,6 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
         ('Структура', (
             {'model': models.site.Site},
             {'model': models.logs.ActionLogEntry},
-            {'model': models.notifications.UserNotificationTemplate},
             {'model': models.articles.Category},
             {'model': models.articles.TagsCategory},
             {'model': models.articles.Tag},

@@ -11,7 +11,6 @@ from web.models.forum import ForumThread, ForumPost, ForumPostVersion
 class OnForumNewPost(EventBase):
     post: ForumPost
     source: str
-    url: str
 
 
 def has_content():
@@ -72,9 +71,6 @@ def api_submit(context, params):
     thread.updated_at = datetime.now(timezone.utc)
     thread.save()
 
-    thread_url = '/forum/t-%d/%s' % (post.thread.id, articles.normalize_article_name(post.thread.name if post.thread.category_id else post.thread.article.display_name))
-    post_url = '%s#post-%d' % (thread_url, post.id)
-
-    OnForumNewPost(post, source, post_url).emit()
+    OnForumNewPost(post=post, source=source).emit()
 
     return {'url': '/forum/t-%d/%s#post-%d' % (thread.id, articles.normalize_article_name(thread.name), post.id)}

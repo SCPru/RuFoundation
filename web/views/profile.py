@@ -46,18 +46,6 @@ class ProfileView(DetailView):
         return q
 
 
-class MyProfileView(LoginRequiredMixin, ProfileView):
-    def get(self, *args, **kwargs):
-        obj = self.get_object()
-        if not obj:
-            return redirect('/')
-        else:
-            return redirect('/-/users/%d-%s' % (obj.id, obj.username))
-
-    def get_object(self, queryset=None):
-        return self.request.user
-
-
 class ChangeProfileView(LoginRequiredMixin, UpdateView):
     form_class = UserProfileForm
     redirect_field_name = 'to'

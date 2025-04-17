@@ -11,7 +11,6 @@ from .models.forum import *
 from .models.site import Site
 from .models.users import User, VisualUserGroup
 from .models.logs import ActionLogEntry
-from .models.notifications import UserNotificationTemplate
 from .views.invite import InviteView
 from .views.bot import CreateBotView
 from .views.reset_votes import ResetUserVotesView
@@ -247,36 +246,3 @@ class ActionsLogAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
-
-class UserNotificationTemplateForm(forms.ModelForm):
-    class Meta:
-        model = UserNotificationTemplate
-        fields = '__all__'
-
-        help_text_js = f"""
-            const common_hints = {str(dict(UserNotificationTemplate.COMMON_PARAMS.items()))};
-            const hints = {str({type.value: params for type, params in UserNotificationTemplate.PARAM_MAPPING.items()})};
-            const template_type = document.getElementById("id_template_type").value;
-            const help_text = document.querySelector("div.field-message > div.help-block:not(.red-text):not(.red)");
-            const render_hints = (h) => {{let hs = []; for (let k in h) hs.push(`%%${{k}}%% - ${{h[k]}}`); return hs.join('<br>'); }};
-            help_text.innerHTML = "Поддерживаются параметры: <br>";
-            if (template_type in hints) {{
-                help_text.innerHTML += render_hints(common_hints) + "<br>" + render_hints(hints[template_type]);
-            }}
-        """
-
-        widgets = {
-            'template_type': forms.Select(attrs={'onchange': f'{help_text_js}'}) # TODO: fix render on page load
-        }
-
-        help_texts = {
-            'message': 'Поддерживаются параметры'
-        }
-
-
-@admin.register(UserNotificationTemplate)
-class UserNotificationTemplateAdmin(admin.ModelAdmin):
-    form = UserNotificationTemplateForm
-    model = UserNotificationTemplate
-    list_display = ['title', 'message', 'template_type']
-    extra = 0

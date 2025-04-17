@@ -64,7 +64,10 @@ api_patterns = [
 
 
 reactive_pages = [
-    'notifications'
+    'notifications',
+    'profile',
+    'notifications/all',
+    'notifications/unread'
 ]
 
 
@@ -80,7 +83,6 @@ sys_patterns = [
     path('reset/done', PasswordResetCompleteView.as_view(template_name='login/password_reset_complete.html'), name='password_reset_complete'),
 
     path("users/<int:pk>-<slug>", profile.ProfileView.as_view(template_name="profile/user.html"), name="users"),
-    path("profile", profile.MyProfileView.as_view(template_name="profile/user.html"), name="profile"),
     path("profile/edit", profile.ChangeProfileView.as_view(template_name="profile/change.html"), name="profile_edit"),
 
     path('accept/<uidb64>/<token>', signup.AcceptInvitationView.as_view(), name="accept"),

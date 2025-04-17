@@ -19,6 +19,7 @@ from modules.listpages import page_to_listpages_vars
 from typing import Optional, Tuple
 import json
 
+from web.models.notifications import UserNotificationMapping
 from web.models.site import get_current_site
 
 import re
@@ -170,8 +171,11 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
         context = super(ArticleView, self).get_context_data(**kwargs)
 
+        notification_count = UserNotificationMapping.objects.filter(recipient=self.request.user, is_viewed=False).count() if self.request.user.is_authenticated else 0
+
         login_status_config = {
-            'user': render_user_to_json(self.request.user)
+            'user': render_user_to_json(self.request.user),
+            'notificationCount': notification_count
         }
 
         article_rating, article_votes, article_popularity, article_rating_mode = articles.get_rating(article)

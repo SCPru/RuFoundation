@@ -1,6 +1,10 @@
 @import 'node_modules/highlight.js/styles/github.css';
 
-.rimg img, .limg img, .cimg img, .img img, .scp-image-block img {
+.rimg img,
+.limg img,
+.cimg img,
+.img img,
+.scp-image-block img {
   // compatibility patch for some unobvious stuff that started working differently after moving away from XHTML
   // https://stackoverflow.com/questions/10844205/html-5-strange-img-always-adds-3px-margin-at-bottom
   vertical-align: middle;
@@ -18,7 +22,8 @@
   pointer-events: none;
 }
 
-.printuser.avatarhover a:hover img.small, .printuser span:hover img.small {
+.printuser.avatarhover a:hover img.small,
+.printuser span:hover img.small {
   transform: scale(4);
   z-index: 100;
   position: relative;

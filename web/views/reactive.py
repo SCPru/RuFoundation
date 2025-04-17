@@ -2,10 +2,12 @@ import json
 from django.http import HttpResponse
 
 from renderer import render_template_from_string
+from renderer.utils import render_user_to_json
+
 
 def reactive_view(request, *args, **kwargs):
     config = {
-        'isAuthenticated': request.user.is_authenticated
+        'user': render_user_to_json(request.user)
     }
 
     return HttpResponse(

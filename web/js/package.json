@@ -9,27 +9,30 @@
     "@types/react": "17",
     "@types/react-dom": "^18.0.5",
     "@types/react-is": "^17.0.3",
-    "@types/react-router-dom": "^5.3.3",
     "@types/sprintf-js": "^1.1.2",
     "@types/styled-components": "^5.1.25",
     "esbuild": "^0.14.34",
     "esbuild-sass-plugin": "^2.2.6",
+    "esbuild-ts-paths": "^1.1.3",
     "highlight.js": "^11.6.0",
+    "prettier": "^3.2.5",
+    "prettier-plugin-organize-imports": "^3.2.4",
     "react": "17.x",
     "react-diff-viewer": "^3.1.1",
     "react-dom": "17",
     "react-infinite-scroller": "^1.2.6",
     "react-is": "^18.0.0",
-    "react-router-dom": "^5.3.4",
+    "react-router-dom": "6",
     "resize-observer-polyfill": "^1.5.1",
     "sprintf-js": "^1.1.2",
     "styled-components": "^5.3.5",
-    "uuid": "^8.3.2",
+    "ts-node": "10.6.0",
     "typescript": ">=2.7",
-    "ts-node": "10.6.0"
+    "uuid": "^8.3.2"
   },
   "scripts": {
     "build": "npx ts-node build.ts",
-    "watch": "npx ts-node build.ts --watch"
+    "watch": "npx ts-node build.ts --watch",
+    "format": "prettier --write ./util ./reactive ./forum ./entrypoints ./components ./articles ./api"
   }
 }

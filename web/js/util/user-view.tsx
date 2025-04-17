@@ -1,42 +1,50 @@
-import * as React from 'react';
-import {UserData} from "../api/user";
+import * as React from 'react'
+import { UserData } from '../api/user'
 
-
-export const ANON_AVATAR = "/-/static/images/anon_avatar.png";
-export const DEFAULT_AVATAR = "/-/static/images/default_avatar.png";
-export const WIKIDOT_AVATAR = "/-/static/images/wikidot_avatar.png";
-
+export const ANON_AVATAR = '/-/static/images/anon_avatar.png'
+export const DEFAULT_AVATAR = '/-/static/images/default_avatar.png'
+export const WIKIDOT_AVATAR = '/-/static/images/wikidot_avatar.png'
 
 interface Props {
-    data: UserData
-    avatarHover?: boolean
-    hideAvatar?: boolean
+  data: UserData
+  avatarHover?: boolean
+  hideAvatar?: boolean
 }
-
 
 const UserView: React.FC<Props> = ({ data, avatarHover, hideAvatar }) => {
-    if (data.type === 'system') {
-        return <span className={`printuser ${avatarHover!==false?'avatarhover':''}`}><strong>system</strong></span>
-    }
-    if (data.type === 'anonymous') {
-        return (
-            <span className={`printuser ${avatarHover!==false?'avatarhover':''}`}>
-                {data.showAvatar&&!hideAvatar&&<span><img className="small" src={ANON_AVATAR} alt="Anonymous User" /></span>}
-                <span>Anonymous User</span>
-            </span>
-        )
-    }
-
-    let avatar = (data.type === 'wikidot') ? WIKIDOT_AVATAR : (data.avatar || DEFAULT_AVATAR);
-
+  if (data.type === 'system') {
     return (
-        <span className={`printuser w-user ${avatarHover!==false?'avatarhover':''}`} data-user-name={data.username}>
-            {data.showAvatar&&!hideAvatar&&<a href={`/-/users/${data.id}-${encodeURIComponent(data.username)}`}><img className="small" src={avatar} alt={data.name} /></a>}
-            &nbsp;
-            <a href={`/-/users/${data.id}-${encodeURIComponent(data.username)}`}>{data.name}</a>
-        </span>
+      <span className={`printuser ${avatarHover !== false ? 'avatarhover' : ''}`}>
+        <strong>system</strong>
+      </span>
     )
-}
+  }
+  if (data.type === 'anonymous') {
+    return (
+      <span className={`printuser ${avatarHover !== false ? 'avatarhover' : ''}`}>
+        {data.showAvatar && !hideAvatar && (
+          <span>
+            <img className="small" src={ANON_AVATAR} alt="Anonymous User" />
+          </span>
+        )}
+        <span>Anonymous User</span>
+      </span>
+    )
+  }
 
+  let avatar = data.type === 'wikidot' ? WIKIDOT_AVATAR : data.avatar || DEFAULT_AVATAR
+
+  return (
+    <span className={`printuser w-user ${avatarHover !== false ? 'avatarhover' : ''}`} data-user-name={data.username}>
+      {data.showAvatar && !hideAvatar && (
+        <a href={`/-/users/${data.id}-${encodeURIComponent(data.username)}`}>
+          <img className="small" src={avatar} alt={data.name} />
+        </a>
+      )}
+      &nbsp;
+      <a href={`/-/users/${data.id}-${encodeURIComponent(data.username)}`}>{data.name}</a>
+    </span>
+  )
+}
 
 export default UserView
