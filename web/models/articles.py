@@ -88,6 +88,8 @@ class Category(auto_prefetch.Model):
 
     name = models.TextField(verbose_name="Имя")
 
+    is_indexed = models.BooleanField(verbose_name='Индексируется поисковиками', null=False, default=True)
+
     readers_can_view = models.BooleanField(verbose_name='Читатели могут просматривать статьи', null=False, default=True)
     readers_can_create = models.BooleanField(verbose_name='Читатели могут создавать статьи', null=False, default=False)
     readers_can_edit = models.BooleanField(verbose_name='Читатели могут редактировать статьи', null=False, default=False)

@@ -238,6 +238,12 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 'google_tag_id': settings.GOOGLE_TAG_ID
             })
 
+        category_name, _ = articles.get_name(article_name)
+        category = permissions.get_or_default_category(category_name)
+        context.update({
+            'noindex': not category.is_indexed
+        })
+
         return context
 
     def get(self, request, *args, **kwargs):

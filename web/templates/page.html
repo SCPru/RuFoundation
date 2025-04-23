@@ -18,6 +18,10 @@
         <meta name="twitter:card" content="summary">
     {% endif %}
 
+    {% if noindex %}
+        <meta name="robots" content="noindex">
+    {% endif %}
+
     <title>{{ site_title }}</title>
 
     <link rel="icon" type="image/x-icon" href="/local--files/{{ site_icon }}">

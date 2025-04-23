@@ -112,7 +112,7 @@ def check(user, action, obj):
             return False
 
 
-def _get_or_default_category(category):
+def get_or_default_category(category):
     cat = Category.objects.filter(name=category)
     if not cat:
         return Category(name=category)
