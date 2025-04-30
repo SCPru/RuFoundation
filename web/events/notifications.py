@@ -44,15 +44,17 @@ def new_forum_post_notification(e: OnForumNewPost):
             break
     section = category.section
 
+    thread_name = thread.name if thread.category_id else thread.article.display_name
+
     section_url = '/forum/s-%d/%s' % (section.id, articles.normalize_article_name(section.name)) if category else ''
     category_url = '/forum/c-%d/%s' % (category.id, articles.normalize_article_name(category.name)) if category else ''
-    thread_url = '/forum/t-%d/%s' % (thread.id, articles.normalize_article_name(thread.name if thread.category_id else thread.article.display_name))
+    thread_url = '/forum/t-%d/%s' % (thread.id, articles.normalize_article_name(thread_name))
     post_url = '%s#post-%d' % (thread_url, e.post.id)
 
     meta = {
         'thread': {
             'id': thread.id,
-            'name': thread.name,
+            'name': thread_name,
             'url': thread_url
         },
         'category': {
