@@ -862,12 +862,28 @@ def get_formatted_rating(full_name_or_article: _FullNameOrArticle) -> str:
         return '%d' % rating
 
 
+class VotedTooSoonError(RuntimeError):
+    def __init__(self, *args, time_left=0, time_total=0, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.time_left = time_left
+        self.time_total = time_total
+
+
 def add_vote(full_name_or_article: _FullNameOrArticle, user: _UserType, rate: int | float | None):
     article = get_article(full_name_or_article)
 
     old_vote_query = Vote.objects.filter(article=article, user=user)
     old_vote = old_vote_query.first()
     old_vote_query.delete()
+
+    if not user.is_staff and not user.is_superuser and not old_vote:
+        last_vote_of_this_user = Vote.objects.filter(user=user).order_by('-id').first()
+        if last_vote_of_this_user and last_vote_of_this_user.date:
+            time_since = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc) - last_vote_of_this_user.date
+            time_total = datetime.timedelta(minutes=5)
+            if time_since < time_total:
+                time_left = time_total - time_since
+                raise VotedTooSoonError('Voting too soon (at least 5 minutes between votes expected)', time_left=time_left.seconds, time_total=time_total.seconds)
 
     new_vote = None
     if rate is not None:

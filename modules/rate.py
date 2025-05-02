@@ -79,6 +79,26 @@ def api_get_votes(context, _params):
     return {'pageId': context.article.full_name, 'votes': votes, 'rating': rating, 'popularity': popularity, 'mode': mode}
 
 
+def pluralize_russian(number, base):
+    if number % 10 in (2, 3, 4):
+        return f'{number} {base}ы'
+    if number % 10 in (5, 6, 7, 8, 9, 0):
+        return f'{number} {base}'
+    if number % 10 in (1,):
+        return f'{number} {base}у'
+
+
+def format_time(seconds):
+    t_minutes = int(seconds / 60)
+    t_seconds = int(seconds % 60)
+    s = ''
+    if t_seconds or not t_minutes:
+        s = pluralize_russian(t_seconds, 'секунд')
+    if t_minutes:
+        s = pluralize_russian(t_minutes, 'минут') + ' ' + s
+    return s
+
+
 def api_rate(context, params):
     if not context.article:
         raise ModuleError('Страница не указана')
@@ -100,6 +120,9 @@ def api_rate(context, params):
             if value < 0 or value > 5:
                 raise ModuleError('Некорректная оценка %s' % str(value))
 
-    articles.add_vote(context.article, context.user, value)
+    try:
+        articles.add_vote(context.article, context.user, value)
+    except articles.VotedTooSoonError as e:
+        raise ModuleError(f'Вы уже голосовали за другую статью менее {format_time(e.time_total)} назад. Попробуйте снова через {format_time(e.time_left)}. Вы можете воспользоваться оставшимся временем, чтобы получше ознакомиться со статьёй, которую оцениваете.')
 
     return api_get_rating(context, params)
