@@ -65,20 +65,18 @@ def is_subscribed(subscriber: _UserType, article: Article=None, forum_thread: Fo
 
 
 def get_notifications(user: _UserType, cursor=-1, limit=10, unread=True, mark_as_viewed=False) -> list[tuple[UserNotification, bool]]:
-    related = UserNotificationMapping.objects.filter(recipient=user)
+    related = UserNotificationMapping.objects.all().order_by('-notification_id')
 
     if not related:
         return []
 
+    if cursor == -1:
+        cursor = related.latest('notification_id').notification_id + 1
+
+    related = related.filter(recipient=user, notification_id__lt=cursor)
+    
     if unread:
-        if cursor == -1:
-            cursor = 0
-        related = related.filter(is_viewed=False).filter(notification_id__gt=cursor)
-    else:
-        related = related.order_by('-notification_id')
-        if cursor == -1:
-            cursor = related.latest('notification_id').notification_id + 1
-        related = related.filter(notification_id__lt=cursor)
+        related = related.filter(is_viewed=False)
 
     result = [(n.notification, n.is_viewed) for n in related[:limit]]
 
