@@ -10,16 +10,36 @@ import * as Styled from './Notifications.styles'
 interface Props {
   batchSize: number
   showUnread: boolean
+  isForceUpdate?: () => boolean
 }
 
-const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread }) => {
+const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, isForceUpdate }) => {
   const [items, setItems] = useState<INotification[]>([])
   const [cursor, setCursor] = useState(-1)
   const [hasMore, setHasMore] = useState(true)
   const [isFetching, setIsFetching] = useState(false)
+  const [isWaitingFetch, setIsWaitingFetch] = useState(false)
+
+  useEffect(() => {
+    if (!isForceUpdate) return
+    if (isForceUpdate()) {
+      setIsFetching(false)
+      setHasMore(true)
+      setCursor(-1)
+      setItems([])
+    }
+  })
+
+  useEffect(() => {
+    if (!isFetching && isWaitingFetch)
+      loadMore()
+  }, [isFetching])
 
   const loadMore = useConstCallback(async () => {
-    if (isFetching) return
+    while (isFetching) {
+      setIsWaitingFetch(true)
+      return
+    }
 
     setIsFetching(true)
     try {
@@ -27,7 +47,10 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread })
       setItems(prev => [...prev, ...resp.notifications])
       setCursor(resp.cursor)
 
-      if (resp.notifications.length < batchSize || resp.cursor === -1) setHasMore(false)
+      if (resp.notifications.length < batchSize || resp.cursor === -1) {
+        setIsWaitingFetch(false)
+        setHasMore(false)
+      }
     } catch (e: any) {
       setHasMore(false)
       console.error('Failed to fetch more notifications', e)
@@ -35,13 +58,6 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread })
       setIsFetching(false)
     }
   })
-
-  useEffect(() => {
-    setIsFetching(false)
-    setItems([])
-    setCursor(-1)
-    setHasMore(true)
-  }, [showUnread])
 
   const loader = (
     <Styled.LoaderContainer key={0}>
