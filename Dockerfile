@@ -46,7 +46,7 @@ USER scpwiki
 
 RUN python manage.py collectstatic
 
-RUN chmode 775 entrypoint.sh
+RUN chmod 775 entrypoint.sh
 
 EXPOSE 8000
 ENTRYPOINT [ "./entrypoint.sh" ]
