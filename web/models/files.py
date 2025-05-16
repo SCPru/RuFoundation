@@ -49,4 +49,8 @@ class File(auto_prefetch.Model):
 
     @property
     def local_media_path(self) -> str:
-        return (Path(settings.MEDIA_ROOT) / 'media' / self.escape_media_name(self.article.media_name) / self.escape_media_name(self.media_name)).as_posix()
+        return Path(settings.MEDIA_ROOT) / 'media' / self.escape_media_name(self.article.media_name) / self.escape_media_name(self.media_name)
+    
+    @property
+    def local_media_destination(self):
+        return Path(self.escape_media_name(self.article.media_name)) / self.escape_media_name(self.media_name)
