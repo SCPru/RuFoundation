@@ -24,3 +24,4 @@ ftml/pkg
 ftml/*.pyd
 ftml/*.so
 venv
+!entrypoint.sh

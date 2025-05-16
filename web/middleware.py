@@ -1,11 +1,14 @@
 from django.conf import settings
 from django.db.models import Q
 from django.http import HttpResponseRedirect
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth import get_user_model
+from django.shortcuts import render
 
 from web.models.site import Site
 from web import threadvars
 
+import logging
 import django.middleware.csrf
 import urllib.parse
 
@@ -65,7 +68,11 @@ class MediaHostMiddleware(object):
                 raw_host = request.get_host().split(':')[0]
                 possible_sites = Site.objects.filter(Q(domain=raw_host) | Q(media_domain=raw_host))
                 if not possible_sites:
-                    raise RuntimeError('Site for this domain (\'%s\') is not configured' % raw_host)
+                    if Site.objects.exists():
+                        logging.warning('This domain (\'%s\') is not configured' % raw_host)
+                        raise PermissionDenied()
+                    else:
+                        return render(request, 'no_site.html')
 
             site = possible_sites[0]
             threadvars.put('current_site', site)
