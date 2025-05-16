@@ -22,7 +22,7 @@ import unicodedata
 from web.models.forum import ForumThread, ForumPost
 from web.util import lock_table
 
-from web.controllers import notifications
+from web.controllers import notifications, media
 
 
 _FullNameOrArticle = Optional[Union[str, Article]]
@@ -204,6 +204,7 @@ def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int,
 # Revert all revisions to specific revision
 def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number: int, user: Optional[_UserType] = None):
     article = get_article(full_name_or_article)
+    pref_full_name = get_full_name(full_name_or_article)
 
     new_props = {}
 
@@ -466,6 +467,7 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
     )
 
     add_log_entry(article, log)
+    media.symlinks_article_update(article, pref_full_name)
 
 
 # Creates new article version for specified article
@@ -549,6 +551,8 @@ def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: st
         )
         add_log_entry(article, log)
 
+    media.symlinks_article_update(article, prev_full_name)
+
 
 def _get_article_votes_meta(full_name_or_article: _FullNameOrArticle):
     article = get_article(full_name_or_article)
@@ -613,10 +617,10 @@ def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user:
 
 def delete_article(full_name_or_article: _FullNameOrArticle):
     article = get_article(full_name_or_article)
-    site = get_current_site()
     ExternalLink.objects.filter(link_from__iexact=get_full_name(full_name_or_article)).delete()
+    media.symlinks_article_delete(article)
     article.delete()
-    file_storage = Path(settings.MEDIA_ROOT) / site.slug / article.media_name
+    file_storage = Path(settings.MEDIA_ROOT) / 'media' / article.media_name
     # this may have race conditions with file upload, because filesystem does not know about database transactions
     for i in range(3):
         try:
@@ -935,6 +939,7 @@ def add_file_to_article(full_name_or_article: _FullNameOrArticle, file: File, us
         meta={'name': file.name, 'id': file.id}
     )
     add_log_entry(article, log)
+    media.symlinks_article_update(article)
 
 
 def get_file_space_usage() -> tuple[int, int]:
@@ -956,6 +961,7 @@ def delete_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fil
         if os.path.exists(file.local_media_path):
             os.unlink(file.local_media_path)
         file.delete()
+        media.symlinks_article_update(article)
     else:
         file.deleted_at = datetime.datetime.now(datetime.timezone.utc)
         file.deleted_by = user
@@ -967,6 +973,7 @@ def delete_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fil
             meta={'name': file.name, 'id': file.id}
         )
         add_log_entry(article, log)
+        media.symlinks_article_update(article)
 
 
 # Restore deleted file to article
@@ -986,6 +993,7 @@ def restore_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fi
         meta={'name': file.name, 'id': file.id}
     )
     add_log_entry(article, log)
+    media.symlinks_article_update(article)
 
 
 # Rename file in article
@@ -1004,6 +1012,7 @@ def rename_file_in_article(full_name_or_article: _FullNameOrArticle, file: File,
             meta={'name': file.name, 'prev_name': old_name, 'id': file.id}
         )
         add_log_entry(article, log)
+    media.symlinks_article_update(article)
 
 
 # Check if name is allowed for creation
@@ -1036,8 +1045,3 @@ def fetch_articles_by_names(original_names):
         dumb_name = ('_default:%s' % name).lower() if ':' not in name else name.lower()
         articles_dict[name] = ret_map[dumb_name]
     return articles_dict
-
-
-def change_slug_for_local_files(old_slug: str, new_slug: str):
-    media_root = Path(settings.MEDIA_ROOT)
-    os.rename(media_root / old_slug, media_root / new_slug)

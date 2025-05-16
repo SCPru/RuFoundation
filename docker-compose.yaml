@@ -1,12 +1,16 @@
 version: "3.9"
+name: scpdev
 services:
   web:
     build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
-      - "8000:8000"
+      - 8000:8000
     volumes:
-      - "./files:/app/files"
-      - "./archive:/app/archive:ro"
+      - ./files:/app/files
+      - ./archive:/app/archive:ro
     env_file:
       - prod-web.env
     environment:
@@ -15,11 +19,16 @@ services:
       DB_PG_USERNAME: pguser
       DB_PG_PASSWORD: pguser
   postgres:
-    image: "postgres:14"
+    image: postgres:14
     volumes:
-      - "./postgresql:/var/lib/postgresql"
-      - "./postgresql/data:/var/lib/postgresql/data"
+      - ./postgresql:/var/lib/postgresql
+      - ./postgresql/data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: pguser
       POSTGRES_PASSWORD: pguser
       POSTGRES_DB: scpwiki
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+        interval: 5s
+        timeout: 3s
+        retries: 3

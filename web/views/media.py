@@ -10,7 +10,6 @@ from django.views.generic.base import View
 from django.utils.http import http_date
 
 from web.controllers import articles
-from web.models.site import get_current_site
 from web.util.http import validate_mime
 
 class MediaView(View):
@@ -54,9 +53,7 @@ class MediaView(View):
             # we need to check if dir path does not exist. if it doesn't, look for possible file remap (name->media_name)
             # to be changed later somehow.
             # the current setup allows serving both UUID-remapped files and avatars/etc from the same path
-
-            site = get_current_site()
-            document_root /= site.slug
+            document_root /= 'media'
 
             if len(dir_path_split) == 2:
                 exists = os.path.exists(document_root / dir_path)

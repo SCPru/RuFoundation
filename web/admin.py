@@ -111,8 +111,6 @@ class SiteAdmin(GuardedModelAdmin, SingletonModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        if change and 'slug' in form.changed_data and form.cleaned_data.get('slug'):
-            articles.change_slug_for_local_files(form.initial['slug'], form.cleaned_data['slug'])
 
 
 class ForumSectionForm(forms.ModelForm):

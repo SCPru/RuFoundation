@@ -35,6 +35,9 @@ def get_notification_subscribtions(article: Article=None, forum_thread: ForumThr
 
 
 def subscribe_to_notifications(subscriber: _UserType, article: Article=None, forum_thread: ForumThread=None) -> UserNotificationSubscription:
+    if subscriber is None:
+        return
+    
     subscription = UserNotificationSubscription.objects.filter(subscriber=subscriber, article=article, forum_thread=forum_thread).first()
 
     if not subscription:
