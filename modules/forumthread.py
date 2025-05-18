@@ -12,6 +12,7 @@ from renderer.utils import render_user_to_json
 from web.controllers import articles, permissions
 from web.models.forum import ForumCategory, ForumThread, ForumSection, ForumPost, ForumPostVersion
 
+from ._csrf_protection import csrf_safe_method
 
 def has_content():
     return False
@@ -287,6 +288,7 @@ def render(context: RenderContext, params):
     )
 
 
+@csrf_safe_method
 def api_for_article(context, _params):
     if not context.article:
         raise ModuleError('Страница не указана')

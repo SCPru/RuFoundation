@@ -3,7 +3,6 @@ from ._csrf_protection import csrf_safe_method
 from .listpages import query_pages
 
 import renderer
-import re
 
 
 def allow_api():

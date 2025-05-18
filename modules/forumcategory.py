@@ -2,13 +2,9 @@ from modules import ModuleError
 from modules.listpages import render_pagination, render_date
 from renderer import RenderContext, render_template_from_string, render_user_to_html
 import math
-from renderer.templates import apply_template
-
-import renderer
-import re
 
 from web.controllers import articles, permissions
-from web.models.forum import ForumCategory, ForumThread, ForumSection, ForumPost
+from web.models.forum import ForumCategory, ForumThread, ForumPost
 
 
 def has_content():
