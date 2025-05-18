@@ -1,11 +1,11 @@
+import modules
 from django.http import HttpRequest, HttpResponse
 
-from . import APIView, takes_json, APIError
-
+from web.middleware import CsrfViewMiddleware
 from web.controllers import articles
 
 from renderer.parser import RenderContext
-import modules
+from . import APIView, takes_json, APIError
 
 
 class ModuleView(APIView):
@@ -34,7 +34,12 @@ class ModuleView(APIView):
                 result = modules.render_module(module, context, params, content=content)
                 return self.render_json(200, {'result': result})
             else:
-                response = modules.handle_api(module, method, context, params)
+                response, is_csrf_safe = modules.handle_api(module, method, context, params)
+                print('module call', method, is_csrf_safe)
+                if not is_csrf_safe:
+                    reason = CsrfViewMiddleware([]).process_view(request, None, (), {})
+                    if reason:
+                        return reason
                 return self.render_json(200, response)
         except modules.ModuleError as e:
             raise APIError(e.message)

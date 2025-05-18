@@ -2,8 +2,6 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponseRedirect
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 
 
@@ -21,7 +19,6 @@ class LoginView(TemplateResponseMixin, ContextMixin, View):
         context = self.get_context_data(path=path)
         return self.render_to_response(context)
 
-    @method_decorator(csrf_protect)
     def post(self, request, *args, **kwargs):
         path = request.META['RAW_PATH'][1:]
         context = self.get_context_data(path=path)

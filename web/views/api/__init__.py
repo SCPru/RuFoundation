@@ -1,5 +1,3 @@
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from django.http import JsonResponse, HttpRequest
 
@@ -22,7 +20,6 @@ class APIView(View):
         super().__init__(*args, **kwargs)
         self.json_input = None
 
-    @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         try:
             return super().dispatch(*args, **kwargs)

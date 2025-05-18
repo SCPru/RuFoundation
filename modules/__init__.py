@@ -104,7 +104,7 @@ def handle_api(name, method, context, params):
             api_method = 'api_%s' % method
             if api_method not in m.__dict__ or not callable(m.__dict__[api_method]):
                 raise ModuleError('Некорректный метод для модуля \'%s\'')
-            return m.__dict__[api_method](context, params)
+            return m.__dict__[api_method](context, params), getattr(m.__dict__[api_method], 'is_csrf_safe', False)
         else:
             raise ModuleError('Модуль \'%s\' не поддерживает API')
     except ModuleError:

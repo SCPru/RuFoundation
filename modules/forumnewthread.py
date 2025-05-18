@@ -13,6 +13,10 @@ def has_content():
     return False
 
 
+def allow_api():
+    return True
+
+
 def render(context: RenderContext, params):
     context.title = 'Создать тему'
 
@@ -71,10 +75,6 @@ def render(context: RenderContext, params):
         canonical_url=canonical_url,
         editor_config=json.dumps(editor_config)
     )
-
-
-def allow_api():
-    return True
 
 
 def api_submit(context, params):

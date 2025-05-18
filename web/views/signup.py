@@ -1,12 +1,10 @@
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.models import AbstractUser as _UserType
-from django.utils.decorators import method_decorator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponseRedirect
-from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth import login
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 
@@ -51,7 +49,6 @@ class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
             context.update({'is_wikidot': True, 'username': user.wikidot_username})
         return self.render_to_response(context)
 
-    @method_decorator(csrf_protect)
     def post(self, request, *args, **kwargs):
         path = request.META['RAW_PATH'][1:]
         context = self.get_context_data(path=path)

@@ -8,6 +8,7 @@ from web.events import EventBase
 from web.controllers import permissions
 from web.models.forum import ForumPost, ForumPostVersion
 
+from ._csrf_protection import csrf_safe_method
 
 class OnForumEditPost(EventBase):
     post: ForumPost
@@ -30,6 +31,7 @@ def allow_api():
     return True
 
 
+@csrf_safe_method
 def api_fetch(context, params):
     post_id = params.get('postid', -1)
 
@@ -129,6 +131,7 @@ def api_delete(context, params):
     }
 
 
+@csrf_safe_method
 def api_fetchversions(context, params):
     post_id = params.get('postid', -1)
 

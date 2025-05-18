@@ -1,9 +1,4 @@
-import re
-
-from django.db.models import Count, Q
-
 from renderer.utils import render_template_from_string
-from . import ModuleError
 from web.controllers.articles import get_tag
 from web.models.articles import Tag
 

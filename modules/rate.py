@@ -2,10 +2,16 @@ from django.contrib.auth.models import AnonymousUser
 
 from web.controllers.articles import get_rating, Vote
 from web.models.settings import Settings
-from . import ModuleError
 from web.controllers import articles, permissions
 
 from renderer.utils import render_user_to_json, render_template_from_string
+
+from . import ModuleError
+from ._csrf_protection import csrf_safe_method
+
+
+def allow_api():
+    return True
 
 
 def render(context, _params):
@@ -50,10 +56,7 @@ def render(context, _params):
         return ''
 
 
-def allow_api():
-    return True
-
-
+@csrf_safe_method
 def api_get_rating(context, _params):
     if not context.article:
         raise ModuleError('Страница не указана')
@@ -61,6 +64,7 @@ def api_get_rating(context, _params):
     return {'pageId': context.article.full_name, 'rating': rating, 'voteCount': votes, 'popularity': popularity, 'ratingMode': mode}
 
 
+@csrf_safe_method
 def api_get_votes(context, _params):
     if not context.article:
         raise ModuleError('Страница не указана')

@@ -7,6 +7,8 @@ from web.events import EventBase
 from web.controllers import articles, permissions
 from web.models.forum import ForumThread, ForumPost, ForumPostVersion
 
+from ._csrf_protection import csrf_safe_method
+
 
 class OnForumNewPost(EventBase):
     post: ForumPost
@@ -21,6 +23,7 @@ def allow_api():
     return True
 
 
+@csrf_safe_method
 def api_preview(context, params):
     if 'source' not in params:
         raise ModuleError('Исходный код не указан')

@@ -1,8 +1,10 @@
-import renderer
 from django.conf import settings
 
+import renderer
 from renderer.templates import apply_template
 from renderer.utils import get_boolean_param
+
+from ._csrf_protection import csrf_safe_method
 
 
 def allow_api():
@@ -13,6 +15,7 @@ def has_content():
     return True
 
 
+@csrf_safe_method
 def api_get(context, params):
     if not context.user.is_authenticated:
         tpl_vars = {

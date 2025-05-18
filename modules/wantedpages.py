@@ -1,4 +1,8 @@
-import json, math
+import json
+import math
+
+from django.db.models import Q, Value as V, Case, When, Subquery, OuterRef
+from django.db.models.functions import Concat, Substr, StrIndex
 
 from modules.listpages import param, query_pages, render_pagination
 from modules.listpages.params import ListPagesParams
@@ -7,14 +11,11 @@ from renderer.utils import render_template_from_string
 from web.fields import CITextField
 from web.controllers import articles
 from web.models.articles import ExternalLink, Article
-from django.db.models import Q, Value as V, Case, When, Subquery, OuterRef
-from django.db.models.functions import Concat, Substr, StrIndex
+
 
 def has_content():
     return False
 
-def allow_api():
-    return True
 
 def render(context, params):
     if 'category_from' in params:

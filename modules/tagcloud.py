@@ -4,8 +4,13 @@ import urllib.parse
 from django.db.models import Count, Q
 
 from renderer.utils import render_template_from_string
-from . import ModuleError
 from web.models.articles import Tag, TagsCategory
+
+from . import ModuleError
+from ._csrf_protection import csrf_safe_method
+
+def allow_api():
+    return True
 
 
 def parse_font_size(size):
@@ -186,10 +191,7 @@ def render(context, params):
     )
 
 
-def allow_api():
-    return True
-
-
+@csrf_safe_method
 def api_list_tags(context, params):
     categories = TagsCategory.objects.order_by('priority')
     tags = Tag.objects.all()

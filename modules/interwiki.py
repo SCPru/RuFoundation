@@ -1,16 +1,23 @@
 import json
-from langcodes import Language
 import logging
+from langcodes import Language
 
 from web.controllers import articles
+from web.models.site import get_current_site
+
 import renderer
 from renderer.templates import apply_template
 from renderer.utils import render_template_from_string
-from web.models.site import get_current_site
 from shared_data import interwiki_batcher
+
+from ._csrf_protection import csrf_safe_method
 
 
 def has_content():
+    return True
+
+
+def allow_api():
     return True
 
 
@@ -46,10 +53,6 @@ def render(context, params, content=''):
     )
 
 
-def allow_api():
-    return True
-
-
 def translate_language(language, in_language=''):
     if not language:
         return '???'
@@ -59,6 +62,7 @@ def translate_language(language, in_language=''):
         return language
 
 
+@csrf_safe_method
 def api_render_for_languages(context, params):
     site = get_current_site(required=True)
     article_name = params.get('article', '')

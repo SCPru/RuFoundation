@@ -7,7 +7,6 @@ from renderer import RenderContext, render_template_from_string, render_user_to_
 from renderer.templates import apply_template
 
 import renderer
-import re
 
 from renderer.utils import render_user_to_json
 from web.controllers import articles, permissions
@@ -16,6 +15,10 @@ from web.models.forum import ForumCategory, ForumThread, ForumSection, ForumPost
 
 def has_content():
     return False
+
+
+def allow_api():
+    return True
 
 
 def get_post_contents(posts):
@@ -282,10 +285,6 @@ def render(context: RenderContext, params):
         data_params=json.dumps(params),
         thread_options_config=json.dumps(thread_options_config)
     )
-
-
-def allow_api():
-    return True
 
 
 def api_for_article(context, _params):

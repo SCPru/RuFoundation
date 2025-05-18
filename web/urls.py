@@ -17,6 +17,7 @@ Including another URLconf
 from typing import List, Union
 
 from django.views.generic.base import RedirectView
+from django.views.decorators.csrf import csrf_exempt
 from django.urls import path, re_path, include, URLPattern, URLResolver
 from django.contrib.auth.views import PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView, PasswordResetView
 from django.contrib import admin
@@ -56,7 +57,7 @@ api_patterns = [
 
     path('preview', preview.PreviewView.as_view()),
 
-    path('modules', module.ModuleView.as_view()),
+    path('modules', csrf_exempt(module.ModuleView.as_view())),
 
     path('notifications', notifications.NotificationsView.as_view()),
     path('notifications/subscribe', notifications.NotificationsSubscribeView.as_view()),
