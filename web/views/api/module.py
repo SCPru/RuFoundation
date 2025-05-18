@@ -35,7 +35,6 @@ class ModuleView(APIView):
                 return self.render_json(200, {'result': result})
             else:
                 response, is_csrf_safe = modules.handle_api(module, method, context, params)
-                print('module call', method, is_csrf_safe)
                 if not is_csrf_safe:
                     reason = CsrfViewMiddleware([]).process_view(request, None, (), {})
                     if reason:
