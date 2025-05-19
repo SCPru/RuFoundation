@@ -82,6 +82,7 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete }) => {
       } else {
         await deleteArticle(pageId)
       }
+      setSaving(false)
       setSavingSuccess(true)
       await sleep(1000)
       setSavingSuccess(false)
