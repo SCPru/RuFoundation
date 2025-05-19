@@ -1,3 +1,5 @@
+import { wFetch } from "../util/fetch-util"
+
 export interface UserData {
   type: 'system' | 'anonymous' | 'user' | 'wikidot'
   id?: number
@@ -10,4 +12,8 @@ export interface UserData {
   admin?: boolean
   visualGroup?: string
   visualGroupIndex?: number
+}
+
+export function fetchAllUsers(): Promise<UserData[]> {
+  return wFetch<UserData[]>('/api/users')
 }

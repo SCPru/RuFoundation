@@ -29,11 +29,12 @@ except ProgrammingError:
 
 
 from django.core.wsgi import get_wsgi_application
-from shared_data import shared_articles, interwiki_batcher
+from shared_data import shared_articles, interwiki_batcher, shared_users
 from web.controllers import media
 from web import events
 
 shared_articles.init()
+shared_users.init()
 interwiki_batcher.init()
 events.preload_events()
 media.symlinks_full_update()

@@ -5,11 +5,17 @@ import { callModule } from '../api/modules'
 import { makePreview } from '../api/preview'
 import { fetchPageRating, fetchPageVotes } from '../api/rate'
 import { fetchAllTags } from '../api/tags'
+import { fetchAllUsers } from '../api/user'
 
 function onApiMessage(e) {
   if (!e.data.hasOwnProperty('type') || !e.data.hasOwnProperty('target') || !e.data.hasOwnProperty('callId') || e.data.type !== 'ApiCall') return
 
-  const avaliableModules = ['listpages', 'listusers', 'countpages', 'interwiki']
+  const avaliableModules = [
+    'listpages',
+    'listusers',
+    'countpages',
+    'interwiki'
+  ]
 
   const callModuleWrapper = (module, method, data) => {
     if (!avaliableModules.includes(module)) throw new Error(`Unexpected or restricted module name: ${module}`)
@@ -31,6 +37,7 @@ function onApiMessage(e) {
     fetchPageRating, // pageId
     fetchPageVotes, // pageId
     fetchAllTags, // [no args]
+    fetchAllUsers, // [no args]
     callModule: callModuleWrapper, // module, method, data?
   }
 

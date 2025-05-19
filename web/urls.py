@@ -24,7 +24,7 @@ from django.contrib import admin
 
 from .views import profile, signup, login
 
-from web.views.api import articles, preview, module, files, notifications
+from web.views.api import articles, preview, module, files, notifications, users
 from web.views.article import ArticleView
 from web.views.reactive import reactive_view
 
@@ -44,6 +44,7 @@ def make_reactive(routes: list[str]):
 
 
 api_patterns = [
+    path('users', users.AllUsersView.as_view()),
     path('articles', articles.AllArticlesView.as_view()),
     path('articles/new', articles.CreateView.as_view()),
     path('articles/<str:full_name>/version', articles.FetchVersionView.as_view()),
