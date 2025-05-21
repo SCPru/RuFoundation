@@ -23,6 +23,7 @@ class BotAuthTokenMiddleware(object):
         if "Authorization" in request.headers and request.headers["Authorization"].startswith("Bearer "):
             try:
                 request.user = User.objects.get(type="bot", api_key=request.headers["Authorization"][7:])
+                setattr(request, 'csrf_processing_done', True)
             except User.DoesNotExist:
                 pass
         return self.get_response(request)
