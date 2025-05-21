@@ -13,7 +13,8 @@ export const TypeName = styled.h2`
   line-height: 16px;
   font-weight: 600;
   padding: 0;
-  margin: 0;
+  margin: 0px 6rem 0px 0px;
+  word-break: break-all;
 `
 
 export const PostFrom = styled.div`
