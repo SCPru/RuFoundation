@@ -59,10 +59,10 @@ lazy_static! {
     };
 
     // … - HORIZONTAL ELLIPSIS
-    static ref ELLIPSIS: Replacer = Replacer::RegexReplace {
+    /*static ref ELLIPSIS: Replacer = Replacer::RegexReplace {
         regex: Regex::new(r"(?:\.\.\.|\. \. \.)").unwrap(),
         replacement: "\u{2026}",
-    };
+    };*/
 }
 
 /// Helper struct to easily perform string replacements.
@@ -173,5 +173,5 @@ pub fn substitute(text: &mut String) {
     replace!(SINGLE_QUOTES);
 
     // Miscellaneous
-    replace!(ELLIPSIS);
+    //replace!(ELLIPSIS);
 }
