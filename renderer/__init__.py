@@ -10,7 +10,7 @@ from web.models.users import User
 from web import threadvars
 from web.models.articles import ArticleVersion, Article
 from web.models.site import get_current_site
-from . import expression
+from . import expression, html
 from .parser import RenderContext
 from .utils import render_user_to_html, render_template_from_string
 
@@ -66,6 +66,10 @@ def callbacks_with_context(context):
                 "image-context-bad": "Некорректный адрес изображения",
             }
             return messages.get(message_id, '?')
+
+        @staticmethod
+        def get_html_injected_code(html_id: str) -> str:
+            return html.get_html_injected_code(html_id)
 
         def render_include_not_found(self, full_name: str) -> str:
             from web.controllers import articles
@@ -227,8 +231,19 @@ def single_pass_render_text(source, context=None, mode='article') -> str:
     return text
 
 
-def single_pass_fetch_backlinks(source, context=None, mode='article') -> tuple[list[str], list[str]]:
+def single_pass_fetch_backlinks(source, context=None, mode='system') -> tuple[list[str], list[str]]:
     from ftml import ftml
 
     text = ftml.collect_backlinks(source, callbacks_with_context(context), page_info_from_context(context), mode)
     return text.included_pages, text.linked_pages
+
+def single_pass_fetch_code_and_html(source, context=None, mode='system', includes=False) -> tuple[list[str], list[str]]:
+    from ftml import ftml
+
+    with threadvars.context():
+        if not includes:
+            res = ftml.collect_code_and_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
+            return res.code, res.html
+        else:
+            res = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context), mode)
+            return res.code, res.html

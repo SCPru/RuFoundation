@@ -231,7 +231,10 @@ pub enum Element<'t> {
     EquationReference(Cow<'t, str>),
 
     /// Element containing a sandboxed HTML block.
-    Html { contents: Cow<'t, str> },
+    Html {
+        contents: Cow<'t, str>,
+        external: bool,
+    },
 
     /// Element containing an iframe component.
     Iframe {
@@ -522,8 +525,9 @@ impl Element<'_> {
             Element::EquationReference(name) => {
                 Element::EquationReference(string_to_owned(name))
             }
-            Element::Html { contents } => Element::Html {
+            Element::Html { contents, external } => Element::Html {
                 contents: string_to_owned(contents),
+                external: *external
             },
             Element::Iframe { url, attributes } => Element::Iframe {
                 url: string_to_owned(url),

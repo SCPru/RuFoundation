@@ -22,7 +22,7 @@ fn page_refs_to_owned(refs: &Vec<PageRef>) -> Vec<PageRef<'static>> {
     refs.iter().map(|x| x.to_owned()).collect()
 }
 
-fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, callbacks: Py<PyAny>, mode: WikitextMode) -> (R::Output, Vec<String>, Vec<String>)
+fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, callbacks: Py<PyAny>, mode: WikitextMode) -> (R::Output, Vec<String>, Vec<String>, Vec<(String, String)>, Vec<String>)
 {
     let mut settings = WikitextSettings::from_mode(mode);
     settings.use_include_compatibility = true;
@@ -51,7 +51,7 @@ fn render<R: Render>(input: &mut String, renderer: &R, page_info: PageInfo, call
     let (tree, _warnings) = parse(&tokens, &page_info, page_callbacks.clone(), &settings).into();
     let output = renderer.render(&tree, &page_info, page_callbacks, &settings);
     
-    (output, page_refs_to_string(&included_pages), page_refs_to_string(&tree.internal_links))
+    (output, page_refs_to_string(&included_pages), page_refs_to_string(&tree.internal_links), tree.code, tree.html)
 }
 
 #[pyclass(name="RenderResult")]
@@ -62,6 +62,18 @@ struct PyRenderResult {
     pub included_pages: Vec<String>,
     #[pyo3(get)]
     pub linked_pages: Vec<String>,
+    #[pyo3(get)]
+    pub code: Vec<(String, String)>,
+    #[pyo3(get)]
+    pub html: Vec<String>,
+}
+
+#[pyclass(name="Parts")]
+struct PyParts {
+    #[pyo3(get)]
+    pub code: Vec<(String, String)>,
+    #[pyo3(get)]
+    pub html: Vec<String>,
 }
 
 #[pyclass(name="IncludeRef")]
@@ -294,6 +306,17 @@ impl PageCallbacks for PythonCallbacks {
         }
     }
 
+    fn get_html_injected_code<'a>(&self, html_id: Cow<str>) -> Cow<'static, str> {
+        let result: PyResult<String> = Python::with_gil(|py| {
+            return self.callbacks.getattr(py, "get_html_injected_code")?.call(py, (html_id,), None)?.extract(py);
+        });
+        log_python_error(&result);
+        match result {
+            Ok(result) => Cow::from(result),
+            Err(_) => Cow::from("?")
+        }
+    }
+
     fn get_page_info<'a>(&self, page_refs: &Vec<PageRef<'a>>) -> Vec<PartialPageInfo<'static>> {
         let py_names: Vec<String> = page_refs_to_string(&page_refs);
         let result: PyResult<Vec<PartialPageInfo<'static>>> = Python::with_gil(|py| {
@@ -429,30 +452,35 @@ fn mode_to_wikitext_mode(mode: String) -> WikitextMode {
         "article" => WikitextMode::Page,
         "message" => WikitextMode::ForumPost,
         "inline" => WikitextMode::Inline,
+        "system" => WikitextMode::System,
         _ => WikitextMode::Page
     }
 }
 
 #[pyfunction]
 fn render_html(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo, mode: String) -> PyResult<PyRenderResult> {
-    let (html_output, included_pages, linked_pages) = render(&mut source.to_string(), &HtmlRender, page_info.to_page_info(), callbacks, mode_to_wikitext_mode(mode));
+    let (html_output, included_pages, linked_pages, code, html) = render(&mut source.to_string(), &HtmlRender, page_info.to_page_info(), callbacks, mode_to_wikitext_mode(mode));
 
     Ok(PyRenderResult{
         body: html_output.body,
         included_pages,
         linked_pages,
+        code,
+        html
     })
 }
 
 
 #[pyfunction]
 fn render_text(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo, mode: String) -> PyResult<PyRenderResult> {
-    let (text_output, included_pages, linked_pages) = render(&mut source.to_string(), &TextRender, page_info.to_page_info(), callbacks, mode_to_wikitext_mode(mode));
+    let (text_output, included_pages, linked_pages, code, html) = render(&mut source.to_string(), &TextRender, page_info.to_page_info(), callbacks, mode_to_wikitext_mode(mode));
 
     Ok(PyRenderResult{
         body: text_output,
         included_pages,
         linked_pages,
+        code,
+        html
     })
 }
 
@@ -477,7 +505,33 @@ fn collect_backlinks(source: String, callbacks: Py<PyAny>, page_info: &PyPageInf
     Ok(PyRenderResult{
         body: String::from(""),
         included_pages: page_refs_to_string(&included_pages),
-        linked_pages: page_refs_to_string(&tree.internal_links)
+        linked_pages: page_refs_to_string(&tree.internal_links),
+        code: tree.code,
+        html: tree.html
+    })
+}
+
+#[pyfunction]
+fn collect_code_and_html(source: String, callbacks: Py<PyAny>, page_info: &PyPageInfo, mode: String) -> PyResult<PyParts> {
+    let mut settings = WikitextSettings::from_mode(mode_to_wikitext_mode(mode));
+    settings.use_include_compatibility = true;
+
+    let page_callbacks = Rc::new(PythonCallbacks{ callbacks: Box::new(callbacks.clone()) });
+
+    let includer = NullIncluder{};
+
+    let text = &mut source.clone();
+    preprocess(text);
+    let (included_text, _included_pages) = include(&text, &settings, includer, || panic!("Mismatched includer page count")).unwrap_or((source.to_owned(), vec![]));
+
+    let text = &mut included_text.clone();
+    let tokens = tokenize(text);
+    let page_info = page_info.to_page_info();
+    let (tree, _warnings) = parse(&tokens, &page_info, page_callbacks.clone(), &settings).into();
+
+    Ok(PyParts{
+        code: tree.code,
+        html: tree.html,
     })
 }
 
@@ -489,6 +543,7 @@ fn ftml(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(render_html, m)?)?;
     m.add_function(wrap_pyfunction!(render_text, m)?)?;
     m.add_function(wrap_pyfunction!(collect_backlinks, m)?)?;
+    m.add_function(wrap_pyfunction!(collect_code_and_html, m)?)?;
     m.add_class::<Callbacks>()?;
     m.add_class::<PyPageInfo>()?;
     m.add_class::<PyIncludeRef>()?;

@@ -77,6 +77,7 @@ fn parse_fn<'r, 't>(
 
     // syntax: [[#if|#ifexpr condition | truthy nodes | falsey nodes]]
 
+    let no_conditionals = parser.settings().no_conditionals;
     let rule = parser.rule();
 
     let condition = collect_text(
@@ -95,7 +96,7 @@ fn parse_fn<'r, 't>(
         _ => unreachable!()
     };
 
-    let parser_tx = &mut parser.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC | ParserTransactionFlags::Scopes);
+    let parser_tx = &mut parser.transaction(ParserTransactionFlags::all());
 
     let truthy_raw = collect_consume_keep(
         parser_tx,
@@ -108,13 +109,13 @@ fn parse_fn<'r, 't>(
 
     let truthy = ParseSuccess::new(truthy_raw.item.0, truthy_raw.exceptions, truthy_raw.paragraph_safe);
 
-    if cond_matched {
+    if no_conditionals || cond_matched {
         parser_tx.commit();
     } else {
         parser_tx.rollback();
     }
 
-    let falsey_tx = &mut parser_tx.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC | ParserTransactionFlags::Scopes);
+    let falsey_tx = &mut parser_tx.transaction(ParserTransactionFlags::all());
 
     let falsey = match truthy_raw.item.1.token {
         Token::Pipe => collect_consume(
@@ -129,17 +130,21 @@ fn parse_fn<'r, 't>(
         _ => return Err(falsey_tx.make_warn(ParseWarningKind::RuleFailed))
     };
 
-    if !cond_matched {
+    if no_conditionals || !cond_matched {
         falsey_tx.commit();
     } else {
         falsey_tx.rollback();
     }
 
     // evaluate right away; 
-    if cond_matched {
-        ok!(truthy.paragraph_safe; truthy.item, truthy.exceptions)
+    if no_conditionals {
+        ok!(truthy.paragraph_safe && falsey.paragraph_safe; [truthy.item, falsey.item].concat(), [truthy.exceptions, falsey.exceptions].concat())
     } else {
-        ok!(truthy.paragraph_safe; falsey.item, truthy.exceptions)
+        if cond_matched {
+            ok!(truthy.paragraph_safe; truthy.item, truthy.exceptions)
+        } else {
+            ok!(falsey.paragraph_safe; falsey.item, falsey.exceptions)
+        }
     }
 }
 
@@ -190,7 +195,8 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
             _ => unreachable!()
         };
 
-    let parser_tx = &mut parser.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC | ParserTransactionFlags::Scopes);
+    let no_conditionals = parser.settings().no_conditionals;
+    let parser_tx = &mut parser.transaction(ParserTransactionFlags::all());
 
     // Get body content, never with paragraphs
     let (truthy, truthy_exceptions, _) =
@@ -216,13 +222,13 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
         }
     });
 
-    if cond_matched {
+    if no_conditionals || cond_matched {
         parser_tx.commit();
     } else {
         parser_tx.rollback();
     }
 
-    let falsey_tx = &mut parser_tx.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC | ParserTransactionFlags::Scopes);
+    let falsey_tx = &mut parser_tx.transaction(ParserTransactionFlags::all());
 
     let falsey = if has_else {
         let (falsey, _, _) = falsey_tx.get_body_elements(rule, name, false)?.into();
@@ -232,17 +238,21 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
         vec![]
     };
 
-    if !cond_matched {
+    if no_conditionals || !cond_matched {
         falsey_tx.commit();
     } else {
         falsey_tx.rollback();
     }
 
     //
-    if cond_matched {
-        ok!(true; truthy, vec![])
+    if no_conditionals {
+        ok!(true; [truthy, falsey].concat(), vec![])
     } else {
-        ok!(true; falsey, vec![])
+        if cond_matched {
+            ok!(true; truthy, vec![])
+        } else {
+            ok!(true; falsey, vec![])
+        }
     }
 }
 

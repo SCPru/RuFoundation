@@ -90,6 +90,11 @@ pub struct WikitextSettings {
     ///   any beyond that are considered part of the link.
     /// * By convention, prefixes should be all-lowercase.
     pub interwiki: InterwikiSettings,
+
+    /// Used for finding page backlinks and for listing [[code]] and [[html]] blocks.
+    /// Iftags conditions are always true.
+    /// For ifexpr and if both sides are evaluated (and stored and rendered) no matter the values.
+    pub no_conditionals: bool,
 }
 
 impl WikitextSettings {
@@ -106,6 +111,18 @@ impl WikitextSettings {
                 isolate_user_ids: true,
                 allow_local_paths: true,
                 interwiki,
+                no_conditionals: false,
+            },
+            WikitextMode::System => WikitextSettings {
+                mode,
+                enable_page_syntax: true,
+                enable_block_elements: true,
+                use_include_compatibility: false,
+                use_true_ids: true,
+                isolate_user_ids: true,
+                allow_local_paths: true,
+                interwiki,
+                no_conditionals: true,
             },
             WikitextMode::Draft => WikitextSettings {
                 mode,
@@ -116,6 +133,7 @@ impl WikitextSettings {
                 isolate_user_ids: true,
                 allow_local_paths: true,
                 interwiki,
+                no_conditionals: false,
             },
             WikitextMode::ForumPost | WikitextMode::DirectMessage => WikitextSettings {
                 mode,
@@ -126,6 +144,7 @@ impl WikitextSettings {
                 isolate_user_ids: true,
                 allow_local_paths: false,
                 interwiki,
+                no_conditionals: false,
             },
             WikitextMode::Inline => WikitextSettings {
                 mode,
@@ -136,6 +155,7 @@ impl WikitextSettings {
                 isolate_user_ids: true,
                 allow_local_paths: true,
                 interwiki,
+                no_conditionals: false,
             },
             WikitextMode::List => WikitextSettings {
                 mode,
@@ -146,6 +166,7 @@ impl WikitextSettings {
                 isolate_user_ids: true,
                 allow_local_paths: true,
                 interwiki,
+                no_conditionals: false,
             },
         }
     }
@@ -177,4 +198,7 @@ pub enum WikitextMode {
 
     /// Processing for modules or other contexts such as `ListPages`.
     List,
+
+    /// Processing for backlinks and such. Causes both sides of all conditions to evaluate.
+    System,
 }

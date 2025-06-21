@@ -92,6 +92,8 @@ where
         result,
         table_of_contents_depths,
         footnotes,
+        code,
+        html,
         has_footnote_block,
         has_toc_block,
         internal_links,
@@ -142,6 +144,8 @@ where
                 table_of_contents,
                 has_toc_block,
                 footnotes,
+                code,
+                html,
                 internal_links,
             )
         }
@@ -165,6 +169,8 @@ where
                 table_of_contents,
                 has_toc_block,
                 footnotes,
+                code,
+                html,
                 internal_links,
             )
         }
@@ -190,6 +196,8 @@ where
     // Build and return
     let table_of_contents_depths = parser.remove_table_of_contents();
     let footnotes = parser.remove_footnotes();
+    let code = parser.remove_code();
+    let html = parser.remove_html();
     let internal_links = parser.remove_internal_links();
     let has_footnote_block = parser.has_footnote_block();
     let has_toc_block = parser.has_toc_block();
@@ -198,6 +206,8 @@ where
         result,
         table_of_contents_depths,
         footnotes,
+        code,
+        html,
         has_footnote_block,
         has_toc_block,
         internal_links,
@@ -284,6 +294,12 @@ pub struct UnstructuredParseResult<'r, 't> {
     /// Each entry is a series of elements, in combination
     /// they make the contents of one footnote.
     pub footnotes: Vec<Vec<Element<'t>>>,
+
+    // The list of [[code]] elements.
+    pub code: Vec<(String, String)>,
+
+    // The list of [[html]] elements.
+    pub html: Vec<String>,
 
     /// Whether a footnote block was placed during parsing.
     pub has_footnote_block: bool,

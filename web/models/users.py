@@ -84,7 +84,7 @@ class User(AbstractUser):
 
     def get_avatar(self, default=None):
         if self.avatar:
-            return '%s%s' % (settings.MEDIA_URL, self.avatar)
+            return '%s%s' % ('local--files/', self.avatar)
         return default
 
     def __str__(self):

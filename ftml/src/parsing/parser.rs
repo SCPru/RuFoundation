@@ -53,6 +53,8 @@ bitflags! {
         const InternalLinks = 1 << 4;
         const AcceptsPartial = 1 << 5;
         const Scopes = 1 << 6;
+        const Code = 1 << 7;
+        const HTML = 1 << 8;
     }
 }
 
@@ -75,6 +77,12 @@ struct ParserState<'t> {
     //
     // Schema: Vec<List of elements in a footnote>
     footnotes: Rc<RefCell<Vec<Vec<Element<'t>>>>>,
+
+    // List of [[code]]. First element is type
+    code: Rc<RefCell<Vec<(String, String)>>>,
+
+    // List of [[html]]
+    html: Rc<RefCell<Vec<String>>>,
 
     // Internal links
     internal_links: Rc<RefCell<Vec<PageRef<'t>>>>,
@@ -177,6 +185,8 @@ impl<'r, 't> Parser<'r, 't> {
             accepts_partial: AcceptsPartial::None,
             table_of_contents: make_shared_vec(),
             footnotes: make_shared_vec(),
+            code: make_shared_vec(),
+            html: make_shared_vec(),
             internal_links: make_shared_vec(),
             has_footnote_block: false,
             has_toc_block: false,
@@ -215,6 +225,18 @@ impl<'r, 't> Parser<'r, 't> {
             current.footnotes
         };
 
+        let cloned_code = if flags.contains(ParserTransactionFlags::Code) {
+            Rc::new(RefCell::new(current.code.borrow().to_vec()))
+        } else {
+            current.code
+        };
+
+        let cloned_html = if flags.contains(ParserTransactionFlags::HTML) {
+            Rc::new(RefCell::new(current.html.borrow().to_vec()))
+        } else {
+            current.html
+        };
+
         let cloned_internal_links = if flags.contains(ParserTransactionFlags::InternalLinks) {
             Rc::new(RefCell::new(current.internal_links.borrow().to_vec()))
         } else {
@@ -225,6 +247,8 @@ impl<'r, 't> Parser<'r, 't> {
             accepts_partial: current.accepts_partial,
             table_of_contents: cloned_toc,
             footnotes: cloned_footnotes,
+            code: cloned_code,
+            html: cloned_html,
             internal_links: cloned_internal_links,
             has_footnote_block: current.has_footnote_block,
             has_toc_block: current.has_toc_block,
@@ -258,6 +282,14 @@ impl<'r, 't> Parser<'r, 't> {
         if flags.contains(ParserTransactionFlags::Footnotes) {
             current.has_footnote_block = last_known.has_footnote_block;
             current.footnotes = last_known.footnotes;
+        }
+
+        if flags.contains(ParserTransactionFlags::Code) {
+            current.code = last_known.code;
+        }
+
+        if flags.contains(ParserTransactionFlags::HTML) {
+            current.html = last_known.html;
         }
 
         if flags.contains(ParserTransactionFlags::FootnoteFlag) {
@@ -311,6 +343,8 @@ impl<'r, 't> Parser<'r, 't> {
             result,
             table_of_contents_depths,
             footnotes,
+            html,
+            code,
             has_footnote_block,
             has_toc_block,
             internal_links,
@@ -329,6 +363,14 @@ impl<'r, 't> Parser<'r, 't> {
                 for foot in footnotes {
                     let elements = foot.iter().map(|element| element.to_owned()).collect();
                     state.footnotes.borrow_mut().push(elements);
+                }
+
+                for s in html {
+                    state.html.borrow_mut().push(s);
+                }
+
+                for s in code {
+                    state.code.borrow_mut().push(s);
                 }
 
                 for internal in internal_links {
@@ -596,6 +638,26 @@ impl<'r, 't> Parser<'r, 't> {
     #[cold]
     pub fn remove_footnotes(&mut self) -> Vec<Vec<Element<'t>>> {
         mem::take(&mut self.state_mut().footnotes.borrow_mut())
+    }
+
+    // Code
+    pub fn push_code(&mut self, code_type: String, code: String) {
+        self.state_mut().code.borrow_mut().push((code_type, code));
+    }
+
+    #[cold]
+    pub fn remove_code(&mut self) -> Vec<(String, String)> {
+        mem::take(&mut self.state_mut().code.borrow_mut())
+    }
+
+    // HTML
+    pub fn push_html(&mut self, html: String) {
+        self.state_mut().html.borrow_mut().push(html);
+    }
+
+    #[cold]
+    pub fn remove_html(&mut self) -> Vec<String> {
+        mem::take(&mut self.state_mut().html.borrow_mut())
     }
 
     // Internal links

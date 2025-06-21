@@ -678,6 +678,35 @@ def get_latest_source(full_name_or_article: _FullNameOrArticle) -> Optional[str]
     return None
 
 
+# Get source of article at specific revision number
+def get_source_at_rev_num(full_name_or_article: _FullNameOrArticle, rev_num: int) -> Optional[str]:
+    article = get_article(full_name_or_article)
+    entry = get_log_entry(article, rev_num)
+    if not entry:
+        return None
+
+    def get_version_from_meta(meta):
+        if 'source' in meta:
+            return get_version(meta['source']['version_id'])
+        elif "version_id" in meta:
+            return get_version(meta["version_id"])
+        else:
+            return None
+
+    version = get_version_from_meta(entry.meta)
+    if not version:
+        log_entries = list(get_log_entries(article))
+        for old_entry in log_entries[log_entries.index(entry):]:
+            version = get_version_from_meta(old_entry.meta)
+            if version:
+                break
+
+    if not version:
+        return None
+
+    return version.source
+
+
 # Get parent of article
 def get_parent(full_name_or_article: _FullNameOrArticle) -> Optional[str]:
     article = get_article(full_name_or_article)
@@ -1019,7 +1048,7 @@ def rename_file_in_article(full_name_or_article: _FullNameOrArticle, file: File,
 # Pretty much this blocks six 100% special paths, everything else is OK
 def is_full_name_allowed(article_name: str) -> bool:
     article_name = article_name.lower()
-    reserved = ['-', '_', 'api', 'forum', 'local--files', 'local--code']
+    reserved = ['-', '_', 'api', 'forum', 'local--files', 'local--code', 'local--html']
     if article_name in reserved:
         return False
     if len(article_name) > 128:

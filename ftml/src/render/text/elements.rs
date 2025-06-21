@@ -436,7 +436,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
         Element::EquationReference(name) => {
             str_write!(ctx, "[{name}]");
         }
-        Element::Html { contents } => {
+        Element::Html { contents, external: _ } => {
             str_write!(ctx, "```html\n{contents}\n```");
         }
         Element::Iframe { url, .. } => str_write!(ctx, "[{url}]"),

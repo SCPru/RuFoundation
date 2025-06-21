@@ -200,37 +200,16 @@ class FetchOrRevertLogView(APIView):
 
 
 class FetchVersionView(APIView):
-    @staticmethod
-    def get_version_from_meta(meta):
-        if 'source' in meta:
-            return articles.get_version(meta['source']['version_id'])
-        elif "version_id" in meta:
-            return articles.get_version(meta["version_id"])
-        else:
-            return None
-
     def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
-        entry = articles.get_log_entry(full_name, request.GET.get('revNum'))
-        if not entry:
-            raise APIError('Версии с данным идентификатором не существует', 404)
+        article = articles.get_article(full_name)
+        source = articles.get_source_at_rev_num(article, int(request.GET.get('revNum')))
 
-        version = self.get_version_from_meta(entry.meta)
-        if not version:
-            log_entries = list(articles.get_log_entries(full_name))
-            for old_entry in log_entries[log_entries.index(entry):]:
-                version = self.get_version_from_meta(old_entry.meta)
-                if version:
-                    break
+        if source:
+            context = RenderContext(article, article,
+                                    json.loads(request.GET.get('pathParams', "{}")), self.request.user)
+            rendered = single_pass_render(source, context)
 
-        if version:
-            if version.rendered:
-                rendered = version.rendered
-            else:
-                context = RenderContext(version.article, version.article,
-                                        json.loads(request.GET.get('pathParams', "{}")), self.request.user)
-                rendered = single_pass_render(version.source, context)
-
-            return self.render_json(200, {'source': version.source, "rendered": rendered})
+            return self.render_json(200, {'source': source, "rendered": rendered})
         raise APIError('Версии с данным идентификатором не существует', 404)
 
 

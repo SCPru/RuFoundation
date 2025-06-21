@@ -33,6 +33,7 @@ latex2mathml = { version = "0.2", optional = true }
 lazy_static = "1"
 log = "0.4"
 maplit = "1"
+md5 = "0.7.0"
 pest = "2"
 pest_derive = "2"
 pyo3 = { version = "0.16.5", features = ["extension-module"] }

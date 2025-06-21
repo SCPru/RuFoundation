@@ -45,7 +45,8 @@ fn parse_fn<'r, 't>(
     assert!(!flag_score, "IfTags doesn't allow score flag");
     assert_block_name(&BLOCK_IFTAGS, name);
 
-    let mut parser_tx = parser.transaction(ParserTransactionFlags::Footnotes | ParserTransactionFlags::TOC);
+    let no_conditionals = parser.settings().no_conditionals;
+    let mut parser_tx = parser.transaction(ParserTransactionFlags::all());
 
     // Parse out tag conditions
     let conditions =
@@ -65,7 +66,7 @@ fn parse_fn<'r, 't>(
     );
 
     // Return elements based on condition
-    let elements = if check_iftags(parser_tx.page_info(), &conditions) {
+    let elements = if no_conditionals || check_iftags(parser_tx.page_info(), &conditions) {
         debug!("Conditions passed, including elements");
 
         // Confirm parser state modification caused by iftags content.

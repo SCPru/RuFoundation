@@ -4,7 +4,7 @@ from io import BufferedReader
 from pathlib import Path
 
 from django.views.static import was_modified_since
-from django.http import FileResponse, Http404, HttpResponse, HttpRequest, HttpResponseNotModified
+from django.http import FileResponse, HttpResponseNotFound, HttpResponse, HttpRequest, HttpResponseNotModified
 from django.conf import settings
 from django.views.generic.base import View
 from django.utils.http import http_date
@@ -71,9 +71,11 @@ class MediaView(View):
         full_path = document_root / dir_path
 
         if not full_path.exists():
-            raise Http404('Not found')
+            return HttpResponseNotFound('Not found')
 
         stat = full_path.stat()
+
+        response = HttpResponse(content_type=content_type)
 
         if not content_type:
             content_type, encoding = mimetypes.guess_type(str(full_path))
@@ -95,7 +97,6 @@ class MediaView(View):
             stat.st_mtime):
             return HttpResponseNotModified()
         
-        response = HttpResponse(content_type=content_type)
         response['Last-Modified'] = http_date(stat.st_mtime)
         response['Content-Length'] = content_length
         response['Access-Control-Expose-Headers'] = 'Content-Length, Content-Range'

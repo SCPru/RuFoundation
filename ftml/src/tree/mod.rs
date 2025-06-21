@@ -87,6 +87,12 @@ pub struct SyntaxTree<'t> {
     /// The full footnote list for this page.
     pub footnotes: Vec<Vec<Element<'t>>>,
 
+    /// List of [[code]] blocks for this page.
+    pub code: Vec<(String, String)>,
+
+    // List of [[html]] blocks for this page.
+    pub html: Vec<String>,
+
     /// The list of internal links referenced in the tree.
     /// 
     /// This is used for bulk querying the database for page titles and existence.
@@ -100,6 +106,8 @@ impl<'t> SyntaxTree<'t> {
         table_of_contents: Vec<Element<'t>>,
         has_toc_block: bool,
         footnotes: Vec<Vec<Element<'t>>>,
+        code: Vec<(String, String)>,
+        html: Vec<String>,
         internal_links: Vec<PageRef<'t>>,
     ) -> ParseOutcome<Self> {
         let tree = SyntaxTree {
@@ -107,6 +115,8 @@ impl<'t> SyntaxTree<'t> {
             table_of_contents,
             has_toc_block,
             footnotes,
+            code,
+            html,
             internal_links,
         };
         ParseOutcome::new(tree, warnings)
@@ -118,6 +128,8 @@ impl<'t> SyntaxTree<'t> {
             table_of_contents: elements_to_owned(&self.table_of_contents),
             has_toc_block: self.has_toc_block,
             footnotes: elements_lists_to_owned(&self.footnotes),
+            code: self.code.to_owned(),
+            html: self.html.to_owned(),
             internal_links: page_refs_to_owned(&self.internal_links),
         }
     }

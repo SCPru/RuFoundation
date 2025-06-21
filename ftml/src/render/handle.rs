@@ -96,6 +96,16 @@ impl<'t> Handle<'t> {
         }
     }
 
+    pub fn get_iframe_link<'a>(
+        &self,
+        hash: &str,
+        id: &str,
+        info: &PageInfo,
+    ) -> Cow<'a, str> {
+        info!("Getting file link for iframe");
+        Cow::Owned(format!("//{}/local--html/{}/{hash}-{id}", &info.media_domain, &info.full_name()))
+    }
+
     pub fn get_link_label<F>(
         &self,
         link: &LinkLocation,
@@ -132,6 +142,10 @@ impl<'t> Handle<'t> {
 
     pub fn get_message(&self, message: &str) -> String {
         self.callbacks.get_i18n_message(Cow::from(message)).as_ref().to_owned()
+    }
+
+    pub fn get_html_injected_code(&self, html_id: &str) -> String {
+        self.callbacks.get_html_injected_code(Cow::from(html_id)).as_ref().to_owned()
     }
 }
 

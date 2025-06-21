@@ -44,12 +44,16 @@ fn parse_fn<'r, 't>(
     assert!(!flag_score, "HTML doesn't allow score flag");
     assert_block_name(&BLOCK_HTML, name);
 
-    parser.get_head_none(&BLOCK_HTML, in_head)?;
+    let mut arguments = parser.get_head_map(&BLOCK_HTML, in_head)?;
+    let external = arguments.get_bool(parser, "external")?.unwrap_or(false);
     let mut html = Cow::from(parser.get_body_text(&BLOCK_HTML, name)?);
     parser.replace_variables(html.to_mut());
-    
+
+    parser.push_html(html.as_ref().to_owned());
+
     let element = Element::Html {
         contents: html,
+        external
     };
 
     ok!(element)
