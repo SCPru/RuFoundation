@@ -95,6 +95,10 @@ pub struct WikitextSettings {
     /// Iftags conditions are always true.
     /// For ifexpr and if both sides are evaluated (and stored and rendered) no matter the values.
     pub no_conditionals: bool,
+
+    /// Used for disabling modules.
+    /// This is also used in "system mode" (when we just want to collect code blocks and html blocks).
+    pub no_modules: bool,
 }
 
 impl WikitextSettings {
@@ -112,6 +116,7 @@ impl WikitextSettings {
                 allow_local_paths: true,
                 interwiki,
                 no_conditionals: false,
+                no_modules: false,
             },
             WikitextMode::System => WikitextSettings {
                 mode,
@@ -123,6 +128,7 @@ impl WikitextSettings {
                 allow_local_paths: true,
                 interwiki,
                 no_conditionals: true,
+                no_modules: true,
             },
             WikitextMode::Draft => WikitextSettings {
                 mode,
@@ -134,6 +140,7 @@ impl WikitextSettings {
                 allow_local_paths: true,
                 interwiki,
                 no_conditionals: false,
+                no_modules: false,
             },
             WikitextMode::ForumPost | WikitextMode::DirectMessage => WikitextSettings {
                 mode,
@@ -145,6 +152,7 @@ impl WikitextSettings {
                 allow_local_paths: false,
                 interwiki,
                 no_conditionals: false,
+                no_modules: false,
             },
             WikitextMode::Inline => WikitextSettings {
                 mode,
@@ -156,6 +164,7 @@ impl WikitextSettings {
                 allow_local_paths: true,
                 interwiki,
                 no_conditionals: false,
+                no_modules: false,
             },
             WikitextMode::List => WikitextSettings {
                 mode,
@@ -167,6 +176,7 @@ impl WikitextSettings {
                 allow_local_paths: true,
                 interwiki,
                 no_conditionals: false,
+                no_modules: false,
             },
         }
     }

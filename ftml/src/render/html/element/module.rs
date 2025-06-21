@@ -25,6 +25,10 @@ use crate::tree::Module;
 pub fn render_module(ctx: &mut HtmlContext, module: &Module) {
     info!("Rendering module {}", module.name());
 
+    if ctx.settings().no_modules {
+        return
+    }
+
     let rendered: Cow<str> = {
         let v = ctx.callbacks().render_module(module.name().to_owned(), module.params().to_owned(), module.text().to_owned());
         v
