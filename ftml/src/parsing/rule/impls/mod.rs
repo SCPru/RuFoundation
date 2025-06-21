@@ -23,13 +23,13 @@ mod prelude {
     pub use crate::parsing::collect::*;
     pub use crate::parsing::condition::ParseCondition;
     pub use crate::parsing::consume::consume;
-    pub use crate::parsing::exception::{ParseException, ParseWarning, ParseWarningKind};
+    pub use crate::parsing::exception::{ParseWarning, ParseWarningKind};
     pub use crate::parsing::parser::Parser;
-    pub use crate::parsing::result::{ParseResult, ParseSuccess};
+    pub use crate::parsing::result::ParseResult;
     pub use crate::parsing::rule::{LineRequirement, Rule};
     pub use crate::parsing::token::{ExtractedToken, Token};
-    pub use crate::text::FullText;
-    pub use crate::tree::{AttributeMap, Container, ContainerType, Element, Elements};
+    
+    pub use crate::tree::{AttributeMap, ContainerType, Element, Elements};
 }
 
 mod anchor;

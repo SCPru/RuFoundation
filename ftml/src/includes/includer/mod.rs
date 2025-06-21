@@ -25,7 +25,7 @@ mod prelude {
     pub use crate::data::PageRef;
     pub use crate::includes::{FetchedPage, IncludeRef, Includer};
     pub use std::borrow::Cow;
-    pub use std::collections::HashMap;
+    
 }
 
 use crate::includes::{IncludeRef, PageRef};

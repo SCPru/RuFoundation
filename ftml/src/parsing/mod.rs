@@ -45,7 +45,7 @@ mod prelude {
     };
     pub use crate::settings::WikitextSettings;
     pub use crate::text::FullText;
-    pub use crate::tree::{Element, Elements, OwnedElementsIterator};
+    pub use crate::tree::{Element, Elements};
 }
 
 use self::depth::{process_depths, DepthItem, DepthList};

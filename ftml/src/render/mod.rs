@@ -21,8 +21,8 @@
 mod prelude {
     pub use super::Render;
     pub use crate::data::PageInfo;
-    pub use crate::settings::{WikitextMode, WikitextSettings};
-    pub use crate::tree::{AttributeMap, Container, ContainerType, Element, SyntaxTree};
+    pub use crate::settings::WikitextSettings;
+    pub use crate::tree::SyntaxTree;
 }
 
 pub mod debug;

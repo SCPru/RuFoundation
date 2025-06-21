@@ -19,7 +19,7 @@
  */
 
 mod prelude {
-    pub use super::super::{Arguments, BlockRule};
+    pub use super::super::BlockRule;
     pub use crate::parsing::collect::*;
     pub use crate::parsing::condition::ParseCondition;
     pub use crate::parsing::parser::{Parser, ParserTransactionFlags};
@@ -130,7 +130,6 @@ pub use self::italics::BLOCK_ITALICS;
 pub use self::lines::BLOCK_LINES;
 pub use self::list::{BLOCK_LI, BLOCK_OL, BLOCK_UL};
 pub use self::mark::BLOCK_MARK;
-pub use self::math::BLOCK_MATH;
 pub use self::module::BLOCK_MODULE;
 pub use self::monospace::BLOCK_MONOSPACE;
 pub use self::paragraph::BLOCK_PARAGRAPH;
