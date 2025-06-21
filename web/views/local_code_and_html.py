@@ -37,9 +37,9 @@ class LocalCodeView(View):
 
         mime_type = 'text/plain'
         language = code[index][0]
-        if language == 'html':
+        if language in ('html', 'xhtml'):
             mime_type = 'text/html'
-        elif language == 'javascript':
+        elif language in ('javascript', 'js', 'jsx'):
             mime_type = 'text/javascript'
         elif language == 'xml':
             mime_type = 'application/xml'
