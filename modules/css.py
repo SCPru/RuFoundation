@@ -5,11 +5,13 @@ def has_content():
     return True
 
 
-def render(_context, params, content=''):
-    code = content.replace('\u00a0', ' ').replace('<', '\\u003c')
+def render(context, _params, content=''):
+    content = content.replace('\u00a0', ' ')
+    code = content.replace('<', '\\u003c')
     # once we have a way to properly parse params, uncomment this and remove show=False
     # show = params.get('show') in ['yes', 'true']
     show = False
+    context.add_css += content + '\n'
     return render_template_from_string(
         """
         <style>{{code|safe}}</style>

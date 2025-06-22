@@ -130,6 +130,18 @@ impl WikitextSettings {
                 no_conditionals: true,
                 no_modules: true,
             },
+            WikitextMode::SystemWithModules => WikitextSettings {
+                mode,
+                enable_page_syntax: true,
+                enable_block_elements: true,
+                use_include_compatibility: false,
+                use_true_ids: true,
+                isolate_user_ids: true,
+                allow_local_paths: true,
+                interwiki,
+                no_conditionals: true,
+                no_modules: false,
+            },
             WikitextMode::Draft => WikitextSettings {
                 mode,
                 enable_page_syntax: true,
@@ -211,4 +223,5 @@ pub enum WikitextMode {
 
     /// Processing for backlinks and such. Causes both sides of all conditions to evaluate.
     System,
+    SystemWithModules,
 }

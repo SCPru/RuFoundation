@@ -6,7 +6,7 @@ function getName(fullName: string) {
 }
 
 export function isFullNameAllowed(articleName: string) {
-  const reserved = ['-', '_', 'api', 'forum', 'local--files', 'local--code', 'local--html']
+  const reserved = ['-', '_', 'api', 'forum', 'local--files', 'local--code', 'local--html', 'local--theme']
 
   articleName = articleName.toLowerCase()
   if (reserved.includes(articleName) || articleName.length > 128 || !/^[A-Za-z0-9\-_:]+$/.test(articleName)) return false

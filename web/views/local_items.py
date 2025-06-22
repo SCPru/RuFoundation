@@ -1,7 +1,7 @@
 from django.http import HttpResponseNotFound, HttpResponseForbidden, HttpResponse, HttpRequest
 from django.views.generic.base import View
 
-from renderer import RenderContext, single_pass_fetch_code_and_html
+from renderer import RenderContext, single_pass_fetch_code_and_html, single_pass_render
 from renderer.html import get_html_injected_code
 from web.controllers import articles, permissions
 
@@ -93,6 +93,37 @@ class LocalHTMLView(View):
         prepend_code = get_html_injected_code(requested_id)
 
         content = (prepend_code + html_by_hash[requested_hash]).encode('utf-8')
+
+        response['Content-Length'] = len(content)
+        response.content = content
+        response.status_code = 200
+
+        return response
+
+
+class LocalThemeView(View):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get(self, request: HttpRequest, page_id: str, *args, **kwargs):
+        article = articles.get_article(page_id)
+        if not article:
+            return HttpResponseNotFound('Article not found')
+
+        if not permissions.check(request.user, 'view', article):
+            return HttpResponseForbidden('Permission denied')
+
+        rev_num = request.GET.get('revNum')
+        if rev_num is not None:
+            source = articles.get_source_at_rev_num(article, int(rev_num)) or ''
+        else:
+            source = articles.get_latest_source(article) or ''
+
+        context = RenderContext(article, article, json.loads(request.GET.get('pathParams', "{}")), self.request.user)
+        r = single_pass_render(source, context, 'system-with-modules')
+
+        response = HttpResponse(content_type='text/css')
+        content = context.add_css.encode('utf-8')
 
         response['Content-Length'] = len(content)
         response.content = content

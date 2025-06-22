@@ -18,12 +18,13 @@ from django.urls import path, include
 from django.conf import settings
 
 from web.views.media import MediaView
-from web.views.local_code_and_html import LocalCodeView, LocalHTMLView
+from web.views.local_items import LocalCodeView, LocalHTMLView, LocalThemeView
 
 
 urlpatterns = [
     path(f"local--files/<path:dir_path>", MediaView.as_view()),
     path(f"local--code/<page_id>/<int:index>", LocalCodeView.as_view()),
     path(f"local--html/<page_id>/<hash_and_id>", LocalHTMLView.as_view()),
+    path(f"local--theme/<page_id>/style.css", LocalThemeView.as_view()),
     path("", include("web.urls"))
 ]

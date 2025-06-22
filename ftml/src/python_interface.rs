@@ -453,6 +453,7 @@ fn mode_to_wikitext_mode(mode: String) -> WikitextMode {
         "message" => WikitextMode::ForumPost,
         "inline" => WikitextMode::Inline,
         "system" => WikitextMode::System,
+        "system-with-modules" => WikitextMode::SystemWithModules,
         _ => WikitextMode::Page
     }
 }

@@ -14,6 +14,7 @@ class RenderContext(object):
         self.title = article.title if article else ''
         self.status = 200
         self.redirect_to = None
+        self.add_css = ''
 
     def clone_with(self, **kwargs):
         article = kwargs.get('article', self.article)

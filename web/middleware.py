@@ -79,7 +79,7 @@ class MediaHostMiddleware(object):
             threadvars.put('current_site', site)
 
             is_media_host = request.get_host().split(':')[0] == site.media_domain
-            media_prefixes = ['local--files', 'local--code', 'local--html']
+            media_prefixes = ['local--files', 'local--code', 'local--html', 'local--theme']
             is_media_url = bool([x for x in media_prefixes if request.path.startswith(f'/{x}/')])
 
             if site.media_domain != site.domain:
