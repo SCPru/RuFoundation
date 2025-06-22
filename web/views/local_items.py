@@ -119,8 +119,12 @@ class LocalThemeView(View):
         else:
             source = articles.get_latest_source(article) or ''
 
+        include_params = json.loads(request.GET.get('includeParams', "{}"))
+        for k in include_params:
+            source = source.replace('{$%s}' % k, include_params[k])
+
         context = RenderContext(article, article, json.loads(request.GET.get('pathParams', "{}")), self.request.user)
-        single_pass_render(source, context, 'system-with-modules')
+        single_pass_render(source, context)
 
         response = HttpResponse(content_type='text/css; charset=utf-8')
         content = context.add_css.encode('utf-8')
