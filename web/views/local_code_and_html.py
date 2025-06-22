@@ -36,7 +36,7 @@ class LocalCodeView(View):
             return HttpResponseNotFound('Code block not found')
 
         mime_type = 'text/plain'
-        language = code[index][0]
+        language = code[index][0].lower()
         if language in ('html', 'xhtml'):
             mime_type = 'text/html'
         elif language in ('javascript', 'js', 'jsx'):
