@@ -119,6 +119,16 @@ class LocalThemeView(View):
         else:
             source = articles.get_latest_source(article) or ''
 
+        # delete blocks between noinclude
+        noinclude_start = '[[noinclude]]'
+        noinclude_end = '[[/noinclude]]'
+        while True:
+            next_noinclude = source.find(noinclude_start)
+            if next_noinclude < 0:
+                break
+            closing_noinclude = source.find(noinclude_end, next_noinclude)
+            source = source[:next_noinclude] + source[closing_noinclude+len(noinclude_end):]
+
         include_params = json.loads(request.GET.get('includeParams', "{}"))
         for k in include_params:
             source = source.replace('{$%s}' % k, include_params[k])
