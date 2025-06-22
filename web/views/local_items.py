@@ -46,7 +46,7 @@ class LocalCodeView(View):
         elif language == 'css':
             mime_type = 'text/css'
 
-        response = HttpResponse(content_type=mime_type)
+        response = HttpResponse(content_type=f'{mime_type}; charset=utf-8')
         content = code[index][1].encode('utf-8')
 
         response['Content-Length'] = len(content)
@@ -61,7 +61,7 @@ class LocalHTMLView(View):
         super().__init__(*args, **kwargs)
 
     def get(self, request: HttpRequest, page_id: str, hash_and_id: str, *args, **kwargs):
-        response = HttpResponse(content_type='text/html')
+        response = HttpResponse(content_type='text/html; charset=utf-8')
 
         article = articles.get_article(page_id)
         if not article:
@@ -120,9 +120,9 @@ class LocalThemeView(View):
             source = articles.get_latest_source(article) or ''
 
         context = RenderContext(article, article, json.loads(request.GET.get('pathParams', "{}")), self.request.user)
-        r = single_pass_render(source, context, 'system-with-modules')
+        single_pass_render(source, context, 'system-with-modules')
 
-        response = HttpResponse(content_type='text/css')
+        response = HttpResponse(content_type='text/css; charset=utf-8')
         content = context.add_css.encode('utf-8')
 
         response['Content-Length'] = len(content)
