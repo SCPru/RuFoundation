@@ -65,7 +65,7 @@ pub fn render_html(ctx: &mut HtmlContext, contents: &str, external: bool) {
             .attr(attr!(
                 "id" => &id,
                 "src" => &iframe_src,
-                "sandbox" => "allow-scripts allow-top-navigation allow-popups allow-modals",
+                "sandbox" => "allow-scripts allow-top-navigation allow-popups allow-modals allow-same-origin",
                 "allow" => "fullscreen",
                 "allowfullscreen" => "allowfullscreen",
                 "style" => "width: 100%; height: 0",
