@@ -21,6 +21,7 @@ services:
       DB_PG_PASSWORD: pguser
   postgres:
     image: postgres:14
+    restart: always
     volumes:
       - ./postgresql:/var/lib/postgresql
       - ./postgresql/data:/var/lib/postgresql/data
