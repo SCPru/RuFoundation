@@ -12,13 +12,13 @@ def symlinks_full_update():
 
     symlinks_dir = Path(settings.MEDIA_ROOT) / 'symlinks'
     rel_media_path = Path('../../media')
-    rel_system_path = Path('../../-')
+    rel_system_static_path = Path('../-')
 
     shutil.rmtree(symlinks_dir, ignore_errors=True)
     symlinks_dir.mkdir(exist_ok=True)
 
     try:
-        (symlinks_dir / '-').symlink_to(rel_system_path, True)
+        (symlinks_dir / '-').symlink_to(rel_system_static_path, True)
         for file in files:
             try:
                 link_dir: Path = symlinks_dir / file.article.full_name
