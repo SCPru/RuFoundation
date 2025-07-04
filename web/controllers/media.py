@@ -12,11 +12,13 @@ def symlinks_full_update():
 
     symlinks_dir = Path(settings.MEDIA_ROOT) / 'symlinks'
     rel_media_path = Path('../../media')
+    rel_system_path = Path('../../-')
 
     shutil.rmtree(symlinks_dir, ignore_errors=True)
     symlinks_dir.mkdir(exist_ok=True)
 
     try:
+        (symlinks_dir / '-').symlink_to(rel_system_path, True)
         for file in files:
             link_dir: Path = symlinks_dir / file.article.full_name
             link_name = link_dir / file.name
@@ -24,7 +26,7 @@ def symlinks_full_update():
             link_dir.mkdir(exist_ok=True)
             link_name.symlink_to(rel_media_path / file.local_media_destination)
     except:
-        logging.error('Failed to update symlincs for articles static')
+        logging.error('Failed to update symlinks for articles static')
 
 
 def symlinks_article_update(article: Article, old_name: str=None):
