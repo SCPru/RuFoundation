@@ -26,7 +26,7 @@ def symlinks_full_update():
             link_dir.mkdir(exist_ok=True)
             link_name.symlink_to(rel_media_path / file.local_media_destination)
     except:
-        logging.error('Failed to update symlinks for articles static')
+        logging.exception('Failed to update symlinks for articles static')
 
 
 def symlinks_article_update(article: Article, old_name: str=None):
@@ -45,7 +45,7 @@ def symlinks_article_update(article: Article, old_name: str=None):
             link_name = article_dir / file.name
             link_name.symlink_to(rel_media_path / file.local_media_destination)
     except:
-        logging.error(f'Failed to update symlincs for article: {article}')
+        logging.exception(f'Failed to update symlincs for article: {article}')
 
 
 def symlinks_article_delete(article: Article):
