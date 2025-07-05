@@ -29,7 +29,7 @@ def symlinks_full_update():
             except FileNotFoundError:
                 logging.exception(f'Failed to update symlincs for article: {file.article}')
     except:
-        logging.exception('Failed to update symlinks for articles static')
+        logging.exception('Failed to update symlinks for static')
 
 
 def symlinks_article_update(article: Article, old_name: str=None):
