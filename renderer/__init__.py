@@ -14,7 +14,7 @@ from web.models.articles import ArticleVersion, Article
 from web.models.site import get_current_site
 from . import expression, html
 from .parser import RenderContext
-from .utils import render_user_to_html, render_template_from_string
+from .utils import render_user_to_html, render_template_from_string, render_external_user_to_html
 
 from modules.listpages import get_page_vars
 from renderer.templates import apply_template
@@ -46,11 +46,7 @@ def callbacks_with_context(context):
             try:
                 if user.lower().startswith('external:'):
                     user = user[len('external:'):]
-                    return render_template_from_string(
-                        '<a href="https://www.wikidot.com/user:info/{{username_url}}" target="_blank" class="w-external-user">{{username}}</a>',
-                        username=user,
-                        username_url=urllib.parse.quote(user)
-                    )
+                    return render_external_user_to_html(user, avatar=avatar)
                 if user.lower().startswith('wd:'):
                     user = User.objects.get(type=User.UserType.Wikidot, wikidot_username=user[3:])
                 else:

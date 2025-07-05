@@ -63,13 +63,31 @@ def render_user_to_html(user: User, avatar=True, hover=True):
                 <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
             {% endif %}
             <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a></span>
-        """, # i know it's a crutch
+        """,
         class_add=(' avatarhover' if hover else ''),
         show_avatar=avatar,
         avatar=user_avatar,
         user_id=user.id,
         username=user.username,
         displayname=displayname
+    )
+
+
+def render_external_user_to_html(username: str, avatar=True, hover=True):
+    return render_template_from_string(
+        """
+        <span class="printuser w-user{{class_add}}" data-user-id="{{user_id}}" data-user-name="{{username}}">
+            {% if show_avatar %}
+                <a href="https://www.wikidot.com/user:info/{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
+            {% endif %}
+            <a href="https://www.wikidot.com/user:info/{{username}}">{{displayname}}</a></span>
+        """,
+        class_add=(' avatarhover' if hover else ''),
+        show_avatar=avatar,
+        avatar=settings.WIKIDOT_AVATAR,
+        user_id=-1,
+        username=username,
+        displayname=username
     )
 
 
