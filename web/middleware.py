@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import get_user_model
 from django.shortcuts import render
+from django.utils.functional import cached_property
 
 from web.models.site import Site
 from web import threadvars
@@ -115,11 +116,11 @@ class CsrfViewMiddleware(django.middleware.csrf.CsrfViewMiddleware):
         super().__init__(*args, **kwargs)
         self.request = None
 
-    @property
+    @cached_property
     def csrf_trusted_origins_hosts(self):
         return [site.domain for site in Site.objects.all()]
 
-    @property
+    @cached_property
     def allowed_origins_exact(self):
         port = ':'+str(self.request.META['SERVER_PORT'])
         hosts = self.csrf_trusted_origins_hosts
@@ -128,7 +129,7 @@ class CsrfViewMiddleware(django.middleware.csrf.CsrfViewMiddleware):
             ['http://'+host for host in hosts] +\
             ['https://'+host for host in hosts]
 
-    @property
+    @cached_property
     def allowed_origin_subdomains(self):
         return dict()
 
