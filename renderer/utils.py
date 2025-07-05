@@ -3,6 +3,7 @@ from django.conf import settings
 from django.template import Context, Template
 
 from web.models.users import User
+from web.controllers import articles
 
 import threading
 import urllib.parse
@@ -74,20 +75,22 @@ def render_user_to_html(user: User, avatar=True, hover=True):
 
 
 def render_external_user_to_html(username: str, avatar=True, hover=True):
+    displayname = username
+    username = articles.normalize_article_name(username)
     return render_template_from_string(
         """
         <span class="printuser w-user{{class_add}}" data-user-id="{{user_id}}" data-user-name="{{username}}">
             {% if show_avatar %}
-                <a href="https://www.wikidot.com/user:info/{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
+                <a href="https://www.wikidot.com/user:info/{{username}}" target="_blank"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
             {% endif %}
-            <a href="https://www.wikidot.com/user:info/{{username}}">{{displayname}}</a></span>
+            <a href="https://www.wikidot.com/user:info/{{username}}" target="_blank">{{displayname}}</a></span>
         """,
         class_add=(' avatarhover' if hover else ''),
         show_avatar=avatar,
         avatar=settings.WIKIDOT_AVATAR,
         user_id=-1,
         username=username,
-        displayname=username
+        displayname=displayname
     )
 
 
