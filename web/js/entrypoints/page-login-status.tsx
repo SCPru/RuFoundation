@@ -15,6 +15,7 @@ const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) =>
   const menuRef = useRef<HTMLDivElement>()
 
   useEffect(() => {
+    sessionStorage.setItem('lastPageBefore', window.location.pathname);
     window.addEventListener('click', onPageClick)
 
     return () => {
