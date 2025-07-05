@@ -60,8 +60,11 @@ You can provision these basic structures by running the following commands:
 
 ### Getting started
 
-To start the project, use:
+Make preparation for files folder
+- `useradd -u 8877 scpwiki`
+- `mkdir -m 774 -p files && chown :scpwiki files`
 
+To start the project, use:
 - `docker-compose up`
 
 To completely delete all data, use:
@@ -71,8 +74,10 @@ To completely delete all data, use:
 
 To create users, sites and seed inside the database, start the project and afterwards use syntax such as this:
 
-- `docker exec -it scpdev_web python manage.py createsite -s scp-ru -d localhost -t "SCP Foundation" -H "Russian branch"`
-- `docker exec -it scpdev_web seed`
+- `docker exec -it scpdev-web python manage.py createsite -s scp-ru -d localhost -t "SCP Foundation" -H "Russian branch"`
+- `docker exec -it scpdev-web python manage.py seed`
+
+If you run production server make sure you setup you real domain Instead of `localhost`
 
 To update current app that is running, do:
 
