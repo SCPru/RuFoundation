@@ -5,6 +5,8 @@ from django.db.models import TextField, Value
 from django.db.models.functions import Concat, Lower
 from django.utils.safestring import SafeString
 
+import urllib.parse
+
 import modules
 from web.models.users import User
 from web import threadvars
@@ -42,6 +44,13 @@ def callbacks_with_context(context):
 
         def render_user(self, user: str, avatar: bool) -> str:
             try:
+                if user.lower().startswith('external:'):
+                    user = user[len('external:'):]
+                    return render_template_from_string(
+                        '<a href="https://www.wikidot.com/user:info/{{username_url}}" target="_blank" class="w-external-user">{{username}}</a>',
+                        username=user,
+                        username_url=urllib.parse.quote(user)
+                    )
                 if user.lower().startswith('wd:'):
                     user = User.objects.get(type=User.UserType.Wikidot, wikidot_username=user[3:])
                 else:
