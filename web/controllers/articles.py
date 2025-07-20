@@ -913,7 +913,7 @@ def add_vote(full_name_or_article: _FullNameOrArticle, user: _UserType, rate: in
         last_vote_of_this_user = Vote.objects.filter(user=user).order_by('-id').first()
         if last_vote_of_this_user and last_vote_of_this_user.date:
             time_since = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc) - last_vote_of_this_user.date
-            time_total = datetime.timedelta(minutes=5)
+            time_total = datetime.timedelta(minutes=3)
             if time_since < time_total:
                 time_left = time_total - time_since
                 raise VotedTooSoonError('Voting too soon (at least 5 minutes between votes expected)', time_left=time_left.seconds, time_total=time_total.seconds)
