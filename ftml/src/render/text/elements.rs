@@ -60,8 +60,8 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                 // Also, determine if we add a prefix.
                 ContainerType::Div | ContainerType::Paragraph => (true, None),
                 ContainerType::Blockquote => (true, Some("    ")),
-                ContainerType::Header(heading) => {
-                    (true, Some(heading.level.prefix_with_space()))
+                ContainerType::Header(_heading) => {
+                    (true, None)
                 }
 
                 // Wrap any ruby text with parentheses
@@ -69,13 +69,6 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                     ctx.push('(');
 
                     (false, None)
-                }
-
-                // Wrap form with [[form]] and [[/form]]
-                ContainerType::Form => {
-                    ctx.push_str("[[form]]");
-
-                    (true, None)
                 }
 
                 // Inline or miscellaneous container.
@@ -100,10 +93,6 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                     ctx.push(')');
                 }
 
-                ContainerType::Form => {
-                    ctx.push_str("[[/form]]");
-                }
-
                 _ => {}
             }
 
@@ -120,19 +109,14 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                 ctx.disable_invisible();
             }
         }
-        Element::Module(module) => {
+        Element::Module(_module) => {
             // for now: do nothing. text rendering is not supported on Python side yet
-            ctx.push_str("[[module ");
-            ctx.push_str(module.name());
-            ctx.push_str("]]")
         }
         Element::Text(text) | Element::Raw(text) | Element::Email(text) => {
             ctx.push_str(text)
         }
         Element::HtmlEntity(text) => {
-            ctx.push_str("<");
             ctx.push_str(text);
-            ctx.push_str(">");
         }
         Element::Variable(name) => {
             let value = match ctx.variables().get(name) {
@@ -153,17 +137,14 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             }
 
             for row in &table.rows {
-                ctx.push_str("|| ");
-
                 for (i, cell) in row.cells.iter().enumerate() {
                     render_elements(ctx, &cell.elements);
 
                     if i < row.cells.len() - 1 {
-                        ctx.push_str(" || ");
+                        ctx.push_str("\t");
                     }
                 }
 
-                ctx.push_str(" ||");
                 ctx.add_newline();
             }
 
@@ -172,7 +153,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
         Element::TabView(tabs) => {
             for Tab { label, elements } in tabs {
                 // Add tab name
-                str_write!(ctx, "[{label}]");
+                str_write!(ctx, "{label}");
                 ctx.add_newline();
 
                 // Add tab contents
@@ -182,25 +163,15 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
         }
         Element::Anchor {
             elements,
-            attributes,
             ..
         } => {
-            render_elements(ctx, elements);
-
-            if let Some(href) = attributes.get().get("href") {
-                let link = LinkLocation::parse(cow!(href), ctx.callbacks());
-                let url = get_url_from_link(ctx, &link);
-
-                str_write!(ctx, " [{url}]");
-            }
+            render_elements(ctx, elements)
         }
         Element::AnchorName(_) => {
             // Anchor names are an invisible addition to the HTML
             // to aid navigation. So in text mode, they are ignored.
         }
         Element::Link { link, label, .. } => {
-            let url = get_url_from_link(ctx, link);
-
             let label = {
                 let mut o_label: String = String::new();
                 ctx.handle().get_link_label(link, label, |label| {
@@ -209,39 +180,10 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                 o_label
             };
 
-            ctx.push_str(&label);
-            if url != label && !url.starts_with('#') {
-                str_write!(ctx, " [{url}]");
-            }
+            ctx.push_str(&label)
         }
-        Element::Image {
-            source,
-            link,
-            attributes,
-            ..
-        } => {
-            let source_url =
-                ctx.handle()
-                    .get_image_link(source, ctx.info(), ctx.settings());
-
-            if let Some(url) = source_url {
-                ctx.push_str(&url);
-
-                if let Some(link) = link {
-                    ctx.push(' ');
-                    ctx.push_str(&get_url_from_link(ctx, link));
-                }
-
-                if let Some(alt_text) = attributes.get().get("alt") {
-                    ctx.push(' ');
-                    ctx.push_str(alt_text);
-                }
-
-                if let Some(title) = attributes.get().get("title") {
-                    ctx.push(' ');
-                    ctx.push_str(title);
-                }
-            }
+        Element::Image {..} => {
+            // do not render images, they are not text.
         }
         Element::List { ltype, items, .. } => {
             if !ctx.ends_with_newline() {
@@ -338,15 +280,8 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                 ctx.add_newline();
             }
         }
-        Element::FormInput(FormInput{ attributes }) => {
-            info!("Rendering form input");
-
-            ctx.push_str(&format!("[[input"));
-            for (k, v) in attributes.get().iter() {
-                ctx.push_str(&format!(" {k}=\"{v}\""));
-            }
-            ctx.push_str("]]");
-            ctx.add_newline();
+        Element::FormInput(FormInput{ .. }) => {
+            // forms are not rendered
         }
         Element::TableOfContents { .. } => {
             info!("Rendering table of contents");
@@ -403,57 +338,30 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             str_write!(ctx, "{}", value.format(Some((*value).default_format_string())));
         }
         Element::Color { elements, .. } => render_elements(ctx, elements),
-        Element::Code { contents, language } => {
-            let language = match language {
-                Some(language) => language,
-                None => "",
-            };
-
-            str_write!(ctx, "```{language}");
+        Element::Code { contents, .. } => {
             ctx.add_newline();
             ctx.push_str(contents);
             ctx.add_newline();
-            ctx.push_str("```");
         }
-        Element::Math { name, latex_source } => {
-            let index = ctx.next_equation_index();
-
-            str_write!(ctx, "{index}.");
-            if let Some(name) = name {
-                str_write!(ctx, " ({name})");
-            }
-
-            ctx.add_newline();
-            ctx.push_str("```latex");
-            ctx.add_newline();
-            ctx.push_str(latex_source);
-            ctx.add_newline();
-            ctx.push_str("```");
+        Element::Math { .. } => {
+            // math is not supported in text
         }
-        Element::MathInline { latex_source } => {
-            str_write!(ctx, "[[$ {latex_source} $]]");
+        Element::MathInline { .. } => {
+            // math is not supported in text
         }
-        Element::EquationReference(name) => {
-            str_write!(ctx, "[{name}]");
+        Element::EquationReference(_name) => {
+            // math is not supported in text
         }
         Element::Html { contents, external: _ } => {
-            str_write!(ctx, "```html\n{contents}\n```");
+            str_write!(ctx, "\n{contents}\n");
         }
-        Element::Iframe { url, .. } => str_write!(ctx, "[{url}]"),
+        Element::Iframe { .. } => {
+            // iframes are not supported in text
+        },
         Element::Include {
-            variables,
-            elements,
             ..
         } => {
-            info!(
-                "Rendering include (variables length {}, elements length {})",
-                variables.len(),
-                elements.len(),
-            );
-
-            ctx.variables_mut().push_scope(variables);
-            render_elements(ctx, elements);
-            ctx.variables_mut().pop_scope();
+            // include is not supported in text
         }
         Element::LineBreak => ctx.add_newline(),
         Element::LineBreaks(amount) => {
@@ -462,33 +370,12 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             }
         }
         Element::ClearFloat(_) => {
-            if !ctx.ends_with_newline() {
-                ctx.add_newline();
-            }
-
-            ctx.push_str("~~~~~~");
-            ctx.add_newline();
+            // noop visual element
         }
         Element::HorizontalRule => {
-            if !ctx.ends_with_newline() {
-                ctx.add_newline();
-            }
-
-            ctx.push_str("------");
-            ctx.add_newline();
+            // noop visual element
         }
         Element::Partial(_) => panic!("Encountered partial element during parsing"),
         Element::Void => {},
     }
-}
-
-fn get_url_from_link<'a>(_ctx: &TextContext, link: &'a LinkLocation<'a>) -> Cow<'a, str> {
-    let url = normalize_link(link);
-
-    // TODO: when we remove inline javascript stuff
-    if url.as_ref() == "javascript:;" {
-        return Cow::Borrowed("#");
-    }
-
-    url
 }
