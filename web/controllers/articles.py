@@ -909,7 +909,8 @@ def add_vote(full_name_or_article: _FullNameOrArticle, user: _UserType, rate: in
     old_vote = old_vote_query.first()
     old_vote_query.delete()
 
-    if not user.is_staff and not user.is_superuser and not old_vote:
+    # temporarily disabled
+    if False and not user.is_staff and not user.is_superuser and not old_vote:
         last_vote_of_this_user = Vote.objects.filter(user=user).order_by('-id').first()
         if last_vote_of_this_user and last_vote_of_this_user.date:
             time_since = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc) - last_vote_of_this_user.date
