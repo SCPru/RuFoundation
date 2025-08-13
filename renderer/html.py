@@ -9,7 +9,7 @@ def get_html_injected_code(html_id: str) -> str:
         function doFrame() {
             const body = document.body;
             const html = document.documentElement;
-            const height = Math.max(body && body.scrollHeight, body && body.offsetHeight, html.offsetHeight, body && body.getBoundingClientRect().height);
+            const height = Math.max(body && body.scrollHeight, body && body.offsetHeight, html.offsetHeight, body && body.getBoundingClientRect().height, html.scrollHeight);
             window.requestAnimationFrame(doFrame);
             if (lastHeight !== height) {
                 parent.postMessage({type: 'iframe-change-height', payload: { height, id: %s } }, '*');
