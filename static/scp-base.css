@@ -380,6 +380,11 @@ div.curved {
 iframe.scpnet-interwiki-frame, div.scpnet-interwiki-wrapper {
      width: 18em;
 }
+
+/* Stop the spaces between `@@` from collapsing, just like on WikiDot */
+.wj-raw {
+    white-space: pre-wrap;
+}
  
 /*
     SCP Sigma 9
