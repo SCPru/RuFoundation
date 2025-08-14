@@ -63,7 +63,7 @@ fn try_consume_link<'p, 'r, 't>(
         None,
     )?;
 
-    let (url, target) = if collected_url.starts_with('*') {
+    let (mut url, target) = if collected_url.starts_with('*') {
         (&collected_url[1..], Some(AnchorTarget::NewTab))
     } else {
         (collected_url, None)
@@ -72,6 +72,11 @@ fn try_consume_link<'p, 'r, 't>(
     // Return error if the resultant URL is not valid.
     if !validate_href(url, true) {
         return Err(parser.make_warn(ParseWarningKind::InvalidUrl));
+    }
+
+    // Hack for Wikidot compatibility: [# link] on Wikidot becomes javascript:;
+    if url == "#" {
+        url = "javascript:;";
     }
 
     let ltype = if url.starts_with('#') {
