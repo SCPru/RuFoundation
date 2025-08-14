@@ -27,6 +27,7 @@ pub fn render_wikitext_raw(ctx: &mut HtmlContext, text: &str) {
         .span()
         .attr(attr!(
             "class" => "wj-raw",
+            "style" => "white-space: pre-wrap;"
         ))
         .inner(text);
 }
