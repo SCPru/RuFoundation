@@ -2,6 +2,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.conf import settings
 from django.template import Context, Template
 
+from web.models.articles import Vote
+from web.models.settings import Settings
 from web.models.users import User
 from web.controllers import articles
 
@@ -128,6 +130,33 @@ def render_user_to_json(user: User, avatar=True):
         'visualGroupIndex': user.visual_group.index if user.visual_group else None
     }
 
+def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Stars, capitalize=True):
+    rate = vote.rate if vote else None
+
+    if vote is None:
+        msg = 'не оценено'
+        if capitalize:
+            msg = msg.capitalize()
+        return render_template_from_string(
+            """
+            <span class="vote" title="Оценка обсуждаемой статьи">{{msg}}</span>
+            """,
+            msg=msg
+        )
+
+    if mode == Settings.RatingMode.UpDown:
+        visual_rate = '%+d' % rate
+    elif mode == Settings.RatingMode.Stars:
+        visual_rate = '%.1f' % rate
+    else:
+        visual_rate = '%d' % rate
+
+    return render_template_from_string(
+        """
+        <span class="vote" title="Оценка обсуждаемой статьи"><span class="rate">{{visual_rate}}</span>
+        """,
+        visual_rate=visual_rate
+    )
 
 def validate_url(url):
     url = url.strip()

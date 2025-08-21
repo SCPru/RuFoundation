@@ -2106,6 +2106,9 @@ version: 2.3.1
 }
 
 .thread-container .post  .long  .head .info{
+	display: flex;
+	align-items: baseline;
+	gap: 0.5ch;
 }
 
 .thread-container .post  .long  .content{
