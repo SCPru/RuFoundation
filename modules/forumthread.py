@@ -38,14 +38,21 @@ def get_post_info(context, thread, posts, show_replies=True):
     for post in posts:
         replies = ForumPost.objects.filter(reply_to=post).order_by('created_at') if show_replies else []
         author_vote = ''
+        is_op = thread.author == post.author
+
         if thread.article:
             rating_mode = thread.article.get_settings().rating_mode
             author_vote = Vote.objects.filter(user=post.author, article=thread.article).last()
             author_vote = render_vote_to_html(author_vote, rating_mode)
+            if thread.article.author == post.author:
+                is_op = True
+
+        print(is_op)
         
         render_post = {
             'id': post.id,
             'name': post.name,
+            'is_op': is_op, #e4f0c8
             'author': render_user_to_html(post.author),
             'author_rate': author_vote,
             'created_at': render_date(post.created_at),
@@ -81,7 +88,7 @@ def render_posts(post_info):
         <div class="post-container">
             <div class="post" id="post-{{ post.id }}">
                 <div class="long">
-                    <div class="head">
+                    <div class="head {% if post.is_op %}op-post{% endif %}">
                         <div class="title">
                             {{ post.name }}
                         </div>

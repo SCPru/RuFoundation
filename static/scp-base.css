@@ -2066,3 +2066,9 @@ div.preview {
     color: #666;
 }
 /* ======================= */
+
+/* New forum triks */
+.thread-container .post .long .head.op-post {
+    background: #e4f0c8;
+}
+/* =============== */
