@@ -169,16 +169,15 @@ def render(context: RenderContext, params):
                                     </div>
                                     <div class="info">
                                         {{ post.author }} {{ post.created_at }}
-                                        <br>
-                                        <span>
-                                            в дискуссии
-                                            {% if post.category %}
-                                            <a href="{{ post.category.section_url }}">{{ post.category.section_name }}</a> &raquo;
-                                            <a href="{{ post.category.url }}">{{post.category.name}}</a> &raquo;
-                                            {% endif %}
-                                            <a href="{{ post.thread.url}}">{{ post.thread.name }}</a>
-                                        </span>
                                     </div>
+                                    <span>
+                                        в дискуссии
+                                        {% if post.category %}
+                                        <a href="{{ post.category.section_url }}">{{ post.category.section_name }}</a> &raquo;
+                                        <a href="{{ post.category.url }}">{{post.category.name}}</a> &raquo;
+                                        {% endif %}
+                                        <a href="{{ post.thread.url}}">{{ post.thread.name }}</a>
+                                    </span>
                                 </div>
                                 <div class="content">
                                     {{ post.content }}
