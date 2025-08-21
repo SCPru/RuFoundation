@@ -46,8 +46,6 @@ def get_post_info(context, thread, posts, show_replies=True):
             author_vote = render_vote_to_html(author_vote, rating_mode)
             if thread.article.author == post.author:
                 is_op = True
-
-        print(is_op)
         
         render_post = {
             'id': post.id,

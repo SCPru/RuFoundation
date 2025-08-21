@@ -1169,8 +1169,8 @@ div.sexy-box div.image-container img {
 }
 
 .post-container .post-container {
-    border-left: 2px solid rgba(0,0,0,.25);
-    padding-left: .75rem;
+    border-left: 2px solid rgba(0,0,0,.1);
+    padding-left: 1rem;
 }
  
 /* Hide Forum Signatures */
