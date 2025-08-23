@@ -19,12 +19,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='visualusergroup',
             name='badge_bg',
-            field=models.TextField(default='gray', validators=[web.models.users.CSSValueValidator()], verbose_name='Цвет бейджа'),
+            field=models.TextField(default='#808080', validators=[web.models.users.CSSValueValidator()], verbose_name='Цвет бейджа'),
         ),
         migrations.AddField(
             model_name='visualusergroup',
             name='badge_text_color',
-            field=models.TextField(default='white', validators=[web.models.users.CSSValueValidator()], verbose_name='Цвет текста'),
+            field=models.TextField(default='#FFFFFF', validators=[web.models.users.CSSValueValidator()], verbose_name='Цвет текста'),
         ),
         migrations.AddField(
             model_name='visualusergroup',
