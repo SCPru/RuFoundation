@@ -111,8 +111,8 @@ class User(AbstractUser):
             badge['show'] = True
             badge['text'] = 'БОТ'
             badge['bg'] = '#77A' #a1abca    #737d9b    #4463bf
-            badge['text_color'] = '#000000'
-            badge['border'] = True
+            badge['text_color'] = "#FFFFFF"
+            badge['border'] = False
         elif self.visual_group:
             badge['show'] = self.visual_group.show_badge
             badge['text'] = self.visual_group.badge

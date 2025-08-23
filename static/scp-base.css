@@ -2080,5 +2080,7 @@ div.preview {
     color: white;
     font-weight: 500;
     font-size: .75em;
-    display: inline-block;
+    height: 1rem;
+    display: inline-flex;
+    align-items: center;
 }
