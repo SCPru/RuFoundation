@@ -2080,7 +2080,8 @@ div.preview {
     color: white;
     font-weight: 500;
     font-size: .75em;
-    height: .8rem;
+    height: 1.5rem;
     display: inline-flex;
     align-items: center;
+    vertical-align: text-top;
 }

@@ -69,7 +69,7 @@ def render_user_to_html(user: User, avatar=True, hover=True):
                 <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
             {% endif %}
             <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a>
-            {% if badge.show %}
+            {% if show_avatar and badge.show %}
                 <span class="badge" style="background: {{badge.bg}}; color: {{badge.text_color}}; {% if badge.border %}outline: solid 1px {{badge.text_color}}{% endif %}">{{badge.text}}</span>
             {% endif %}
         </span>
