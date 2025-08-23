@@ -113,18 +113,18 @@ class User(AbstractUser):
             badge['bg'] = '#77A' #a1abca    #737d9b    #4463bf
             badge['text_color'] = '#000000'
             badge['border'] = True
-        elif self.is_staff or self.is_superuser:
-            badge['show'] = True
-            badge['text'] = 'МОД'
-            badge['bg'] = '#FFFFFF'
-            badge['text_color'] = '#b42d2d'
-            badge['border'] = True
         elif self.visual_group:
             badge['show'] = self.visual_group.show_badge
             badge['text'] = self.visual_group.badge
             badge['bg'] = self.visual_group.badge_bg
             badge['text_color'] = self.visual_group.badge_text_color
             badge['border'] = self.visual_group.badge_show_border
+        elif self.is_staff or self.is_superuser:
+            badge['show'] = True
+            badge['text'] = 'МОД'
+            badge['bg'] = '#FFFFFF'
+            badge['text_color'] = '#b42d2d'
+            badge['border'] = True
         return badge
 
     def __str__(self):
