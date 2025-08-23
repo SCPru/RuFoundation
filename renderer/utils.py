@@ -59,16 +59,28 @@ def render_user_to_html(user: User, avatar=True, hover=True):
     else:
         user_avatar = user.get_avatar(default=settings.DEFAULT_AVATAR)
         displayname = user.username
+    badge = {'show': False}
+    if user.visual_group:
+        badge['show'] = user.visual_group.show_badge
+        badge['text'] = user.visual_group.badge
+        badge['bg'] = user.visual_group.badge_bg
+        badge['text_color'] = user.visual_group.badge_text_color
+
     return render_template_from_string(
         """
         <span class="printuser w-user{{class_add}}" data-user-id="{{user_id}}" data-user-name="{{username}}">
             {% if show_avatar %}
                 <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
             {% endif %}
-            <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a></span>
+            <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a>
+            {% if badge.show %}
+                <span class="badge" style="background: {{badge.bg}}; color: {{badge.text_color}}">{{badge.text}}</span>
+            {% endif %}
+        </span>
         """,
         class_add=(' avatarhover' if hover else ''),
         show_avatar=avatar,
+        badge=badge,
         avatar=user_avatar,
         user_id=user.id,
         username=user.username,

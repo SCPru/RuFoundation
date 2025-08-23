@@ -2072,3 +2072,13 @@ div.preview {
     background: #e4f0c8;
 }
 /* =============== */
+
+.printuser .badge {
+    background: gray;
+    padding: 0px 2px 0px 2px;
+    border-radius: 3px;
+    color: white;
+    font-weight: 500;
+    font-size: .75em;
+    display: inline-block;
+}

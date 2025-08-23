@@ -18,6 +18,11 @@ class StrictUsernameValidator(RegexValidator):
     message = 'Имя пользователя может содержать только английские буквы, цифры и символы [.-_] (без скобок).'
     flags = re.ASCII
 
+class CSSValueValidator(RegexValidator):
+    regex = r"^[^;\n\r]+\Z"
+    message = 'CSS значение не может содержать ";" и переносы строк.'
+    flags = re.ASCII
+
 
 class VisualUserGroup(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
@@ -26,6 +31,10 @@ class VisualUserGroup(auto_prefetch.Model):
 
     name = models.TextField(unique=True, verbose_name='Название группы', blank=False, null=False)
     index = models.IntegerField(verbose_name='Порядок в списках', blank=False, null=False, default=0)
+    show_badge = models.BooleanField(default=False, verbose_name='Показывать бейдж')
+    badge = models.TextField(default='', verbose_name='Бейдж', blank=False, null=False)
+    badge_bg = models.TextField(default='#808080', validators=[CSSValueValidator()], verbose_name='Цвет бейджа', blank=False, null=False)
+    badge_text_color = models.TextField(default='#FFFFFF', validators=[CSSValueValidator()], verbose_name='Цвет текста', blank=False, null=False)
 
     def __str__(self):
         return self.name
