@@ -70,7 +70,7 @@ def render_user_to_html(user: User, avatar=True, hover=True):
             {% endif %}
             <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a>
             {% if badge.show %}
-                <span class="badge" style="background: {{badge.bg}}; color: {{badge.text_color}}; {% if badge.border %}border: solid 1px {{badge.text_color}}{% endif %}">{{badge.text}}</span>
+                <span class="badge" style="background: {{badge.bg}}; color: {{badge.text_color}}; {% if badge.border %}outline: solid 1px {{badge.text_color}}{% endif %}">{{badge.text}}</span>
             {% endif %}
         </span>
         """,
