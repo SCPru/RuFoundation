@@ -4,10 +4,12 @@ from django.contrib.auth.models import AbstractUser as _UserType
 from django.db import transaction
 from django.db.models import QuerySet, Sum, Avg, Count, Max, TextField, Value, IntegerField, Q, F
 from django.db.models.functions import Coalesce, Concat, Lower
+from django.contrib.postgres.search import SearchVector
 
 import renderer
-from renderer import RenderContext
+from renderer import RenderContext, single_pass_render_text
 from web.events import EventBase
+from web.models import ArticleSearchIndex
 from web.models.users import User
 from web.models.articles import *
 from web.models.files import *

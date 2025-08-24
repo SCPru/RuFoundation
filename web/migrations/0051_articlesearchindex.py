@@ -22,10 +22,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('content_plaintext', models.TextField(verbose_name='Текст статьи')),
                 ('content_source', models.TextField(verbose_name='Исходный код статьи')),
-                ('vector_plaintext_en', django.contrib.postgres.search.SearchVectorField(null=True)),
-                ('vector_plaintext_ru', django.contrib.postgres.search.SearchVectorField(null=True)),
-                ('vector_source_en', django.contrib.postgres.search.SearchVectorField(null=True)),
-                ('vector_source_ru', django.contrib.postgres.search.SearchVectorField(null=True)),
+                ('vector_plaintext', django.contrib.postgres.search.SearchVectorField(null=True)),
                 ('article', auto_prefetch.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='web.article', verbose_name='Статья')),
             ],
             options={
@@ -33,7 +30,7 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Индексы для поиска по статьям',
                 'abstract': False,
                 'base_manager_name': 'prefetch_manager',
-                'indexes': [models.Index(fields=['article'], name='web_article_article_5eb4fb_idx'), django.contrib.postgres.indexes.GinIndex(fields=['vector_plaintext_en'], name='web_article_vector__7954ea_gin'), django.contrib.postgres.indexes.GinIndex(fields=['vector_plaintext_ru'], name='web_article_vector__306931_gin'), django.contrib.postgres.indexes.GinIndex(fields=['content_plaintext'], name='article_search_plaintext_gin', opclasses=['gin_trgm_ops']), django.contrib.postgres.indexes.GinIndex(fields=['content_source'], name='article_search_source_gin', opclasses=['gin_trgm_ops'])],
+                'indexes': [models.Index(fields=['article'], name='web_article_article_5eb4fb_idx'), django.contrib.postgres.indexes.GinIndex(fields=['vector_plaintext'], name='web_article_vector__7954ea_gin'), django.contrib.postgres.indexes.GinIndex(fields=['content_plaintext'], name='article_search_plaintext_gin', opclasses=['gin_trgm_ops']), django.contrib.postgres.indexes.GinIndex(fields=['content_source'], name='article_search_source_gin', opclasses=['gin_trgm_ops'])],
                 'constraints': [models.UniqueConstraint(fields=('article',), name='web_articlesearchindex_unique')],
             },
             managers=[
