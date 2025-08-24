@@ -101,7 +101,7 @@ class User(AbstractUser):
         badge = {'show': False}
         if self == AnonymousUser:
             pass
-        elif not self.is_active:
+        elif not self.is_active and not self.type == User.UserType.Wikidot:
             badge['show'] = True
             badge['text'] = 'БАН'
             badge['bg'] = '#000000'
