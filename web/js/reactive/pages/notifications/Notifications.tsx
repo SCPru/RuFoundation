@@ -36,7 +36,7 @@ const Notifications: React.FC = () => {
           Все
         </Styled.RadioLabel>
       </Styled.FilterContainer>
-      <NotificationsInfiniteScroll batchSize={10} showUnread={showUnread} isForceUpdate={isForceUpdate} />
+      <NotificationsInfiniteScroll key={`tab-${showUnread}`} batchSize={10} showUnread={showUnread} isForceUpdate={isForceUpdate} />
     </Page>
   )
 }

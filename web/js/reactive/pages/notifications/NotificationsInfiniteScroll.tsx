@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import InfiniteScroll from 'react-infinite-scroller'
 import { getNotifications, Notification as INotification } from '~api/notifications'
 import useConstCallback from '~util/const-callback'
@@ -18,7 +18,8 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, i
   const [cursor, setCursor] = useState(-1)
   const [hasMore, setHasMore] = useState(true)
   const [isFetching, setIsFetching] = useState(false)
-  const [isWaitingFetch, setIsWaitingFetch] = useState(false)
+  const loaderRef = useRef<HTMLDivElement | null>(null)
+  const [isLoaderVisible, setIsLoaderVisible] = useState(false)
 
   useEffect(() => {
     if (!isForceUpdate) return
@@ -30,14 +31,20 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, i
     }
   })
 
+  const handleVisibleChange = useConstCallback((newVisible: boolean) => {
+    if (isLoaderVisible !== newVisible) {
+      setIsLoaderVisible(newVisible)
+    }
+  })
+
   useEffect(() => {
-    if (!isFetching && isWaitingFetch)
+    if (isLoaderVisible && !isFetching && hasMore) {
       loadMore()
-  }, [isFetching])
+    }
+  }, [isFetching, isLoaderVisible])
 
   const loadMore = useConstCallback(async () => {
     while (isFetching) {
-      setIsWaitingFetch(true)
       return
     }
 
@@ -48,7 +55,6 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, i
       setCursor(resp.cursor)
 
       if (resp.notifications.length < batchSize || resp.cursor === -1) {
-        setIsWaitingFetch(false)
         setHasMore(false)
       }
     } catch (e: any) {
@@ -59,21 +65,37 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, i
     }
   })
 
-  const loader = (
-    <Styled.LoaderContainer key={0}>
-      <Loader />
-    </Styled.LoaderContainer>
-  )
+  useEffect(() => {
+    const loader = loaderRef.current
+    if (!loader) {
+      return undefined
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      console.log('visibility change', entries)
+      const newVisible = entries.some(x => x.isIntersecting && x.intersectionRatio > 0)
+      handleVisibleChange(newVisible)
+    })
+
+    observer.observe(loader)
+
+    return () => {
+      observer.unobserve(loader)
+    }
+  }, [loaderRef.current])
 
   return (
     <>
-      <InfiniteScroll loadMore={loadMore} hasMore={hasMore} loader={loader} initialLoad={true}>
-        <Styled.List>
-          {items.map((item, n) => (
-            <Notification notification={item} key={n} />
-          ))}
-        </Styled.List>
-      </InfiniteScroll>
+      <Styled.List>
+        {items.map((item, n) => (
+          <Notification notification={item} key={n} />
+        ))}
+      </Styled.List>
+      {hasMore && (
+        <Styled.LoaderContainer ref={loaderRef}>
+          <Loader />
+        </Styled.LoaderContainer>
+      )}
       {!hasMore && items.length === 0 && <Styled.EmptyMessage>Уведомлений пока нет :(</Styled.EmptyMessage>}
     </>
   )
