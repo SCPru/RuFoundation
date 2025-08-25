@@ -158,8 +158,11 @@ def update_search_index(article: Article):
 
     search_obj, created = ArticleSearchIndex.objects.get_or_create(article=article)
     context = RenderContext(article=version.article, source_article=article)
-    search_obj.content_plaintext = article.title + '\n\n' + single_pass_render_text(version.source, context, 'system')
     search_obj.content_source = article.title + '\n\n' + version.source
+    try:
+        search_obj.content_plaintext = article.title + '\n\n' + single_pass_render_text(version.source, context, 'system')
+    except:
+        search_obj.content_plaintext = search_obj.content_source
     search_obj.save()
 
     ArticleSearchIndex.objects.filter(pk=search_obj.pk).update(
