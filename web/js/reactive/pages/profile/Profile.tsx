@@ -1,6 +1,6 @@
 import React from 'react'
 import { useConfigContext } from '~reactive/config'
-import Page from '~reactive/containers/page'
+import { ProfilePage } from '~reactive/containers/page'
 import * as Styled from './Profile.styles'
 
 const Profile: React.FC = () => {
@@ -10,7 +10,7 @@ const Profile: React.FC = () => {
   const { user } = useConfigContext()
 
   return (
-    <Page>
+    <ProfilePage>
       <Styled.Container>
         <Styled.Buttons>
           <Styled.Link href={`/-/users/${user.id}-${user.username}`}>Публичный профиль</Styled.Link>
@@ -18,7 +18,7 @@ const Profile: React.FC = () => {
           <Styled.Link href={`/-/profile/edit`}>Редактировать</Styled.Link>
         </Styled.Buttons>
       </Styled.Container>
-    </Page>
+    </ProfilePage>
   )
 }
 

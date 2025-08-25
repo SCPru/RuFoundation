@@ -2,6 +2,7 @@ import { ReactTheme } from './Theme.types'
 
 export const SYSTEM_THEME: ReactTheme = {
   primary: '#263636',
+  primaryForeground: '#ffffff',
   pagePadding: '#98a6a6',
   windowPadding: '#ffffff',
   windowStrong: '#aaaaaa',

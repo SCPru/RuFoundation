@@ -1,5 +1,6 @@
 export interface ReactTheme {
   primary: string
+  primaryForeground: string
   pagePadding: string
   windowPadding: string
   windowStrong: string

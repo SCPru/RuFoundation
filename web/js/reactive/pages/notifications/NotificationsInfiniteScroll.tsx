@@ -70,7 +70,7 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, i
       return undefined
     }
 
-    const observer = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver(entries => {
       console.log('visibility change', entries)
       const newVisible = entries.some(x => x.isIntersecting && x.intersectionRatio > 0)
       handleVisibleChange(newVisible)

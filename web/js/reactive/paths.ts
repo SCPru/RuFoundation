@@ -3,4 +3,5 @@ export const Paths = {
   notificationsAll: '/notifications/all',
   notificationsUnread: '/notifications/unread',
   profile: '/profile',
+  search: '/search',
 }

@@ -1,4 +1,4 @@
-import styled, { createGlobalStyle } from 'styled-components'
+import styled, { createGlobalStyle, css } from 'styled-components'
 import { MOBILE_SIZE } from '~reactive/theme/Theme.consts'
 
 export const RootStyles = createGlobalStyle`
@@ -31,7 +31,7 @@ export const HeaderContainer = styled.div`
   z-index: 1;
 `
 
-export const FixedWidthContainer = styled.div`
+export const FixedWidthContainer = styled.div<{ hasBorder?: boolean }>`
   position: relative;
   z-index: 0;
   max-width: 1024px;
@@ -41,28 +41,33 @@ export const FixedWidthContainer = styled.div`
   min-width: 0;
   overflow: hidden;
   flex-grow: 1;
-  box-shadow: 0 0 8px #0000007f;
-  padding: 0 5px;
 
-  &:before,
-  &:after {
-    content: '';
-    width: 5px;
-    border-left: 1px solid ${({ theme }) => theme.windowStrong};
-    border-right: 1px solid ${({ theme }) => theme.windowStrong};
-    background: ${({ theme }) => theme.windowPadding};
-    position: absolute;
-    top: 0;
-    bottom: 0;
-  }
+  ${({ hasBorder }) =>
+    hasBorder &&
+    css`
+      box-shadow: 0 0 8px #0000007f;
+      padding: 0 5px;
 
-  &:before {
-    left: 0;
-  }
+      &:before,
+      &:after {
+        content: '';
+        width: 5px;
+        border-left: 1px solid ${({ theme }) => theme.windowStrong};
+        border-right: 1px solid ${({ theme }) => theme.windowStrong};
+        background: ${({ theme }) => theme.windowPadding};
+        position: absolute;
+        top: 0;
+        bottom: 0;
+      }
 
-  &:after {
-    right: 0;
-  }
+      &:before {
+        left: 0;
+      }
+
+      &:after {
+        right: 0;
+      }
+    `};
 
   @media (max-width: ${MOBILE_SIZE}px) {
     flex-direction: column;

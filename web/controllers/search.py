@@ -9,23 +9,25 @@ from django.db import connection
 import base64
 import json
 
+from django.db.models.functions import Cast
+
 from renderer import RenderContext, single_pass_render_text
 from web.controllers import articles
 from web.models import ArticleSearchIndex, Article
 
 
-def search_articles(text, is_source=False, cursor=None, limit=25):
+def search_articles(text, is_source=False, cursor=None, limit=25, explain=False):
     if is_source:
         cursor_parameters = decode_cursor(cursor, 'source', ['id__lt', 'id'])
 
-        results = ArticleSearchIndex.objects
+        results = ArticleSearchIndex.objects.filter(
+            content_source__icontains=text,
+        ).order_by('-id')
         if cursor_parameters:
             results = results.filter(cursor_parameters)
-        results = results.filter(
-            content_source__icontains=text,
-        ).order_by('-id')[:limit]
-
-        print(results.explain(analyze=True))
+        results = results[:limit]
+        if explain:
+            print(results.explain(analyze=True))
 
         output = []
 
@@ -47,22 +49,24 @@ def search_articles(text, is_source=False, cursor=None, limit=25):
 
         return output, next_cursor
     else:
-        cursor_parameters = decode_cursor(cursor, 'plain', ['rank__lt', 'rank', 'id__lt', 'id'])
+        cursor_parameters = decode_cursor(cursor, 'plain', ['rank_str__lt', 'rank_str', 'id__lt', 'id'])
         search_query_en = SearchQuery(text, config='english', search_type="websearch")
         search_query_ru = SearchQuery(text, config='russian', search_type="websearch")
         search_query = search_query_en | search_query_ru
         mark_name = str(uuid4())
         mark_open = f'<{mark_name}>'
         mark_close = f'</{mark_name}>'
-        results = ArticleSearchIndex.objects
-        if cursor_parameters:
-            results = results.filter(cursor_parameters)
-        results = results.annotate(
+        results = ArticleSearchIndex.objects.annotate(
             rank=SearchRank(
                 models.F('vector_plaintext'),
                 search_query,
                 cover_density=True,
                 normalization=32
+            ),
+            rank_str=models.Func(
+                'rank',
+                template="TO_CHAR(%(expressions)s, '000.999999')",
+                output_field=models.CharField()
             ),
             headline_en=SearchHeadline(
                 models.F('content_plaintext'),
@@ -88,9 +92,14 @@ def search_articles(text, is_source=False, cursor=None, limit=25):
             )
         ).filter(
             models.Q(vector_plaintext__exact=search_query)
-        ).order_by('-rank', '-id')[:limit]
+        ).order_by('-rank_str', '-id')
+        print(repr(cursor_parameters))
+        if cursor_parameters:
+            results = results.filter(cursor_parameters)
+        results = results[:limit]
 
-        print(results.explain(analyze=True))
+        if explain:
+            print(results.explain(analyze=True))
 
         output = []
 
@@ -109,8 +118,8 @@ def search_articles(text, is_source=False, cursor=None, limit=25):
 
         if results:
             next_cursor = encode_cursor('plain', [
-                dict(rank__lt=results[-1].rank),
-                dict(rank=results[-1].rank, id__lt=results[-1].id)
+                dict(rank_str__lt=results[-1].rank_str),
+                dict(rank_str=results[-1].rank_str, id__lt=results[-1].id)
             ])
         else:
             next_cursor = encode_cursor('plain', [

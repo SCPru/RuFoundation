@@ -10,12 +10,7 @@ import { fetchAllUsers } from '../api/user'
 function onApiMessage(e) {
   if (!e.data.hasOwnProperty('type') || !e.data.hasOwnProperty('target') || !e.data.hasOwnProperty('callId') || e.data.type !== 'ApiCall') return
 
-  const avaliableModules = [
-    'listpages',
-    'listusers',
-    'countpages',
-    'interwiki'
-  ]
+  const avaliableModules = ['listpages', 'listusers', 'countpages', 'interwiki']
 
   const callModuleWrapper = (module, method, data) => {
     if (!avaliableModules.includes(module)) throw new Error(`Unexpected or restricted module name: ${module}`)

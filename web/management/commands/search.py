@@ -18,6 +18,7 @@ class Command(BaseCommand):
             options['text'],
             is_source=options.get('source'),
             cursor=cursor,
-            limit=limit
+            limit=limit,
+            explain=True
         )
         print(repr(result))

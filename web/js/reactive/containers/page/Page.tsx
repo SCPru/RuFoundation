@@ -1,21 +1,20 @@
 import React from 'react'
 import Header from './Header'
-import Navigation from './Navigation'
 import * as Styled from './Page.styles'
 
-export const Page: React.FC = ({ children }) => {
+interface Props {
+  title: string
+  hasBorder?: boolean
+}
+
+export const Page: React.FC<Props> = ({ children, title, hasBorder = false }) => {
   return (
     <Styled.Container>
       <Styled.RootStyles />
       <Styled.HeaderContainer>
-        <Header />
+        <Header title={title} />
       </Styled.HeaderContainer>
-      <Styled.FixedWidthContainer>
-        <Styled.NavContainer>
-          <Navigation />
-        </Styled.NavContainer>
-        <Styled.ContentContainer>{children}</Styled.ContentContainer>
-      </Styled.FixedWidthContainer>
+      <Styled.FixedWidthContainer hasBorder={hasBorder}>{children}</Styled.FixedWidthContainer>
     </Styled.Container>
   )
 }

@@ -1,4 +1,4 @@
-import { wFetch } from "../util/fetch-util"
+import { wFetch } from '../util/fetch-util'
 
 export interface UserData {
   type: 'system' | 'anonymous' | 'user' | 'wikidot'
