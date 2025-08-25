@@ -16,13 +16,19 @@ export const Search: React.FC = () => {
   const searchRef = useRef<HTMLInputElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [isSearching, setIsSearching] = useState(false)
+  const [isSource, setIsSource] = useState(false)
 
-  const [lastSearchText, setLastSearchText] = useState<string | undefined>(undefined)
+  const [lastSearchText, setLastSearchText] = useState('')
+  const [lastSource, setLastSource] = useState(false)
   const [searchResults, setSearchResults] = useState<SearchResults | undefined>(undefined)
   const [error, setError] = useState<string | undefined>(undefined)
 
   const handleSearchChange = useConstCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(event.target.value)
+  })
+
+  const handleSourceChange = useConstCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setIsSource(event.target.checked)
   })
 
   const handleSearchSubmit = useConstCallback(async (event: React.FormEvent) => {
@@ -36,8 +42,11 @@ export const Search: React.FC = () => {
     }
     setIsSearching(true)
     try {
-      const results = await fetchSearch(searchText)
+      const results = await fetchSearch(searchText, {
+        mode: isSource ? 'source' : 'plain'
+      })
       setLastSearchText(searchText)
+      setLastSource(isSource)
       setSearchResults(results)
       containerRef.current?.scrollTo(0, 0)
       setError(undefined)
@@ -71,6 +80,7 @@ export const Search: React.FC = () => {
     try {
       const results = await fetchSearch(lastSearchText, {
         cursor: searchResults.cursor,
+        mode: lastSource ? 'source' : 'plain'
       })
       setSearchResults({
         results: [...searchResults.results, ...results.results],
@@ -95,6 +105,14 @@ export const Search: React.FC = () => {
               {isSearching && <Styled.Loader color={theme.uiSelectionForeground} />}
             </Styled.LoaderContainer>
           </Styled.SearchFieldWrapper>
+          <Styled.CheckboxContainer>
+            <label>
+              <input type="checkbox" checked={isSource} onChange={handleSourceChange} />
+              <span>
+                Поиск по исходнику
+              </span>
+            </label>
+          </Styled.CheckboxContainer>
         </Styled.SearchFieldContainer>
         <Styled.SearchResultsWrapper>
           {searchResults?.results?.map((article, index) => {

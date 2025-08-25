@@ -167,3 +167,13 @@ export const Button = styled.button<{ isDisabled?: boolean }>`
       cursor: not-allowed;
     `};
 `
+
+export const CheckboxContainer = styled.div`
+  margin-top: 8px;
+  cursor: pointer;
+  user-select: none;
+  
+  label {
+    cursor: pointer;
+  }
+`

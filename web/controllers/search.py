@@ -35,7 +35,7 @@ def search_articles(text, is_source=False, cursor=None, limit=25, explain=False)
         for article in results:
             output.append({
                 'article': article,
-                'words': text
+                'words': [text]
             })
 
         if results:
