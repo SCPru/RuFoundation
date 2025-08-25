@@ -11,7 +11,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('web', '0050_rename_media_folders'),
+        ('web', '0052_visualusergroup_badge_show_border'),
     ]
 
     operations = [

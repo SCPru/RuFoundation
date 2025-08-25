@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('web', '0051_articlesearchindex'),
+        ('web', '0053_articlesearchindex'),
     ]
 
     operations = [
