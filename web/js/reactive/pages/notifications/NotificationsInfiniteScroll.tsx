@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import InfiniteScroll from 'react-infinite-scroller'
 import { getNotifications, Notification as INotification } from '~api/notifications'
 import useConstCallback from '~util/const-callback'
 import Loader from '~util/loader'
