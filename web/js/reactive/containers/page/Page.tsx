@@ -1,4 +1,5 @@
 import React from 'react'
+import { Helmet } from 'react-helmet'
 import Header from './Header'
 import * as Styled from './Page.styles'
 
@@ -10,6 +11,9 @@ interface Props {
 export const Page: React.FC<Props> = ({ children, title, hasBorder = false }) => {
   return (
     <Styled.Container>
+      <Helmet>
+        <title>{title}</title>
+      </Helmet>
       <Styled.RootStyles />
       <Styled.HeaderContainer>
         <Header title={title} />
