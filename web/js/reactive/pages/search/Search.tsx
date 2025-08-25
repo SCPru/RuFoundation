@@ -9,6 +9,7 @@ import useConstCallback from '~util/const-callback'
 import formatDate from '~util/date-format'
 import UserView from '~util/user-view'
 import * as Styled from './Search.styles'
+import WikidotModal from '~util/wikidot-modal'
 
 export const Search: React.FC = () => {
   const theme = useTheme()
@@ -94,8 +95,19 @@ export const Search: React.FC = () => {
     }
   })
 
+  const onCloseError = useConstCallback(() => {
+    setError(undefined)
+  })
+
   return (
     <Page title="Поиск по сайту">
+      {error && (
+        <WikidotModal buttons={[{ title: 'Закрыть', onClick: onCloseError }]} isError>
+          <p>
+            <strong>Ошибка:</strong> {error}
+          </p>
+        </WikidotModal>
+      )}
       <Styled.Container ref={containerRef}>
         <Styled.SearchFieldContainer>
           <Styled.SearchFieldWrapper onSubmit={handleSearchSubmit} isDisabled={isSearching}>

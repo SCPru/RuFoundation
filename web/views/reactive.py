@@ -27,6 +27,7 @@ def reactive_view(request, *args, **kwargs):
             </head>
             <body>
                 <div id="reactive-root" data-config="{{ config }}"></div>
+                <div id="w-modals"></div>
             </body>
             </html>
         """,

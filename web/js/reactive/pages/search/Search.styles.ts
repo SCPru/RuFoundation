@@ -172,6 +172,10 @@ export const CheckboxContainer = styled.div`
   margin-top: 8px;
   cursor: pointer;
   user-select: none;
+  padding: 8px;
+  border-radius: 8px;
+  background: ${({ theme }) => theme.windowBackground}7f;
+  display: inline-block;
   
   label {
     cursor: pointer;
