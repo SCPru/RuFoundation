@@ -131,8 +131,11 @@ export const Search: React.FC = () => {
             return (
               <Styled.SearchResult key={index}>
                 <Styled.SearchResultTitle>
-                  <a href={`${window.location.origin}/${article.pageId}`}>{highlightWords(article.title, article.words)}</a>
+                  <a href={`${window.location.origin}/${article.pageId}`} target="_blank">{highlightWords(article.title, article.words)}</a>
                 </Styled.SearchResultTitle>
+                <Styled.SearchResultSlug>
+                  {article.pageId}
+                </Styled.SearchResultSlug>
                 <Styled.SearchResultMeta>
                   <Styled.SearchResultMetaItem>
                     <Styled.SearchResultMetaKey>От:</Styled.SearchResultMetaKey>

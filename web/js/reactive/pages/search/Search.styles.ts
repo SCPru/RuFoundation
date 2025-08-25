@@ -108,13 +108,22 @@ export const SearchResult = styled.div`
   }
 `
 
-export const SearchResultTitle = styled.a`
+export const SearchResultTitle = styled.div`
   font-size: 16px;
   line-height: 18px;
   a {
     color: ${({ theme }) => theme.primary};
     border-bottom: 1px dotted ${({ theme }) => theme.primary};
   }
+`
+
+export const SearchResultSlug = styled.span`
+  margin-top: 8px;
+  background: ${({ theme }) => theme.windowStrong}7f;
+  padding: 4px;
+  border-radius: 8px;
+  font-family: monospace;
+  display: inline-block;
 `
 
 export const SearchResultExcerpts = styled.div`
