@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.conf import settings
 from django.db import models
 
@@ -18,6 +18,11 @@ class StrictUsernameValidator(RegexValidator):
     message = 'Имя пользователя может содержать только английские буквы, цифры и символы [.-_] (без скобок).'
     flags = re.ASCII
 
+class CSSValueValidator(RegexValidator):
+    regex = r"^[^;\n\r]+\Z"
+    message = 'CSS значение не может содержать ";" и переносы строк.'
+    flags = re.ASCII
+
 
 class VisualUserGroup(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
@@ -26,6 +31,11 @@ class VisualUserGroup(auto_prefetch.Model):
 
     name = models.TextField(unique=True, verbose_name='Название группы', blank=False, null=False)
     index = models.IntegerField(verbose_name='Порядок в списках', blank=False, null=False, default=0)
+    show_badge = models.BooleanField(default=False, verbose_name='Показывать бейдж')
+    badge = models.TextField(default='', verbose_name='Бейдж', blank=False, null=False)
+    badge_bg = models.TextField(default='#808080', validators=[CSSValueValidator()], verbose_name='Цвет бейджа', blank=False, null=False)
+    badge_text_color = models.TextField(default='#FFFFFF', validators=[CSSValueValidator()], verbose_name='Цвет текста', blank=False, null=False)
+    badge_show_border = models.BooleanField(default=False, verbose_name='Показывать границу', blank=False, null=False)
 
     def __str__(self):
         return self.name
@@ -86,6 +96,36 @@ class User(AbstractUser):
         if self.avatar:
             return '%s%s' % ('/local--files/', self.avatar)
         return default
+    
+    def get_badge(self):
+        badge = {'show': False}
+        if self == AnonymousUser:
+            pass
+        elif not self.is_active:
+            badge['show'] = True
+            badge['text'] = 'БАН'
+            badge['bg'] = '#000000'
+            badge['text_color'] = '#FFFFFF'
+            badge['border'] = False
+        elif self.type == User.UserType.Bot:
+            badge['show'] = True
+            badge['text'] = 'БОТ'
+            badge['bg'] = '#77A' #a1abca    #737d9b    #4463bf
+            badge['text_color'] = "#FFFFFF"
+            badge['border'] = False
+        elif self.visual_group:
+            badge['show'] = self.visual_group.show_badge
+            badge['text'] = self.visual_group.badge
+            badge['bg'] = self.visual_group.badge_bg
+            badge['text_color'] = self.visual_group.badge_text_color
+            badge['border'] = self.visual_group.badge_show_border
+        elif self.is_staff or self.is_superuser:
+            badge['show'] = True
+            badge['text'] = 'МОД'
+            badge['bg'] = '#FFFFFF'
+            badge['text_color'] = '#b42d2d'
+            badge['border'] = True
+        return badge
 
     def __str__(self):
         return self.username

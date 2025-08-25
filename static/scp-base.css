@@ -1169,8 +1169,8 @@ div.sexy-box div.image-container img {
 }
 
 .post-container .post-container {
-    border-left: 2px solid rgba(0,0,0,.25);
-    padding-left: .75rem;
+    border-left: 2px solid rgba(0,0,0,.1);
+    padding-left: 1rem;
 }
  
 /* Hide Forum Signatures */
@@ -2046,4 +2046,42 @@ div#u-adult-warning > .error-block {
 /* Page preview component -- https://scp-wiki.wikidot.com/component:preview */
 div.preview {
     display: none;
+}
+
+/* User rate on forum post */
+.thread-container .post .long .head .vote {
+	flex-grow: 1;
+    text-align: right;
+	color: #666
+}
+
+.thread-container .post .long .head .rate {
+	font-weight: bold;
+}
+
+.thread-container .post .long .head .rate::before {
+	font-family: "Font Awesome 5 Free";
+    content: "\f005 ";
+    letter-spacing: 2px;
+    color: #666;
+}
+/* ======================= */
+
+/* New forum triks */
+.thread-container .post .long .head.op-post {
+    background: #e4f0c8;
+}
+/* =============== */
+
+.printuser .badge {
+    background: gray;
+    padding: 0px 2px 0px 2px;
+    border-radius: 3px;
+    color: white;
+    font-weight: 500;
+    font-size: .75em;
+    height: 1.5em;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: text-top;
 }

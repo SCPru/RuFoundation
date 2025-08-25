@@ -2,6 +2,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.conf import settings
 from django.template import Context, Template
 
+from web.models.articles import Vote
+from web.models.settings import Settings
 from web.models.users import User
 from web.controllers import articles
 
@@ -57,16 +59,24 @@ def render_user_to_html(user: User, avatar=True, hover=True):
     else:
         user_avatar = user.get_avatar(default=settings.DEFAULT_AVATAR)
         displayname = user.username
+    
+    badge = user.get_badge()
+
     return render_template_from_string(
         """
         <span class="printuser w-user{{class_add}}" data-user-id="{{user_id}}" data-user-name="{{username}}">
             {% if show_avatar %}
                 <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
             {% endif %}
-            <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a></span>
+            <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a>
+            {% if show_avatar and badge.show %}
+                <span class="badge" style="background: {{badge.bg}}; color: {{badge.text_color}}; {% if badge.border %}outline: solid 1px {{badge.text_color}}{% endif %}">{{badge.text}}</span>
+            {% endif %}
+        </span>
         """,
         class_add=(' avatarhover' if hover else ''),
         show_avatar=avatar,
+        badge=badge,
         avatar=user_avatar,
         user_id=user.id,
         username=user.username,
@@ -128,6 +138,33 @@ def render_user_to_json(user: User, avatar=True):
         'visualGroupIndex': user.visual_group.index if user.visual_group else None
     }
 
+def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Stars, capitalize=True):
+    rate = vote.rate if vote else None
+
+    if vote is None:
+        msg = 'не оценено'
+        if capitalize:
+            msg = msg.capitalize()
+        return render_template_from_string(
+            """
+            <span class="vote" title="Оценка обсуждаемой статьи">{{msg}}</span>
+            """,
+            msg=msg
+        )
+
+    if mode == Settings.RatingMode.UpDown:
+        visual_rate = '%+d' % rate
+    elif mode == Settings.RatingMode.Stars:
+        visual_rate = '%.1f' % rate
+    else:
+        visual_rate = '%d' % rate
+
+    return render_template_from_string(
+        """
+        <span class="vote" title="Оценка обсуждаемой статьи"><span class="rate">{{visual_rate}}</span>
+        """,
+        visual_rate=visual_rate
+    )
 
 def validate_url(url):
     url = url.strip()

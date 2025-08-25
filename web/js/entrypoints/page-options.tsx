@@ -361,9 +361,11 @@ const PageOptions: React.FC<Props> = ({
             Редактировать
           </a>
         )}
-        <a id="pagerate-button" className="btn btn-default" href="#" onClick={onRate}>
-          {canRate ? 'Оценить' : 'Оценки'} ({renderRating()})
-        </a>
+        {ratingMode != 'disabled' && (
+          <a id="pagerate-button" className="btn btn-default" href="#" onClick={onRate}>
+            {canRate ? 'Оценить' : 'Оценки'} ({renderRating()})
+          </a>
+        )}
         {editable && (
           <a id="tags-button" className="btn btn-default" href="#" onClick={onTags}>
             Теги

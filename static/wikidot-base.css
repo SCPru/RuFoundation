@@ -2083,7 +2083,6 @@ version: 2.3.1
 
 .thread-container .post{
 	padding: 10px 0 10px 0;
-	width: 99%; /* I love you IE */
 }
 
 .thread-container .post .options a{
@@ -2106,6 +2105,9 @@ version: 2.3.1
 }
 
 .thread-container .post  .long  .head .info{
+	display: flex;
+	align-items: baseline;
+	gap: 0.5ch;
 }
 
 .thread-container .post  .long  .content{
@@ -2178,10 +2180,6 @@ version: 2.3.1
 .thread-container .post.folded   .short{ display: block;}
 
 /* structured layout */
-
-.post-container .post-container{
-	margin-left: 5%;
-}
 
 .post-container.fordelete{
 	border: 2px solid #E44;

@@ -199,6 +199,9 @@ class VisualUserGroupForm(forms.ModelForm):
         model = VisualUserGroup
         widgets = {
             'name': forms.TextInput,
+            'badge': forms.TextInput,
+            'badge_bg': forms.TextInput(attrs={'type': 'color'}),
+            'badge_text_color': forms.TextInput(attrs={'type': 'color'}),
         }
         fields = '__all__'
 
@@ -207,9 +210,6 @@ class VisualUserGroupForm(forms.ModelForm):
 class VisualUserGroupAdmin(GuardedModelAdmin):
     form = VisualUserGroupForm
     search_fields = ['name']
-    fieldsets = (
-        (None, {"fields": ('name', 'index')}),
-    )
 
 
 class ActionsLogForm(forms.ModelForm):

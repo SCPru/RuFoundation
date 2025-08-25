@@ -3,13 +3,13 @@ import math
 
 from modules import ModuleError
 from modules.listpages import render_date, render_pagination
-from renderer import RenderContext, render_template_from_string, render_user_to_html
-from renderer.templates import apply_template
+from renderer import RenderContext
 
 import renderer
 
-from renderer.utils import render_user_to_json
+from renderer.utils import render_user_to_json, render_user_to_html, render_template_from_string, render_vote_to_html
 from web.controllers import articles, permissions
+from web.models.articles import Vote
 from web.models.forum import ForumCategory, ForumThread, ForumSection, ForumPost, ForumPostVersion
 
 from ._csrf_protection import csrf_safe_method
@@ -37,10 +37,22 @@ def get_post_info(context, thread, posts, show_replies=True):
 
     for post in posts:
         replies = ForumPost.objects.filter(reply_to=post).order_by('created_at') if show_replies else []
+        author_vote = ''
+        is_op = thread.author == post.author
+
+        if thread.article:
+            rating_mode = thread.article.get_settings().rating_mode
+            author_vote = Vote.objects.filter(user=post.author, article=thread.article).last()
+            author_vote = render_vote_to_html(author_vote, rating_mode)
+            if thread.article.author == post.author:
+                is_op = True
+        
         render_post = {
             'id': post.id,
             'name': post.name,
+            'is_op': is_op, #e4f0c8
             'author': render_user_to_html(post.author),
+            'author_rate': author_vote,
             'created_at': render_date(post.created_at),
             'updated_at': render_date(post.updated_at),
             'content': renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user), 'message'),
@@ -74,12 +86,12 @@ def render_posts(post_info):
         <div class="post-container">
             <div class="post" id="post-{{ post.id }}">
                 <div class="long">
-                    <div class="head">
+                    <div class="head {% if post.is_op %}op-post{% endif %}">
                         <div class="title">
                             {{ post.name }}
                         </div>
                         <div class="info">
-                            {{ post.author }} {{ post.created_at }}
+                            {{ post.author }} {{ post.created_at }} {{ post.author_rate }}
                         </div>
                     </div>
                     <div class="content">
