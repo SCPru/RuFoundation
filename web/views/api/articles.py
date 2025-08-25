@@ -12,6 +12,7 @@ from renderer.parser import RenderContext
 
 import json
 
+from ...controllers.search import update_search_index
 from ...models.articles import ExternalLink, Article
 
 from modules import rate, ModuleError
@@ -137,6 +138,7 @@ class FetchOrUpdateView(ArticleView):
                     raise APIError('Недостаточно прав', 403)
 
         article.refresh_from_db()
+        update_search_index(article)
         return self.render_article(article)
 
     def delete(self, request: HttpRequest, full_name: str) -> HttpResponse:
@@ -196,6 +198,8 @@ class FetchOrRevertLogView(APIView):
         version = articles.get_latest_version(article)
         articles.refresh_article_links(version)
 
+        article.refresh_from_db()
+        update_search_index(article)
         return self.render_json(200, {"pageId": article.full_name})
 
 
