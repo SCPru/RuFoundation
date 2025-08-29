@@ -1,3 +1,4 @@
+import auto_prefetch
 from django.db import models
 from django.contrib.postgres.search import SearchVectorField
 from django.contrib.postgres.indexes import GinIndex, OpClass
@@ -6,8 +7,8 @@ from django.db.models.functions import Upper
 from .articles import Article
 
 
-class ArticleSearchIndex(models.Model):
-    class Meta:
+class ArticleSearchIndex(auto_prefetch.Model):
+    class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Индекс для поиска по статьям"
         verbose_name_plural = "Индексы для поиска по статьям"
 
@@ -23,7 +24,7 @@ class ArticleSearchIndex(models.Model):
             ),
         ]
 
-    article = models.ForeignKey(Article, on_delete=models.SET_NULL, null=True, verbose_name="Статья")
+    article = auto_prefetch.ForeignKey(Article, on_delete=models.SET_NULL, null=True, verbose_name="Статья")
 
     content_plaintext = models.TextField(verbose_name="Текст статьи")
     content_source = models.TextField(verbose_name="Исходный код статьи")

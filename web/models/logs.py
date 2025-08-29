@@ -20,7 +20,7 @@ class ActionLogEntry(auto_prefetch.Model):
         RemoveForumPost = ('remove_forum_post', 'Сообщение форума удалено')
         ChangeProfileInfo = ('change_profile_info', 'Информация профиля изменена')
 
-    user = models.ForeignKey(User, verbose_name='Пользователь', on_delete=models.DO_NOTHING)
+    user = auto_prefetch.ForeignKey(User, verbose_name='Пользователь', on_delete=models.DO_NOTHING)
     stale_username = models.TextField(verbose_name='Имя на момент действия')
     type = models.TextField(choices=ActionType.choices, verbose_name='Тип')
     meta = models.JSONField(default=dict, blank=True)
