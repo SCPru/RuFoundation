@@ -2,7 +2,6 @@ Django==5.1.4
 py7zr==0.21.0
 whitenoise==6.6.0
 django-jazzmin==3.0.1
-django-guardian==2.4.0
 Pillow==11.1.0
 python-dotenv==1.0.1
 psycopg2-binary==2.9.10
