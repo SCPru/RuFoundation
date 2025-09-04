@@ -64,21 +64,28 @@ def visualgroups_to_roles(apps, schema_editor):
 def create_roles(apps, schema_editor):
     ContentType = apps.get_model('contenttypes', 'ContentType')
     Permission = apps.get_model('auth', 'Permission')
+    RoleCategory = apps.get_model('web', 'RoleCategory')
     Role = apps.get_model('web', 'Role')
     User = apps.get_model('web', 'User')
 
     last_index = Role.objects.aggregate(max_index=Max('index'))['max_index']
 
+    category = RoleCategory.objects.create(
+        name='Статус пользователя'
+    )
+
     reader_role = Role.objects.create(
         slug='reader',
         name='Читатель',
+        category=category,
         votes_title='Голоса читателей',
         group_votes=True,
         index=last_index+2,
     )
-    contributor_role = Role.objects.create(
-        slug='contributor',
+    editor_role = Role.objects.create(
+        slug='editor',
         name='Участник',
+        category=category,
         votes_title='Голоса участников',
         group_votes=True,
         index=last_index+1
@@ -90,13 +97,19 @@ def create_roles(apps, schema_editor):
     )
 
     readers_perms = ['rate_articles', 'comment_articles', 'create_forum_threads', 'create_forum_posts']
-    contributors_perms = ['create_articles', 'edit_articles', 'tag_articles', 'move_articles', 'manage_article_files', 'reset_article_votes']
+    editors_perms = ['create_articles', 'edit_articles', 'tag_articles', 'move_articles', 'manage_article_files', 'reset_article_votes']
 
     reader_role.permissions.set(Permission.objects.filter(codename__in=readers_perms, content_type=content_type))
-    contributor_role.permissions.set(Permission.objects.filter(codename__in=contributors_perms, content_type=content_type))
+    editor_role.permissions.set(Permission.objects.filter(codename__in=editors_perms, content_type=content_type))
 
     reader_role.users.set(User.objects.filter(is_active=True))
-    contributor_role.users.set(User.objects.filter(is_active=True, is_editor=True))
+    editor_role.users.set(User.objects.filter(is_active=True, is_editor=True))
+    
+    for user in User.objects.filter(is_active=True):
+        if user.is_editor:
+            user.vote_set.all().update(role=editor_role)
+        else:
+            user.vote_set.all().update(role=reader_role)
 
 
 class Migration(migrations.Migration):
