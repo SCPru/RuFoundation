@@ -6,11 +6,17 @@ from zoneinfo import ZoneInfo
 
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.models import AbstractUser, AnonymousUser
-from django.conf import settings
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from web.fields import CITextField
+import web.fields
+from web.models.roles import RolesMixin
+
+
+__all__ = [
+    'User',
+    'UsedToken'
+]
 
 
 class StrictUsernameValidator(RegexValidator):
@@ -24,24 +30,7 @@ class CSSValueValidator(RegexValidator):
     flags = re.ASCII
 
 
-class VisualUserGroup(auto_prefetch.Model):
-    class Meta(auto_prefetch.Model.Meta):
-        verbose_name = "Визуальная группа"
-        verbose_name_plural = "Визуальные группы"
-
-    name = models.TextField(unique=True, verbose_name='Название группы', blank=False, null=False)
-    index = models.IntegerField(verbose_name='Порядок в списках', blank=False, null=False, default=0)
-    show_badge = models.BooleanField(default=False, verbose_name='Показывать бейдж')
-    badge = models.TextField(default='', verbose_name='Бейдж', blank=False, null=False)
-    badge_bg = models.TextField(default='#808080', validators=[CSSValueValidator()], verbose_name='Цвет бейджа', blank=False, null=False)
-    badge_text_color = models.TextField(default='#FFFFFF', validators=[CSSValueValidator()], verbose_name='Цвет текста', blank=False, null=False)
-    badge_show_border = models.BooleanField(default=False, verbose_name='Показывать границу', blank=False, null=False)
-
-    def __str__(self):
-        return self.name
-
-
-class User(AbstractUser):
+class User(AbstractUser, RolesMixin):
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
@@ -52,7 +41,7 @@ class User(AbstractUser):
         System = ('system', 'Системный')
         Bot = ('bot', 'Бот')
 
-    username = CITextField(
+    username = web.fields.CITextField(
         max_length=150, validators=[StrictUsernameValidator()], unique=True,
         verbose_name="Имя пользователя",
         error_messages={
@@ -60,7 +49,7 @@ class User(AbstractUser):
         },
     )
 
-    wikidot_username = CITextField(unique=True, max_length=150, validators=[StrictUsernameValidator()], verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
+    wikidot_username = web.fields.CITextField(unique=True, max_length=150, validators=[StrictUsernameValidator()], verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
 
     type = models.TextField(choices=UserType.choices, default=UserType.Normal, verbose_name="Тип")
 
@@ -75,9 +64,13 @@ class User(AbstractUser):
     is_active = models.BooleanField(verbose_name='Активирован', default=True)
     inactive_until = models.DateTimeField(verbose_name='Деактивировать до', null=True)
 
-    is_editor = models.BooleanField(verbose_name='Статус участника', default=False)
-
-    visual_group = auto_prefetch.ForeignKey(VisualUserGroup, on_delete=models.SET_NULL, verbose_name="Визуальная группа", null=True, blank=True)
+    @property
+    def is_staff(self):
+        return self.is_superuser or RolesMixin.is_staff(self)
+    
+    @is_staff.setter
+    def is_staff(self, new_value):
+        pass
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -96,36 +89,6 @@ class User(AbstractUser):
         if self.avatar:
             return '%s%s' % ('/local--files/', self.avatar)
         return default
-    
-    def get_badge(self):
-        badge = {'show': False}
-        if self == AnonymousUser:
-            pass
-        elif not self.is_active and not self.type == User.UserType.Wikidot:
-            badge['show'] = True
-            badge['text'] = 'БАН'
-            badge['bg'] = '#000000'
-            badge['text_color'] = '#FFFFFF'
-            badge['border'] = False
-        elif self.type == User.UserType.Bot:
-            badge['show'] = True
-            badge['text'] = 'БОТ'
-            badge['bg'] = '#77A' #a1abca    #737d9b    #4463bf
-            badge['text_color'] = "#FFFFFF"
-            badge['border'] = False
-        elif self.visual_group:
-            badge['show'] = self.visual_group.show_badge
-            badge['text'] = self.visual_group.badge
-            badge['bg'] = self.visual_group.badge_bg
-            badge['text_color'] = self.visual_group.badge_text_color
-            badge['border'] = self.visual_group.badge_show_border
-        elif self.is_staff or self.is_superuser:
-            badge['show'] = True
-            badge['text'] = 'МОД'
-            badge['bg'] = '#FFFFFF'
-            badge['text_color'] = '#b42d2d'
-            badge['border'] = True
-        return badge
 
     def __str__(self):
         return self.username

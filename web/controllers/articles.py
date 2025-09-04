@@ -1,5 +1,13 @@
+import unicodedata
 import shutil
+import datetime
+import re
+import os.path
 
+from pathlib import Path
+from typing import Optional, Union, Sequence, Tuple, Dict
+
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser as _UserType
 from django.db import transaction
 from django.db.models import QuerySet, Sum, Avg, Count, Max, TextField, Value, IntegerField, Q, F
@@ -7,21 +15,14 @@ from django.db.models.functions import Coalesce, Concat, Lower
 
 import renderer
 from web.events import EventBase
-from web.models.users import User
-from web.models.articles import *
-from web.models.files import *
-
-from typing import Optional, Union, Sequence, Tuple, Dict
-import datetime
-import re
-import os.path
-
-import unicodedata
-
-from web.models.forum import ForumThread, ForumPost
-from web.util import lock_table
-
 from web.controllers import notifications, media
+from web.models.articles import Article, ArticleLogEntry, ArticleVersion, Category, ExternalLink, Tag, TagsCategory, Vote
+from web.models.files import File
+from web.models.settings import Settings
+from web.models.users import User
+from web.models.forum import ForumThread, ForumPost
+from web.models.roles import Role
+from web.util import lock_table
 
 
 _FullNameOrArticle = Optional[Union[str, Article]]
@@ -440,16 +441,16 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
             Vote.objects.filter(article=article).delete()
             for vote in new_props['votes']['votes']:
                 try:
-                    vote_visual_group = VisualUserGroup.objects.get(id=vote['visual_group_id'])
-                except VisualUserGroup.DoesNotExist:
-                    vote_visual_group = None
+                    vote_role = Role.objects.get(id=vote['role_id'])
+                except Role.DoesNotExist:
+                    vote_role = None
                 try:
                     vote_user = User.objects.get(id=vote['user_id'])
                 except User.DoesNotExist:
                     # missing user id means we skip this vote and can't restore it.
                     continue
                 vote_date = datetime.datetime.fromisoformat(vote['date']) if vote['date'] else None
-                new_vote = Vote(article=article, user=vote_user, date=vote_date, rate=vote['vote'], visual_group=vote_visual_group)
+                new_vote = Vote(article=article, user=vote_user, date=vote_date, rate=vote['vote'], role=vote_role)
                 new_vote.save()
                 new_vote.date = vote_date
                 new_vote.save()
@@ -577,7 +578,7 @@ def _get_article_votes_meta(full_name_or_article: _FullNameOrArticle):
         votes_meta['votes'].append({
             'user_id': vote.user_id,
             'vote': vote.rate,
-            'visual_group_id': vote.visual_group_id,
+            'role_id': vote.role,
             'date': vote.date.isoformat() if vote.date else None
         })
     return votes_meta
@@ -920,7 +921,7 @@ def add_vote(full_name_or_article: _FullNameOrArticle, user: _UserType, rate: in
 
     new_vote = None
     if rate is not None:
-        new_vote = Vote(article=article, user=user, rate=rate, visual_group=user.visual_group)
+        new_vote = Vote(article=article, user=user, rate=rate, role=user.vote_role)
         new_vote.save()
 
     OnVote(user, article, old_vote, new_vote).emit()

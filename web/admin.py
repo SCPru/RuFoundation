@@ -1,19 +1,22 @@
+from solo.admin import SingletonModelAdmin
+from adminsortable2.admin import SortableAdminMixin
+
+from django.db.models.query import QuerySet
+from django.contrib.auth.models import Permission
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib import admin
 from django.urls import path
-from solo.admin import SingletonModelAdmin
 from django import forms
 
-from .models.articles import *
-from .models.forum import *
-from .models.site import Site
-from .models.users import User, VisualUserGroup
-from .models.logs import ActionLogEntry
+import web.fields
+
+from .models import *
 from .views.invite import InviteView
 from .views.bot import CreateBotView
 from .views.reset_votes import ResetUserVotesView
 from .controllers import logging
+from .permissions import ROLE_PERMISSIONS_CONTENT_TYPE
 
 
 class TagsCategoryForm(forms.ModelForm):
@@ -23,14 +26,14 @@ class TagsCategoryForm(forms.ModelForm):
             'name': forms.TextInput,
             'slug': forms.TextInput,
         }
-        fields = ("name", "slug", "description", "priority")
+        fields = ('name', 'slug', 'description', 'priority')
 
 
 @admin.register(TagsCategory)
 class TagsCategoryAdmin(admin.ModelAdmin):
     form = TagsCategoryForm
     search_fields = ['name', 'slug', 'description']
-    list_display = ["name", "description", "priority", "slug"]
+    list_display = ['name', 'description', 'priority', 'slug']
 
 
 class TagForm(forms.ModelForm):
@@ -73,17 +76,81 @@ class CategoryForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput,
         }
-        fields = '__all__'
+        exclude = ['permissions_override']
+
+    _add_override_roles_ = forms.ModelMultipleChoiceField(label='Добавить роли для переопределения', queryset=QuerySet(Role), required=False)
+    _remove_override_roles_ = forms.ModelMultipleChoiceField(label='Удалить роли для переопределения', queryset=QuerySet(Role), required=False)
+    _perms_override_ = web.fields.PermissionsOverrideField(exclude_admin=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        instance = kwargs.get('instance')
+        if instance:
+            self.fields['_perms_override_'].widget.instance = instance
+
+            overrided_roles = Role.objects.filter(rolepermissionsoverride__in=instance.permissions_override.all())
+            self.fields['_add_override_roles_'].queryset = Role.objects.exclude(id__in=overrided_roles)
+            self.fields['_remove_override_roles_'].queryset = overrided_roles
+        else:
+            self.fields['_perms_override_'].widget.instance = None
+            self.fields['_add_override_roles_'].queryset = Role.objects.all()
+            self.fields['_remove_override_roles_'].disabled = True
+
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        instance.save()
+
+        roles_data = self.cleaned_data.get('_perms_override_', {})
+        if roles_data:
+            instance.permissions_override.all().delete()
+            overrides = []
+
+            for role_id, perms_data in roles_data.items():
+                perms_override = RolePermissionsOverride.objects.create(role_id=role_id)
+
+                if perms_data['allow']:
+                    perms = Permission.objects.filter(codename__in=perms_data['allow'], content_type=ROLE_PERMISSIONS_CONTENT_TYPE)
+                    perms_override.permissions.set(perms)
+
+                if perms_data['deny']:
+                    restrictions = Permission.objects.filter(codename__in=perms_data['deny'], content_type=ROLE_PERMISSIONS_CONTENT_TYPE)
+                    perms_override.restrictions.set(restrictions)
+
+                overrides.append(perms_override)
+
+            instance.permissions_override.add(*overrides)
+
+        roles_to_override = self.cleaned_data.get('_add_override_roles_', {})
+        if roles_to_override:
+            overrides = []
+            for role in roles_to_override:
+                overrides.append(RolePermissionsOverride.objects.create(role=role))
+
+            instance.permissions_override.add(*overrides)
+
+        roles_to_cancel_override = self.cleaned_data.get('_remove_override_roles_', {})
+        if roles_to_cancel_override:
+            instance.permissions_override.all().filter(role__in=roles_to_cancel_override).delete()
+
+        if commit:
+            instance.save()
+
+        return instance
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     form = CategoryForm
     fieldsets = (
-        (None, {"fields": ('name','is_indexed')}),
-        ('Права читателей',
-         {"fields": ('readers_can_view', 'readers_can_create', 'readers_can_edit', 'readers_can_rate', 'readers_can_delete', 'readers_can_comment')}),
-        ('Права участников', {"fields": ('users_can_view', 'users_can_create', 'users_can_edit', 'users_can_rate', 'users_can_delete', 'users_can_comment')})
+        (None, {
+            'fields': ('name', 'is_indexed')
+        }),
+        ('Переопределение прав', {
+            'fields': ('_add_override_roles_', '_remove_override_roles_', '_perms_override_')
+        })
     )
     inlines = [SettingsAdmin]
 
@@ -152,18 +219,22 @@ class AdvancedUserChangeForm(UserChangeForm):
             'wikidot_username': forms.TextInput(attrs={'class': 'vTextField'})
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['roles'].queryset = Role.objects.exclude(slug__in=['everyone', 'registered'])
+
 
 @admin.register(User)
 class AdvancedUserAdmin(UserAdmin):
     form = AdvancedUserChangeForm
 
-    list_filter = ['is_superuser', 'is_staff', 'is_editor', 'is_active', 'visual_group']
+    list_filter = ['is_superuser', 'is_active']
     list_display = ['username_or_wd', 'email']
     search_fields = ['username', 'wikidot_username', 'email']
     readonly_fields = ['api_key']
 
     fieldsets = UserAdmin.fieldsets
-    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'is_editor', 'is_staff', 'is_superuser', 'visual_group', 'groups', 'user_permissions')
+    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'roles', 'is_superuser')
     fieldsets[1][1]['fields'] += ('bio', 'avatar')
     fieldsets[0][1]['fields'] = ('username', 'wikidot_username', 'type', 'password', 'api_key')
 
@@ -191,24 +262,6 @@ class AdvancedUserAdmin(UserAdmin):
             if not_required_field in form.base_fields:
                 form.base_fields[not_required_field].required = False
         return form
-
-
-class VisualUserGroupForm(forms.ModelForm):
-    class Meta:
-        model = VisualUserGroup
-        widgets = {
-            'name': forms.TextInput,
-            'badge': forms.TextInput,
-            'badge_bg': forms.TextInput(attrs={'type': 'color'}),
-            'badge_text_color': forms.TextInput(attrs={'type': 'color'}),
-        }
-        fields = '__all__'
-
-
-@admin.register(VisualUserGroup)
-class VisualUserGroupAdmin(admin.ModelAdmin):
-    form = VisualUserGroupForm
-    search_fields = ['name']
 
 
 class ActionsLogForm(forms.ModelForm):
@@ -243,3 +296,106 @@ class ActionsLogAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
+
+class RoleCategoryForm(forms.ModelForm):
+    class Meta:
+        model = RoleCategory
+        fields = '__all__'
+
+
+@admin.register(RoleCategory)
+class RoleCategoryAdmin(admin.ModelAdmin):
+    form = RoleCategoryForm
+
+
+class RoleForm(forms.ModelForm):
+    class Meta:
+        model = Role
+        exclude = ['permissions', 'restrictions']
+
+    _perms_ = web.fields.PermissionsField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        instance = kwargs.get('instance')
+        self.fields['_perms_'].widget.instance = instance
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        instance.save()
+
+        perms_data = self.cleaned_data.get('_perms_', {})
+        if perms_data:
+            instance.permissions.clear()
+            instance.restrictions.clear()
+
+            if perms_data['allow']:
+                perms = Permission.objects.filter(codename__in=perms_data['allow'], content_type=ROLE_PERMISSIONS_CONTENT_TYPE)
+                instance.permissions.set(perms)
+
+            if perms_data['deny']:
+                restrictions = Permission.objects.filter(codename__in=perms_data['deny'], content_type=ROLE_PERMISSIONS_CONTENT_TYPE)
+                instance.restrictions.set(restrictions)
+
+        if commit:
+            instance.save()
+
+        return instance
+
+
+@admin.register(Role)
+class RoleAdmin(SortableAdminMixin, admin.ModelAdmin):
+    form = RoleForm
+    list_display = ['__str__', '_users_number', '_idx']
+    fieldsets = (
+        (None, {
+            'fields': ('slug', 'name', 'short_name', 'category', 'is_staff')
+        }),
+        ('Визуал', {
+            'fields': ('group_votes', 'votes_title', 'inline_visual_mode', 'profile_visual_mode', 'color', 'icon', 'badge_text', 'badge_bg', 'badge_text_color', 'badge_show_border')
+        }),
+        ('Права доступа', {
+            'fields': ('_perms_',)
+        })
+    )
+
+    @admin.display(description='Индекс')
+    def _idx(self, obj):
+        return obj.index
+
+    @admin.display(description='Пользователей')
+    def _users_number(self, obj):
+        if obj.slug in ['everyone', 'registered']:
+            return User.objects.all().count()
+        return obj.users.all().count()
+    
+    @property
+    def change_list_template(self):
+        return 'admin/%s/%s/change_list.html' % (self.opts.app_label, self.opts.model_name)
+    
+    @property
+    def change_list_results_template(self):
+        return 'admin/%s/%s/change_list_results.html' % (self.opts.app_label, self.opts.model_name)
+    
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.slug  in ['everyone', 'registered']:
+            return False
+        return super().has_delete_permission(request, obj)
+        
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.slug  in ['everyone', 'registered']:
+            return self.readonly_fields + ("slug",)
+        return self.readonly_fields
+
+    def get_sortable_objects(self, request, queryset):
+        sortable, non_sortable = [], []
+        for obj in queryset:
+            if obj.slug  in ['everyone', 'registered']:
+                non_sortable.append(obj)
+            else:
+                sortable.append(obj)
+        return sortable, non_sortable
+    

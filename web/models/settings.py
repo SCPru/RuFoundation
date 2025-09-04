@@ -2,6 +2,11 @@ import auto_prefetch
 from django.db import models
 
 
+__all__ = [
+    'Settings'
+]
+
+
 class Settings(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Настройки"

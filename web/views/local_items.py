@@ -3,7 +3,7 @@ from django.views.generic.base import View
 
 from renderer import RenderContext, single_pass_fetch_code_and_html, single_pass_render
 from renderer.html import get_html_injected_code
-from web.controllers import articles, permissions
+from web.controllers import articles
 
 import json
 import hashlib
@@ -18,7 +18,7 @@ class LocalCodeView(View):
         if not article:
             return HttpResponseNotFound('Article not found')
 
-        if not permissions.check(request.user, 'view', article):
+        if not request.user.has_perm('roles.view_articles', article):
             return HttpResponseForbidden('Permission denied')
 
         rev_num = request.GET.get('revNum')
@@ -67,7 +67,7 @@ class LocalHTMLView(View):
         if not article:
             return HttpResponseNotFound('Article not found')
 
-        if not permissions.check(request.user, 'view', article):
+        if not request.user.has_perm('roles.view_articles', article):
             return HttpResponseForbidden('Permission denied')
 
         rev_num = request.GET.get('revNum')
@@ -110,7 +110,7 @@ class LocalThemeView(View):
         if not article:
             return HttpResponseNotFound('Article not found')
 
-        if not permissions.check(request.user, 'view', article):
+        if not request.user.has_perm('roles.view_articles', article):
             return HttpResponseForbidden('Permission denied')
 
         rev_num = request.GET.get('revNum')

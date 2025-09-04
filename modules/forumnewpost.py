@@ -4,7 +4,7 @@ from modules import ModuleError
 from renderer import RenderContext, single_pass_render
 
 from web.events import EventBase
-from web.controllers import articles, permissions
+from web.controllers import articles
 from web.models.forum import ForumThread, ForumPost, ForumPostVersion
 
 from ._csrf_protection import csrf_safe_method
@@ -60,7 +60,7 @@ def api_submit(context, params):
     except:
         reply_to = None
 
-    if not permissions.check(context.user, 'create', ForumPost(thread=thread)):
+    if not context.user.has_perm('roles.create_forum_posts', thread):
         raise ModuleError('Недостаточно прав для создания сообщения')
 
     post = ForumPost(thread=thread, author=context.user, name=title, reply_to=reply_to)

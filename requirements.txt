@@ -7,6 +7,7 @@ python-dotenv==1.0.1
 psycopg2-binary==2.9.10
 watchdog==4.0.1
 beautifulsoup4==4.12.3
+django-admin-sortable2==2.2.8
 django-auto-prefetch==1.11.0
 langcodes==3.4.0
 requests==2.32.3

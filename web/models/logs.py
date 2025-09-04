@@ -3,7 +3,13 @@ from django.db import models
 from django.contrib.auth import get_user_model
 
 
+__all__ = [
+    'ActionLogEntry'
+]
+
+
 User = get_user_model()
+
 
 class ActionLogEntry(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):

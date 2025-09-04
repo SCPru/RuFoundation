@@ -10,8 +10,7 @@ export interface UserData {
   editor?: boolean
   staff?: boolean
   admin?: boolean
-  visualGroup?: string
-  visualGroupIndex?: number
+  roles?: string
 }
 
 export function fetchAllUsers(): Promise<UserData[]> {

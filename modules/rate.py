@@ -2,7 +2,7 @@ from django.contrib.auth.models import AnonymousUser
 
 from web.controllers.articles import get_rating, Vote
 from web.models.settings import Settings
-from web.controllers import articles, permissions
+from web.controllers import articles
 
 from renderer.utils import render_user_to_json, render_template_from_string
 
@@ -74,8 +74,8 @@ def api_get_votes(context, _params):
         rendered_vote = {
             'user': render_user_to_json(db_vote.user),
             'value': db_vote.rate,
-            'visualGroup': db_vote.visual_group.name if db_vote.visual_group else None,
-            'visualGroupIndex': db_vote.visual_group.index if db_vote.visual_group else None
+            'group': (db_vote.role.votes_title or db_vote.role.name or db_vote.role.slug) if db_vote.role else None,
+            'groupIndex': db_vote.role.index if db_vote.role else None
         }
         if context.user.is_staff or context.user.is_superuser:
             rendered_vote['date'] = db_vote.date.isoformat() if db_vote.date else None
@@ -107,7 +107,7 @@ def api_rate(context, params):
     if not context.article:
         raise ModuleError('Страница не указана')
 
-    if not permissions.check(context.user, "rate", context.article):
+    if not context.user.has_perm('roles.vote_articles', context.article):
         raise ModuleError('Недостаточно прав')
 
     if 'value' not in params:

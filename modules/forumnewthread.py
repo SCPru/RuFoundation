@@ -5,7 +5,7 @@ from renderer import RenderContext, render_template_from_string
 import json
 
 from renderer.utils import render_user_to_json
-from web.controllers import articles, permissions, notifications
+from web.controllers import articles, notifications
 from web.models.forum import ForumCategory, ForumThread, ForumPost, ForumPostVersion
 
 
@@ -32,7 +32,7 @@ def render(context: RenderContext, params):
         context.status = 404
         raise ModuleError('Категория "%s" не найдена' % c)
 
-    if not permissions.check(context.user, 'create', ForumThread(category=category)):
+    if not context.user.has_perm('roles.create_forum_threads', category):
         raise ModuleError('Недостаточно прав для создания темы')
 
     num_threads = ForumThread.objects.filter(category=category).count()
@@ -100,7 +100,7 @@ def api_submit(context, params):
         context.status = 404
         raise ModuleError('Категория не найдена или не указана')
 
-    if not permissions.check(context.user, 'create', ForumThread(category=category)):
+    if not context.user.has_perm('roles.create_forum_threads', category):
         raise ModuleError('Недостаточно прав для создания темы')
 
     thread = ForumThread(category=category, name=title, description=description, author=context.user)

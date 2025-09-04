@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 
 from renderer.utils import render_user_to_json
 from web.events import EventBase
-from web.controllers import permissions
 from web.models.forum import ForumPost, ForumPostVersion
 
 from ._csrf_protection import csrf_safe_method
@@ -40,7 +39,7 @@ def api_fetch(context, params):
         raise ModuleError('Сообщение "%d" не существует', post_id)
     post = post[0]
 
-    if not permissions.check(context.user, 'view', post):
+    if not context.user.has_perm('roles.view_forum_posts', post):
         raise ModuleError('Недостаточно прав для просмотра сообщения')
 
     q = ForumPostVersion.objects.filter(post=post).order_by('-created_at')
@@ -79,7 +78,7 @@ def api_update(context, params):
         raise ModuleError('Сообщение "%d" не существует', post_id)
     post = post[0]
 
-    if not permissions.check(context.user, 'edit', post):
+    if not context.user.has_perm('roles.edit_forum_posts', post) or not context.user.has_perm('roles.create_forum_posts', post.thread):
         raise ModuleError('Недостаточно прав для редактирования сообщения')
 
     latest_version = ForumPostVersion.objects.filter(post=post).order_by('-created_at')[:1]
@@ -117,7 +116,7 @@ def api_delete(context, params):
         raise ModuleError('Сообщение "%d" не существует', post_id)
     post = post[0]
 
-    if not permissions.check(context.user, 'delete', post):
+    if not context.user.has_perm('roles.delete_forum_posts', post):
         raise ModuleError('Недостаточно прав для удаления сообщения')
     
     latest_version = ForumPostVersion.objects.filter(post=post).order_by('-created_at').first()
@@ -140,7 +139,7 @@ def api_fetchversions(context, params):
         raise ModuleError('Сообщение "%d" не существует', post_id)
     post = post[0]
 
-    if not permissions.check(context.user, 'view', post):
+    if not context.user.has_perm('roles.view_forum_posts', post):
         raise ModuleError('Недостаточно прав для просмотра сообщения')
 
     q = ForumPostVersion.objects.filter(post=post).order_by('-created_at')

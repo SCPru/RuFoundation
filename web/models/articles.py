@@ -3,49 +3,60 @@ import auto_prefetch
 
 from uuid import uuid4
 from django.core.validators import RegexValidator
-from django.conf import settings
 from django.db import models
 from django.contrib.auth import get_user_model
 
 from web.fields import CITextField
-from .users import VisualUserGroup
+from .roles import Role, PermissionsOverrideMixin, RolePermissionsOverrideMixin
 from .settings import Settings
 from .site import Site
+
+
+__all__ = [
+    'TagsCategory',
+    'Tag',
+    'Category',
+    'Article',
+    'ArticleVersion',
+    'ArticleLogEntry',
+    'Vote',
+    'ExternalLink'
+]
 
 
 User = get_user_model()
 
 
 class TagsCategorySlugValidator(RegexValidator):
-    regex = r"^[a-zа-я0-9.-_]+\Z"
-    message = "Идентификатор категории тега может содержать только строчные буквы, цифры и символы [.-_] (без скобок)."
+    regex = r'^[a-zа-я0-9.-_]+\Z'
+    message = 'Идентификатор категории тега может содержать только строчные буквы, цифры и символы [.-_] (без скобок).'
     flags = re.ASCII
 
 
 class TagsCategory(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
-        verbose_name = "Категория тегов"
-        verbose_name_plural = "Категории тегов"
+        verbose_name = 'Категория тегов'
+        verbose_name_plural = 'Категории тегов'
 
         constraints = [models.UniqueConstraint(fields=['slug'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['name'])]
 
-    name = models.TextField(verbose_name="Полное название")
-    description = models.TextField(blank=True, verbose_name="Описание")
-    priority = models.PositiveIntegerField(null=True, blank=True, unique=True, verbose_name="Порядковый номер")
-    slug = models.TextField(verbose_name="Идентификатор", unique=True, validators=[TagsCategorySlugValidator()])
+    name = models.TextField('Полное название')
+    description = models.TextField('Описание', blank=True)
+    priority = models.PositiveIntegerField(null=True, blank=True, unique=True, verbose_name='Порядковый номер')
+    slug = models.TextField('Идентификатор', unique=True, validators=[TagsCategorySlugValidator()])
 
     def __str__(self):
-        return f"{self.name} ({self.slug})"
+        return f'{self.name} ({self.slug})'
 
     @staticmethod
     def get_or_create_default_tags_category():
-        category, _ = TagsCategory.objects.get_or_create(slug="_default", defaults=dict(name="Default"))
+        category, _ = TagsCategory.objects.get_or_create(slug='_default', defaults=dict(name='Default'))
         return category.pk
 
     @property
     def is_default(self) -> bool:
-        return self.slug == "_default"
+        return self.slug == '_default'
 
     def save(self, *args, **kwargs):
         if not self.id and not self.name:
@@ -55,14 +66,14 @@ class TagsCategory(auto_prefetch.Model):
 
 class Tag(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
-        verbose_name = "Тег"
-        verbose_name_plural = "Теги"
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
 
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['category', 'name'])]
 
-    category = auto_prefetch.ForeignKey(TagsCategory, null=False, blank=False, on_delete=models.CASCADE, verbose_name="Категория", default=TagsCategory.get_or_create_default_tags_category)
-    name = models.TextField(verbose_name="Название")
+    category = auto_prefetch.ForeignKey(TagsCategory, null=False, blank=False, on_delete=models.CASCADE, verbose_name='Категория', default=TagsCategory.get_or_create_default_tags_category)
+    name = models.TextField('Название')
 
     def __str__(self):
         return self.full_name
@@ -70,7 +81,7 @@ class Tag(auto_prefetch.Model):
     @property
     def full_name(self) -> str:
         if self.category and not self.category.is_default:
-            return f"{self.category.slug}:{self.name}"
+            return f'{self.category.slug}:{self.name}'
         return self.name
 
     def save(self, *args, **kwargs):
@@ -78,31 +89,17 @@ class Tag(auto_prefetch.Model):
         return super(Tag, self).save(*args, **kwargs)
 
 
-class Category(auto_prefetch.Model):
+class Category(auto_prefetch.Model, RolePermissionsOverrideMixin):
     class Meta(auto_prefetch.Model.Meta):
-        verbose_name = "Настройки категории"
-        verbose_name_plural = "Настройки категорий"
+        verbose_name = 'Настройки категории'
+        verbose_name_plural = 'Настройки категорий'
 
         constraints = [models.UniqueConstraint(fields=['name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['name'])]
 
-    name = models.TextField(verbose_name="Имя")
+    name = models.TextField(verbose_name='Имя')
 
     is_indexed = models.BooleanField(verbose_name='Индексируется поисковиками', null=False, default=True)
-
-    readers_can_view = models.BooleanField(verbose_name='Читатели могут просматривать статьи', null=False, default=True)
-    readers_can_create = models.BooleanField(verbose_name='Читатели могут создавать статьи', null=False, default=False)
-    readers_can_edit = models.BooleanField(verbose_name='Читатели могут редактировать статьи', null=False, default=False)
-    readers_can_rate = models.BooleanField(verbose_name='Читатели могут голосовать за статьи', null=False, default=True)
-    readers_can_comment = models.BooleanField(verbose_name='Читатели могут комментировать статьи', null=False, default=True)
-    readers_can_delete = models.BooleanField(verbose_name='Читатели могут удалять статьи', null=False, default=False)
-
-    users_can_view = models.BooleanField(verbose_name='Участники могут просматривать статьи', null=False, default=True)
-    users_can_create = models.BooleanField(verbose_name='Участники могут создавать статьи', null=False, default=True)
-    users_can_edit = models.BooleanField(verbose_name='Участники могут редактировать статьи', null=False, default=True)
-    users_can_rate = models.BooleanField(verbose_name='Участники могут голосовать за статьи', null=False, default=True)
-    users_can_comment = models.BooleanField(verbose_name='Участники могут комментировать статьи', null=False, default=True)
-    users_can_delete = models.BooleanField(verbose_name='Участники могут удалять статьи', null=False, default=False)
 
     def __str__(self) -> str:
         return self.name
@@ -113,30 +110,40 @@ class Category(auto_prefetch.Model):
         category_settings = Settings.objects.filter(category=self).first() or Settings.get_default_settings()
         site_settings = Site.objects.get().get_settings() or Settings.get_default_settings()
         return Settings.get_default_settings().merge(site_settings).merge(category_settings)
+    
+    @staticmethod
+    def get_or_default_category(category):
+        cat = Category.objects.filter(name=category)
+        if not cat:
+            return Category(name=category)
+        else:
+            return cat[0]
 
 
-class Article(auto_prefetch.Model):
+class Article(auto_prefetch.Model, PermissionsOverrideMixin):
     class Meta(auto_prefetch.Model.Meta):
-        verbose_name = "Статья"
-        verbose_name_plural = "Статьи"
+        verbose_name = 'Статья'
+        verbose_name_plural = 'Статьи'
 
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['category', 'name']), models.Index(fields=['created_at']), models.Index(fields=['updated_at'])]
 
-    category = models.TextField(default="_default", verbose_name="Категория")
-    name = models.TextField(verbose_name="Имя")
-    title = models.TextField(verbose_name="Заголовок")
+    roles_override_pipeline = ['category_as_object']
 
-    parent = auto_prefetch.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Родитель")
-    tags = models.ManyToManyField(Tag, blank=True, related_name="articles", verbose_name="Тэги")
-    author = auto_prefetch.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Автор")
+    category = models.TextField('Категория', default='_default')
+    name = models.TextField('Имя')
+    title = models.TextField('Заголовок')
 
-    locked = models.BooleanField(default=False, verbose_name="Страница защищена")
+    parent = auto_prefetch.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Родитель')
+    tags = models.ManyToManyField(Tag, blank=True, related_name='articles', verbose_name='Тэги')
+    author = auto_prefetch.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Автор')
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
-    updated_at = models.DateTimeField(auto_now_add=True, verbose_name="Время изменения")
+    locked = models.BooleanField('Страница защищена', default=False)
 
-    media_name = models.TextField(verbose_name="Название папки с файлами в ФС-хранилище", unique=True, default=uuid4)
+    created_at = models.DateTimeField('Время создания', auto_now_add=True)
+    updated_at = models.DateTimeField('Время изменения', auto_now_add=True)
+
+    media_name = models.TextField('Название папки с файлами в ФС-хранилище', unique=True, default=uuid4)
 
     def get_settings(self):
         try:
@@ -149,38 +156,48 @@ class Article(auto_prefetch.Model):
     @property
     def full_name(self) -> str:
         if self.category != '_default':
-            return f"{self.category}:{self.name}"
+            return f'{self.category}:{self.name}'
         return self.name
 
     @property
     def display_name(self) -> str:
         return self.title.strip() or self.full_name
+    
+    @property
+    def category_as_object(self) -> Category | None:
+        return Category.get_or_default_category(self.category)
 
     def __str__(self) -> str:
-        return f"{self.title} ({self.full_name})"
+        return f'{self.title} ({self.full_name})'
+    
+    def override_perms(self, user_obj, perms: set, roles=[]):
+        if self.locked and 'roles.lock_articles' not in perms:
+            lockable_perms = {'roles.edit_articles', 'roles.tag_articles', 'roles.move_articles', 'roles.delete_articles'}
+            perms = perms.difference(lockable_perms)
+        return super().override_perms(user_obj, perms, roles)
 
 
 class ArticleVersion(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
-        verbose_name = "Версия статьи"
-        verbose_name_plural = "Версии статей"
+        verbose_name = 'Версия статьи'
+        verbose_name_plural = 'Версии статей'
 
         indexes = [models.Index(fields=['article', 'created_at'])]
 
-    article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья", related_name='versions')
-    source = models.TextField(verbose_name="Исходник")
-    ast = models.JSONField(blank=True, null=True, verbose_name="AST-дерево статьи")
-    rendered = models.TextField(blank=True, null=True, verbose_name="Рендер статьи")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
+    article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name='Статья', related_name='versions')
+    source = models.TextField('Исходник')
+    ast = models.JSONField('AST-дерево статьи', blank=True, null=True)
+    rendered = models.TextField('Рендер статьи', blank=True, null=True)
+    created_at = models.DateTimeField('Время создания', auto_now_add=True)
 
     def __str__(self) -> str:
-        return f"{self.created_at.strftime('%Y-%m-%d, %H:%M:%S')} - {self.article}"
+        return f'{self.created_at.strftime('%Y-%m-%d, %H:%M:%S')} - {self.article}'
 
 
 class ArticleLogEntry(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
-        verbose_name = "Запись в журнале изменений"
-        verbose_name_plural = "Записи в журнале изменений"
+        verbose_name = 'Запись в журнале изменений'
+        verbose_name_plural = 'Записи в журнале изменений'
 
         constraints = [models.UniqueConstraint(fields=['article', 'rev_number'], name='%(app_label)s_%(class)s_unique')]
 
@@ -198,40 +215,40 @@ class ArticleLogEntry(auto_prefetch.Model):
         Wikidot = ('wikidot', 'Правка с Wikidot')
         Revert = ('revert', 'Откат правки')
 
-    article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
-    user = auto_prefetch.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
-    type = models.TextField(choices=LogEntryType.choices, verbose_name="Тип")
-    meta = models.JSONField(default=dict, blank=True, verbose_name="Мета")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
-    comment = models.TextField(blank=True, verbose_name="Комментарий")
-    rev_number = models.PositiveIntegerField(verbose_name="Номер правки")
+    article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name='Статья')
+    user = auto_prefetch.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Пользователь')
+    type = models.TextField('Тип', choices=LogEntryType.choices)
+    meta = models.JSONField('Мета', default=dict, blank=True)
+    created_at = models.DateTimeField('Время создания', auto_now_add=True)
+    comment = models.TextField('Комментарий', blank=True)
+    rev_number = models.PositiveIntegerField('Номер правки')
 
     def __str__(self) -> str:
-        return f"№{self.rev_number} - {self.article}"
+        return f'№{self.rev_number} - {self.article}'
 
 
 class Vote(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
-        verbose_name = "Оценка"
-        verbose_name_plural = "Оценки"
+        verbose_name = 'Оценка'
+        verbose_name_plural = 'Оценки'
 
         constraints = [models.UniqueConstraint(fields=['article', 'user'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['article'])]
 
-    article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья", related_name='votes')
-    user = auto_prefetch.ForeignKey(User, null=True, on_delete=models.SET_NULL, verbose_name="Пользователь")
-    rate = models.FloatField(verbose_name="Оценка")
-    date = models.DateTimeField(verbose_name="Дата голоса", auto_now_add=True, null=True)
-    visual_group = auto_prefetch.ForeignKey(VisualUserGroup, on_delete=models.SET_NULL, verbose_name="Визуальная группа", null=True)
+    article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name='Статья', related_name='votes')
+    user = auto_prefetch.ForeignKey(User, null=True, on_delete=models.SET_NULL, verbose_name='Пользователь')
+    rate = models.FloatField('Оценка')
+    date = models.DateTimeField('Дата голоса', auto_now_add=True, null=True)
+    role = auto_prefetch.ForeignKey(Role, on_delete=models.SET_NULL, verbose_name='Роль', null=True)
 
     def __str__(self) -> str:
-        return f"{self.article}: {self.user} - {self.rate}"
+        return f'{self.article}: {self.user} - {self.rate}'
 
 
 class ExternalLink(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
-        verbose_name = "Связь"
-        verbose_name_plural = "Связи"
+        verbose_name = 'Связь'
+        verbose_name_plural = 'Связи'
 
         indexes = [
             models.Index(fields=['link_from', 'link_to']),
@@ -244,6 +261,6 @@ class ExternalLink(auto_prefetch.Model):
         Include = 'include'
         Link = 'link'
 
-    link_from = CITextField(verbose_name="Ссылающаяся статья", null=False)
-    link_to = CITextField(verbose_name="Целевая статья", null=False)
-    link_type = models.TextField(choices=Type.choices, verbose_name="Тип ссылки", null=False)
+    link_from = CITextField('Ссылающаяся статья', null=False)
+    link_to = CITextField('Целевая статья', null=False)
+    link_type = models.TextField('Тип ссылки', choices=Type.choices, null=False)

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
 
     'web',
+    'adminsortable2',
 
     'django.contrib.staticfiles',
 ]
@@ -126,6 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
+    'web.permissions.backends.RolesBackend'
 ]
 
 
@@ -239,7 +241,7 @@ else:
 GOOGLE_TAG_ID = os.environ.get('GOOGLE_TAG_ID', None)
 
 
-AUTH_USER_MODEL = "web.User"
+AUTH_USER_MODEL = 'web.User'
 
 LOGGING = {
     'version': 1,

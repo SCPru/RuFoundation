@@ -9,8 +9,8 @@ import urllib.parse
 
 from renderer.templates import apply_template
 from renderer.utils import render_user_to_json
-from web.models.articles import Article
-from web.controllers import articles, permissions, notifications
+from web.models.articles import Article, Category
+from web.controllers import articles, notifications
 
 from renderer import single_pass_render, single_pass_render_with_excerpt
 from renderer.parser import RenderContext
@@ -84,7 +84,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         rev_number = 0
         updated_at = None
         if article is not None:
-            if not permissions.check(self.request.user, 'view', article):
+            if not self.request.user.has_perm('roles.view_articles', article):
                 context = {'page_id': fullname}
                 content = render_to_string(self.template_403, context)
                 redirect_to = None
@@ -111,7 +111,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         else:
             category, name = articles.get_name(fullname)
             options = {'page_id': fullname, 'pathParams': path_params}
-            context = {'options': json.dumps(options), 'allow_create': articles.is_full_name_allowed(fullname) and permissions.check(self.request.user, "create", Article(name=name, category=category))}
+            context = {'options': json.dumps(options), 'allow_create': articles.is_full_name_allowed(fullname) and self.request.user.has_perm('roles.create_articles', Category.get_or_default_category(category))}
             content = render_to_string(self.template_404, context)
             redirect_to = None
             title = ''
@@ -182,20 +182,25 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
         options_config = {
             'optionsEnabled': article is not None,
-            'editable': permissions.check(self.request.user, "edit", article),
-            'lockable': permissions.check(self.request.user, "lock", article),
+            'editable': self.request.user.has_perm('roles.edit_articles', article),
+            'lockable': self.request.user.has_perm('roles.lock_articles', article),
+            'tagable': self.request.user.has_perm('roles.tag_articles', article),
             'pageId': article_name,
             'rating': article_rating,
             'ratingMode': article_rating_mode,
             'ratingVotes': article_votes,
             'ratingPopularity': article_popularity,
             'pathParams': path_params,
-            'canRate': permissions.check(self.request.user, "rate", article),
-            'canComment': permissions.check(self.request.user, "view-comments", article) if article else False,
+            'canRate': self.request.user.has_perm('roles.vote_articles', article),
+            'canComment': self.request.user.has_perm('roles.comment_articles', article) if article else False,
             'commentThread': ('/%s/comments/show' % normalized_article_name) if article else None,
             'commentCount': comment_count,
-            'canDelete': permissions.check(self.request.user, "delete", article),
+            'canDelete': self.request.user.has_perm('roles.delete_articles', article),
             'canCreateTags': site.get_settings().creating_tags_allowed,
+            'canManageFiles': self.request.user.has_perm('roles.manage_article_files', article),
+            'canRename': self.request.user.has_perm('roles.move_articles', article),
+            'canCreateHere': self.request.user.has_perm('roles.create_articles', article),
+            'canResetVotes': self.request.user.has_perm('roles.reset_article_votes', article),
             'canWatch': not self.request.user.is_anonymous,
             'isWatching': not self.request.user.is_anonymous and (
                 notifications.is_subscribed(self.request.user, article=article) or \
@@ -239,7 +244,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             })
 
         category_name, _ = articles.get_name(article_name)
-        category = permissions.get_or_default_category(category_name)
+        category = Category.get_or_default_category(category_name)
         context.update({
             'noindex': not category.is_indexed
         })

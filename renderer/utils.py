@@ -1,14 +1,16 @@
+import threading
+import urllib.parse
+
 from django.contrib.auth.models import AnonymousUser
 from django.conf import settings
+from django.forms import model_to_dict
 from django.template import Context, Template
 
 from web.models.articles import Vote
+from web.models.roles import Role
 from web.models.settings import Settings
 from web.models.users import User
 from web.controllers import articles
-
-import threading
-import urllib.parse
 
 
 _templates = dict()
@@ -22,6 +24,22 @@ def render_template_from_string(template: str, **context: object) -> object:
         else:
             tpl = _templates[template] = Template(template.strip())
     return tpl.render(Context(context))
+
+
+def render_role_to_json(role: Role):
+    if role is None:
+        return {}
+    return {
+        'slug': role.slug,
+        'name': role.name,
+        'short_name': role.short_name,
+        'category': role.category.id if role.category else None,
+        'staff': role.is_staff,
+        'group_votes': role.group_votes,
+        'inline_visual_mode': role.inline_visual_mode,
+        'profile_visual_mode': role.profile_visual_mode,
+        'tails': role.get_name_tails()
+    }
 
 
 def render_user_to_text(user: User):
@@ -59,8 +77,6 @@ def render_user_to_html(user: User, avatar=True, hover=True):
     else:
         user_avatar = user.get_avatar(default=settings.DEFAULT_AVATAR)
         displayname = user.username
-    
-    badge = user.get_badge()
 
     return render_template_from_string(
         """
@@ -69,14 +85,19 @@ def render_user_to_html(user: User, avatar=True, hover=True):
                 <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
             {% endif %}
             <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a>
-            {% if show_avatar and badge.show %}
-                <span class="badge" style="background: {{badge.bg}}; color: {{badge.text_color}}; {% if badge.border %}outline: solid 1px {{badge.text_color}}{% endif %}">{{badge.text}}</span>
+            {% if show_avatar %}
+                {% for icon in tails.icons %}
+                    <span class="icon" title="{{icon.tooltip|safe}}"><img src="data:image/svg+xml,{{icon.icon}}"/></span>
+                {% endfor %}
+                {% for badge in tails.badges %}
+                    <span class="badge" title="{{badge.tooltip|safe}}" style="background: {{badge.bg|safe}}; color: {{badge.text_color|safe}}; {% if badge.border %}border: solid 1px {{badge.text_color|safe}}{% endif %}">{{badge.text|safe}}</span>
+                {% endfor %}
             {% endif %}
         </span>
         """,
         class_add=(' avatarhover' if hover else ''),
         show_avatar=avatar,
-        badge=badge,
+        tails=user.name_tails,
         avatar=user_avatar,
         user_id=user.id,
         username=user.username,
@@ -121,9 +142,6 @@ def render_user_to_json(user: User, avatar=True):
     displayname = user.username
     if user.type == User.UserType.Wikidot:
         displayname = 'wd:'+user.wikidot_username
-    staff = user.is_staff
-    admin = user.is_superuser
-    editor = user.is_editor
     return {
         'type': user_type,
         'id': user.id,
@@ -131,11 +149,8 @@ def render_user_to_json(user: User, avatar=True):
         'name': displayname,
         'username': user.username,
         'showAvatar': avatar,
-        'staff': staff,
-        'admin': admin,
-        'editor': editor,
-        'visualGroup': user.visual_group.name if user.visual_group else None,
-        'visualGroupIndex': user.visual_group.index if user.visual_group else None
+        'staff': user.is_staff,
+        'roles': [role.id for role in user.roles.all() if role.group_votes or role.inline_visual_mode != Role.InlineVisualMode.Hidden or role.profile_visual_mode != Role.ProfileVisualMode.Hidden]
     }
 
 def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Stars, capitalize=True):

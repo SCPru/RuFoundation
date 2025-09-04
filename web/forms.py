@@ -1,6 +1,7 @@
 from django import forms
 from django.core.validators import RegexValidator
 
+from web.models.roles import Role
 from web.models.users import User
 
 
@@ -16,7 +17,7 @@ class UserProfileForm(forms.ModelForm):
 class InviteForm(forms.Form):
     _selected_user = forms.IntegerField(widget=forms.MultipleHiddenInput, required=False)
     email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'vTextField'}))
-    is_editor = forms.BooleanField(label='Статус участника', required=False)
+    roles = forms.ModelMultipleChoiceField(label='Роли', queryset=Role.objects.exclude(slug__in=['everyone', 'registered']), required=False)
 
 
 class CreateAccountForm(forms.Form):

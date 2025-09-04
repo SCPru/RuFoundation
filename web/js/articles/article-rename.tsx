@@ -75,6 +75,7 @@ const ArticleRename: React.FC<Props> = ({ pageId, isNew, onClose }) => {
     try {
       await updateArticle(pageId, input)
       setSavingSuccess(true)
+      setSaving(false)
       await sleep(1000)
       setSavingSuccess(false)
       window.scrollTo(window.scrollX, 0)

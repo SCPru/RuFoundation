@@ -7,7 +7,15 @@ from web.models.articles import Article
 from web.models.forum import ForumThread
 
 
+__all__ = [
+    'UserNotification',
+    'UserNotificationMapping',
+    'UserNotificationSubscription'
+]
+
+
 User = get_user_model()
+
 
 class UserNotification(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):

@@ -1,7 +1,7 @@
 from modules import ModuleError
 from modules.listpages import render_date
 from renderer import RenderContext, render_template_from_string, render_user_to_html
-from web.controllers import articles, permissions
+from web.controllers import articles
 from web.models.forum import ForumCategory, ForumThread, ForumSection, ForumPost
 
 
@@ -40,13 +40,13 @@ def render(context: RenderContext, params):
 
     items = []
     for section in sections:
-        if not permissions.check(context.user, 'view', section):
+        if not context.user.has_perm('roles.view_forum_sections', section):
             continue
         item = {'name': section.name, 'description': section.description, 'categories': [], 'url': '/forum/s-%d/%s' % (section.id, articles.normalize_article_name(section.name))}
         for category in categories:
             if category.section_id != section.id:
                 continue
-            if not permissions.check(context.user, 'view', category):
+            if not context.user.has_perm('roles.view_forum_categories', category):
                 continue
             citem = {
                 'name': category.name,

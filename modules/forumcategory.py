@@ -3,7 +3,7 @@ from modules.listpages import render_pagination, render_date
 from renderer import RenderContext, render_template_from_string, render_user_to_html
 import math
 
-from web.controllers import articles, permissions
+from web.controllers import articles
 from web.models.forum import ForumCategory, ForumThread, ForumPost
 
 
@@ -26,7 +26,7 @@ def render(context: RenderContext, params):
         context.status = 404
         raise ModuleError('Категория "%s" не найдена' % c)
 
-    if not permissions.check(context.user, 'view', category):
+    if not context.user.has_perm('roles.view_forum_categories', category):
         raise ModuleError('Недостаточно прав для просмотра раздела')
 
     sort_by = context.path_params.get('sort')
@@ -129,7 +129,7 @@ def render(context: RenderContext, params):
                     {% endif %}
                 </div>
             </div>
-            {% if not category.is_for_comments %}
+            {% if not category.is_for_comments and can_create_thread %}
                 <div class="new-post">
                     <a href="/forum:new-thread/c/{{ category.id }}">Создать тему</a>
                 </div>
@@ -186,5 +186,6 @@ def render(context: RenderContext, params):
         canonical_url=canonical_url,
         short_url=short_url,
         threads=render_threads,
+        can_create_thread=context.user.has_perm('roles.create_forum_thread', category),
         pagination=render_pagination(short_url, page, max_page) if max_page != 1 else ''
     )

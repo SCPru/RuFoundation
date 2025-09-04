@@ -8,6 +8,12 @@ from web import threadvars
 from .settings import Settings
 
 
+__all__ = [
+    'Site',
+    'get_current_site'
+]
+
+
 class Site(SingletonModel):
     class Meta(SingletonModel.Meta):
         verbose_name = "Сайт"

@@ -7,6 +7,11 @@ from django.db.models.functions import Upper
 from .articles import Article
 
 
+__all__ = [
+    'ArticleSearchIndex'
+]
+
+
 class ArticleSearchIndex(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
         verbose_name = "Индекс для поиска по статьям"

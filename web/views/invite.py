@@ -59,7 +59,7 @@ class InviteView(FormView):
 
     def form_valid(self, form):
         email = form.cleaned_data['email']
-        is_editor = form.cleaned_data['is_editor']
+        roles = form.cleaned_data['roles']
         user = self.get_user()
         if user:
             created = not user.email
@@ -67,7 +67,7 @@ class InviteView(FormView):
             user, created = User.objects.get_or_create(email=email)
         site = get_current_site()
         if created:
-            user.is_editor = is_editor
+            user.roles.set(roles)
             user.is_active = False
             user.username = 'user-%d' % user.id
             user.email = email

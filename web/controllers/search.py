@@ -93,7 +93,6 @@ def search_articles(text, is_source=False, cursor=None, limit=25, explain=False)
         ).filter(
             models.Q(vector_plaintext__exact=search_query)
         ).order_by('-rank_str', '-id')
-        print(repr(cursor_parameters))
         if cursor_parameters:
             results = results.filter(cursor_parameters)
         results = results[:limit]

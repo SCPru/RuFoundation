@@ -1,0 +1,14 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        label[for="id__perms_override_"] {
+            display: none;
+        }
+        .field-_perms_override_ {
+            max-width: 100%;
+            flex: 0 0 100%;
+        }
+    </style>
+{% endblock %}

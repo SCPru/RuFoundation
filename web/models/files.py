@@ -10,6 +10,11 @@ from .site import get_current_site
 import urllib.parse
 
 
+__all__ = [
+    'File'
+]
+
+
 User = get_user_model()
 
 

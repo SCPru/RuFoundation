@@ -7,3 +7,4 @@ from .settings import *
 from .site import *
 from .users import *
 from .search import *
+from .roles import *

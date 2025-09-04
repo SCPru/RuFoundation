@@ -4,7 +4,7 @@ from django.http import HttpRequest, HttpResponse
 from shared_data import shared_articles
 from . import APIView, APIError, takes_json
 
-from web.controllers import articles, permissions, notifications
+from web.controllers import articles, notifications
 
 from renderer.utils import render_user_to_json
 from renderer import single_pass_render
@@ -12,8 +12,8 @@ from renderer.parser import RenderContext
 
 import json
 
-from ...controllers.search import update_search_index
-from ...models.articles import ExternalLink, Article
+from web.controllers.search import update_search_index
+from web.models.articles import Category, ExternalLink, Article
 
 from modules import rate, ModuleError
 
@@ -45,7 +45,7 @@ class CreateView(ArticleView):
         self._validate_article_data(data)
 
         category, name = articles.get_name(data['pageId'])
-        if not permissions.check(request.user, "create", Article(category=category, name=name)):
+        if not request.user.has_perm('roles.create_articles', Category.get_or_default_category(category)):
             raise APIError('Недостаточно прав', 403)
 
         article = articles.get_article(data['pageId'])
@@ -96,15 +96,15 @@ class FetchOrUpdateView(ArticleView):
         if article is None:
             raise APIError('Страница не найдена', 404)
 
-        if not permissions.check(request.user, "edit", article):
-            raise APIError('Недостаточно прав', 403)
+        can_edit_articles = request.user.has_perm('roles.edit_articles', article)
 
         data = self.json_input
-
         self._validate_article_data(data, allow_partial=True)
 
         # check if renaming
         if data['pageId'] != full_name:
+            if not request.user.has_perm('roles.move_articles', article):
+                raise APIError('Недостаточно прав', 403)
             new_name = articles.normalize_article_name(data['pageId'])
             article2 = articles.get_article(new_name)
             if article2 is not None and article2.id != article.id and not data.get('forcePageId'):
@@ -114,25 +114,33 @@ class FetchOrUpdateView(ArticleView):
 
         # check if changing title
         if 'title' in data and data['title'] != article.title:
+            if not can_edit_articles:
+                raise APIError('Недостаточно прав', 403)
             articles.update_title(article, data['title'], request.user)
 
         # check if changing source
         if 'source' in data and data['source'] != articles.get_latest_source(article):
+            if not can_edit_articles:
+                raise APIError('Недостаточно прав', 403)
             version = articles.create_article_version(article, data['source'], request.user, data.get('comment', ''))
             articles.refresh_article_links(version)
 
         # check if changing tags
         if 'tags' in data:
+            if not request.user.has_perm('roles.tag_articles', article):
+                raise APIError('Недостаточно прав', 403)
             articles.set_tags(article, data['tags'], request.user)
 
         # check if changing parent
         if 'parent' in data:
+            if not can_edit_articles:
+                raise APIError('Недостаточно прав', 403)
             articles.set_parent(article, data['parent'], request.user)
 
         # check if lock article
         if 'locked' in data:
             if data['locked'] != article.locked:
-                if permissions.check(request.user, "lock", article):
+                if request.user.has_perm('roles.lock_articles', article):
                     articles.set_lock(article, data['locked'], request.user)
                 else:
                     raise APIError('Недостаточно прав', 403)
@@ -147,7 +155,7 @@ class FetchOrUpdateView(ArticleView):
         if article is None:
             raise APIError('Страница не найдена', 404)
 
-        if not permissions.check(request.user, "delete", article):
+        if not request.user.has_perm('roles.delete_articles', article):
             raise APIError('Недостаточно прав', 403)
 
         articles.OnDeleteArticle(request.user, article).emit()
@@ -186,7 +194,7 @@ class FetchOrRevertLogView(APIView):
         if article is None:
             raise APIError('Страница не найдена', 404)
 
-        if not permissions.check(request.user, "edit", article):
+        if not request.user.has_perm('roles.edit_articles', article):
             raise APIError('Недостаточно прав', 403)
 
         data = self.json_input
@@ -260,7 +268,7 @@ class FetchOrUpdateVotesView(APIView):
         if not article:
             raise APIError('Страница не найдена', 404)
 
-        if not permissions.check(request.user, "edit", article):
+        if not request.user.has_perm('roles.reset_article_votes', article):
             raise APIError('Недостаточно прав', 403)
 
         articles.delete_article_votes(article, user=request.user)

@@ -1,6 +1,5 @@
 import copy
 
-from django.contrib.auth.models import Group
 from django.template import Context
 from jazzmin.templatetags import jazzmin
 from jazzmin.settings import get_settings
@@ -18,10 +17,10 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
     options = get_settings()
 
     structure = (
-        ('Пользователи и группы', (
-            {'model': Group},
+        ('Пользователи и роли', (
+            {'model': models.roles.RoleCategory},
+            {'model': models.roles.Role},
             {'model': models.users.User},
-            {'model': models.users.VisualUserGroup},
         )),
         ('Структура', (
             {'model': models.site.Site},

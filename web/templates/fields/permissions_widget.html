@@ -1,0 +1,98 @@
+{% block extrastyle %}
+    <style>
+        .description {
+            font-size: .8em;
+            color: #859099;
+            font-style: italic;
+        }
+        .perm-switch {
+            display: flex;
+            flex-flow: row-reverse;
+        }
+        .perm-switch-inner {
+            display: flex;
+            height: 1.7em;
+            margin: auto 0 auto 0;
+            border-radius: 8px;
+            outline: 1px solid;
+        }
+        .radio-icon {
+            margin: 0;
+            width: 30px;
+            text-align: center;
+        }
+        .radio-icon.allow {
+            border-radius: 0 7px 7px 0;
+            color: #218838;
+        }
+        .radio-icon.deny {
+            border-radius: 7px 0 0 7px;
+            color: #c82333;
+        }
+        .radio-icon.neutral {
+            color: #138496;
+            border-left: 1px solid black;
+            border-right: 1px solid black;
+            box-sizing: content-box;
+        }
+        .perm-radio {
+            display: none;
+        }
+        .perm-radio:checked + .radio-icon{
+            color: white;
+        }
+        .perm-radio:checked + .radio-icon.allow {
+            background: #218838;
+        }
+        .perm-radio:checked + .radio-icon.deny {
+            background: #c82333;
+        }
+        .perm-radio:checked + .radio-icon.neutral {
+            background: #138496;
+        }
+        .perms-group {
+            margin-bottom: 15px;
+        }
+    </style>
+{% endblock %}
+
+<div class="perms-list">
+{% for group, perms in perms.items %}
+    <div class="perms-group">
+    {% if group %}
+        <h3>{{group}}</h3>
+        <hr/>
+    {% endif %}
+    {% for perm in perms %}
+        <div class="row">
+            <div class="col perm-name">
+                <div>
+                    {{perm.name}}
+                </div>
+                {% if perm.description %}
+                <div class="description">
+                    {{perm.description}}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col perm-switch">
+                <div class="perm-switch-inner">
+                    <input name="perm-{{perm.codename}}" id="deny-{{perm.codename}}" class="perm-radio" type="radio" value="deny" {% if perm.deny %}checked{% endif %}></input>
+                    <label for="deny-{{perm.codename}}" class="radio-icon deny">
+                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M17.3 18.7a1 1 0 0 0 1.4-1.4L13.42 12l5.3-5.3a1 1 0 0 0-1.42-1.4L12 10.58l-5.3-5.3a1 1 0 0 0-1.4 1.42L10.58 12l-5.3 5.3a1 1 0 1 0 1.42 1.4L12 13.42l5.3 5.3Z"></path></svg>
+                    </label>
+                    <input name="perm-{{perm.codename}}" id="neutral-{{perm.codename}}" class="perm-radio" type="radio" value="neutral" {% if perm.neutral %}checked{% endif %}></input>
+                    <label for="neutral-{{perm.codename}}" class="radio-icon neutral">
+                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M19.12 2a.5.5 0 0 1 .43.76L8.22 21.64a.75.75 0 0 1-.64.36h-2.7a.5.5 0 0 1-.43-.76L15.78 2.36a.75.75 0 0 1 .64-.36h2.7Z" clip-rule="evenodd"></path></svg>
+                    </label>
+                    <input name="perm-{{perm.codename}}" id="allow-{{perm.codename}}" class="perm-radio" type="radio" value="allow" {% if perm.allow %}checked{% endif %}></input>
+                    <label for="allow-{{perm.codename}}" class="radio-icon allow">
+                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M21.7 5.3a1 1 0 0 1 0 1.4l-12 12a1 1 0 0 1-1.4 0l-6-6a1 1 0 1 1 1.4-1.4L9 16.58l11.3-11.3a1 1 0 0 1 1.4 0Z"></path></svg>
+                    </label>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+{% endfor %}
+</div>

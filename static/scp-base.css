@@ -2084,4 +2084,13 @@ div.preview {
     display: inline-flex;
     align-items: center;
     vertical-align: text-top;
+    box-sizing: border-box;
+}
+
+.printuser .icon {
+    padding: 0px 2px 0px 2px;
+    display: inline-flex;
+    vertical-align: text-top;
+    height: 14.4px;
+    width: 14.4px;
 }
