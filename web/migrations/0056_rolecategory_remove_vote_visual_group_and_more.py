@@ -5,7 +5,6 @@ import web.fields.models
 import web.models.roles
 
 from django.db import migrations, models
-from django.db.models import Max
 
 
 def create_default_roles(apps, schema_editor):
@@ -42,6 +41,8 @@ def visualgroups_to_roles(apps, schema_editor):
             slug=f'migrated_role_{n}',
             name=group.name,
             index=n+2,
+            inline_visual_mode='badge' if group.show_badge else 'hidden',
+            profile_visual_mode='status',
             badge_text=group.badge,
             badge_bg=group.badge_bg,
             badge_text_color=group.badge_text_color,
@@ -99,7 +100,7 @@ class Migration(migrations.Migration):
                 ('inline_visual_mode', models.CharField(choices=[('hidden', 'Скрыто'), ('badge', 'Бейдж'), ('icon', 'Иконка')], default='hidden', verbose_name='Режим отображения в имени')),
                 ('profile_visual_mode', models.CharField(choices=[('hidden', 'Скрыто'), ('badge', 'Бейдж'), ('status', 'Статус')], default='hidden', verbose_name='Режим отображения в профиле')),
                 ('color', web.fields.models.CSSColorField(default='#000000', verbose_name='Цвет')),
-                ('icon', models.FileField(blank=True, upload_to='-/roles', validators=[web.models.roles.svg_file_valudator], verbose_name='Иконка')),
+                ('icon', models.FileField(blank=True, upload_to='-/roles', validators=[web.models.roles.svg_file_validator], verbose_name='Иконка')),
                 ('badge_text', models.CharField(blank=True, verbose_name='Текст бейджа')),
                 ('badge_bg', web.fields.models.CSSColorField(default='#808080', verbose_name='Цвет бейджа')),
                 ('badge_text_color', web.fields.models.CSSColorField(default='#ffffff', verbose_name='Цвет текста')),

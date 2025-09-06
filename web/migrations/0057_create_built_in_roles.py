@@ -1,10 +1,4 @@
-import auto_prefetch
-import django.db.models.deletion
-import django.db.models.manager
-import web.fields.models
-import web.models.roles
-
-from django.db import migrations, models
+from django.db import migrations
 from django.db.models import Max
 
 

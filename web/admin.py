@@ -16,7 +16,7 @@ from .views.invite import InviteView
 from .views.bot import CreateBotView
 from .views.reset_votes import ResetUserVotesView
 from .controllers import logging
-from .permissions import ROLE_PERMISSIONS_CONTENT_TYPE
+from .permissions import get_role_permissions_content_type
 
 
 class TagsCategoryForm(forms.ModelForm):
@@ -105,18 +105,20 @@ class CategoryForm(forms.ModelForm):
 
         roles_data = self.cleaned_data.get('_perms_override_', {})
         if roles_data:
-            instance.permissions_override.all().delete()
+            content_type = get_role_permissions_content_type()
             overrides = []
+
+            instance.permissions_override.all().delete()
 
             for role_id, perms_data in roles_data.items():
                 perms_override = RolePermissionsOverride.objects.create(role_id=role_id)
 
                 if perms_data['allow']:
-                    perms = Permission.objects.filter(codename__in=perms_data['allow'], content_type=ROLE_PERMISSIONS_CONTENT_TYPE)
+                    perms = Permission.objects.filter(codename__in=perms_data['allow'], content_type=content_type)
                     perms_override.permissions.set(perms)
 
                 if perms_data['deny']:
-                    restrictions = Permission.objects.filter(codename__in=perms_data['deny'], content_type=ROLE_PERMISSIONS_CONTENT_TYPE)
+                    restrictions = Permission.objects.filter(codename__in=perms_data['deny'], content_type=content_type)
                     perms_override.restrictions.set(restrictions)
 
                 overrides.append(perms_override)
@@ -328,15 +330,17 @@ class RoleForm(forms.ModelForm):
 
         perms_data = self.cleaned_data.get('_perms_', {})
         if perms_data:
+            content_type = get_role_permissions_content_type()
+
             instance.permissions.clear()
             instance.restrictions.clear()
 
             if perms_data['allow']:
-                perms = Permission.objects.filter(codename__in=perms_data['allow'], content_type=ROLE_PERMISSIONS_CONTENT_TYPE)
+                perms = Permission.objects.filter(codename__in=perms_data['allow'], content_type=content_type)
                 instance.permissions.set(perms)
 
             if perms_data['deny']:
-                restrictions = Permission.objects.filter(codename__in=perms_data['deny'], content_type=ROLE_PERMISSIONS_CONTENT_TYPE)
+                restrictions = Permission.objects.filter(codename__in=perms_data['deny'], content_type=content_type)
                 instance.restrictions.set(restrictions)
 
         if commit:

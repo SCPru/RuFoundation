@@ -11,6 +11,17 @@ _ROLE_PERMISSIONS_REPR_CACHE = {}
 ROLE_PERMISSIONS_CONTENT_TYPE = None
 
 
+def get_role_permissions_content_type():
+    global ROLE_PERMISSIONS_CONTENT_TYPE
+    if not ROLE_PERMISSIONS_CONTENT_TYPE:
+        print('recreate')
+        ROLE_PERMISSIONS_CONTENT_TYPE, _ = ContentType.objects.get_or_create(
+            app_label='web',
+            model='roles'
+        )
+    return ROLE_PERMISSIONS_CONTENT_TYPE
+
+
 class BaseRolePermission:
     name = None
     codename = None
@@ -23,7 +34,7 @@ class BaseRolePermission:
     def get_permission(cls):
         return Permission.objects.get(
             codename=cls.codename,
-            content_type=ROLE_PERMISSIONS_CONTENT_TYPE,
+            content_type=get_role_permissions_content_type(),
         )
     
     def __str__(self):
@@ -53,13 +64,10 @@ def _preload_role_permissions():
 
 
 def register_role_permissions():
-    global _ROLE_PERMISSIONS_REPR_CACHE, ALL_PERMISSIONS, ROLE_PERMISSIONS_CONTENT_TYPE
+    global _ROLE_PERMISSIONS_REPR_CACHE, ALL_PERMISSIONS
     _preload_role_permissions()
 
-    ROLE_PERMISSIONS_CONTENT_TYPE, _ = ContentType.objects.get_or_create(
-        app_label='web',
-        model='roles'
-    )
+    content_type = get_role_permissions_content_type()
     permissions = BaseRolePermission.__subclasses__()
 
     actual_perms = []
@@ -70,7 +78,7 @@ def register_role_permissions():
 
         new_perm, _ = Permission.objects.get_or_create(
             codename=perm.codename,
-            content_type=ROLE_PERMISSIONS_CONTENT_TYPE,
+            content_type=content_type,
         )
         new_perm.name = perm.name
 
@@ -85,4 +93,4 @@ def register_role_permissions():
             else:
                 _ROLE_PERMISSIONS_REPR_CACHE[perm_repr] = [codename]
 
-    Permission.objects.filter(content_type=ROLE_PERMISSIONS_CONTENT_TYPE).exclude(codename__in=actual_perms).delete()
+    Permission.objects.filter(content_type=content_type).exclude(codename__in=actual_perms).delete()

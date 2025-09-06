@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 
-def svg_file_valudator(file):
+def svg_file_validator(file):
     if not file.name.lower().endswith('.svg'):
         raise ValidationError('Допускаются только файлы в формате SVG.')
     try:
@@ -79,7 +79,7 @@ class Role(auto_prefetch.Model):
     profile_visual_mode = models.CharField('Режим отображения в профиле', choices=ProfileVisualMode.choices, default=ProfileVisualMode.Hidden)
 
     color = fields.CSSColorField('Цвет', default='#000000', blank=False, null=False)
-    icon = models.FileField('Иконка', upload_to='-/roles', validators=[svg_file_valudator], blank=True)
+    icon = models.FileField('Иконка', upload_to='-/roles', validators=[svg_file_validator], blank=True)
 
     badge_text = models.CharField('Текст бейджа',  blank=True)
     badge_bg = fields.CSSColorField('Цвет бейджа', default='#808080', blank=False, null=False)
@@ -248,7 +248,7 @@ class RolesMixin(models.Model):
         titles = []
 
         for role in candidates:
-            if role.inline_visual_mode == Role.ProfileVisualMode.Badge:
+            if role.profile_visual_mode == Role.ProfileVisualMode.Badge:
                 badges.append({
                     'text': role.badge_text or role.name or role.slug,
                     'bg': role.badge_bg,
@@ -256,7 +256,7 @@ class RolesMixin(models.Model):
                     'border': role.badge_show_border,
                     'tooltip': role.name
                 })
-            elif role.inline_visual_mode == Role.ProfileVisualMode.Status:
+            elif role.profile_visual_mode == Role.ProfileVisualMode.Status:
                 titles.append(role.name or role.slug)
         
         return {
