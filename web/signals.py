@@ -8,6 +8,7 @@ def after_migration(migration):
     if migration == '0057':
         assign_default_permissions()
 
+
 def after_migration_jit(migration):
     if migration == '0056':
         register_role_permissions()

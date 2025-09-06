@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('web', '0057_create_built_in_roles'),
+        ('web', '0057_create_built_in_roles_and_migrate_categories'),
     ]
 
     operations = [

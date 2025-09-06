@@ -65,52 +65,80 @@ def migrate_categories(apps: Apps, schema_editor):
 
     for category in Category.objects.all():
         reader_perms = []
+        reader_restrs = []
         editor_perms = []
+        editor_restrs = []
 
         if category.readers_can_comment:
             reader_perms.append(get_permission('comment_articles'))
+        else:
+            reader_restrs.append(get_permission('comment_articles'))
 
         if category.readers_can_create:
             reader_perms.append(get_permission('create_articles'))
+        else:
+            reader_restrs.append(get_permission('create_articles'))
 
         if category.readers_can_delete:
             reader_perms.append(get_permission('delete_articles'))
+        else:
+            reader_restrs.append(get_permission('delete_articles'))
 
         if category.readers_can_edit:
             reader_perms.append(get_permission('edit_articles'))
+        else:
+            reader_restrs.append(get_permission('edit_articles'))
 
         if category.readers_can_rate:
             reader_perms.append(get_permission('rate_articles'))
+        else:
+            reader_restrs.append(get_permission('rate_articles'))
 
         if category.readers_can_view:
             reader_perms.append(get_permission('view_articles'))
+        else:
+            reader_restrs.append(get_permission('view_articles'))
 
         if category.users_can_comment:
             editor_perms.append(get_permission('comment_articles'))
+        else:
+            editor_restrs.append(get_permission('comment_articles'))
 
         if category.users_can_create:
             editor_perms.append(get_permission('create_articles'))
+        else:
+            editor_restrs.append(get_permission('create_articles'))
 
         if category.users_can_delete:
             editor_perms.append(get_permission('delete_articles'))
+        else:
+            editor_restrs.append(get_permission('delete_articles'))
 
         if category.users_can_edit:
             editor_perms.append(get_permission('edit_articles'))
+        else:
+            editor_restrs.append(get_permission('edit_articles'))
 
         if category.users_can_rate:
             editor_perms.append(get_permission('rate_articles'))
+        else:
+            editor_restrs.append(get_permission('rate_articles'))
 
         if category.users_can_view:
             editor_perms.append(get_permission('view_articles'))
+        else:
+            editor_restrs.append(get_permission('view_articles'))
 
-        if reader_perms:
+        if reader_perms or reader_restrs:
             perms_override = RolePermissionsOverride.objects.create(role=reader_role)
             perms_override.permissions.add(*reader_perms)
+            perms_override.restrictions.add(*reader_restrs)
             category.permissions_override.add(perms_override)
 
-        if editor_perms:
+        if editor_perms or editor_restrs:
             perms_override = RolePermissionsOverride.objects.create(role=editor_role)
             perms_override.permissions.add(*editor_perms)
+            perms_override.restrictions.add(*editor_restrs)
             category.permissions_override.add(perms_override)
 
 
