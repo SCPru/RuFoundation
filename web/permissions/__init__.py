@@ -14,7 +14,6 @@ ROLE_PERMISSIONS_CONTENT_TYPE = None
 def get_role_permissions_content_type():
     global ROLE_PERMISSIONS_CONTENT_TYPE
     if not ROLE_PERMISSIONS_CONTENT_TYPE:
-        print('recreate')
         ROLE_PERMISSIONS_CONTENT_TYPE, _ = ContentType.objects.get_or_create(
             app_label='web',
             model='roles'
@@ -31,7 +30,7 @@ class BaseRolePermission:
     represent_django_perms = []
 
     @classmethod
-    def get_permission(cls):
+    def as_permission(cls):
         return Permission.objects.get(
             codename=cls.codename,
             content_type=get_role_permissions_content_type(),

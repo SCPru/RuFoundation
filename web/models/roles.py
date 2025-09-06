@@ -134,11 +134,11 @@ class Role(auto_prefetch.Model):
         )
         if created:
             everyone.permissions.add(
-                web.permissions.articles.ViewArticlesPermission.get_permission(),
-                web.permissions.forum.ViewForumSectionsPermission.get_permission(),
-                web.permissions.forum.ViewForumCategoriesPermission.get_permission(),
-                web.permissions.forum.ViewForumThreadsPermission.get_permission(),
-                web.permissions.forum.ViewForumPostsPermission.get_permission(),
+                web.permissions.articles.ViewArticlesPermission.as_permission(),
+                web.permissions.forum.ViewForumSectionsPermission.as_permission(),
+                web.permissions.forum.ViewForumCategoriesPermission.as_permission(),
+                web.permissions.forum.ViewForumThreadsPermission.as_permission(),
+                web.permissions.forum.ViewForumPostsPermission.as_permission(),
                 )
             everyone.index = 0
             everyone.save()

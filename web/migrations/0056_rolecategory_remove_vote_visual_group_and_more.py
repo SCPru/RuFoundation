@@ -8,26 +8,15 @@ from django.db import migrations, models
 
 
 def create_default_roles(apps, schema_editor):
-    ContentType = apps.get_model('contenttypes', 'ContentType')
-    Permission = apps.get_model('auth', 'Permission')
     Role = apps.get_model('web', 'Role')
-    
-    everyone_role = Role.objects.create(
+    Role.objects.create(
         slug='everyone',
         index=0
     )
-    registered_role = Role.objects.create(
+    Role.objects.create(
         slug='registered',
         index=1
     )
-
-    everyone_perms = ['view_articles', 'view_forum_sections', 'view_forum_categories', 'view_forum_threads', 'view_forum_posts']
-    
-    content_type, _ = ContentType.objects.get_or_create(
-        app_label='web',
-        model='roles'
-    )
-    everyone_role.permissions.set(Permission.objects.filter(codename__in=everyone_perms, content_type=content_type))
 
 def visualgroups_to_roles(apps, schema_editor):
     VisualUserGroup = apps.get_model('web', 'VisualUserGroup')

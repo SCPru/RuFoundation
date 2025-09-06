@@ -3,8 +3,6 @@ from django.db.models import Max
 
 
 def create_built_in_roles(apps, schema_editor):
-    ContentType = apps.get_model('contenttypes', 'ContentType')
-    Permission = apps.get_model('auth', 'Permission')
     RoleCategory = apps.get_model('web', 'RoleCategory')
     Role = apps.get_model('web', 'Role')
     User = apps.get_model('web', 'User')
@@ -31,17 +29,6 @@ def create_built_in_roles(apps, schema_editor):
         group_votes=True,
         index=last_index+1
     )
-
-    content_type, _ = ContentType.objects.get_or_create(
-        app_label='web',
-        model='roles'
-    )
-
-    readers_perms = ['rate_articles', 'comment_articles', 'create_forum_threads', 'create_forum_posts']
-    editors_perms = ['create_articles', 'edit_articles', 'tag_articles', 'move_articles', 'manage_article_files', 'reset_article_votes']
-
-    reader_role.permissions.set(Permission.objects.filter(codename__in=readers_perms, content_type=content_type))
-    editor_role.permissions.set(Permission.objects.filter(codename__in=editors_perms, content_type=content_type))
 
     reader_role.users.set(User.objects.filter(is_active=True))
     editor_role.users.set(User.objects.filter(is_active=True, is_editor=True))
