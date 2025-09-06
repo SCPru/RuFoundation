@@ -1,12 +1,16 @@
 from django.contrib.auth.models import Permission
 
-from web.models.roles import Role
-from web.permissions import get_role_permissions_content_type
+from web.models import Role
+from web.permissions import get_role_permissions_content_type, register_role_permissions
 
 
 def after_migration(migration):
     if migration == '0057':
         assign_default_permissions()
+
+def after_migration_jit(migration):
+    if migration == '0056':
+        register_role_permissions()
 
 
 def assign_default_permissions():

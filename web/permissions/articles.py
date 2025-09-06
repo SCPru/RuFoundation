@@ -13,7 +13,7 @@ class ViewArticlesPermission(BaseRolePermission):
 
 class VoteArticlesPermission(BaseRolePermission):
     name = 'Голосовать за статьи'
-    codename = 'vote_articles'
+    codename = 'rate_articles'
     description = 'Позволяет ставить, изменять и снимать оценку со статьи'
     group = 'Статьи'
 

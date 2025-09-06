@@ -191,7 +191,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'ratingVotes': article_votes,
             'ratingPopularity': article_popularity,
             'pathParams': path_params,
-            'canRate': self.request.user.has_perm('roles.vote_articles', article),
+            'canRate': self.request.user.has_perm('roles.rate_articles', article),
             'canComment': self.request.user.has_perm('roles.comment_articles', article) if article else False,
             'commentThread': ('/%s/comments/show' % normalized_article_name) if article else None,
             'commentCount': comment_count,

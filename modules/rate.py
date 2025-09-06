@@ -107,7 +107,7 @@ def api_rate(context, params):
     if not context.article:
         raise ModuleError('Страница не указана')
 
-    if not context.user.has_perm('roles.vote_articles', context.article):
+    if not context.user.has_perm('roles.rate_articles', context.article):
         raise ModuleError('Недостаточно прав')
 
     if 'value' not in params:

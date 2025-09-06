@@ -5,9 +5,11 @@ import web.fields.models
 import web.models.roles
 
 from django.db import migrations, models
+from django.apps.registry import Apps
 
 
-def create_default_roles(apps, schema_editor):
+
+def create_default_roles(apps: Apps, schema_editor):
     Role = apps.get_model('web', 'Role')
     Role.objects.create(
         slug='everyone',
@@ -18,7 +20,7 @@ def create_default_roles(apps, schema_editor):
         index=1
     )
 
-def visualgroups_to_roles(apps, schema_editor):
+def visualgroups_to_roles(apps: Apps, schema_editor):
     VisualUserGroup = apps.get_model('web', 'VisualUserGroup')
     Role = apps.get_model('web', 'Role')
     Vote = apps.get_model('web', 'Vote')
