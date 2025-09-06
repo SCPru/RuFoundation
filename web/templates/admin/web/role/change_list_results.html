@@ -51,10 +51,10 @@
         </tbody>
         <thead class="fake">
         {% for result in results %}
-            {% if "/-/admin/web/role/2/change/" in result|list_to_string %}
+            {% if "/-/admin/web/role/1/change/" in result|list_to_string %}
                 <tr>{% for item in result %}{{ item }}{% endfor %}</tr>
             {% endif %}
-            {% if "/-/admin/web/role/1/change/" in result|list_to_string %}
+            {% if "/-/admin/web/role/2/change/" in result|list_to_string %}
                 <tr>{% for item in result %}{{ item }}{% endfor %}</tr>
             {% endif %}
         {% endfor %}
