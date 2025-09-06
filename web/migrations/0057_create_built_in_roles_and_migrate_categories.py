@@ -35,7 +35,7 @@ def create_built_in_roles(apps: Apps, schema_editor):
     reader_role.users.set(User.objects.filter(is_active=True))
     editor_role.users.set(User.objects.filter(is_active=True, is_editor=True))
     
-    for user in User.objects.filter(is_active=True):
+    for user in User.objects.all():
         if user.is_editor:
             user.vote_set.all().filter(role__isnull=True).update(role=editor_role)
         else:
