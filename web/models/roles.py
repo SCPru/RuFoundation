@@ -90,7 +90,7 @@ class Role(auto_prefetch.Model):
     restrictions = models.ManyToManyField(Permission, verbose_name='Запрещения', related_name='role_restrictions_set', blank=True)
 
     def __str__(self):
-        return self.name or self.short_name or self.slug
+        return self.short_name or self.name or self.slug
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

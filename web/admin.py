@@ -230,7 +230,7 @@ class AdvancedUserChangeForm(UserChangeForm):
 class AdvancedUserAdmin(UserAdmin):
     form = AdvancedUserChangeForm
 
-    list_filter = ['is_superuser', 'is_active']
+    list_filter = ['is_superuser', 'is_active', 'roles']
     list_display = ['username_or_wd', 'email']
     search_fields = ['username', 'wikidot_username', 'email']
     readonly_fields = ['api_key']
