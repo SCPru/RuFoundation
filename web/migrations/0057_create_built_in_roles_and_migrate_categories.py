@@ -20,7 +20,7 @@ def create_built_in_roles(apps: Apps, schema_editor):
         name='Читатель',
         category=category,
         votes_title='Голоса читателей',
-        inline_visual_mode='status',
+        profile_visual_mode='status',
         group_votes=True,
         index=last_index+2,
     )
@@ -29,7 +29,7 @@ def create_built_in_roles(apps: Apps, schema_editor):
         name='Участник',
         category=category,
         votes_title='Голоса участников',
-        inline_visual_mode='status',
+        profile_visual_mode='status',
         group_votes=True,
         index=last_index+1
     )
