@@ -92,6 +92,21 @@ class Role(auto_prefetch.Model):
     def __str__(self):
         return self.name or self.short_name or self.slug
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        last_index = Role.objects.aggregate(max_index=models.Max('index'))['max_index']
+
+        Role.objects.filter(slug='registered').update(index=last_index+1)
+        Role.objects.filter(slug='everyone').update(index=last_index+2)
+
+        roles_to_update = []
+        for n, role in enumerate(Role.objects.order_by('index')):
+            role.index = n
+            roles_to_update.append(role)
+
+        Role.objects.bulk_update(roles_to_update, ['index'])
+
     def delete(self, *args, **kwargs):
         if self.slug == 'everyone':
             raise ValidationError('Role "everyone" can\'t be deleted.')
@@ -238,12 +253,13 @@ class RolesMixin(models.Model):
         elif self.type == self.UserType.Bot:
             return {
                 'badges': [],
-                'titles': ['Пользователь является ботом']
+                'titles': ['Бот']
             }
         
-        catigorized_candidates = self.roles.all().exclude(category__isnull=True).order_by('category').distinct('category')
+        catigorized_candidates = self.roles.all().exclude(category__isnull=True).order_by('category', 'index').distinct('category')
         uncatigorized_candidates = self.roles.all().filter(category__isnull=True)
         candidates = catigorized_candidates.union(uncatigorized_candidates).order_by('index')
+
         badges = []
         titles = []
 

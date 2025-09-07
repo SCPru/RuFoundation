@@ -17,7 +17,7 @@ def create_default_roles(apps: Apps, schema_editor):
     )
     Role.objects.create(
         slug='registered',
-        index=1
+        index=0
     )
 
 def visualgroups_to_roles(apps: Apps, schema_editor):

@@ -20,6 +20,7 @@ def create_built_in_roles(apps: Apps, schema_editor):
         name='Читатель',
         category=category,
         votes_title='Голоса читателей',
+        inline_visual_mode='status',
         group_votes=True,
         index=last_index+2,
     )
@@ -28,6 +29,7 @@ def create_built_in_roles(apps: Apps, schema_editor):
         name='Участник',
         category=category,
         votes_title='Голоса участников',
+        inline_visual_mode='status',
         group_votes=True,
         index=last_index+1
     )
@@ -40,6 +42,15 @@ def create_built_in_roles(apps: Apps, schema_editor):
             user.vote_set.all().filter(role__isnull=True).update(role=editor_role)
         else:
             user.vote_set.all().filter(role__isnull=True).update(role=reader_role)
+
+    registered_role = Role.objects.get(slug='registered')
+    everyone_role = Role.objects.get(slug='everyone')
+
+    registered_role.index = last_index+3
+    everyone_role.index = last_index+4
+
+    registered_role.save()
+    everyone_role.save()
 
 
 def migrate_categories(apps: Apps, schema_editor):

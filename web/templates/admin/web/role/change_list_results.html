@@ -2,10 +2,13 @@
 {% load filters %}
 
 <style>
-    .table-striped thead.fake tr:nth-of-type(2n+1) {
-        background-color: rgba(0,0,0,.05);
+    .table-striped tr.even {
+        background-color: rgba(0,0,0,.05) !important;
     }
-    thead.fake div.drag.handle {
+    .table-striped tr.odd {
+        background-color: unset !important;
+    }
+    tbody.fake div.drag.handle {
         display: none;
     }
     .table tbody + tbody {
@@ -49,16 +52,19 @@
             {% endif %}
         {% endfor %}
         </tbody>
-        <thead class="fake">
+        <tbody class="fake">
         {% for result in results %}
-            {% if "/-/admin/web/role/1/change/" in result|list_to_string %}
-                <tr>{% for item in result %}{{ item }}{% endfor %}</tr>
-            {% endif %}
-            {% if "/-/admin/web/role/2/change/" in result|list_to_string %}
+            {% if "/-/admin/web/role/1/change/" in result|list_to_string or "/-/admin/web/role/2/change/" in result|list_to_string %}
                 <tr>{% for item in result %}{{ item }}{% endfor %}</tr>
             {% endif %}
         {% endfor %}
-        </thead>
+        </tbody>
     </table>
 </div>
 {% endif %}
+
+<script>
+    document.querySelectorAll('#result_list tr').forEach((tr, i) => {
+        tr.classList.add(i % 2 ? 'even' : 'odd')
+    })
+</script>
