@@ -32,6 +32,7 @@ def visualgroups_to_roles(apps: Apps, schema_editor):
             slug=f'migrated_role_{n}',
             name=group.name,
             index=n,
+            group_votes=True,
             inline_visual_mode='badge' if group.show_badge else 'hidden',
             profile_visual_mode='status',
             badge_text=group.badge,
