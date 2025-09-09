@@ -2,7 +2,7 @@ from solo.admin import SingletonModelAdmin
 from adminsortable2.admin import SortableAdminMixin
 
 from django.db.models.query import QuerySet
-from django.db.models import ExpressionWrapper, F, Case, When
+from django.db.models import ExpressionWrapper, F, Case, When, BooleanField
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth.models import Permission
 from django.contrib.auth.admin import UserAdmin
@@ -405,7 +405,7 @@ class IsVisualRoleFilter(SimpleListFilter):
                 F('group_votes') or \
                 F('inline_visual_mode') != Role.InlineVisualMode.Hidden or \
                 F('profile_visual_mode') != Role.ProfileVisualMode.Hidden,
-                output_field=django.db.models.BooleanField()
+                output_field=BooleanField()
             )).filter(is_visual_role=self.value())
         else:
             return queryset
