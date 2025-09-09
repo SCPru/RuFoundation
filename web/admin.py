@@ -1,9 +1,9 @@
 from solo.admin import SingletonModelAdmin
 from adminsortable2.admin import SortableAdminMixin
 
-import django.db.models
 from django.db.models.query import QuerySet
-from django.db.models import F, ExpressionWrapper
+from django.db.models import ExpressionWrapper, Value, F, Case, When
+from django.db.models.functions import Concat
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth.models import Permission
 from django.contrib.auth.admin import UserAdmin
@@ -15,6 +15,7 @@ from django import forms
 import web.fields
 
 from .models import *
+from .fields import CITextField
 from .views.invite import InviteView
 from .views.bot import CreateBotView
 from .views.reset_votes import ResetUserVotesView
@@ -275,8 +276,14 @@ class AdvancedUserAdmin(ProtectSensetiveAdminMixin, UserAdmin):
     
     def get_queryset(self, request):
         qs = super(AdvancedUserAdmin, self).get_queryset(request)
-        qs = qs.annotate(username_or_wd=ExpressionWrapper(F('username') or F('wikidot_username'), output_field=django.db.models.CharField())).order_by('username', 'wikidot_username')
-        return qs
+        return qs.annotate(username_or_wd=ExpressionWrapper(
+                Case(
+                    When(type=User.UserType.Wikidot, then=Concat(Value('w'), F('wikidot_username'))),
+                    default=F('username'),
+                    output_field=CITextField()
+                ),
+                output_field=CITextField()
+            )).order_by('username_or_wd')
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == 'roles' and not request.user.has_perm('roles.manage_roles'):
