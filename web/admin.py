@@ -278,7 +278,7 @@ class AdvancedUserAdmin(ProtectSensetiveAdminMixin, UserAdmin):
         qs = super(AdvancedUserAdmin, self).get_queryset(request)
         return qs.annotate(username_or_wd=ExpressionWrapper(
                 Case(
-                    When(type=User.UserType.Wikidot, then=Concat(Value('w'), F('wikidot_username'))),
+                    When(type=User.UserType.Wikidot, then=Concat(Value('zw'), F('wikidot_username'))),
                     default=F('username'),
                     output_field=CITextField()
                 ),
