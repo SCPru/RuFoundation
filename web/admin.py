@@ -2,8 +2,7 @@ from solo.admin import SingletonModelAdmin
 from adminsortable2.admin import SortableAdminMixin
 
 from django.db.models.query import QuerySet
-from django.db.models import ExpressionWrapper, Value, F, Case, When
-from django.db.models.functions import Concat
+from django.db.models import ExpressionWrapper, F, Case, When
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth.models import Permission
 from django.contrib.auth.admin import UserAdmin
@@ -278,7 +277,7 @@ class AdvancedUserAdmin(ProtectSensetiveAdminMixin, UserAdmin):
         qs = super(AdvancedUserAdmin, self).get_queryset(request)
         return qs.annotate(username_or_wd=ExpressionWrapper(
                 Case(
-                    When(type=User.UserType.Wikidot, then=Concat(Value('zw'), F('wikidot_username'))),
+                    When(type=User.UserType.Wikidot, then=F('wikidot_username')),
                     default=F('username'),
                     output_field=CITextField()
                 ),
@@ -296,12 +295,13 @@ class AdvancedUserAdmin(ProtectSensetiveAdminMixin, UserAdmin):
         return super().has_change_permission(request, obj)
     
     def save_model(self, request, obj, form, change):
-        target = User.objects.get(id=obj.id)
-        if change:
-            if not request.user.is_superuser:
-                obj.is_superuser = target.is_superuser
-            if not request.user.has_perm('roles.manage_roles'):
-                obj.roles.set(target.roles.all())
+        if obj.pk:
+            target = User.objects.get(id=obj.id)
+            if change:
+                if not request.user.is_superuser:
+                    obj.is_superuser = target.is_superuser
+                if not request.user.has_perm('roles.manage_roles'):
+                    obj.roles.set(target.roles.all())
         super().save_model(request, obj, form, change)
 
 
