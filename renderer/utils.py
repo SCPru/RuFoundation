@@ -3,7 +3,6 @@ import urllib.parse
 
 from django.contrib.auth.models import AnonymousUser
 from django.conf import settings
-from django.forms import model_to_dict
 from django.template import Context, Template
 
 from web.models.articles import Vote
@@ -150,7 +149,7 @@ def render_user_to_json(user: User, avatar=True):
         'username': user.username,
         'showAvatar': avatar,
         'staff': user.is_staff,
-        'roles': [role.id for role in user.roles.all() if role.group_votes or role.inline_visual_mode != Role.InlineVisualMode.Hidden or role.profile_visual_mode != Role.ProfileVisualMode.Hidden]
+        'roles': [role.id for role in user.roles.all() if role.is_visual]
     }
 
 def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Stars, capitalize=True):

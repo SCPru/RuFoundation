@@ -1,7 +1,10 @@
 from solo.admin import SingletonModelAdmin
 from adminsortable2.admin import SortableAdminMixin
 
+import django.db.models
 from django.db.models.query import QuerySet
+from django.db.models import F, ExpressionWrapper
+from django.contrib.admin import SimpleListFilter
 from django.contrib.auth.models import Permission
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
@@ -223,7 +226,8 @@ class AdvancedUserChangeForm(UserChangeForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['roles'].queryset = Role.objects.exclude(slug__in=['everyone', 'registered'])
+        if 'roles' in self.fields:
+            self.fields['roles'].queryset = Role.objects.exclude(slug__in=['everyone', 'registered'])
 
 
 @admin.register(User)
@@ -253,9 +257,8 @@ class AdvancedUserAdmin(UserAdmin):
         return new_urls + urls
 
     def username_or_wd(self, obj):
-        if obj.type == User.UserType.Wikidot:
-            return 'wd:%s' % obj.wikidot_username
-        return obj.username
+        return obj.__str__()
+    username_or_wd.admin_order_field = 'username_or_wd'
 
     def get_form(self, request, *args, **kwargs):
         form = super().get_form(request, *args, **kwargs)
@@ -264,6 +267,36 @@ class AdvancedUserAdmin(UserAdmin):
             if not_required_field in form.base_fields:
                 form.base_fields[not_required_field].required = False
         return form
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if not request.user.is_superuser:
+            readonly_fields += ['is_superuser']
+        return readonly_fields
+    
+    def get_queryset(self, request):
+        qs = super(AdvancedUserAdmin, self).get_queryset(request)
+        qs = qs.annotate(username_or_wd=ExpressionWrapper(F('username') or F('wikidot_username'), output_field=django.db.models.CharField())).order_by('username', 'wikidot_username')
+        return qs
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == 'roles' and not request.user.has_perm('roles.manage_roles'):
+            kwargs['disabled'] = True
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+    
+    def has_change_permission(self, request, obj=None):
+        if obj and obj.operation_index < request.user.operation_index:
+            return False
+        return super().has_change_permission(request, obj)
+    
+    def save_model(self, request, obj, form, change):
+        target = User.objects.get(id=obj.id)
+        if change:
+            if not request.user.is_superuser:
+                obj.is_superuser = target.is_superuser
+            if not request.user.has_perm('roles.manage_roles'):
+                obj.roles.set(target.roles.all())
+        super().save_model(request, obj, form, change)
 
 
 class ActionsLogForm(forms.ModelForm):
@@ -349,9 +382,31 @@ class RoleForm(forms.ModelForm):
         return instance
 
 
+class IsVisualRoleFilter(SimpleListFilter):
+        title = 'Визуальная роль'
+        parameter_name = 'is_visual_role'
+
+        def lookups(self, request, model_admin):
+            return [
+                (True, 'Да'),
+                (False, 'Нет')
+            ]
+
+        def queryset(self, request, queryset):
+            if self.value():
+                return queryset.annotate(is_visual_role=ExpressionWrapper(
+                    F('group_votes') or \
+                    F('inline_visual_mode') != Role.InlineVisualMode.Hidden or \
+                    F('profile_visual_mode') != Role.ProfileVisualMode.Hidden,
+                    output_field=django.db.models.BooleanField()
+                )).filter(is_visual_role=self.value())
+            else:
+                return queryset
+
 @admin.register(Role)
 class RoleAdmin(SortableAdminMixin, admin.ModelAdmin):
     form = RoleForm
+    list_filter = ['category', 'is_staff', IsVisualRoleFilter]
     list_display = ['__str__', '_users_number', '_idx']
     fieldsets = (
         (None, {
@@ -387,19 +442,14 @@ class RoleAdmin(SortableAdminMixin, admin.ModelAdmin):
         if obj and obj.slug  in ['everyone', 'registered']:
             return False
         return super().has_delete_permission(request, obj)
-        
     
+    def has_change_permission(self, request, obj=None):
+        if obj and not request.user.is_superuser and obj.index < request.user.operation_index:
+            return False
+        return super().has_change_permission(request, obj)
+        
     def get_readonly_fields(self, request, obj=None):
         if obj and obj.slug  in ['everyone', 'registered']:
             return self.readonly_fields + ("slug",)
         return self.readonly_fields
-
-    def get_sortable_objects(self, request, queryset):
-        sortable, non_sortable = [], []
-        for obj in queryset:
-            if obj.slug  in ['everyone', 'registered']:
-                non_sortable.append(obj)
-            else:
-                sortable.append(obj)
-        return sortable, non_sortable
     

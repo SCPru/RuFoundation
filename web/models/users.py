@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser
@@ -66,11 +67,7 @@ class User(AbstractUser, RolesMixin):
 
     @property
     def is_staff(self):
-        return self.is_superuser or RolesMixin.is_staff(self)
-    
-    @is_staff.setter
-    def is_staff(self, new_value):
-        pass
+        return self.is_superuser or RolesMixin.is_staff.__get__(self)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -91,6 +88,8 @@ class User(AbstractUser, RolesMixin):
         return default
 
     def __str__(self):
+        if self.type == User.UserType.Wikidot:
+            return 'wd:%s' % (self.wikidot_username or self.username)
         return self.username
 
     def _generate_apikey(self, commit=True):
@@ -98,6 +97,11 @@ class User(AbstractUser, RolesMixin):
         self.api_key = make_password(self.username)[21:]
         if commit:
             self.save()
+
+    def clean(self):
+        super().clean()
+        if self.username is None and self.wikidot_username is None:
+            raise ValidationError('Имя пользователя или имя wikidot должно быть задано.')
 
     def save(self, *args, **kwargs):
         if not self.wikidot_username:

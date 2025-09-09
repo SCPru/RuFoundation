@@ -89,6 +89,10 @@ class Role(auto_prefetch.Model):
     permissions = models.ManyToManyField(Permission, verbose_name='Разрешения', related_name='role_permissions_set', blank=True)
     restrictions = models.ManyToManyField(Permission, verbose_name='Запрещения', related_name='role_restrictions_set', blank=True)
 
+    @property
+    def is_visual(self):
+        return self.group_votes or self.inline_visual_mode != Role.InlineVisualMode.Hidden or self.profile_visual_mode != Role.ProfileVisualMode.Hidden
+
     def __str__(self):
         return self.short_name or self.name or self.slug
 
@@ -183,11 +187,20 @@ class RolesMixin(models.Model):
 
     roles = models.ManyToManyField(Role, verbose_name='Роли', blank=True, related_name='users', related_query_name='user')
         
+    @property
     def is_staff(self):
         for role in self.roles.all():
             if role.is_staff:
                 return True
         return False
+    
+    @is_staff.setter
+    def is_staff(self, new_value):
+        pass
+
+    @cached_property
+    def operation_index(self):
+        return self.roles.aggregate(min_index=models.Min('index'))['min_index'] or float('inf')
     
     @cached_property
     def vote_role(self):
