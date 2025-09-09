@@ -5,8 +5,24 @@
 {% endblock %}
 
 {% block h1 %}
+    <style>
+        a.manage-user {
+            color: unset;
+            text-decoration: unset;
+        }
+        a.manage-user:hover {
+            color: #ff5f5f;
+            text-decoration: underline;
+            background-color: transparent;
+        }
+    </style>
+
     <img class="system-heading-avatar" src="{{ avatar }}" alt="{{ displayname }}">
-    {{ displayname }}
+    {% if can_manage_users %}
+        <a class="manage-user" href="{{ manage_url }}" target="_blank">{{ displayname }}</a>
+    {% else %}
+        {{ displayname }}
+    {% endif %}
     {% if subtitle %}
         <div class="user-heading-subtitle">
             {{ subtitle }}

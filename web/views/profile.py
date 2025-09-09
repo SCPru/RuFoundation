@@ -2,6 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import DetailView, UpdateView
 from django.shortcuts import resolve_url, redirect
 from django.conf import settings
+from django.urls import reverse
 
 from renderer import single_pass_render
 from renderer.parser import RenderContext
@@ -28,8 +29,16 @@ class ProfileView(DetailView):
         ctx['bio_rendered'] = single_pass_render(user.bio, RenderContext(article=None, source_article=None, path_params=None, user=self.request.user), 'inline')
         return ctx
 
-    def get(self, *args, **kwargs):
-        return super().get(*args, **kwargs)
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        if request.user.is_staff and request.user.has_perm('roles.manage_users'):
+            context['can_manage_users'] = True
+            context['manage_url'] = '%s?_popup=1' % reverse(
+                'admin:%s_%s_change' % (self.object._meta.app_label, self.object._meta.model_name),
+                args=[self.object.pk],
+            )
+        return self.render_to_response(context)
 
     def get_object(self, queryset=None):
         q = super().get_object(queryset=queryset)
