@@ -19,7 +19,8 @@ __all__ = [
     'RolePermissionsOverride',
     'RolesMixin',
     'PermissionsOverrideMixin',
-    'RolePermissionsOverrideMixin'
+    'RolePermissionsOverrideMixin',
+    'ProtectSensetiveAdminMixin'
 ]
 
 
@@ -261,7 +262,7 @@ class RolesMixin(models.Model):
         if not self.is_active and not self.type == self.UserType.Wikidot:
             return {
                 'badges': [],
-                'titles': ['Заблкирован']
+                'titles': ['Заблокирован']
             }
         elif self.type == self.UserType.Bot:
             return {
@@ -336,3 +337,33 @@ class RolePermissionsOverrideMixin(models.Model, PermissionsOverrideMixin):
                     perms.remove(codename)
             break
         return perms
+    
+
+class ProtectSensetiveAdminMixin:
+    sensetive_fields = []
+
+    def __init__(self, *args, **kwargs):
+        self.sensetive_fields = self.__class__.sensetive_fields
+        super().__init__(*args, **kwargs)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if not request.user.has_perm('roles.view_sensetive_info'):
+            for _, fieldset in fieldsets:
+                fieldset['fields'] = [field for field in fieldset['fields'] if field not in self.sensetive_fields]
+        return fieldsets
+    
+    def get_list_filter(self, request):
+        if not request.user.has_perm('roles.view_sensetive_info'):
+            return [field for field in self.list_filter if field not in self.sensetive_fields]
+        return self.list_filter
+    
+    def get_list_display(self, request):
+        if not request.user.has_perm('roles.view_sensetive_info'):
+            return [field for field in self.list_display if field not in self.sensetive_fields]
+        return self.list_display
+    
+    def get_search_fields(self, request):
+        if not request.user.has_perm('roles.view_sensetive_info'):
+            return [field for field in self.search_fields if field not in self.sensetive_fields]
+        return self.search_fields

@@ -65,3 +65,11 @@ class ManageForumPermission(BaseRolePermission):
     represent_django_perms = ['web.view_forumcategory', 'web.add_forumcategory', 'web.change_forumcategory', 'web.delete_forumcategory', 'web.view_forumsection', 'web.add_forumsection', 'web.change_forumsection', 'web.delete_forumsection']
     group = 'Админка'
     admin_only = True
+
+
+class ViewSensetiveInfoPermission(BaseRolePermission):
+    name = 'Проссматривать чувствительную информацию'
+    codename = 'view_sensetive_info'
+    description = 'Позволяет просматривать чувствительную информацию пользователей, такую как почта или ip адрес'
+    group = 'Админка'
+    admin_only = True

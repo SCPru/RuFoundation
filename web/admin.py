@@ -231,20 +231,19 @@ class AdvancedUserChangeForm(UserChangeForm):
 
 
 @admin.register(User)
-class AdvancedUserAdmin(UserAdmin):
+class AdvancedUserAdmin(ProtectSensetiveAdminMixin, UserAdmin):
     form = AdvancedUserChangeForm
 
     list_filter = ['is_superuser', 'is_active', 'roles']
-    list_display = ['username_or_wd', 'email']
+    list_display = ['username_or_wd', 'email', 'is_active']
     search_fields = ['username', 'wikidot_username', 'email']
     readonly_fields = ['api_key']
+    sensetive_fields = ['email']
 
     fieldsets = UserAdmin.fieldsets
     fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'roles', 'is_superuser')
     fieldsets[1][1]['fields'] += ('bio', 'avatar')
     fieldsets[0][1]['fields'] = ('username', 'wikidot_username', 'type', 'password', 'api_key')
-
-    inlines = []
 
     def get_urls(self):
         urls = super(AdvancedUserAdmin, self).get_urls()
@@ -285,7 +284,7 @@ class AdvancedUserAdmin(UserAdmin):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
     
     def has_change_permission(self, request, obj=None):
-        if obj and obj.operation_index < request.user.operation_index:
+        if obj and not request.user.is_superuser and obj.operation_index < request.user.operation_index:
             return False
         return super().has_change_permission(request, obj)
     
@@ -306,11 +305,12 @@ class ActionsLogForm(forms.ModelForm):
 
 
 @admin.register(ActionLogEntry)
-class ActionsLogAdmin(admin.ModelAdmin):
+class ActionsLogAdmin(ProtectSensetiveAdminMixin, admin.ModelAdmin):
     form = ActionsLogForm
     list_filter = ['user', 'type', 'created_at', 'origin_ip']
     list_display = ['user_or_name', 'type', 'info', 'created_at', 'origin_ip']
     search_fields = ['meta']
+    sensetive_fields = ['origin_ip']
 
     @admin.display(description=User.Meta.verbose_name)
     def user_or_name(self, obj):
@@ -383,25 +383,25 @@ class RoleForm(forms.ModelForm):
 
 
 class IsVisualRoleFilter(SimpleListFilter):
-        title = 'Визуальная роль'
-        parameter_name = 'is_visual_role'
+    title = 'Визуальная роль'
+    parameter_name = 'is_visual_role'
 
-        def lookups(self, request, model_admin):
-            return [
-                (True, 'Да'),
-                (False, 'Нет')
-            ]
+    def lookups(self, request, model_admin):
+        return [
+            (True, 'Да'),
+            (False, 'Нет')
+        ]
 
-        def queryset(self, request, queryset):
-            if self.value():
-                return queryset.annotate(is_visual_role=ExpressionWrapper(
-                    F('group_votes') or \
-                    F('inline_visual_mode') != Role.InlineVisualMode.Hidden or \
-                    F('profile_visual_mode') != Role.ProfileVisualMode.Hidden,
-                    output_field=django.db.models.BooleanField()
-                )).filter(is_visual_role=self.value())
-            else:
-                return queryset
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.annotate(is_visual_role=ExpressionWrapper(
+                F('group_votes') or \
+                F('inline_visual_mode') != Role.InlineVisualMode.Hidden or \
+                F('profile_visual_mode') != Role.ProfileVisualMode.Hidden,
+                output_field=django.db.models.BooleanField()
+            )).filter(is_visual_role=self.value())
+        else:
+            return queryset
 
 @admin.register(Role)
 class RoleAdmin(SortableAdminMixin, admin.ModelAdmin):

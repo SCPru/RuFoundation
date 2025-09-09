@@ -138,9 +138,7 @@ def render_user_to_json(user: User, avatar=True):
     user_type = 'user'
     if user.type != User.UserType.Normal:
         user_type = user.type
-    displayname = user.username
-    if user.type == User.UserType.Wikidot:
-        displayname = 'wd:'+user.wikidot_username
+    displayname = user.__str__()
     return {
         'type': user_type,
         'id': user.id,
