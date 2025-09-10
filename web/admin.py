@@ -255,9 +255,9 @@ class AdvancedUserAdmin(ProtectSensetiveAdminMixin, UserAdmin):
         ]
         return new_urls + urls
 
+    @admin.display(ordering='username_or_wd')
     def username_or_wd(self, obj):
         return obj.__str__()
-    username_or_wd.admin_order_field = 'username_or_wd'
 
     def get_form(self, request, *args, **kwargs):
         form = super().get_form(request, *args, **kwargs)
