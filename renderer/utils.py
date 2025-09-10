@@ -147,6 +147,8 @@ def render_user_to_json(user: User, avatar=True):
         'username': user.username,
         'showAvatar': avatar,
         'staff': user.is_staff,
+        'admin': user.is_superuser,
+        'editor': user.has_perm('roles.edit_articles'),
         'roles': [role.id for role in user.roles.all() if role.is_visual]
     }
 
