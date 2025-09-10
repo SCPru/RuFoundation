@@ -16,8 +16,8 @@ export interface ModuleRateVote {
   user: UserData
   value: number
   date?: string
-  group?: string
-  groupIndex?: number
+  visualGroup?: string
+  visualGroupIndex?: number
 }
 
 export interface ModuleRateVotesResponse {

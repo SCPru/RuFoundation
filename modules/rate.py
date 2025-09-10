@@ -74,8 +74,8 @@ def api_get_votes(context, _params):
         rendered_vote = {
             'user': render_user_to_json(db_vote.user),
             'value': db_vote.rate,
-            'group': (db_vote.role.votes_title or db_vote.role.name or db_vote.role.slug) if db_vote.role else None,
-            'groupIndex': db_vote.role.index if db_vote.role else None
+            'visualGroup': (db_vote.role.votes_title or db_vote.role.name or db_vote.role.slug) if db_vote.role else None,
+            'visualGroupIndex': db_vote.role.index if db_vote.role else None
         }
         if context.user.is_staff or context.user.is_superuser:
             rendered_vote['date'] = db_vote.date.isoformat() if db_vote.date else None

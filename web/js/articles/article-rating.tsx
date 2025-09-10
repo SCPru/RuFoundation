@@ -351,15 +351,22 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
     )
   })
 
+  interface VotesGroup {
+    name: string
+    index: number
+    votes: ModuleRateVote[]
+    isUngrouped: boolean
+  }
+
   const sortVotes = useConstCallback((votes: ModuleRateVote[]) => {
-    const groups: Array<{ name: string; index: number; votes: ModuleRateVote[]; isUngrouped: boolean }> = []
+    const groups: Array<VotesGroup> = []
     votes.forEach(vote => {
-      if (vote.group) {
-        const existingGroup = groups.find(x => x.name === vote.group)
+      if (vote.visualGroup) {
+        const existingGroup = groups.find(x => x.name === vote.visualGroup)
         if (!existingGroup) {
           groups.push({
-            name: vote.group,
-            index: vote.groupIndex || 0,
+            name: vote.visualGroup,
+            index: vote.visualGroupIndex || 0,
             votes: [vote],
             isUngrouped: false,
           })
@@ -373,7 +380,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
       if (a.index > b.index) return 1
       return a.name.localeCompare(b.name)
     })
-    const otherVotes = votes.filter(x => !x.group)
+    const otherVotes = votes.filter(x => !x.visualGroup)
     if (otherVotes.length) {
       groups.push({
         name: 'Голоса других пользователей',
@@ -435,7 +442,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
       </span>
       <div id="who-rated-page-area" className={`${loading ? 'loading' : ''}`}>
         {loading && <Loader className="loader" />}
-        {sortVotes(votes).map((group, i) => (
+        {sortVotes(votes).map((group: VotesGroup, i: number) => (
           <React.Fragment key={i}>
             <h2>
               {group.name} ({renderCombinedVoteRating(group.votes)})
