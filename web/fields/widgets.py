@@ -54,6 +54,15 @@ class PermissionsInput(forms.Widget):
                 'deny': state == 'deny',
                 'neutral': state == 'neutral',
             })
+
+        for perm_group in context['perms']:
+            context['perms'][perm_group].sort(
+                key=lambda perm: perm['codename']
+                                    .replace('view', '0')
+                                    .replace('create', '1')
+                                    .replace('edit', '2')
+                                    .replace('delete', '3')
+            )
         
         return context
     
@@ -116,5 +125,15 @@ class PermissionsOverrideInput(forms.Widget):
                     'deny': state == 'deny',
                     'neutral': state == 'neutral',
                 })
+
+            for n, role in enumerate(context['roles']):
+                for perm_group in role['perms']:
+                    context['roles'][n]['perms'][perm_group].sort(
+                        key=lambda perm: perm['codename']
+                                            .replace('view', '0')
+                                            .replace('create', '1')
+                                            .replace('edit', '2')
+                                            .replace('delete', '3')
+                    )
         
         return context
