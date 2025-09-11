@@ -172,7 +172,7 @@ class Article(auto_prefetch.Model, PermissionsOverrideMixin):
     
     def override_perms(self, user_obj, perms: set, roles=[]):
         if self.locked and 'roles.lock_articles' not in perms:
-            lockable_perms = {'roles.edit_articles', 'roles.tag_articles', 'roles.move_articles', 'roles.delete_articles'}
+            lockable_perms = {'roles.edit_articles', 'roles.manage_articles_files', 'roles.tag_articles', 'roles.move_articles', 'roles.delete_articles'}
             perms = perms.difference(lockable_perms)
         return super().override_perms(user_obj, perms, roles)
 

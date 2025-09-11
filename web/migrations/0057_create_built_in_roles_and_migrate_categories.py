@@ -80,64 +80,46 @@ def migrate_categories(apps: Apps, schema_editor):
         editor_perms = []
         editor_restrs = []
 
-        if category.readers_can_comment:
-            reader_perms.append(get_permission('comment_articles'))
-        else:
+        if not category.readers_can_comment:
             reader_restrs.append(get_permission('comment_articles'))
 
         if category.readers_can_create:
             reader_perms.append(get_permission('create_articles'))
-        else:
-            reader_restrs.append(get_permission('create_articles'))
 
         if category.readers_can_delete:
             reader_perms.append(get_permission('delete_articles'))
-        else:
-            reader_restrs.append(get_permission('delete_articles'))
 
         if category.readers_can_edit:
             reader_perms.append(get_permission('edit_articles'))
-        else:
-            reader_restrs.append(get_permission('edit_articles'))
+            reader_perms.append(get_permission('manage_articles_files'))
+            reader_perms.append(get_permission('tag_articles'))
+            reader_perms.append(get_permission('move_articles'))
 
-        if category.readers_can_rate:
-            reader_perms.append(get_permission('rate_articles'))
-        else:
+        if not category.readers_can_rate:
             reader_restrs.append(get_permission('rate_articles'))
 
-        if category.readers_can_view:
-            reader_perms.append(get_permission('view_articles'))
-        else:
+        if not category.readers_can_view:
             reader_restrs.append(get_permission('view_articles'))
 
-        if category.users_can_comment:
-            editor_perms.append(get_permission('comment_articles'))
-        else:
+        if not category.users_can_comment:
             editor_restrs.append(get_permission('comment_articles'))
 
-        if category.users_can_create:
-            editor_perms.append(get_permission('create_articles'))
-        else:
+        if not category.users_can_create:
             editor_restrs.append(get_permission('create_articles'))
 
         if category.users_can_delete:
             editor_perms.append(get_permission('delete_articles'))
-        else:
-            editor_restrs.append(get_permission('delete_articles'))
 
-        if category.users_can_edit:
+        if not category.users_can_edit:
             editor_perms.append(get_permission('edit_articles'))
-        else:
-            editor_restrs.append(get_permission('edit_articles'))
+            editor_perms.append(get_permission('manage_articles_files'))
+            editor_perms.append(get_permission('tag_articles'))
+            editor_perms.append(get_permission('move_articles'))
 
-        if category.users_can_rate:
-            editor_perms.append(get_permission('rate_articles'))
-        else:
+        if not category.users_can_rate:
             editor_restrs.append(get_permission('rate_articles'))
 
-        if category.users_can_view:
-            editor_perms.append(get_permission('view_articles'))
-        else:
+        if not category.users_can_view:
             editor_restrs.append(get_permission('view_articles'))
 
         if reader_perms or reader_restrs:

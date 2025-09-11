@@ -55,7 +55,7 @@ class LockArticlesPermission(BaseRolePermission):
 
 class ManageArticleFilesPermission(BaseRolePermission):
     name = 'Редактировать файлы статей'
-    codename = 'manage_article_files'
+    codename = 'manage_articles_files'
     description = 'Позволяет загружать, переименовывать и удалять файлы статей'
     group = 'Статьи'
 
@@ -70,12 +70,19 @@ class DeleteArticlesPermission(BaseRolePermission):
 class ResetArticleVotesPermission(BaseRolePermission):
     name = 'Сбрасывать голоса'
     codename = 'reset_article_votes'
-    description = 'Позволяет сбрасывать голоса статьи'
+    description = 'Позволяет сбрасывать голоса статей'
     group = 'Статьи'
 
 
 class CommentArticlesPermission(BaseRolePermission):
-    name = 'Комментировать статьи'
+    name = 'Обсуждать статьи'
     codename = 'comment_articles'
-    description = 'Позволяет комментировать статьи'
+    description = 'Позволяет обсуждать статьи'
+    group = 'Статьи'
+
+
+class ViewArticlesCommentsPermission(BaseRolePermission):
+    name = 'Просматривать обсуждения статей'
+    codename = 'view_articles_comments'
+    description = 'Позволяет просматривать обсуждения статей'
     group = 'Статьи'

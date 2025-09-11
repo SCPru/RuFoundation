@@ -16,8 +16,8 @@ def after_migration_jit(migration):
 
 def assign_default_permissions():
     readers_perms = ['rate_articles', 'comment_articles', 'create_forum_threads', 'create_forum_posts']
-    editors_perms = ['create_articles', 'edit_articles', 'tag_articles', 'move_articles', 'manage_article_files', 'reset_article_votes']
-    everyone_perms = ['view_articles', 'view_forum_sections', 'view_forum_categories', 'view_forum_threads', 'view_forum_posts']
+    editors_perms = ['create_articles', 'edit_articles', 'tag_articles', 'move_articles', 'manage_articles_files', 'reset_article_votes']
+    everyone_perms = ['view_articles', 'view_articles_comments', 'view_forum_sections', 'view_forum_categories', 'view_forum_threads', 'view_forum_posts']
 
     content_type = get_role_permissions_content_type()
 

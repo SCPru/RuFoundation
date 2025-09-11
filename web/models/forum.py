@@ -109,7 +109,7 @@ class ForumPost(auto_prefetch.Model, PermissionsOverrideMixin):
     thread = auto_prefetch.ForeignKey(ForumThread, on_delete=models.CASCADE, verbose_name='Тема')
 
     def override_perms(self, user_obj, perms: set, roles=[]):
-        if user_obj == self.author:
+        if user_obj == self.author and user_obj.has_perm('roles.create_forum_posts'):
             perms.add('roles.edit_forum_posts')
         return super().override_perms(user_obj, perms, roles)
 

@@ -19,7 +19,7 @@ class FileView(APIView):
         article = articles.get_article(article_name_or_article)
         if article is None:
             raise APIError('Страница не найдена', 404)
-        if edit and not request.user.has_perm('roles.manage_article_files', article):
+        if edit and not request.user.has_perm('roles.manage_articles_files', article):
             raise APIError('Недостаточно прав', 403)
         return article
 

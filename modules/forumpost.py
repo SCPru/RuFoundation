@@ -78,7 +78,7 @@ def api_update(context, params):
         raise ModuleError('Сообщение "%d" не существует', post_id)
     post = post[0]
 
-    if not context.user.has_perm('roles.edit_forum_posts', post) or not context.user.has_perm('roles.create_forum_posts', post.thread):
+    if not context.user.has_perm('roles.edit_forum_posts', post):
         raise ModuleError('Недостаточно прав для редактирования сообщения')
 
     latest_version = ForumPostVersion.objects.filter(post=post).order_by('-created_at')[:1]

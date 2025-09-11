@@ -14,7 +14,7 @@ class ViewForumPostsPermission(BaseRolePermission):
 class CreateForumPostsPermission(BaseRolePermission):
     name = 'Создавать посты на форуме'
     codename = 'create_forum_posts'
-    description = 'Позволяет создавать посты на форуме'
+    description = 'Позволяет создавать и редактировать свои посты на форуме'
     group = 'Форум'
 
 

@@ -32,6 +32,7 @@ interface Props {
   canRate?: boolean
   canDelete?: boolean
   canComment?: boolean
+  canViewComments?: boolean
   commentThread?: string
   commentCount?: number
   canCreateTags?: boolean
@@ -71,6 +72,7 @@ const PageOptions: React.FC<Props> = ({
   canRate,
   canDelete,
   canComment,
+  canViewComments,
   commentThread,
   commentCount,
   canCreateTags,
@@ -381,9 +383,9 @@ const PageOptions: React.FC<Props> = ({
             Теги
           </a>
         )}
-        {canComment && (
+        {canViewComments  && (
           <a id="discuss-button" className="btn btn-default" href={commentThread || '/forum/start'}>
-            Обсудить ({commentCount || 0})
+            {canComment ? 'Обсудить' : 'Обсуждение'} ({commentCount || 0})
           </a>
         )}
         <a id="history-button" className="btn btn-default" href="#" onClick={onHistory}>

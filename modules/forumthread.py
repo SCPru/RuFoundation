@@ -46,6 +46,8 @@ def get_post_info(context, thread, posts, show_replies=True):
             author_vote = render_vote_to_html(author_vote, rating_mode)
             if thread.article.author == post.author:
                 is_op = True
+
+        
         
         render_post = {
             'id': post.id,
@@ -67,8 +69,8 @@ def get_post_info(context, thread, posts, show_replies=True):
                 'lastRevisionDate': post.updated_at.isoformat(),
                 'lastRevisionAuthor': render_user_to_json(post_contents.get(post.id, ('', None))[1]),
                 'user': render_user_to_json(context.user),
-                'canReply': context.user.has_perm('roles.create_forum_posts', thread),
-                'canEdit': context.user.has_perm('roles.edit_forum_posts', post) and context.user.has_perm('roles.create_forum_posts', thread),
+                'canReply': context.user.has_perm('roles.create_forum_posts', thread) if not thread.article else context.user.has_perm('roles.comment_articles', thread.article),
+                'canEdit': context.user.has_perm('roles.edit_forum_posts', post),
                 'canDelete': context.user.has_perm('roles.delete_forum_posts', post)
             })
         }
@@ -126,12 +128,15 @@ def render(context: RenderContext, params):
     if thread is None:
         context.status = 404
         raise ModuleError('Тема "%s" не найдена' % t)
-
-    if not context.user.has_perm('roles.view_forum_threads', thread):
-        raise ModuleError('Недостаточно прав для просмотра темы')
-
+    
     category = thread.category
-    if not category:
+    if category:
+        if not context.user.has_perm('roles.view_forum_threads', thread):
+            raise ModuleError('Недостаточно прав для просмотра темы')
+    else:
+        if not context.user.has_perm('roles.view_articles_comments', thread):
+            raise ModuleError(f'Недостаточно прав для просмотра обсуждения')
+        
         # find first category that matches
         for c in ForumCategory.objects.filter(is_for_comments=True):
             if context.user.has_perm('roles.view_forum_categories', c):
@@ -292,7 +297,7 @@ def render(context: RenderContext, params):
         pagination=render_pagination(short_url, page, max_page) if max_page != 1 else '',
         new_post_config=json.dumps(new_post_config),
         posts=render_posts(post_info),
-        can_reply=context.user.has_perm('roles.create_forum_posts', thread),
+        can_reply=context.user.has_perm('roles.create_forum_posts', thread) if not thread.article else context.user.has_perm('roles.comment_articles', thread.article),
         content_only=content_only,
         data_path_params=json.dumps(context.path_params),
         data_params=json.dumps(params),

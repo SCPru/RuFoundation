@@ -136,14 +136,14 @@ class Role(auto_prefetch.Model):
             if self.icon:
                 with self.icon.open('r') as f:
                     icon = f.read()
-            icon_parts:list = icon[icon.index('<svg'):].split('>')
-            icon_parts.insert(1, f'<style>svg{{color:{self.color}}}</style')
-            colored_icon = quote('>'.join(icon_parts))
-            icons.append({
-                'icon': colored_icon,
-                'color': self.color,
-                'tooltip': self.name
-            })
+                icon_parts:list = icon[icon.index('<svg'):].split('>')
+                icon_parts.insert(1, f'<style>svg{{color:{self.color}}}</style')
+                colored_icon = quote('>'.join(icon_parts))
+                icons.append({
+                    'icon': colored_icon,
+                    'color': self.color,
+                    'tooltip': self.name
+                })
 
         return icons, badges
     

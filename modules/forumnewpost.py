@@ -60,7 +60,7 @@ def api_submit(context, params):
     except:
         reply_to = None
 
-    if not context.user.has_perm('roles.create_forum_posts', thread):
+    if not context.user.has_perm('roles.create_forum_posts', thread) and thread and thread.article and not context.user.has_perm('roles.comment_articles', thread):
         raise ModuleError('Недостаточно прав для создания сообщения')
 
     post = ForumPost(thread=thread, author=context.user, name=title, reply_to=reply_to)
