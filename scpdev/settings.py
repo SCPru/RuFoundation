@@ -35,7 +35,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    "jazzmin",
+    'jazzmin',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -53,7 +53,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'web.middleware.FixRawPathMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -150,14 +150,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Static and media files
-STATIC_URL = "/-/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = BASE_DIR / "static_dist"
+STATIC_URL = '/-/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'static_dist'
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 MEDIA_HOST = os.environ.get('MEDIA_HOST', None)
-MEDIA_ROOT = BASE_DIR / "files"
+MEDIA_ROOT = BASE_DIR / 'files'
 
 
 def parse_size(size):
@@ -165,7 +165,7 @@ def parse_size(size):
     match = re.fullmatch(r'(\d+)(.*)', size)
     if not match:
         raise ValueError('Invalid size specification: %s' % size)
-    units = {"B": 1, "KB": 2 ** 10, "MB": 2 ** 20, "GB": 2 ** 30, "TB": 2 ** 40}
+    units = {'B': 1, 'KB': 2 ** 10, 'MB': 2 ** 20, 'GB': 2 ** 30, 'TB': 2 ** 40}
     number = match[1]
     unit = match[2].strip().upper()
     if not unit:
@@ -181,8 +181,8 @@ ABSOLUTE_MEDIA_UPLOAD_LIMIT = parse_size(os.environ.get('ABSOLUTE_MEDIA_UPLOAD_L
 MEDIA_UPLOAD_LIMIT = parse_size(os.environ.get('MEDIA_UPLOAD_LIMIT', '0'))
 
 
-LOGIN_REDIRECT_URL = "/"
-LOGIN_URL = "/-/login"
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/-/login'
 
 # Fixes slash at the end of URLs
 APPEND_SLASH = False
@@ -195,14 +195,14 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Default avatars
-ANON_AVATAR = "/-/static/images/anon_avatar.png"
-DEFAULT_AVATAR = "/-/static/images/default_avatar.png"
-WIKIDOT_AVATAR = "/-/static/images/wikidot_avatar.png"
+ANON_AVATAR = '/-/static/images/anon_avatar.png'
+DEFAULT_AVATAR = '/-/static/images/default_avatar.png'
+WIKIDOT_AVATAR = '/-/static/images/wikidot_avatar.png'
 
 
 # Fixes static images
-mimetypes.add_type("text/css", ".css", True)
-mimetypes.add_type("text/javascript", ".js", True)
+mimetypes.add_type('text/css', '.css', True)
+mimetypes.add_type('text/javascript', '.js', True)
 
 
 ARTICLE_IMPORT_REPLACE_CONFIG = {}
@@ -265,21 +265,21 @@ LOGGING = {
 
 
 JAZZMIN_SETTINGS = {
-    "user_avatar": "avatar",
+    "user_avatar": "get_avatar",
 
-    "site_title": "RuFoundation",
-    "site_brand": "Админка",
+    'site_title': 'RuFoundation',
+    'site_brand': 'Админка',
 }
 
 
 # Dict of supported ranged content-types in format: MIME, CHUNK_SIZE_IN_BYTES
 RANGED_CONTENT_SERVING = {
-    "audio/*": 2097152,                   # 2 MB
-    "video/*": 4194304,                   # 4 MB
-    # "image/*": 524288,                    # 512 KB  ### Some shit will happen if you try to uncomment this option
-    "application/octet-stream": 4194304,  # 4 MB
-    "application/zip": 8388608,           # 8 MB
-    "application/gzip": 8388608,          # 8 MB
-    "application/x-tar": 8388608,         # 8 MB
-    "application/pdf": 1048576,           # 1 MB
+    'audio/*': 2097152,                   # 2 MB
+    'video/*': 4194304,                   # 4 MB
+    # 'image/*': 524288,                    # 512 KB  ### Some shit will happen if you try to uncomment this option
+    'application/octet-stream': 4194304,  # 4 MB
+    'application/zip': 8388608,           # 8 MB
+    'application/gzip': 8388608,          # 8 MB
+    'application/x-tar': 8388608,         # 8 MB
+    'application/pdf': 1048576,           # 1 MB
 }

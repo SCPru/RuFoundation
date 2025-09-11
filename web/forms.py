@@ -8,7 +8,7 @@ from web.models.users import User
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', "bio", "avatar"]
+        fields = ['first_name', 'last_name', 'bio', 'avatar']
         widgets = {
             'username': forms.TextInput()
         }
@@ -21,9 +21,9 @@ class InviteForm(forms.Form):
 
 
 class CreateAccountForm(forms.Form):
-    username = forms.CharField(label="Имя пользователя", required=True, validators=[RegexValidator(r'^[A-Za-z0-9_-]+$', 'Некорректное имя пользователя')])
-    password = forms.CharField(label="Пароль", widget=forms.PasswordInput(), required=True)
-    password2 = forms.CharField(label="Повторите пароль", widget=forms.PasswordInput(), required=True)
+    username = forms.CharField(label='Имя пользователя', required=True, validators=[RegexValidator(r'^[A-Za-z0-9_-]+$', 'Некорректное имя пользователя')])
+    password = forms.CharField(label='Пароль', widget=forms.PasswordInput(), required=True)
+    password2 = forms.CharField(label='Повторите пароль', widget=forms.PasswordInput(), required=True)
 
     def clean_password2(self):
         cd = self.cleaned_data
@@ -34,7 +34,7 @@ class CreateAccountForm(forms.Form):
 
 class CreateBotForm(forms.Form):
     username = forms.CharField(
-        label="Ник бота",
+        label='Ник бота',
         required=True,
         validators=[
                 RegexValidator(r'^[A-Za-z0-9_-]+$', 'Некорректное имя пользователя')

@@ -84,7 +84,7 @@ class User(AbstractUser, RolesMixin):
 
     def get_avatar(self, default=None):
         if self.avatar:
-            return '%s%s' % ('/local--files/', self.avatar)
+            return '/local--files/%s' % self.avatar
         return default
 
     def __str__(self):

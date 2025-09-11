@@ -245,6 +245,10 @@ class AdvancedUserAdmin(ProtectSensetiveAdminMixin, UserAdmin):
     fieldsets[1][1]['fields'] += ('bio', 'avatar')
     fieldsets[0][1]['fields'] = ('username', 'wikidot_username', 'type', 'password', 'api_key')
 
+    @admin.display(ordering='username_or_wd')
+    def username_or_wd(self, obj):
+        return obj.__str__()
+
     def get_urls(self):
         urls = super(AdvancedUserAdmin, self).get_urls()
         new_urls = [
@@ -254,10 +258,6 @@ class AdvancedUserAdmin(ProtectSensetiveAdminMixin, UserAdmin):
             path('<id>/reset_votes/', ResetUserVotesView.as_view()),
         ]
         return new_urls + urls
-
-    @admin.display(ordering='username_or_wd')
-    def username_or_wd(self, obj):
-        return obj.__str__()
 
     def get_form(self, request, *args, **kwargs):
         form = super().get_form(request, *args, **kwargs)
