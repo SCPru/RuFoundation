@@ -41,8 +41,8 @@ def svg_file_validator(file):
 class RoleBadgeJSON(JSONInterface):
     text: str
     bg: str=None
-    textColor: str=None
-    showBorder: bool=False
+    text_color: str=None
+    show_border: bool=False
     tooltip: str=None
 
 
@@ -239,7 +239,7 @@ class RolesMixin(models.Model):
                     bg='#000000',
                     text_color='#FFFFFF',
                     border=False
-                )],
+                ).model_dump()],
                 'icons': []
             }
         elif self.type == self.UserType.Bot:
