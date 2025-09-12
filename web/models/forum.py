@@ -88,7 +88,7 @@ class ForumThread(auto_prefetch.Model, PermissionsOverrideMixin):
     def override_perms(self, user_obj, perms: set, roles=[]):
         if user_obj == self.author:
             perms.add('roles.edit_forum_threads')
-        if self.is_locked and 'roles.lock_forum_threads' not in perms:
+        if not user_obj.is_forum_active or self.is_locked and 'roles.lock_forum_threads' not in perms:
             perms_to_revoke = {'roles.create_forum_posts', 'roles.edit_forum_posts', 'roles.delete_forum_posts', 'roles.edit_forum_threads', 'roles.pin_forum_threads', 'roles.move_forum_threads'}
             perms = perms.difference(perms_to_revoke)
         return super().override_perms(user_obj, perms, roles)
