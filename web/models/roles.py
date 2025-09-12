@@ -134,20 +134,16 @@ class Role(auto_prefetch.Model):
             raise ValidationError('Role "registered" can\'t be deleted.')
         return super().delete(*args, **kwargs)
     
-    def get_name_tails(self):
-        badges = []
-        icons = []
-
+    def get_name_tail(self):
         if self.inline_visual_mode == Role.InlineVisualMode.Badge:
-            badges.append(RoleBadgeJSON(
+            return RoleBadgeJSON(
                 text=self.badge_text or self.slug,
                 bg=self.badge_bg,
                 text_color=self.badge_text_color,
                 show_border=self.badge_show_border,
                 tooltip=self.name
-            ))
+            )
         elif self.inline_visual_mode == Role.InlineVisualMode.Icon:
-            icon = None
             if self.icon:
                 with self.icon.open('r') as f:
                     icon = f.read()
@@ -155,13 +151,14 @@ class Role(auto_prefetch.Model):
                 icon_parts:list = icon[icon.index('<svg'):].split('>')
                 icon_parts.insert(1, f'<style>svg{{color:{self.color}}}</style')
                 colored_icon = quote('>'.join(icon_parts))
-                icons.append({
-                    'icon': colored_icon,
-                    'color': self.color,
-                    'tooltip': self.name
-                })
 
-        return icons, badges
+                return RoleIconJSON(
+                    icon=colored_icon,
+                    color=self.color,
+                    tooltip=self.name
+                )
+
+        return None
     
     @staticmethod
     def get_or_create_default_role():
@@ -256,16 +253,19 @@ class RolesMixin(models.Model):
                 'icons': []
             }
         
-        catigorized_candidates = self.roles.all().exclude(category__isnull=True).order_by('category').distinct('category')
+        catigorized_candidates = self.roles.all().exclude(category__isnull=True).order_by('category', 'index').distinct('category')
         uncatigorized_candidates = self.roles.all().filter(category__isnull=True)
         candidates = catigorized_candidates.union(uncatigorized_candidates).order_by('index')
         badges = []
         icons = []
 
         for role in candidates:
-            role_icons, role_badges = role.get_name_tails()
-            badges.extend(role_badges)
-            icons.extend(role_icons)
+            tail = role.get_name_tail()
+            if tail:
+                if isinstance(tail, RoleBadgeJSON):
+                    badges.append(tail)
+                else:
+                    icons.append(tail)
         
         return {
             'badges': badges,
