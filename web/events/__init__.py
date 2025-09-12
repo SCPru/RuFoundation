@@ -1,19 +1,14 @@
-import re
 import sys
 import pkgutil
 import logging
+
 from importlib.util import module_from_spec
 from dataclasses import dataclass
 
+from web.util import camel_to_snake
+
 
 _event_handlers: dict[str, list] = {}
-
-
-def camel_to_snake(camel_str):
-    # Wierd thing to translate camel-case to snake-case like this:
-    #     TestString -> test_string
-    #     AnotherABCTestString -> another_abc_test_string
-    return re.sub(r'(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])', r'_\1', camel_str).lower()
 
 
 class EventBase:

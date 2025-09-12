@@ -1,10 +1,9 @@
-import auto_prefetch
-from django.db import models
-
-
 __all__ = [
     'Settings'
 ]
+
+import auto_prefetch
+from django.db import models
 
 
 class Settings(auto_prefetch.Model):

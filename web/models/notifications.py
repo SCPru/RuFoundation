@@ -1,3 +1,9 @@
+__all__ = [
+    'UserNotification',
+    'UserNotificationMapping',
+    'UserNotificationSubscription'
+]
+
 import auto_prefetch
 
 from django.db import models
@@ -5,13 +11,6 @@ from django.contrib.auth import get_user_model
 
 from web.models.articles import Article
 from web.models.forum import ForumThread
-
-
-__all__ = [
-    'UserNotification',
-    'UserNotificationMapping',
-    'UserNotificationSubscription'
-]
 
 
 User = get_user_model()

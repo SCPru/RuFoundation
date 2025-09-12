@@ -1,3 +1,14 @@
+__all__ = [
+    'TagsCategory',
+    'Tag',
+    'Category',
+    'Article',
+    'ArticleVersion',
+    'ArticleLogEntry',
+    'Vote',
+    'ExternalLink'
+]
+
 import re
 import auto_prefetch
 
@@ -10,18 +21,6 @@ from web.fields import CITextField
 from .roles import Role, PermissionsOverrideMixin, RolePermissionsOverrideMixin
 from .settings import Settings
 from .site import Site
-
-
-__all__ = [
-    'TagsCategory',
-    'Tag',
-    'Category',
-    'Article',
-    'ArticleVersion',
-    'ArticleLogEntry',
-    'Vote',
-    'ExternalLink'
-]
 
 
 User = get_user_model()

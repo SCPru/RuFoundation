@@ -1,3 +1,7 @@
+__all__ = [
+    'ArticleSearchIndex'
+]
+
 import auto_prefetch
 from django.db import models
 from django.contrib.postgres.search import SearchVectorField
@@ -5,11 +9,6 @@ from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db.models.functions import Upper
 
 from .articles import Article
-
-
-__all__ = [
-    'ArticleSearchIndex'
-]
 
 
 class ArticleSearchIndex(auto_prefetch.Model):

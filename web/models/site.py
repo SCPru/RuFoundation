@@ -1,17 +1,15 @@
-from typing import Union, Sequence, Optional
+__all__ = [
+    'Site',
+    'get_current_site'
+]
 
-import auto_prefetch
+from typing import Optional
+
 from solo.models import SingletonModel
 from django.db import models
 from web import threadvars
 
 from .settings import Settings
-
-
-__all__ = [
-    'Site',
-    'get_current_site'
-]
 
 
 class Site(SingletonModel):

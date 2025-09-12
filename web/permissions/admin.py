@@ -73,3 +73,11 @@ class ViewSensetiveInfoPermission(BaseRolePermission):
     description = 'Позволяет просматривать чувствительную информацию пользователей, такую как почта или ip адрес'
     group = 'Админка'
     admin_only = True
+
+
+class ViewVotesTimestampPermission(BaseRolePermission):
+    name = 'Проссматривать время голоса'
+    codename = 'view_votes_timestamp'
+    description = 'Позволяет видеть дату и время простановки оценко статьи'
+    group = 'Админка'
+    admin_only = True

@@ -1,11 +1,3 @@
-import re
-
-from django.core import validators
-from django.db import models
-
-from . import widgets
-
-
 __all__ = [
     'CIText',
     'CICharField',
@@ -13,6 +5,13 @@ __all__ = [
     'CITextField',
     'CSSColorField'
 ]
+
+import re
+
+from django.core import validators
+from django.db import models
+
+from . import widgets
 
 
 class CSSHexColorValidator(validators.RegexValidator):

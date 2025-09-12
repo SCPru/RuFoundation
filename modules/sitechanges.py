@@ -4,15 +4,12 @@ import operator
 
 from django.db.models import Q
 
-from modules.forumthread import get_post_contents
 from modules.listpages import render_pagination, render_date
 from renderer import RenderContext, render_template_from_string, render_user_to_html
 import math
 
-import renderer
 from web.models.users import User
 
-from web.controllers import articles
 from web.models.articles import ArticleLogEntry, Article
 from web.models.settings import Settings
 
@@ -21,7 +18,7 @@ def has_content():
     return False
 
 
-def log_entry_type_name(entry: ArticleLogEntry.LogEntryType) -> (str, str):
+def log_entry_type_name(entry: ArticleLogEntry.LogEntryType) -> tuple[str, str]:
     mapping = {
         ArticleLogEntry.LogEntryType.Source: ('S', 'изменился текст статьи'),
         ArticleLogEntry.LogEntryType.Title: ('T', 'изменился заголовок'),

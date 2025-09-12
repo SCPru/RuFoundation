@@ -1,12 +1,11 @@
-from django import forms
-
-from web.permissions import ALL_PERMISSIONS
-
-
 __all__ = [
     'ColorInput',
     'PermissionsInput'
 ]
+
+from django import forms
+
+from web.permissions import ALL_PERMISSIONS
 
 
 class ColorInput(forms.TextInput):

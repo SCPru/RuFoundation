@@ -11,6 +11,10 @@ import os
 os.environ['DJANGO_SETTINGS_MODULE'] = 'scpdev.settings'
 
 
+from web.util import json
+json.replace_json_dumps_default()
+
+
 import django
 django.setup()
 
@@ -34,11 +38,13 @@ from web.controllers import media
 from web import permissions
 from web import events
 
+
 shared_articles.init()
 shared_users.init()
 interwiki_batcher.init()
 events.preload_events()
 media.symlinks_full_update()
 permissions.register_role_permissions()
+
 
 application = get_wsgi_application()

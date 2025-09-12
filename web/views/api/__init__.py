@@ -1,11 +1,11 @@
-from django.views.generic import View
-from django.http import JsonResponse, HttpRequest
+import logging
+import json
 
 from inspect import getfullargspec
 from functools import lru_cache
 
-import logging
-import json
+from django.views.generic import View
+from django.http import JsonResponse, HttpRequest
 
 
 class APIError(Exception):

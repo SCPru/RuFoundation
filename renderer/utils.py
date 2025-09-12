@@ -1,15 +1,18 @@
 import threading
 import urllib.parse
+from enum import Enum
+from typing import Literal, Union
 
 from django.contrib.auth.models import AnonymousUser
 from django.conf import settings
 from django.template import Context, Template
 
 from web.models.articles import Vote
-from web.models.roles import Role
+from web.models.roles import Role, RoleBadgeJSON, RoleIconJSON
 from web.models.settings import Settings
 from web.models.users import User
 from web.controllers import articles
+from web.util.pydantic import JSONInterface
 
 
 _templates = dict()
@@ -25,20 +28,35 @@ def render_template_from_string(template: str, **context: object) -> object:
     return tpl.render(Context(context))
 
 
+class RoleJSON(JSONInterface):
+    slug: str
+    name: str | None=None
+    shortName: str | None=None
+    category: int | None=None
+    staff: bool=False
+    groupVotes: bool=False
+    inlineVisualMode: Role.InlineVisualMode=Role.InlineVisualMode.Hidden
+    profileVisualMode: Role.ProfileVisualMode=Role.ProfileVisualMode.Hidden
+    icons: list[RoleBadgeJSON]=[],
+    badges: list[RoleIconJSON]=[]
+
 def render_role_to_json(role: Role):
     if role is None:
-        return {}
-    return {
-        'slug': role.slug,
-        'name': role.name,
-        'short_name': role.short_name,
-        'category': role.category.id if role.category else None,
-        'staff': role.is_staff,
-        'group_votes': role.group_votes,
-        'inline_visual_mode': role.inline_visual_mode,
-        'profile_visual_mode': role.profile_visual_mode,
-        'tails': role.get_name_tails()
-    }
+        return RoleJSON()
+    
+    icons, badges = role.get_name_tails()
+    return RoleJSON(
+        slug=role.slug,
+        name=role.name,
+        short_name=role.short_name,
+        category=role.category.id if role.category else None,
+        staff=role.is_staff,
+        group_votes=role.group_votes,
+        inline_visual_mode=role.inline_visual_mode,
+        profile_visual_mode=role.profile_visual_mode,
+        icons=icons,
+        badges=badges
+    )
 
 
 def render_user_to_text(user: User):
@@ -89,7 +107,7 @@ def render_user_to_html(user: User, avatar=True, hover=True):
                     <span class="icon" title="{{icon.tooltip|safe}}"><img src="data:image/svg+xml,{{icon.icon}}"/></span>
                 {% endfor %}
                 {% for badge in tails.badges %}
-                    <span class="badge" title="{{badge.tooltip|safe}}" style="background: {{badge.bg|safe}}; color: {{badge.text_color|safe}}; {% if badge.border %}border: solid 1px {{badge.text_color|safe}}{% endif %}">{{badge.text|safe}}</span>
+                    <span class="badge" title="{{badge.tooltip|safe}}" style="background: {{badge.bg|safe}}; color: {{badge.text_color|safe}}; {% if badge.show_border %}border: solid 1px {{badge.text_color|safe}}{% endif %}">{{badge.text|safe}}</span>
                 {% endfor %}
             {% endif %}
         </span>
@@ -124,33 +142,52 @@ def render_external_user_to_html(username: str, avatar=True, hover=True):
     )
 
 
-def render_user_to_json(user: User, avatar=True):
+class APIUserType(Enum):
+    Anonymous='anonymous'
+    Normal='normal'
+    Wikidot='wikidot'
+    System='system'
+    Bot='bot'
+
+
+class UserJSON(JSONInterface):
+    type: Union[User.UserType, Literal['anonymous']]='anonymous'
+    id: int | None=None
+    name: str | None=None
+    username: str | None=None
+    isActive: bool=True
+    avatar: str | None=None
+    showAvatar: bool=False
+    admin:bool=False
+    staff: bool=False
+    editor: bool=False
+    roles: list[str]=[]
+
+
+def render_user_to_json(user: User, show_avatar=True):
     if user is None:
-        return {'type': 'system'}
+        return UserJSON(type=User.UserType.System)
     if isinstance(user, AnonymousUser):
-        return {
-            'type': 'anonymous',
-            'avatar': None,
-            'name': 'Anonymous User',
-            'username': None,
-            'showAvatar': avatar
-        }
-    user_type = 'user'
-    if user.type != User.UserType.Normal:
-        user_type = user.type
-    displayname = user.__str__()
-    return {
-        'type': user_type,
-        'id': user.id,
-        'avatar': user.get_avatar(),
-        'name': displayname,
-        'username': user.username,
-        'showAvatar': avatar,
-        'staff': user.is_staff,
-        'admin': user.is_superuser,
-        'editor': user.has_perm('roles.edit_articles'),
-        'roles': [role.id for role in user.roles.all() if role.is_visual]
-    }
+        return UserJSON(
+            type='anonymous',
+            name='Anonymous User',
+            username=None,
+            showAvatar=show_avatar
+        )
+    return UserJSON(
+        # I don't know why we do this shit, but we can't stop))
+        type=user.type,
+        id=user.id,
+        name=user.__str__(),
+        username=user.username,
+        is_active=user.is_active,
+        avatar=user.get_avatar(),
+        showAvatar=show_avatar,
+        admin=user.is_superuser,
+        staff=user.is_staff,
+        editor=user.has_perm('roles.edit_articles'),
+        roles=[role.slug for role in user.roles.all() if role.is_visual]
+    )
 
 def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Stars, capitalize=True):
     rate = vote.rate if vote else None

@@ -1,14 +1,12 @@
+__all__ = [
+    'PermissionsField',
+    'PermissionsOverrideField'
+]
+
 from django import forms
 
 from web.models.roles import Role
 from . import widgets
-
-
-__all__ = [
-    'PermissionsField',
-    'PermissionsOverrideField'
-
-]
 
 
 class PermissionsField(forms.Field):

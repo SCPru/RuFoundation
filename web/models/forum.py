@@ -1,3 +1,11 @@
+__all__ = [
+    'ForumSection',
+    'ForumCategory',
+    'ForumThread',
+    'ForumPost',
+    'ForumPostVersion'
+]
+
 from django.conf import settings
 import auto_prefetch
 from django.db import models
@@ -7,15 +15,6 @@ from django.contrib.auth import get_user_model
 
 from web.models.roles import PermissionsOverrideMixin
 from .articles import Article
-
-
-__all__ = [
-    'ForumSection',
-    'ForumCategory',
-    'ForumThread',
-    'ForumPost',
-    'ForumPostVersion'
-]
 
 
 User = get_user_model()

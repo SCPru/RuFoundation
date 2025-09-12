@@ -1,11 +1,10 @@
-import auto_prefetch
-from django.db import models
-from django.contrib.auth import get_user_model
-
-
 __all__ = [
     'ActionLogEntry'
 ]
+
+import auto_prefetch
+from django.db import models
+from django.contrib.auth import get_user_model
 
 
 User = get_user_model()

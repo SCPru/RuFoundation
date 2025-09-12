@@ -1,3 +1,7 @@
+__all__ = [
+    'File'
+]
+
 from django.conf import settings
 import auto_prefetch
 from django.db import models
@@ -8,11 +12,6 @@ from .articles import Article
 from .site import get_current_site
 
 import urllib.parse
-
-
-__all__ = [
-    'File'
-]
 
 
 User = get_user_model()

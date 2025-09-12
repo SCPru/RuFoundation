@@ -1,3 +1,8 @@
+__all__ = [
+    'User',
+    'UsedToken'
+]
+
 import auto_prefetch
 import re
 
@@ -12,12 +17,6 @@ from django.db import models
 
 import web.fields
 from web.models.roles import RolesMixin
-
-
-__all__ = [
-    'User',
-    'UsedToken'
-]
 
 
 class StrictUsernameValidator(RegexValidator):

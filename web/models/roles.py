@@ -11,6 +11,7 @@ import web.permissions.articles
 import web.permissions.forum
 
 from web import fields
+from web.util.pydantic import JSONInterface
 
 
 __all__ = [
@@ -35,6 +36,20 @@ def svg_file_validator(file):
 
     if '<svg' not in header:
         raise ValidationError('Файл не содержит SVG-разметки.')
+    
+
+class RoleBadgeJSON(JSONInterface):
+    text: str
+    bg: str=None
+    textColor: str=None
+    showBorder: bool=False
+    tooltip: str=None
+
+
+class RoleIconJSON(JSONInterface):
+    icon: str
+    color: str=None
+    tooltip: str=None
 
 
 class RoleCategory(models.Model):
@@ -124,18 +139,19 @@ class Role(auto_prefetch.Model):
         icons = []
 
         if self.inline_visual_mode == Role.InlineVisualMode.Badge:
-            badges.append({
-                'text': self.badge_text or self.slug,
-                'bg': self.badge_bg,
-                'text_color': self.badge_text_color,
-                'border': self.badge_show_border,
-                'tooltip': self.name
-            })
+            badges.append(RoleBadgeJSON(
+                text=self.badge_text or self.slug,
+                bg=self.badge_bg,
+                text_color=self.badge_text_color,
+                show_border=self.badge_show_border,
+                tooltip=self.name
+            ))
         elif self.inline_visual_mode == Role.InlineVisualMode.Icon:
             icon = None
             if self.icon:
                 with self.icon.open('r') as f:
                     icon = f.read()
+
                 icon_parts:list = icon[icon.index('<svg'):].split('>')
                 icon_parts.insert(1, f'<style>svg{{color:{self.color}}}</style')
                 colored_icon = quote('>'.join(icon_parts))
@@ -221,22 +237,22 @@ class RolesMixin(models.Model):
     def name_tails(self):
         if not self.is_active and not self.type == self.UserType.Wikidot:
             return {
-                'badges': [{
-                    'text': 'БАН',
-                    'bg': '#000000',
-                    'text_color': '#FFFFFF',
-                    'border': False
-                }],
+                'badges': [RoleBadgeJSON(
+                    text='БАН',
+                    bg='#000000',
+                    text_color='#FFFFFF',
+                    border=False
+                )],
                 'icons': []
             }
         elif self.type == self.UserType.Bot:
             return {
-                'badges': [{
-                    'text': 'БОТ',
-                    'bg': '#77A',    #a1abca    #737d9b    #4463bf
-                    'text_color': '#FFFFFF',
-                    'border': False
-                }],
+                'badges': [RoleBadgeJSON(
+                    text='БОТ',
+                    bg='#77A',    #a1abca    #737d9b    #4463bf
+                    text_color='#FFFFFF',
+                    border=False
+                )],
                 'icons': []
             }
         
@@ -279,13 +295,13 @@ class RolesMixin(models.Model):
 
         for role in candidates:
             if role.profile_visual_mode == Role.ProfileVisualMode.Badge:
-                badges.append({
-                    'text': role.badge_text or role.name or role.slug,
-                    'bg': role.badge_bg,
-                    'text_color': role.badge_text_color,
-                    'border': role.badge_show_border,
-                    'tooltip': role.name
-                })
+                badges.append(RoleBadgeJSON(
+                    text=role.badge_text or role.name or role.slug,
+                    bg=role.badge_bg,
+                    text_color=role.badge_text_color,
+                    border=role.badge_show_border,
+                    tooltip=role.name
+                ))
             elif role.profile_visual_mode == Role.ProfileVisualMode.Status:
                 titles.append(role.name or role.slug)
         
