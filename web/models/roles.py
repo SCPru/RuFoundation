@@ -252,9 +252,9 @@ class RolesMixin(models.Model):
                 )],
                 'icons': []
             }
-        
-        catigorized_candidates = self.roles.all().exclude(category__isnull=True).order_by('category', 'index').distinct('category')
-        uncatigorized_candidates = self.roles.all().filter(category__isnull=True)
+        visual_roles = self.roles.all().exclude(inline_visual_mode=Role.InlineVisualMode.Hidden)
+        catigorized_candidates = visual_roles.exclude(category__isnull=True).order_by('category', 'index').distinct('category')
+        uncatigorized_candidates = visual_roles.filter(category__isnull=True)
         candidates = catigorized_candidates.union(uncatigorized_candidates).order_by('index')
         badges = []
         icons = []
@@ -286,8 +286,9 @@ class RolesMixin(models.Model):
                 'titles': ['Бот']
             }
         
-        catigorized_candidates = self.roles.all().exclude(category__isnull=True).order_by('category', 'index').distinct('category')
-        uncatigorized_candidates = self.roles.all().filter(category__isnull=True)
+        visual_roles = self.roles.all().exclude(profile_visual_mode=Role.ProfileVisualMode.Hidden)
+        catigorized_candidates = visual_roles.exclude(category__isnull=True).order_by('category', 'index').distinct('category')
+        uncatigorized_candidates = visual_roles.filter(category__isnull=True)
         candidates = catigorized_candidates.union(uncatigorized_candidates).order_by('index')
 
         badges = []
