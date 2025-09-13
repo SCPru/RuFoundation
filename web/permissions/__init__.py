@@ -53,6 +53,8 @@ def _preload_role_permissions():
         try:
             spec = importer.find_spec(modname)
             m = module_from_spec(spec)
+            # HACK: pizdes without this wierd thing admin permissions cant load properly
+            m.__dict__
             spec.loader.exec_module(m)
             if not getattr(m, 'is_perms_collection', False):
                 continue
