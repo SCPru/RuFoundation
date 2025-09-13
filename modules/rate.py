@@ -66,11 +66,11 @@ def api_get_rating(context, _params):
 
 
 @drop_nones(['date'])
-class RenderedVote(JSONInterface):
+class RenderedVoteJSON(JSONInterface):
     user: UserJSON
     value: float
-    visualGroup: str
-    visualGroupIndex: int
+    visualGroup: str | None=None
+    visualGroupIndex: int | None=None
     date: str | None=None
 
 
@@ -81,7 +81,7 @@ def api_get_votes(context, _params):
     votes = []
     rating, _, popularity, mode = articles.get_rating(context.article)
     for db_vote in Vote.objects.filter(article=context.article).order_by('-date', '-user__username'):
-        rendered_vote = RenderedVote(
+        rendered_vote = RenderedVoteJSON(
             user=render_user_to_json(db_vote.user),
             value=db_vote.rate,
             visualGroup=(db_vote.role.votes_title or db_vote.role.name or db_vote.role.slug) if db_vote.role else None,
