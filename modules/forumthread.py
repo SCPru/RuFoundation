@@ -297,7 +297,7 @@ def render(context: RenderContext, params):
         pagination=render_pagination(short_url, page, max_page) if max_page != 1 else '',
         new_post_config=json.dumps(new_post_config),
         posts=render_posts(post_info),
-        can_reply=context.user.has_perm('roles.create_forum_posts', thread) if not thread.article else context.user.has_perm('roles.comment_articles', thread.article),
+        can_reply=context.user.has_perm('roles.create_forum_posts', thread) if not thread.article else context.user.has_perm('roles.comment_articles', thread),
         content_only=content_only,
         data_path_params=json.dumps(context.path_params),
         data_params=json.dumps(params),
