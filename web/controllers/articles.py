@@ -578,7 +578,7 @@ def _get_article_votes_meta(full_name_or_article: _FullNameOrArticle):
         votes_meta['votes'].append({
             'user_id': vote.user_id,
             'vote': vote.rate,
-            'role_id': vote.role,
+            'role_id': vote.role_id,
             'date': vote.date.isoformat() if vote.date else None
         })
     return votes_meta
