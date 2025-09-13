@@ -238,7 +238,7 @@ class RolesMixin(models.Model):
                     text='БАН',
                     bg='#000000',
                     text_color='#FFFFFF',
-                    border=False
+                    show_border=False
                 )],
                 'icons': []
             }
@@ -248,7 +248,7 @@ class RolesMixin(models.Model):
                     text='БОТ',
                     bg='#77A',    #a1abca    #737d9b    #4463bf
                     text_color='#FFFFFF',
-                    border=False
+                    show_border=False
                 )],
                 'icons': []
             }
@@ -300,7 +300,7 @@ class RolesMixin(models.Model):
                     text=role.badge_text or role.name or role.slug,
                     bg=role.badge_bg,
                     text_color=role.badge_text_color,
-                    border=role.badge_show_border,
+                    show_border=role.badge_show_border,
                     tooltip=role.name
                 ))
             elif role.profile_visual_mode == Role.ProfileVisualMode.Status:
