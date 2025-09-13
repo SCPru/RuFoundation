@@ -69,7 +69,7 @@ def get_post_info(context, thread, posts, show_replies=True):
                 'lastRevisionDate': post.updated_at.isoformat(),
                 'lastRevisionAuthor': render_user_to_json(post_contents.get(post.id, ('', None))[1]),
                 'user': render_user_to_json(context.user),
-                'canReply': context.user.has_perm('roles.create_forum_posts', thread) if not thread.article else context.user.has_perm('roles.comment_articles', thread.article),
+                'canReply': context.user.has_perm('roles.create_forum_posts', thread) if not thread.article else context.user.has_perm('roles.comment_articles', thread),
                 'canEdit': context.user.has_perm('roles.edit_forum_posts', post),
                 'canDelete': context.user.has_perm('roles.delete_forum_posts', post)
             })
