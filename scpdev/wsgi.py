@@ -43,7 +43,7 @@ shared_articles.init()
 shared_users.init()
 interwiki_batcher.init()
 events.preload_events()
-media.symlinks_full_update()
+media.update_all_symlinks_in_background()
 permissions.register_role_permissions()
 
 
