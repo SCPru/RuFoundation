@@ -37,8 +37,8 @@ class RoleJSON(JSONInterface):
     groupVotes: bool=False
     inlineVisualMode: Role.InlineVisualMode=Role.InlineVisualMode.Hidden
     profileVisualMode: Role.ProfileVisualMode=Role.ProfileVisualMode.Hidden
-    icons: list[RoleBadgeJSON]=[],
-    badges: list[RoleIconJSON]=[]
+    icons: list[RoleBadgeJSON]=None,
+    badges: list[RoleIconJSON]=None
 
 def render_role_to_json(role: Role):
     if role is None:
@@ -161,7 +161,7 @@ class UserJSON(JSONInterface):
     admin:bool=False
     staff: bool=False
     editor: bool=False
-    roles: list[str]=[]
+    roles: list[str]=None
 
 
 def render_user_to_json(user: User, show_avatar=True):
@@ -175,12 +175,11 @@ def render_user_to_json(user: User, show_avatar=True):
             showAvatar=show_avatar
         )
     return UserJSON(
-        # I don't know why we do this shit, but we can't stop))
         type=user.type,
         id=user.id,
         name=user.__str__(),
         username=user.username,
-        is_active=user.is_active,
+        isActive=user.is_active,
         avatar=user.get_avatar(),
         showAvatar=show_avatar,
         admin=user.is_superuser,

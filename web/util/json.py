@@ -14,7 +14,7 @@ def get_default(_default=None, **kwargs):
         _default = kwargs['default']
     def default(o):
         if isinstance(o, JSONInterface):
-            return o.model_dump()
+            return o.dump()
         if _default:
             return _default(o)
     return default

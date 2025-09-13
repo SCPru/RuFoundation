@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from dataclasses import asdict, dataclass
 
 
 def drop_nones(fields_to_drop=None):
@@ -15,10 +15,18 @@ def drop_nones(fields_to_drop=None):
     return wrapper
 
 
-class JSONInterface(BaseModel):
-    def model_dump(self, *args, **kwargs):
-        dump = super().model_dump(*args, **kwargs)
-        return self._drop_none_fields(dump)
+class JSONInterface:
+    def __init_subclass__(cls, **kwargs):
+        dataclass_params = {
+            key: kwargs.pop(key)
+            for key in ['init', 'repr', 'eq', 'order', 'unsafe_hash', 'frozen']
+            if key in kwargs
+        }
+        
+        cls = dataclass(**dataclass_params)(cls)
+
+    def dump(self):
+        return asdict(self)
     
     def _drop_none_fields(self, fields):
         return fields

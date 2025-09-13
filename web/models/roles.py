@@ -239,7 +239,7 @@ class RolesMixin(models.Model):
                     bg='#000000',
                     text_color='#FFFFFF',
                     border=False
-                ).model_dump()],
+                )],
                 'icons': []
             }
         elif self.type == self.UserType.Bot:
