@@ -108,6 +108,10 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
                 rev_number = articles.get_latest_log_entry(article).rev_number
                 updated_at = article.updated_at
+                if context.og_image:
+                    image = context.og_image
+                if context.og_description:
+                    excerpt = context.og_description
         else:
             category, name = articles.get_name(fullname)
             options = {'page_id': fullname, 'pathParams': path_params}

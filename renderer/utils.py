@@ -40,6 +40,7 @@ class RoleJSON(JSONInterface):
     icons: list[RoleBadgeJSON]=None,
     badges: list[RoleIconJSON]=None
 
+
 def render_role_to_json(role: Role):
     if role is None:
         return RoleJSON()
@@ -243,3 +244,17 @@ def get_boolean_param(params: dict, key, default=False):
     if value in ['false', 'f', '0', 'no']:
         return False
     return default
+
+
+def get_resource(uri, context):
+    uri = filter_url(uri)
+    if not uri:
+        return None
+    if '//' in uri:
+        return uri
+    else:
+        uri = uri.removeprefix('/')
+        if '/' in uri:
+            return f'/local--files/{uri}'
+        else:
+            return f'/local--files/{context.article.full_name}/{uri}'
