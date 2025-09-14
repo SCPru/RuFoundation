@@ -7,5 +7,5 @@ def has_content():
 
 def render(context, _params):
     if 'src' in _params:
-        context.og_image = get_resource(_params['src'], context)
+        context.og_image = get_resource(_params['src'], context, True)
     return ''
