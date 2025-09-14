@@ -6,6 +6,6 @@ def has_content():
 
 
 def render(context, _params):
-    if 'img' in _params:
-        context.og_image = get_resource(_params['img'], context)
+    if 'src' in _params:
+        context.og_image = get_resource(_params['src'], context)
     return ''
