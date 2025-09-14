@@ -69,7 +69,12 @@ def _preload_role_permissions():
 
 def register_role_permissions():
     global _ROLE_PERMISSIONS_REPR_CACHE, ALL_PERMISSIONS
-    _preload_role_permissions()
+
+    import web.permissions.admin
+    import web.permissions.forum
+    import web.permissions.articles
+    # Temporary disabled because paws
+    # _preload_role_permissions()
 
     content_type = get_role_permissions_content_type()
     permissions = BaseRolePermission.__subclasses__()
