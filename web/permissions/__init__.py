@@ -1,10 +1,13 @@
 import sys
 import pkgutil
 import logging
+
 from importlib.util import module_from_spec
 
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Permission
+
+from web.util import check_function_exists_and_callable
 
 
 _ROLE_PERMISSIONS_REPR_CACHE = {}
@@ -53,10 +56,10 @@ def _preload_role_permissions():
         try:
             spec = importer.find_spec(modname)
             m = module_from_spec(spec)
-            # HACK: pizdes without this wierd thing admin permissions cant load properly
-            m.__dict__
             spec.loader.exec_module(m)
-            if not getattr(m, 'is_perms_collection', False):
+            if not check_function_exists_and_callable(m, 'is_perms_collection'):
+                continue
+            if not m.is_perms_collection():
                 continue
             logging.info('Loaded permissions collection \'%s\'', modname.lower())
         except:

@@ -1,10 +1,13 @@
 import pkgutil
 import sys
 import logging
+
 from types import ModuleType
 from importlib.util import module_from_spec
 
 from django.db import transaction
+
+from web.util import check_function_exists_and_callable
 
 _all_modules = {}
 _initialized = False
@@ -14,10 +17,6 @@ class ModuleError(Exception):
     def __init__(self, message, *args):
         super().__init__(message, *args)
         self.message = message
-
-
-def check_function_exists_and_callable(m, func):
-    return func in m.__dict__ and callable(m.__dict__[func])
 
 
 def get_all_modules():

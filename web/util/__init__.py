@@ -21,3 +21,7 @@ def camel_to_snake(camel_str):
     #     TestString -> test_string
     #     AnotherABCTestString -> another_abc_test_string
     return re.sub(r'(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])', r'_\1', camel_str).lower()
+
+
+def check_function_exists_and_callable(o, func):
+    return func in o.__dict__ and callable(o.__dict__[func])

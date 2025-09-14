@@ -1,7 +1,8 @@
 from web.permissions import BaseRolePermission
 
 
-is_perms_collection = True
+def is_perms_collection():
+    return True
 
 
 class ViewArticlesPermission(BaseRolePermission):
