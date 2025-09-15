@@ -67,10 +67,18 @@ export const FixedWidthContainer = styled.div<{ hasBorder?: boolean }>`
       &:after {
         right: 0;
       }
+
+      @media (max-width: ${MOBILE_SIZE}px) {
+        &:before,
+        &:after {
+          display: none;
+        }
+      }
     `};
 
   @media (max-width: ${MOBILE_SIZE}px) {
     flex-direction: column;
+    padding: 0;
   }
 `
 
