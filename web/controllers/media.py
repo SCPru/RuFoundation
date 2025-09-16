@@ -22,7 +22,9 @@ def symlinks_full_update():
     symlinks_dir.mkdir(exist_ok=True)
 
     try:
-        (symlinks_dir / '-').symlink_to(rel_system_static_path, True)
+        system_symlinks_dir = symlinks_dir / '-'
+        if not system_symlinks_dir.exists():
+            system_symlinks_dir.symlink_to(rel_system_static_path, True)
         for file in files:
             try:
                 link_dir: Path = symlinks_dir / file.article.full_name
