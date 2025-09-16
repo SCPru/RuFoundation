@@ -275,11 +275,17 @@ class RolesMixin(models.Model):
     
     @cached_property
     def showcase(self):
-        if not self.is_active and not self.type == self.UserType.Wikidot:
-            return {
-                'badges': [],
-                'titles': ['Заблокирован']
-            }
+        if not self.is_active:
+            if self.type == self.UserType.Wikidot:
+                return {
+                    'badges': [],
+                    'titles': ['Неактивен']
+                }
+            else:
+                return {
+                    'badges': [],
+                    'titles': ['Заблокирован']
+                }
         elif self.type == self.UserType.Bot:
             return {
                 'badges': [],
