@@ -237,8 +237,9 @@ class RolesMixin(models.Model):
                 'badges': [RoleBadgeJSON(
                     text='БАН',
                     bg='#000000',
-                    text_color='#FFFFFF',
-                    show_border=False
+                    text_color="#3D3838",
+                    show_border=False,
+                    tooltip='Пользователь заблокирован'
                 )],
                 'icons': []
             }
@@ -248,7 +249,8 @@ class RolesMixin(models.Model):
                     text='БОТ',
                     bg='#77A',    #a1abca    #737d9b    #4463bf
                     text_color='#FFFFFF',
-                    show_border=False
+                    show_border=False,
+                    tooltip='Машинный болван'
                 )],
                 'icons': []
             }

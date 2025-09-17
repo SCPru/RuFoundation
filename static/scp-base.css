@@ -2072,25 +2072,3 @@ div.preview {
     background: #e4f0c8;
 }
 /* =============== */
-
-.printuser .badge {
-    background: gray;
-    padding: 0px 2px 0px 2px;
-    border-radius: 3px;
-    color: white;
-    font-weight: 500;
-    font-size: .75em;
-    height: 1.5em;
-    display: inline-flex;
-    align-items: center;
-    vertical-align: text-top;
-    box-sizing: border-box;
-}
-
-.printuser .icon {
-    padding: 0px 2px 0px 2px;
-    display: inline-flex;
-    vertical-align: text-top;
-    height: 14.4px;
-    width: 14.4px;
-}
