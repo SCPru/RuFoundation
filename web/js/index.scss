@@ -28,6 +28,14 @@
   position: relative;
 }
 
+.printuser {
+  white-space: nowrap;
+}
+
+.mod-by .printuser {
+  white-space: initial;
+}
+
 // fixes printusers misbehaving in tables
 .printuser a {
   margin-right: 0;
