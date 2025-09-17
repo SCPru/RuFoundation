@@ -106,10 +106,10 @@ def render_user_to_html(user: User, avatar=True, hover=True):
             <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a>
             {% if show_avatar %}
                 {% for icon in tails.icons %}
-                    <span class="icon" {% if icon.tooltip %}title="{{icon.tooltip|safe}}{% endif %}"><img src="data:image/svg+xml,{{icon.icon}}"/></span>
+                    <span class="icon" {% if icon.tooltip %}title="{{icon.tooltip|safe}}"{% endif %}><img src="data:image/svg+xml,{{icon.icon}}"/></span>
                 {% endfor %}
                 {% for badge in tails.badges %}
-                    <span class="badge" {% if badge.tooltip %}title="{{badge.tooltip|safe}}{% endif %} style="background: {{badge.bg|safe}}; color: {{badge.text_color|safe}}; {% if badge.show_border %}border: solid 1px {{badge.text_color|safe}}{% endif %}">{{badge.text|safe}}</span>
+                    <span class="badge" {% if badge.tooltip %}title="{{badge.tooltip|safe}}"{% endif %} style="background: {{badge.bg|safe}}; color: {{badge.text_color|safe}}; {% if badge.show_border %}border: solid 1px {{badge.text_color|safe}}{% endif %}">{{badge.text|safe}}</span>
                 {% endfor %}
             {% endif %}
         </span>
