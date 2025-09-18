@@ -214,7 +214,8 @@ class RolesMixin(models.Model):
 
     @cached_property
     def operation_index(self):
-        return self.roles.aggregate(min_index=models.Min('index'))['min_index'] or float('inf')
+        op_index = self.roles.aggregate(min_index=models.Min('index'))['min_index']
+        return op_index if op_index is not None else float('inf')
     
     @cached_property
     def vote_role(self):
@@ -237,7 +238,7 @@ class RolesMixin(models.Model):
                 'badges': [RoleBadgeJSON(
                     text='БАН',
                     bg='#000000',
-                    text_color="#3D3838",
+                    text_color="#FFFFFF",
                     show_border=False,
                     tooltip='Пользователь заблокирован'
                 )],

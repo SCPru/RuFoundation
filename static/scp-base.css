@@ -2047,28 +2047,3 @@ div#u-adult-warning > .error-block {
 div.preview {
     display: none;
 }
-
-/* User rate on forum post */
-.thread-container .post .long .head .vote {
-	flex-grow: 1;
-    text-align: right;
-	color: #666
-}
-
-.thread-container .post .long .head .rate {
-	font-weight: bold;
-}
-
-.thread-container .post .long .head .rate::before {
-	font-family: "Font Awesome 5 Free";
-    content: "\f005 ";
-    letter-spacing: 2px;
-    color: #666;
-}
-/* ======================= */
-
-/* New forum triks */
-.thread-container .post .long .head.op-post {
-    background: #e4f0c8;
-}
-/* =============== */

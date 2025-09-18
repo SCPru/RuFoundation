@@ -2,7 +2,7 @@ from solo.admin import SingletonModelAdmin
 from adminsortable2.admin import SortableAdminMixin
 
 from django.db.models.query import QuerySet
-from django.db.models import ExpressionWrapper, F, Case, When, BooleanField
+from django.db.models import ExpressionWrapper, Min, F, Case, When, BooleanField
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth.models import Permission
 from django.contrib.auth.admin import UserAdmin
@@ -224,6 +224,11 @@ class AdvancedUserChangeForm(UserChangeForm):
             'wikidot_username': forms.TextInput(attrs={'class': 'vTextField'})
         }
 
+    # _op_index = forms.CharField(
+    #     label='Уровень превилегий',
+    #     help_text='Показывает индекс самой приоритетной роли, чем ниже значение, тем выше приоритет'
+    # )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'roles' in self.fields:
@@ -237,17 +242,21 @@ class AdvancedUserAdmin(ProtectSensetiveAdminMixin, UserAdmin):
     list_filter = ['is_superuser', 'is_active', 'roles']
     list_display = ['username_or_wd', 'email', 'is_active']
     search_fields = ['username', 'wikidot_username', 'email']
-    readonly_fields = ['api_key']
+    readonly_fields = ['api_key', '_op_index']
     sensetive_fields = ['email']
 
     fieldsets = UserAdmin.fieldsets
-    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'roles', 'is_superuser')
+    fieldsets[0][1]['fields'] = ('username', 'wikidot_username', 'type', 'password', 'api_key', '_op_index')
     fieldsets[1][1]['fields'] += ('bio', 'avatar')
-    fieldsets[0][1]['fields'] = ('username', 'wikidot_username', 'type', 'password', 'api_key')
+    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'roles', 'is_superuser')
 
     @admin.display(ordering='username_or_wd')
     def username_or_wd(self, obj):
         return obj.__str__()
+    
+    @admin.display(description='Уровень привилегий')
+    def _op_index(self, obj):
+        return obj.operation_index
 
     def get_urls(self):
         urls = super(AdvancedUserAdmin, self).get_urls()
@@ -275,14 +284,16 @@ class AdvancedUserAdmin(ProtectSensetiveAdminMixin, UserAdmin):
     
     def get_queryset(self, request):
         qs = super(AdvancedUserAdmin, self).get_queryset(request)
-        return qs.annotate(username_or_wd=ExpressionWrapper(
-                Case(
-                    When(type=User.UserType.Wikidot, then=F('wikidot_username')),
-                    default=F('username'),
+        return qs.annotate(
+                username_or_wd=ExpressionWrapper(
+                    Case(
+                        When(type=User.UserType.Wikidot, then=F('wikidot_username')),
+                        default=F('username'),
+                        output_field=CITextField()
+                    ),
                     output_field=CITextField()
-                ),
-                output_field=CITextField()
-            )).order_by('username_or_wd')
+                )
+            ).order_by('username_or_wd')
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == 'roles' and not request.user.has_perm('roles.manage_roles'):
@@ -290,7 +301,7 @@ class AdvancedUserAdmin(ProtectSensetiveAdminMixin, UserAdmin):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
     
     def has_change_permission(self, request, obj=None):
-        if obj and not request.user.is_superuser and obj.operation_index < request.user.operation_index:
+        if obj and not request.user.is_superuser and obj.operation_index <= request.user.operation_index:
             return False
         return super().has_change_permission(request, obj)
     
