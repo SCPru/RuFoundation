@@ -56,17 +56,17 @@ You can provision these basic structures by running the following commands:
 ### Requirements (tested with):
 
 - Docker 20.10.14
-- Docker-Compose 1.29.2
+- Docker Compose 2.39.4
 
 ### Getting started
 
 To start the project, use:
 
-- `docker-compose up`
+- `docker compose up`
 
 To completely delete all data, use:
 
-- `docker-compose down`
+- `docker compose down`
 - `rm -rf ./files ./archive ./postgresql`
 
 To create users, sites and seed inside the database, start the project and afterwards use syntax such as this:
@@ -76,7 +76,5 @@ To create users, sites and seed inside the database, start the project and after
 
 To update current app that is running, do:
 
-- `docker-compose up -d --no-deps --build web`
-
-Note: in more recent versions, you may want to use `docker compose` instead of `docker-compose`.
+- `docker compose up -d --no-deps --build web`
 
