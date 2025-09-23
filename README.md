@@ -55,7 +55,7 @@ You can provision these basic structures by running the following commands:
 
 ### Requirements (tested with):
 
-- Docker 20.10.14
+- Docker 28.4.0
 - Docker Compose 2.39.4
 
 ### Getting started
