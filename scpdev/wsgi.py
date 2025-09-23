@@ -20,6 +20,12 @@ django.setup()
 
 
 import logging
+logging.addLevelName(20, '==')
+logging.addLevelName(30, '!!')
+logging.addLevelName(40, '!!')
+logging.addLevelName(50, '!!')
+
+
 from web.models import Site
 from django.db.utils import ProgrammingError
 
