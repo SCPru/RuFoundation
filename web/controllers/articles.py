@@ -855,7 +855,8 @@ def get_comment_info(full_name_or_article: _FullNameOrArticle) -> tuple[int, int
     article = get_article(full_name_or_article)
     if not article:
         return 0, 0
-    thread, created = ForumThread.objects.get_or_create(article=article)
+    with transaction.atomic():
+        thread, created = ForumThread.objects.get_or_create(article=article)
     if created:
         notifications.subscribe_to_notifications(subscriber=article.author, forum_thread=thread)
     post_count = ForumPost.objects.filter(thread=thread).count()
