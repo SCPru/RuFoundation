@@ -1,15 +1,25 @@
 from django.core.management.commands.migrate import Command as MigrateCommand
 from django.core.management.base import no_translations
-from django.db.migrations.recorder import MigrationRecorder
+from django.db.migrations.executor import MigrationExecutor
+from django.db import connections
 
 from web.signals import after_migration, after_migration_jit
+
 
 class Command(MigrateCommand):
     @no_translations
     def handle(self, *args, **kwargs):
-        migrations_before = {migration.name for migration in MigrationRecorder.Migration.objects.all()}
+        database = kwargs["database"]
+
+        connection = connections[database]
+        connection.prepare_database()
+
+        executor = MigrationExecutor(connection, self.migration_progress_callback)
+        executor.loader.check_consistent_history(connection)
+
+        migrations_before = set(executor.loader.applied_migrations)
         result = super().handle(*args, **kwargs)
-        migrations_after = {migration.name for migration in MigrationRecorder.Migration.objects.all()}
+        migrations_after = set(executor.loader.applied_migrations)
 
         current_migrated = migrations_after.difference(migrations_before)
 
