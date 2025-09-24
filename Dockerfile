@@ -40,7 +40,8 @@ COPY --from=js_build /build/static/* ./static/
 COPY --from=rust_build /build/target/release/libftml.so ./ftml/ftml.so
 
 RUN useradd -u 8877 scpwiki
-RUN chown scpwiki:scpwiki /app -R
+# This wierd thing extremly speeds up chown
+RUN find /app -print0 | xargs -0 -n 100 -P 32 chown scpwiki:scpwiki
 
 USER scpwiki
 
