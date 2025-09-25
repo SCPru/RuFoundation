@@ -132,7 +132,7 @@ def api_rate(context, params):
             if value not in [-1, 0, 1]:
                 raise ModuleError('Некорректная оценка %s' % str(value))
         elif obj_settings.rating_mode == Settings.RatingMode.Stars:
-            if value < 0 or value > 5:
+            if value < 0 or value > 5 or value % 0.5 != 0:
                 raise ModuleError('Некорректная оценка %s' % str(value))
 
     try:

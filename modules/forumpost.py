@@ -5,18 +5,21 @@ from datetime import datetime, timezone
 
 from renderer.utils import render_user_to_json
 from web.events import EventBase
-from web.models.forum import ForumPost, ForumPostVersion
+from web.models import ForumPost, ForumPostVersion, User
 
 from ._csrf_protection import csrf_safe_method
 
 class OnForumEditPost(EventBase):
+    user: User
     post: ForumPost
     title: str
-    prev_source: str
+    prev_title: str
     source: str
+    prev_source: str
 
 
 class OnForumDeletePost(EventBase):
+    user: User
     post: ForumPost
     title: str
     source: str
@@ -89,12 +92,14 @@ def api_update(context, params):
         new_version.save()
         post.updated_at = datetime.now(timezone.utc)
 
+    prev_title = post.name
+
     if title != post.name:
         post.name = title
 
     post.save()
 
-    OnForumEditPost(post, title, prev_source, source).emit()
+    OnForumEditPost(context.user, post, title, prev_title, source, prev_source).emit()
 
     content = single_pass_render(source, RenderContext(None, None, {}, context.user), 'message')
 
@@ -121,7 +126,7 @@ def api_delete(context, params):
     
     latest_version = ForumPostVersion.objects.filter(post=post).order_by('-created_at').first()
     
-    OnForumDeletePost(post, post.name, latest_version.source).emit()
+    OnForumDeletePost(context.user, post, post.name, latest_version.source).emit()
 
     post.delete()
 

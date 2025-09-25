@@ -79,11 +79,12 @@ def log_forum_edit_post(e: OnForumEditPost):
         'author_id': e.post.author.id,
         'post': model_to_dict(e.post),
         'title': e.title,
+        'prev_title': e.prev_title,
         'source': e.source,
         'prev_source': e.prev_source
     }
     
-    add_action_log(e.post.author, ActionLogEntry.ActionType.EditForumPost, meta)
+    add_action_log(e.user, ActionLogEntry.ActionType.EditForumPost, meta)
 
 
 @on_trigger(OnForumDeletePost)
@@ -95,4 +96,4 @@ def log_forum_delete_post(e: OnForumDeletePost):
         'source': e.source
     }
     
-    add_action_log(e.post.author, ActionLogEntry.ActionType.RemoveForumPost, meta)
+    add_action_log(e.user, ActionLogEntry.ActionType.RemoveForumPost, meta)

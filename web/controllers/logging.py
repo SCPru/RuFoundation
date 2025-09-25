@@ -49,24 +49,24 @@ def _make_post_preview(post_id, author_id, title, source):
 
 def _render_post_edit_preview(m):
     body = render_template_from_string(
-        """
-        <div class="w-tabview">
-            <ul class="yui-nav post-versions">
-                <li class=""><a href="javascript:;">Старая</a></li>
+        '''
+        <div class='w-tabview'>
+            <ul class='yui-nav post-versions'>
+                <li class=''><a href='javascript:;'>Старая</a></li>
                 |
-                <li class="selected" title="active"><a href="javascript:;">Новая</a></li>
+                <li class='selected' title='active'><a href='javascript:;'>Новая</a></li>
             </ul>
-            <div class="yui-content">
-                <div class="w-tabview-tab" style="display: none;">
+            <div class='yui-content'>
+                <div class='w-tabview-tab' style='display: none;'>
                     {{prev_post}}
                 </div>
-                <div class="w-tabview-tab" style="display: block;">
+                <div class='w-tabview-tab' style='display: block;'>
                     {{post}}
                 </div>
             </div>
         </div>
-        """,
-        prev_post=_make_post_preview(m['post']['id'], m['post']['author'], m['title'], m['prev_source']),
+        ''',
+        prev_post=_make_post_preview(m['post']['id'], m['post']['author'], m['prev_title'], m['prev_source']),
         post=_make_post_preview(m['post']['id'], m['post']['author'], m['title'], m['source'])
     )
     return body
@@ -80,39 +80,41 @@ def get_action_log_entry_description(log_entry: ActionLogEntry):
             case ActionType.Vote:
                 m = _mark_safe_all(m)
                 if m['is_new']:
-                    return f"На страницу {m['article']} добавлена оценка {m['new_vote']}"
+                    return f'На страницу {m['article']} добавлена оценка {m['new_vote']:.1f}'
                 elif m['is_remove']:
-                    return f"Со страницы {m['article']} удалена оценка {m['old_vote']}"
+                    return f'Со страницы {m['article']} удалена оценка {m['old_vote']:.1f}'
                 elif m['is_change']:
-                    return f"Оценка на странице {m['article']} изменена с {m['old_vote']} на {m['new_vote']}"
+                    return f'Оценка на странице {m['article']} изменена с {m['old_vote']:.1f} на {m['new_vote']:.1f}'
+                else:
+                    return f'Оценка на странице {m['article']} удалена повторно (ее не было)'
             case ActionType.NewArticle:
                 m = _mark_safe_all(m)
-                return f"Создана новая страница: {m['article']}"
+                return f'Создана новая страница: {m['article']}'
             case ActionType.RemoveArticle:
                 m = _mark_safe_all(m)
-                return f"Страница: {m['article']}, рейтинг на момент удаления: {m['rating']}, голосов: {m['votes']}, популярность: {m['popularity']}"
+                return f'Страница: {m['article']}, рейтинг на момент удаления: {m['rating']}, голосов: {m['votes']}, популярность: {m['popularity']}'
             case ActionType.EditArticle:
                 m = _mark_safe_all(m)
-                msg = [f"Страница: {m['article']}, ревизия: {m['rev_number']}"]
+                msg = [f'Страница: {m['article']}, ревизия: {m['rev_number']}']
                 meta = m['log_entry_meta']
                 match m['edit_type']:
                     case 'tags':
                         added_tags = meta['added_tags']
                         removed_tags = meta['removed_tags']
                         if added_tags:
-                            msg.append(f"добавлены теги: {', '.join([t['name'] for t in added_tags])}")
+                            msg.append(f'добавлены теги: {', '.join([t['name'] for t in added_tags])}')
                         if removed_tags:
-                            msg.append(f"удалены теги: {', '.join([t['name'] for t in removed_tags])}")
+                            msg.append(f'удалены теги: {', '.join([t['name'] for t in removed_tags])}')
                     case 'title':
-                        msg.append(f"заголовок изменен c {meta['prev_title']} на {meta['title']}")
+                        msg.append(f'заголовок изменен c {meta['prev_title']} на {meta['title']}')
                     case 'name':
-                        msg.append(f"адрес изменен c {meta['prev_name']} на {meta['name']}")
+                        msg.append(f'адрес изменен c {meta['prev_name']} на {meta['name']}')
                     case 'votes_deleted':
-                        msg.append(f"рейтинг сброшен")
+                        msg.append(f'рейтинг сброшен')
                     case _:
-                        msg.append(f"тип правки: {m['edit_type']}")
+                        msg.append(f'тип правки: {m['edit_type']}')
                 if m['comment']:
-                    msg.append(f"комментарий: {m['comment']}")
+                    msg.append(f'комментарий: {m['comment']}')
                 return ', '.join(msg)
             case ActionType.NewForumPost:
                 return _make_post_preview(m['post']['id'], m['post']['author'], m['title'], m['source'])
