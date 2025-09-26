@@ -9,7 +9,7 @@ def get_html_injected_code(html_id: str) -> str:
         function doFrame() {
             const body = document.body;
             const html = document.documentElement;
-            const height = Math.max(body && body.scrollHeight, body && body.offsetHeight, html.offsetHeight, body && body.getBoundingClientRect().height, html.scrollHeight);
+            const height = Math.max(body && body.scrollHeight, body && body.offsetHeight, html.offsetHeight, body && body.getBoundingClientRect().height);
             window.requestAnimationFrame(doFrame);
             if (lastHeight !== height) {
                 parent.postMessage({type: 'iframe-change-height', payload: { height, id: %s } }, '*');
@@ -52,6 +52,10 @@ def get_html_injected_code(html_id: str) -> str:
     const api = new Proxy({}, apiHandler);
     </script>
     <style>
-      body { margin: 0; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow-y: hidden;
+      }
     </style> 
     """ % json.dumps(html_id)
