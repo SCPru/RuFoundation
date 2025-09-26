@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 import mimetypes
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,6 +29,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-)wy0h9z6x4o3t4@=s_keq
 DEBUG = os.environ.get('DEBUG', 'true') == 'true'
 
 ALLOWED_HOSTS = ['*']
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+    '::1'
+]
 
 # SILENCED_SYSTEM_CHECKS = ['templates.E003']
 
@@ -285,3 +291,15 @@ RANGED_CONTENT_SERVING = {
     'application/x-tar': 8388608,         # 8 MB
     'application/pdf': 1048576,           # 1 MB
 }
+
+
+if DEBUG:
+    INSTALLED_APPS += [
+        'debug_toolbar',
+    ]
+    MIDDLEWARE += [
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    ]
+    DEBUG_TOOLBAR_CONFIG = {
+        'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG and request.user.is_superuser
+    }

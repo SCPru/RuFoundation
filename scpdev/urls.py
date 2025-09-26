@@ -28,3 +28,10 @@ urlpatterns = [
     path(f"local--theme/<page_id>/style.css", LocalThemeView.as_view()),
     path('', include('web.urls'))
 ]
+
+if settings.DEBUG:
+    from debug_toolbar.toolbar import debug_toolbar_urls
+    urlpatterns = [
+        *debug_toolbar_urls(),
+        *urlpatterns
+    ]
