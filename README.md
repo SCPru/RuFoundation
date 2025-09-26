@@ -71,8 +71,8 @@ To completely delete all data, use:
 
 To create users, sites and seed inside the database, start the project and afterwards use syntax such as this:
 
-- `docker exec -it scpdev_web python manage.py createsite -s scp-ru -d localhost -t "SCP Foundation" -H "Russian branch"`
-- `docker exec -it scpdev_web seed`
+- `docker exec -it scpdev-web-1 python manage.py createsite -s scp-ru -d localhost -t "SCP Foundation" -H "Russian branch"`
+- `docker exec -it scpdev-web-1 seed`
 
 To update current app that is running, do:
 
