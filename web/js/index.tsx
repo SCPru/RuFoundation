@@ -51,39 +51,43 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // add new things here!
   const processNode = (node: HTMLElement) => {
-    if (!node.classList) return
-    if (node.classList.contains('w-collapsible')) {
-      makeCollapsible(node)
-    } else if (node.classList.contains('w-tabview')) {
-      makeTabView(node)
-    } else if (node.classList.contains('w-rate-module')) {
-      makeUpDownRateModule(node)
-    } else if (node.classList.contains('w-stars-rate-module')) {
-      makeStarsRateModule(node)
-    } else if (node.classList.contains('w-list-pages')) {
-      makeListPages(node)
-    } else if (node.classList.contains('w-wanted-pages')) {
-      makeWantedPages(node)
-    } else if (node.classList.contains('w-toc')) {
-      makeTOC(node)
-    } else if (node.classList.contains('w-forum-post-options')) {
-      renderTo(node, <ForumPostOptions {...JSON.parse(node.dataset.config)} />)
-    } else if (node.classList.contains('w-forum-thread')) {
-      makeForumThread(node)
-    } else if (node.classList.contains('w-forum-recent-posts')) {
-      makeRecentPosts(node)
-    } else if (node.classList.contains('w-site-changes')) {
-      makeSiteChanges(node)
-    } else if (node.classList.contains('w-date')) {
-      makeDate(node)
-    } else if (node.classList.contains('w-footnoteref')) {
-      makeFootnote(node)
-    } else if (node.classList.contains('w-code')) {
-      makeCodeBlock(node)
-    } else if (node.classList.contains('w-ref-form')) {
-      makeRefForm(node)
-    } else if (node.classList.contains('w-interwiki')) {
-      makeInterwiki(node)
+    try {
+      if (!node.classList || node.classList.contains('w-fake-node')) return
+      if (node.classList.contains('w-collapsible')) {
+        makeCollapsible(node)
+      } else if (node.classList.contains('w-tabview')) {
+        makeTabView(node)
+      } else if (node.classList.contains('w-rate-module')) {
+        makeUpDownRateModule(node)
+      } else if (node.classList.contains('w-stars-rate-module')) {
+        makeStarsRateModule(node)
+      } else if (node.classList.contains('w-list-pages')) {
+        makeListPages(node)
+      } else if (node.classList.contains('w-wanted-pages')) {
+        makeWantedPages(node)
+      } else if (node.classList.contains('w-toc')) {
+        makeTOC(node)
+      } else if (node.classList.contains('w-forum-post-options')) {
+        renderTo(node, <ForumPostOptions {...JSON.parse(node.dataset.config)} />)
+      } else if (node.classList.contains('w-forum-thread')) {
+        makeForumThread(node)
+      } else if (node.classList.contains('w-forum-recent-posts')) {
+        makeRecentPosts(node)
+      } else if (node.classList.contains('w-site-changes')) {
+        makeSiteChanges(node)
+      } else if (node.classList.contains('w-date')) {
+        makeDate(node)
+      } else if (node.classList.contains('w-footnoteref')) {
+        makeFootnote(node)
+      } else if (node.classList.contains('w-code')) {
+        makeCodeBlock(node)
+      } else if (node.classList.contains('w-ref-form')) {
+        makeRefForm(node)
+      } else if (node.classList.contains('w-interwiki')) {
+        makeInterwiki(node)
+      }
+    } catch (e) {
+      console.error('Failed to process node', node, e)
     }
   }
 
