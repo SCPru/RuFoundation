@@ -20,20 +20,20 @@ from web.models.roles import RolesMixin
 
 
 class StrictUsernameValidator(RegexValidator):
-    regex = r"^[\w.-]+\Z"
+    regex = r'^[\w.-]+\Z'
     message = 'Имя пользователя может содержать только английские буквы, цифры и символы [.-_] (без скобок).'
     flags = re.ASCII
 
 class CSSValueValidator(RegexValidator):
-    regex = r"^[^;\n\r]+\Z"
+    regex = r'^[^;\n\r]+\Z'
     message = 'CSS значение не может содержать ";" и переносы строк.'
     flags = re.ASCII
 
 
 class User(AbstractUser, RolesMixin):
     class Meta:
-        verbose_name = "Пользователь"
-        verbose_name_plural = "Пользователи"
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
     class UserType(models.TextChoices):
         Normal = ('normal', 'Обычный')
@@ -43,26 +43,26 @@ class User(AbstractUser, RolesMixin):
 
     username = web.fields.CITextField(
         max_length=150, validators=[StrictUsernameValidator()], unique=True,
-        verbose_name="Имя пользователя",
+        verbose_name='Имя пользователя',
         error_messages={
-            "unique": "Пользователь с данным именем уже существует",
+            'unique': 'Пользователь с данным именем уже существует',
         },
     )
 
-    wikidot_username = web.fields.CITextField(unique=True, max_length=150, validators=[StrictUsernameValidator()], verbose_name="Имя пользователя на Wikidot", null=True, blank=False)
+    wikidot_username = web.fields.CITextField('Имя пользователя на Wikidot', unique=True, max_length=150, validators=[StrictUsernameValidator()], null=True, blank=False)
 
-    type = models.TextField(choices=UserType.choices, default=UserType.Normal, verbose_name="Тип")
+    type = models.TextField('Тип', choices=UserType.choices, default=UserType.Normal)
 
-    avatar = models.ImageField(null=True, blank=True, upload_to='-/users', verbose_name="Аватар")
-    bio = models.TextField(blank=True, verbose_name="Описание")
+    avatar = models.ImageField('Аватар', null=True, blank=True, upload_to='-/users')
+    bio = models.TextField('Описание', blank=True)
 
-    api_key = models.CharField(unique=True, blank=True, null=True, max_length=67, verbose_name="Апи-ключ")
+    api_key = models.CharField('Апи-ключ', unique=True, blank=True, null=True, max_length=67)
 
-    is_forum_active = models.BooleanField(verbose_name='Активирован форум', default=True)
-    forum_inactive_until = models.DateTimeField(verbose_name='Деактивировать форум до', null=True)
+    is_forum_active = models.BooleanField('Активирован форум', default=True)
+    forum_inactive_until = models.DateTimeField('Деактивировать форум до', null=True)
 
-    is_active = models.BooleanField(verbose_name='Активирован', default=True)
-    inactive_until = models.DateTimeField(verbose_name='Деактивировать до', null=True)
+    is_active = models.BooleanField('Активирован', default=True)
+    inactive_until = models.DateTimeField('Деактивировать до', null=True)
 
     @property
     def is_staff(self):
@@ -92,7 +92,7 @@ class User(AbstractUser, RolesMixin):
         return self.username
 
     def _generate_apikey(self, commit=True):
-        self.password = ""
+        self.password = ''
         self.api_key = make_password(self.username)[21:]
         if commit:
             self.save()
@@ -105,7 +105,7 @@ class User(AbstractUser, RolesMixin):
     def save(self, *args, **kwargs):
         if not self.wikidot_username:
             self.wikidot_username = None
-        if self.type == "bot":
+        if self.type == 'bot':
             if not self.api_key:
                 self._generate_apikey(commit=False)
         else:
@@ -115,18 +115,18 @@ class User(AbstractUser, RolesMixin):
 
 class UsedToken(auto_prefetch.Model):
     class Meta(auto_prefetch.Model.Meta):
-        verbose_name = "Использованный токен"
-        verbose_name_plural = "Использованные токены"
+        verbose_name = 'Использованный токен'
+        verbose_name_plural = 'Использованные токены'
 
-    token = models.TextField(verbose_name='Токен', null=False)
-    is_case_sensitive = models.BooleanField(verbose_name='Чувствителен к регистру', null=False, default=True)
+    token = models.TextField('Токен', null=False)
+    is_case_sensitive = models.BooleanField('Чувствителен к регистру', null=False, default=True)
 
     @classmethod
     def is_used(cls, token):
-        used_sensitive = cls.objects.filter(token__exact=token)
+        used_sensitive = cls.objects.filter(token=token)
         if used_sensitive:
             return True
-        used_insensitive = cls.objects.filter(token__iexact=token)
+        used_insensitive = cls.objects.filter(token=token)
         return used_insensitive and not used_insensitive[0].is_case_sensitive
 
     @classmethod

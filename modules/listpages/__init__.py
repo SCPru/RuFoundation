@@ -159,7 +159,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
     if full_name_param:
         if always_query:
             category, name = articles.get_name(full_name_param)
-            q = Article.objects.filter(category__iexact=category, name__iexact=name)
+            q = Article.objects.filter(category=category, name=name)
             return q, 0, 1, 1, int(q.count() > 0)
         article = articles.get_article(full_name_param[0].full_name)
         if article:

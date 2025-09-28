@@ -69,8 +69,8 @@ class AcceptInvitationView(TemplateResponseMixin, ContextMixin, View):
             context.update({'error': 'Некорректное имя пользователя. Разрешённые символы: A-Z, a-z, 0-9, -, _.'})
             return self.render_to_response(context)
         # check if user already exists
-        user_exists = User.objects.filter(username__iexact=username)
-        wd_user_exists = User.objects.filter(wikidot_username__iexact=username)
+        user_exists = User.objects.filter(username=username)
+        wd_user_exists = User.objects.filter(wikidot_username=username)
         if (user_exists and user_exists[0] != user) or (wd_user_exists and wd_user_exists[0] != user):
             context.update({'error': 'Выбранное имя пользователя уже используется.'})
             return self.render_to_response(context)

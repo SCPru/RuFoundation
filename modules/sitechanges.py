@@ -128,7 +128,7 @@ def render(context: RenderContext, params):
             if user_name_search in 'system':
                 new_q |= Q(user__isnull=True)
         else:
-            user_q = list(User.objects.filter(Q(username__iexact=user_name_search)|Q(wikidot_username__iexact=user_name_search)))
+            user_q = list(User.objects.filter(Q(username=user_name_search)|Q(wikidot_username=user_name_search)))
             new_q = Q(user__in=user_q)
             if user_name_search == 'system':
                 new_q |= Q(user__isnull=True)

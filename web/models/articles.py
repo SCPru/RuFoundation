@@ -96,9 +96,9 @@ class Category(auto_prefetch.Model, RolePermissionsOverrideMixin):
         constraints = [models.UniqueConstraint(fields=['name'], name='%(app_label)s_%(class)s_unique')]
         indexes = [models.Index(fields=['name'])]
 
-    name = models.TextField(verbose_name='Имя')
+    name = CITextField('Имя')
 
-    is_indexed = models.BooleanField(verbose_name='Индексируется поисковиками', null=False, default=True)
+    is_indexed = models.BooleanField('Индексируется поисковиками', null=False, default=True)
 
     def __str__(self) -> str:
         return self.name
@@ -129,8 +129,8 @@ class Article(auto_prefetch.Model, PermissionsOverrideMixin):
 
     roles_override_pipeline = ['category_as_object']
 
-    category = models.TextField('Категория', default='_default')
-    name = models.TextField('Имя')
+    category = CITextField('Категория', default='_default')
+    name = CITextField('Имя')
     title = models.TextField('Заголовок')
 
     parent = auto_prefetch.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Родитель')
@@ -146,7 +146,7 @@ class Article(auto_prefetch.Model, PermissionsOverrideMixin):
 
     def get_settings(self):
         try:
-            category_as_object = Category.objects.get(name__iexact=self.category)
+            category_as_object = Category.objects.get(name=self.category)
             return category_as_object.get_settings()
         except Category.DoesNotExist:
             site_settings = Site.objects.get().get_settings()

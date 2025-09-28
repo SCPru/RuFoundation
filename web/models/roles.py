@@ -69,6 +69,7 @@ class Role(auto_prefetch.Model):
         verbose_name_plural = 'Роли'
 
         ordering = ['index']
+        indexes = [models.Index(fields=['slug']), models.Index(fields=['category'])]
 
     class InlineVisualMode(models.TextChoices):
         Hidden = ('hidden', 'Скрыто')
@@ -255,7 +256,9 @@ class RolesMixin(models.Model):
                 )],
                 'icons': []
             }
-        visual_roles = self.roles.all().exclude(inline_visual_mode=Role.InlineVisualMode.Hidden).annotate(typed_category=models.functions.ConcatPair(models.F('inline_visual_mode'), models.F('category_id'), output_field=models.CharField())).order_by('typed_category', 'index')
+        visual_roles = self.roles.all() \
+        .exclude(inline_visual_mode=Role.InlineVisualMode.Hidden) \
+        .annotate(typed_category=models.functions.ConcatPair(models.F('inline_visual_mode'), models.F('category_id'), output_field=models.CharField())).order_by('typed_category', 'index')
         catigorized_candidates = visual_roles.exclude(category__isnull=True).distinct('typed_category')
         uncatigorized_candidates = visual_roles.filter(category__isnull=True)
         candidates = catigorized_candidates.union(uncatigorized_candidates).order_by('index')

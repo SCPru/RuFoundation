@@ -116,11 +116,7 @@ def get_article(full_name_or_article: _FullNameOrArticle) -> Optional[Article]:
     if type(full_name_or_article) == str:
         full_name_or_article = full_name_or_article.lower()
         category, name = get_name(full_name_or_article)
-        objects = Article.objects.filter(category__iexact=category, name__iexact=name)
-        if objects:
-            return objects[0]
-        else:
-            return None
+        return Article.objects.filter(category=category, name=name).first()
     if not isinstance(full_name_or_article, Article):
         raise ValueError('Expected str or Article')
     return full_name_or_article
@@ -539,8 +535,8 @@ def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: st
     article.save()
 
     # update links
-    ExternalLink.objects.filter(link_from__iexact=new_full_name).delete()  # this should not happen, but just to be sure
-    ExternalLink.objects.filter(link_from__iexact=prev_full_name).update(link_from=new_full_name)
+    ExternalLink.objects.filter(link_from=new_full_name).delete()  # this should not happen, but just to be sure
+    ExternalLink.objects.filter(link_from=prev_full_name).update(link_from=new_full_name)
 
     if log:
         log = ArticleLogEntry(
@@ -617,7 +613,7 @@ def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user:
 
 def delete_article(full_name_or_article: _FullNameOrArticle):
     article = get_article(full_name_or_article)
-    ExternalLink.objects.filter(link_from__iexact=get_full_name(full_name_or_article)).delete()
+    ExternalLink.objects.filter(link_from=get_full_name(full_name_or_article)).delete()
     media.symlinks_article_delete(article)
     article.delete()
     file_storage = Path(settings.MEDIA_ROOT) / 'media' / article.media_name
@@ -941,7 +937,7 @@ def get_file_in_article(full_name_or_article: _FullNameOrArticle, file_name: str
     article = get_article(full_name_or_article)
     if article is None:
         return None
-    files = File.objects.filter(article=article, name__iexact=file_name, deleted_at__isnull=True)
+    files = File.objects.filter(article=article, name=file_name, deleted_at__isnull=True)
     if not files:
         return None
     return files[0]

@@ -155,9 +155,9 @@ class ListPagesParams:
             else:
                 f_created_by = f_created_by.strip()
                 if f_created_by.startswith('wd:'):
-                    user = User.objects.filter(type=User.UserType.Wikidot, wikidot_username__iexact=f_created_by[3:])
+                    user = User.objects.filter(type=User.UserType.Wikidot, wikidot_username=f_created_by[3:])
                 else:
-                    user = User.objects.filter(username__iexact=f_created_by.strip())
+                    user = User.objects.filter(username=f_created_by.strip())
                 user = user[0] if user else None
             if not user or not user.is_authenticated:
                 self.params.append(param.Invalid())

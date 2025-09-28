@@ -91,7 +91,7 @@ def search_articles(text, is_source=False, cursor=None, limit=25, explain=False)
                 fragment_delimiter=' ... '
             )
         ).filter(
-            models.Q(vector_plaintext__exact=search_query)
+            models.Q(vector_plaintext=search_query)
         ).order_by('-rank_str', '-id')
         if cursor_parameters:
             results = results.filter(cursor_parameters)
