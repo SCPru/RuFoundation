@@ -30,11 +30,6 @@ DEBUG = os.environ.get('DEBUG', 'true') == 'true'
 
 ALLOWED_HOSTS = ['*']
 
-INTERNAL_IPS = [
-    '127.0.0.1',
-    '::1'
-]
-
 # SILENCED_SYSTEM_CHECKS = ['templates.E003']
 
 
@@ -135,6 +130,14 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'web.permissions.backends.RolesBackend'
 ]
+
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake'
+    }
+}
 
 
 # Internationalization
@@ -301,5 +304,6 @@ if DEBUG:
         'debug_toolbar.middleware.DebugToolbarMiddleware',
     ]
     DEBUG_TOOLBAR_CONFIG = {
-        'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG and request.user.is_superuser
+        'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG and request.user.is_superuser,
+        'TOOLBAR_STORE_CLASS': 'debug_toolbar.store.DatabaseStore'
     }
