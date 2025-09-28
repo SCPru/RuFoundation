@@ -127,7 +127,7 @@ def api_rate(context, params):
     value = params['value']
 
     if value is not None:
-        obj_settings = context.article.get_settings()
+        obj_settings = context.article.settings
         if obj_settings.rating_mode == Settings.RatingMode.UpDown:
             if value not in [-1, 0, 1]:
                 raise ModuleError('Некорректная оценка %s' % str(value))

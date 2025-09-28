@@ -216,7 +216,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
 
         rating_func = F('id')
 
-        obj_settings = Article(name='_tmp', category=requested_category or '_default').get_settings()
+        obj_settings = Article(name='_tmp', category=requested_category or '_default').settings
         popularity_filter = V(True)
         if obj_settings.rating_mode == Settings.RatingMode.UpDown:
             rating_func = Coalesce(Sum('votes__rate'), 0)
