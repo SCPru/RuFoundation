@@ -1,11 +1,7 @@
 import re
 from typing import Optional
 
-from django.db.models import TextField, Value
-from django.db.models.functions import Concat, Lower
 from django.utils.safestring import SafeString
-
-import urllib.parse
 
 import modules
 from web.models.users import User
@@ -90,9 +86,9 @@ def callbacks_with_context(context):
         # This is so that we can later reuse this in the database query that will just concat the category+name for articles
         @staticmethod
         def _page_name_to_dumb(name):
-            return ('_default:%s' % name).lower() if ':' not in name else name.lower()
+            return f'_default:{name}'.lower() if ':' not in name else name.lower()
 
-        def fetch_includes(self, include_refs: list[ftml.IncludeRef]) -> list[ftml.FetchedPage]:
+        def fetch_includes(self, include_refs: list[ftml.IncludeRef]) -> list[ftml.FetchedPage]: # type: ignore
             if not self.context:
                 return []
 
@@ -101,15 +97,14 @@ def callbacks_with_context(context):
             page_vars = get_page_vars(self.context.article)
 
             refs_as_dumb = [self._page_name_to_dumb(x.full_name) for x in include_refs]
-            included = ArticleVersion.objects\
-                .select_related('article')\
-                .annotate(full_name=Lower(Concat('article__category', Value(':'), 'article__name', output_field=TextField())))\
-                .filter(full_name__in=refs_as_dumb)\
-                .order_by('article__id', '-created_at')\
+            included = ArticleVersion.objects \
+                .select_related('article') \
+                .filter(article__complete_full_name__in=refs_as_dumb) \
+                .order_by('article__id', '-created_at') \
                 .distinct('article__id')
             included_map = {}
             for item in included:
-                included_map[item.full_name] = apply_template(item.source, lambda param: get_this_page_params(page_vars, param))
+                included_map[item.article.complete_full_name] = apply_template(item.source, lambda param: get_this_page_params(page_vars, param))
             result = []
             new_includes = []
             is_include_overflow = threadvars.get('include_level', MAX_INCLUDE_LEVEL) <= 0
@@ -125,14 +120,13 @@ def callbacks_with_context(context):
                         new_includes.append(include_name)
             return result
 
-        def fetch_internal_links(self, page_refs: list[str]) -> list[ftml.PartialPageInfo]:
+        def fetch_internal_links(self, page_refs: list[str]) -> list[ftml.PartialPageInfo]: # type: ignore
             refs_as_dumb = [self._page_name_to_dumb(x) for x in page_refs]
-            pages = Article.objects\
-                .annotate(dumb_name=Lower(Concat('category', Value(':'), 'name', output_field=TextField())))\
-                .filter(dumb_name__in=refs_as_dumb)
+            pages = Article.objects \
+                .filter(complete_full_name__in=refs_as_dumb)
             page_map = {}
             for item in pages:
-                page_map[item.dumb_name] = item
+                page_map[item.complete_full_name] = item
             result = []
             for ref in page_refs:
                 ref_dumb = self._page_name_to_dumb(ref)
@@ -164,7 +158,7 @@ def page_info_from_context(context: RenderContext):
     site = get_current_site()
 
     if context.article:
-        raw_tags = context.article.tags.prefetch_related("category")
+        raw_tags = context.article.tags.select_related('category')
         tags = []
         for tag in raw_tags:
             tags.append(tag.full_name)

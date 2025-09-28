@@ -73,13 +73,13 @@ class ListPagesParams:
                 if not article:
                     self.params.append(param.Invalid())
                 else:
-                    article_tags = article.tags.prefetch_related('category')
+                    article_tags = article.tags.select_related('category')
                     self.params.append(param.Tags(required=article_tags, present=[], absent=[]))
             elif f_tags == '==':
                 if not article:
                     self.params.append(param.Invalid())
                 else:
-                    article_tags = article.tags.prefetch_related('category')
+                    article_tags = article.tags.select_related('category')
                     self.params.append(param.ExactTags(tags=article_tags))
             else:
                 f_tags = [x.strip() for x in f_tags.split(' ') if x.strip()]

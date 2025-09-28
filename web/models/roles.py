@@ -332,14 +332,18 @@ class PermissionsOverrideMixin:
         pipeline = self.__class__.roles_override_pipeline
         if pipeline:
             for unit in pipeline:
-                perms = getattr(self, unit).override_role(user_obj, perms, role)
+                obj = getattr(self, unit)
+                if obj:
+                    perms = obj.override_role(user_obj, perms, role)
         return perms
     
     def override_perms(self, user_obj, perms, roles=[]):
         pipeline = self.__class__.perms_override_pipeline
         if pipeline:
             for unit in pipeline:
-                perms = getattr(self, unit).override_perms(user_obj, perms, roles)
+                obj = getattr(self, unit)
+                if obj:
+                    perms = obj.override_perms(user_obj, perms, roles)
         return perms
 
 

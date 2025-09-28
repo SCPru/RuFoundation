@@ -13,14 +13,17 @@ import re
 import auto_prefetch
 
 from uuid import uuid4
+from functools import cached_property
+
 from django.core.validators import RegexValidator
 from django.db import models
 from django.contrib.auth import get_user_model
 
+from web import threadvars
 from web.fields import CITextField
 from .roles import Role, PermissionsOverrideMixin, RolePermissionsOverrideMixin
 from .settings import Settings
-from .site import Site
+from .site import get_current_site
 
 
 User = get_user_model()
@@ -105,9 +108,10 @@ class Category(auto_prefetch.Model, RolePermissionsOverrideMixin):
 
     # this function returns site settings overridden by category settings.
     # if neither is set, falls back to defaults defined in Settings class.
-    def get_settings(self):
-        category_settings = Settings.objects.filter(category=self).first() or Settings.get_default_settings()
-        site_settings = Site.objects.get().get_settings() or Settings.get_default_settings()
+    @cached_property
+    def settings(self):
+        category_settings = Settings.objects.filter(category=self).first()
+        site_settings = get_current_site().settings
         return Settings.get_default_settings().merge(site_settings).merge(category_settings)
     
     @staticmethod
@@ -125,12 +129,19 @@ class Article(auto_prefetch.Model, PermissionsOverrideMixin):
         verbose_name_plural = 'Статьи'
 
         constraints = [models.UniqueConstraint(fields=['category', 'name'], name='%(app_label)s_%(class)s_unique')]
-        indexes = [models.Index(fields=['category', 'name']), models.Index(fields=['created_at']), models.Index(fields=['updated_at'])]
+        indexes = [models.Index(fields=['category']), models.Index(fields=['name']), models.Index(fields=['complete_full_name']), models.Index(fields=['created_at']), models.Index(fields=['updated_at'])]
 
     roles_override_pipeline = ['category_as_object']
 
     category = CITextField('Категория', default='_default')
     name = CITextField('Имя')
+    complete_full_name = models.GeneratedField(
+        expression=models.functions.Concat(
+            'category', models.Value(':', output_field=CITextField()), 'name',
+        ),
+        output_field=CITextField(),
+        db_persist=True
+    )
     title = models.TextField('Заголовок')
 
     parent = auto_prefetch.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Родитель')
@@ -144,12 +155,12 @@ class Article(auto_prefetch.Model, PermissionsOverrideMixin):
 
     media_name = models.TextField('Название папки с файлами в ФС-хранилище', unique=True, default=uuid4)
 
-    def get_settings(self):
-        try:
-            category_as_object = Category.objects.get(name=self.category)
-            return category_as_object.get_settings()
-        except Category.DoesNotExist:
-            site_settings = Site.objects.get().get_settings()
+    @cached_property
+    def settings(self):
+        if self.category_as_object:
+            return self.category_as_object.settings
+        else:
+            site_settings = get_current_site().settings
             return Settings.get_default_settings().merge(site_settings)
 
     @property
@@ -162,9 +173,9 @@ class Article(auto_prefetch.Model, PermissionsOverrideMixin):
     def display_name(self) -> str:
         return self.title.strip() or self.full_name
     
-    @property
+    @cached_property
     def category_as_object(self) -> Category | None:
-        return Category.get_or_default_category(self.category)
+        return Category.objects.filter(name=self.category).first()
 
     def __str__(self) -> str:
         return f'{self.title} ({self.full_name})'

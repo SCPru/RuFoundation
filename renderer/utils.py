@@ -10,7 +10,7 @@ from django.template import Context, Template
 from web.models.articles import Vote
 from web.models.roles import Role, RoleBadgeJSON, RoleIconJSON
 from web.models.settings import Settings
-from web.models.site import Site
+from web.models.site import Site, get_current_site
 from web.models.users import User
 from web.controllers import articles
 from web.util.pydantic import JSONInterface
@@ -252,7 +252,7 @@ def get_resource(uri, context, full_url=False):
     prefix = ''
 
     if full_url:
-        domain = Site.objects.get().media_domain
+        domain = get_current_site().media_domain
         prefix = f'https://{domain}'
 
     if not uri:

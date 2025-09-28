@@ -110,6 +110,12 @@ def normalize_article_name(full_name: str) -> str:
     return '%s:%s' % (category, name)
 
 
+def denormalize_article_name(full_name: str):
+    if ':' not in full_name:
+        return f'_default:{full_name}'
+    return full_name
+
+
 def get_article(full_name_or_article: _FullNameOrArticle) -> Optional[Article]:
     if full_name_or_article is None:
         return None
@@ -790,14 +796,14 @@ def get_tags(full_name_or_article: _FullNameOrArticle) -> Sequence[str]:
 def get_tags_internal(full_name_or_article: _FullNameOrArticle) -> Sequence[Tag]:
     article = get_article(full_name_or_article)
     if article:
-        return article.tags.prefetch_related("category")
+        return article.tags.select_related('category')
     return []
 
 
 def get_tags_categories(full_name_or_article: _FullNameOrArticle) -> Dict[TagsCategory, Sequence[Tag]]:
     article = get_article(full_name_or_article)
     if article:
-        tags = article.tags.prefetch_related("category").exclude(name__startswith="_")
+        tags = article.tags.select_related('category').exclude(name__startswith="_")
         return dict(sorted({category: list(tags.filter(category=category)) for category in set(TagsCategory.objects.prefetch_related("tag_set").filter(tag__in=tags))}.items(), key=lambda x: x[0].priority if x[0].priority is not None else tags.count()))
     return {}
 
@@ -806,7 +812,7 @@ def get_tags_categories(full_name_or_article: _FullNameOrArticle) -> Dict[TagsCa
 def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[Union[str]], user: Optional[_UserType] = None, log: bool = True):
     article = get_article(full_name_or_article)
 
-    allow_creating = article.get_settings().creating_tags_allowed
+    allow_creating = article.settings.creating_tags_allowed
     tags = list(filter(lambda x: x is not None, [get_tag(x, create=allow_creating) for x in tags if is_tag_name_allowed(x)]))
 
     return set_tags_internal(article, tags, user=user, log=log)
@@ -830,7 +836,7 @@ def set_tags_internal(full_name_or_article: _FullNameOrArticle, tags: Sequence[T
             article.tags.add(tag)
             added_tags.append({'id': tag.id, 'name': tag.full_name})
 
-    if article.get_settings().creating_tags_allowed:
+    if article.settings.creating_tags_allowed:
         # garbage collect tags if anything was removed
         Tag.objects.annotate(num_articles=Count('articles')).filter(num_articles=0).delete()
         TagsCategory.objects.annotate(num_tags=Count('tag')).filter(num_tags=0, slug=F('name')).delete()
@@ -864,7 +870,7 @@ def get_rating(full_name_or_article: _FullNameOrArticle) -> tuple[int | float, i
     article = get_article(full_name_or_article)
     if not article:
         return 0, 0, 0, Settings.RatingMode.Disabled
-    obj_settings = article.get_settings()
+    obj_settings = article.settings
     if obj_settings.rating_mode == Settings.RatingMode.UpDown:
         data = article.votes.aggregate(sum=Coalesce(Sum('rate'), 0, output_field=IntegerField()), count=Count('rate'), good=Count('rate', filter=Q(rate=1)))
         return data['sum'] or 0, data['count'] or 0, round((data['good'] or 0) / (data['count'] or 1) * 100), obj_settings.rating_mode
@@ -1062,11 +1068,10 @@ def is_full_name_allowed(article_name: str) -> bool:
 # Fetch multiple articles by names
 def fetch_articles_by_names(original_names):
     names = list(dict.fromkeys([('_default:%s' % x).lower() if ':' not in x else x.lower() for x in original_names]))
-    all_articles = Article.objects.annotate(
-        dumb_name=Lower(Concat('category', Value(':'), 'name', output_field=TextField()))).filter(dumb_name__in=names)
+    all_articles = Article.objects.filter(complete_full_name__in=names)
     ret_map = dict()
     for article in all_articles:
-        ret_map[article.dumb_name] = article
+        ret_map[article.complete_full_name] = article
     articles_dict = dict()
     for name in original_names:
         dumb_name = ('_default:%s' % name).lower() if ':' not in name else name.lower()

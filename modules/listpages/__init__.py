@@ -1,5 +1,3 @@
-from typing import Optional
-
 import json
 import urllib.parse
 import math
@@ -77,8 +75,14 @@ def get_page_vars(page: Article):
             updated_by = articles.get_latest_log_entry(page).user
 
         return updated_by
-
-    _, votes, popularity, _ = articles.get_rating(page)
+    
+    rating_cache = {}
+    def get_rating(key: str):
+        if not rating_cache:
+            _, votes, popularity, _ = articles.get_rating(page)
+            rating_cache['votes'] = votes
+            rating_cache['popularity'] = popularity
+        return rating_cache[key]
     
     page_vars = LazyDict({
         'name': lambda: page.name,
@@ -89,9 +93,9 @@ def get_page_vars(page: Article):
         'link': lambda: '/%s' % page.title,  # temporary, must be full page URL based on hostname
         'content': lambda: articles.get_latest_source(page),
         'rating': lambda: articles.get_formatted_rating(page),
-        'rating_votes': lambda: str(votes),
+        'rating_votes': lambda: str(get_rating('votes')),
         'current_user_voted': lambda: 'True' if page.votes.filter(user=current_user).exists() else 'False',
-        'popularity': lambda: str(popularity),
+        'popularity': lambda: str(get_rating('popularity')),
         'revisions': lambda: str(len(ArticleLogEntry.objects.filter(article=page))),
         'created_by': lambda: render_user_to_text(page.author),
         'created_by_linked': lambda: ('[[*user %s]]' % page.author.username) if page.author and 'username' in page.author.__dict__ else render_user_to_text(page.author),
@@ -168,6 +172,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
             return [], 0, 1, 1, 0
 
     prefetch_related = []
+    select_related = []
 
     has_rating = parsed_params.has_type(param.Rating)
     has_votes = parsed_params.has_type(param.Votes)
@@ -194,9 +199,10 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
         prefetch_related.append('tags')
 
     if has_parent:
-        prefetch_related.append('parent')
+        select_related.append('parent')
 
-    q = Article.objects.prefetch_related(*prefetch_related).distinct()
+    q = Article.objects.select_related(*select_related)
+    q = q.prefetch_related(*prefetch_related).distinct()
 
     # detect required annotations and annotate if needed
     if has_votes:
@@ -329,7 +335,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
                     'name': F('name'),
                     'title': F('title'),
                     'updated_at': F('updated_at'),
-                    'fullname': Concat('category', V(':'), 'name', output_field=CharField()),
+                    'fullname': F('complete_full_name'),
                     'rating': F('rating'),
                     'votes': F('num_votes'),
                     'popularity': F('popularity'),

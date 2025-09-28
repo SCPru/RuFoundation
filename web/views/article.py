@@ -201,7 +201,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'commentThread': ('/%s/comments/show' % normalized_article_name) if article else None,
             'commentCount': comment_count,
             'canDelete': self.request.user.has_perm('roles.delete_articles', article),
-            'canCreateTags': site.get_settings().creating_tags_allowed,
+            'canCreateTags': site.settings.creating_tags_allowed,
             'canManageFiles': self.request.user.has_perm('roles.manage_articles_files', article),
             'canRename': self.request.user.has_perm('roles.move_articles', article),
             'canCreateHere': self.request.user.has_perm('roles.create_articles', article),

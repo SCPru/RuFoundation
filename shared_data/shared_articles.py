@@ -28,7 +28,7 @@ def background_reload():
             with threadvars.context():
                 threadvars.put('current_site', site)
                 logging.info('%s: Reloading articles for %s', threading.current_thread().ident, site.slug)
-                db_articles = Article.objects.prefetch_related("votes", "tags")
+                db_articles = Article.objects.prefetch_related('votes', 'tags')
                 stored_articles = []
                 for article in db_articles:
                     last_event = ArticleLogEntry.objects.filter(article=article).order_by('-rev_number')[0]

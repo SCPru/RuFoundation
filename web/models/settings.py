@@ -37,6 +37,8 @@ class Settings(auto_prefetch.Model):
     # overwrites whatever fields that are not null with values from the other object.
     # returns a copy.
     def merge(self, other: 'Settings') -> 'Settings':
+        if other is None:
+            return self
         new_settings = Settings()
         new_settings.rating_mode = other.rating_mode if other.rating_mode != Settings.RatingMode.Default else self.rating_mode
         new_settings.can_user_create_tags = other.can_user_create_tags if other.can_user_create_tags != Settings.UserCreateTagsMode.Default else self.can_user_create_tags
