@@ -13,6 +13,7 @@ import re
 import auto_prefetch
 
 from uuid import uuid4
+from typing import Optional
 from functools import cached_property
 
 from django.core.validators import RegexValidator
@@ -174,7 +175,7 @@ class Article(auto_prefetch.Model, PermissionsOverrideMixin):
         return self.title.strip() or self.full_name
     
     @cached_property
-    def category_as_object(self) -> Category | None:
+    def category_as_object(self) -> Optional[Category]:
         return Category.objects.filter(name=self.category).first()
 
     def __str__(self) -> str:
