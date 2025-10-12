@@ -2108,6 +2108,7 @@ version: 2.3.1
 	display: flex;
 	align-items: baseline;
 	gap: 0.5ch;
+	flex-wrap: wrap;
 }
 
 .thread-container .post  .long  .content{
