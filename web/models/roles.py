@@ -201,9 +201,10 @@ class RolesMixin(models.Model):
         abstract = True
 
     roles = models.ManyToManyField(Role, verbose_name='Роли', blank=True, related_name='users', related_query_name='user')
-        
     @property
     def is_staff(self):
+        if self.is_superuser:
+            return True
         for role in self.roles.all():
             if role.is_staff:
                 return True

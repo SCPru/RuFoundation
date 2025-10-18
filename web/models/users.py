@@ -64,9 +64,7 @@ class User(AbstractUser, RolesMixin):
     is_active = models.BooleanField('Активирован', default=True)
     inactive_until = models.DateTimeField('Деактивировать до', null=True)
 
-    @property
-    def is_staff(self):
-        return self.is_superuser or RolesMixin.is_staff.__get__(self)
+    is_staff = RolesMixin.is_staff
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
