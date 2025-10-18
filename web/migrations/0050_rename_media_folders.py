@@ -12,8 +12,10 @@ def rename_media_folders(apps, schema_editor):
     new_media_folder = media_root / 'media'
 
     if Site.objects.exists():
-        slug = Site.objects.get().slug
-        os.rename(media_root / slug, new_media_folder)
+        slug: str = Site.objects.get().slug
+        slug_folder = media_root / slug
+        if slug_folder.exists():
+            os.rename(slug_folder, new_media_folder)
     elif not new_media_folder.exists():
         os.mkdir(new_media_folder)
             
