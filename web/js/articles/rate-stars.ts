@@ -36,9 +36,9 @@ export function makeStarsRateModule(node: HTMLElement) {
   const cancel: HTMLElement = node.querySelector('.w-stars-rate-cancel')
 
   let originalRateWidth = control.style.width
-  let rateWith = null
+  let rateWith: number = null
 
-  const callback = function (votesData) {
+  const callback = function (votesData: ModuleRateResponse) {
     updateRating(number, votes, popularity, control, votesData)
     originalRateWidth = control.style.width
     window.postMessage({ type: 'rate_updated' })

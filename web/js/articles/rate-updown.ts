@@ -33,7 +33,7 @@ export function makeUpDownRateModule(node: HTMLElement) {
   const ratedown: HTMLElement = node.querySelector('.ratedown a')
   const cancel: HTMLElement = node.querySelector('.cancel a')
 
-  const callback = function (votesData) {
+  const callback = function (votesData: ModuleRateResponse) {
     updateRating(number, votesData)
     window.postMessage({ type: 'rate_updated' })
   }
