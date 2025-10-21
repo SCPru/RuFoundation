@@ -16,5 +16,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(delete_broken_logs, migrations.RunPython.noop),
+        migrations.RunPython(delete_broken_logs, migrations.RunPython.noop, atomic=True),
     ]

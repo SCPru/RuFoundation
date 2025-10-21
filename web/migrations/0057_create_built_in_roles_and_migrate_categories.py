@@ -144,8 +144,8 @@ class Migration(migrations.Migration):
 
     operations = [
         # Create roles for readers and editors
-        migrations.RunPython(create_built_in_roles, migrations.RunPython.noop),
+        migrations.RunPython(create_built_in_roles, migrations.RunPython.noop, atomic=True),
 
         # Migrate permissions in categories
-        migrations.RunPython(migrate_categories, migrations.RunPython.noop),
+        migrations.RunPython(migrate_categories, migrations.RunPython.noop, atomic=True),
     ]

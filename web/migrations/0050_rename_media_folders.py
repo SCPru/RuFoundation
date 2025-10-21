@@ -27,5 +27,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(rename_media_folders, atomic=True),
+        migrations.RunPython(rename_media_folders, migrations.RunPython.noop, atomic=True),
     ]

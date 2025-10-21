@@ -147,8 +147,8 @@ class Migration(migrations.Migration):
         ),
 
         # Create default roles
-        migrations.RunPython(create_default_roles, migrations.RunPython.noop),
+        migrations.RunPython(create_default_roles, migrations.RunPython.noop, atomic=True),
 
         # Migrate from visual user groups to roles
-        migrations.RunPython(visualgroups_to_roles, migrations.RunPython.noop),
+        migrations.RunPython(visualgroups_to_roles, migrations.RunPython.noop, atomic=True),
     ]
