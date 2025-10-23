@@ -1,3 +1,4 @@
+@charset "utf-8";
 @import url('./fonts/font-bauhaus.css');
 @import url('./fonts/new-fonts.css');
 @import url('https://fonts.googleapis.com/earlyaccess/nanumgothic.css');
@@ -6,7 +7,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans+Condensed:wght@700&display=swap');
 @import url('side-bar-redesign.css');
 
-@charset "utf-8";
 
 div.class1 > div {
     font-family: 'Open Sans Condensed', sans-serif !important;
@@ -723,11 +723,6 @@ sup {
     right: 0;
 }
  
-/* IE7 HACK */
-#top-bar ul > li > ul {
-    *margin-top: -4px;
-}
- 
 /* SIDE MENU */
 #side-bar {
     clear: none;
@@ -1394,18 +1389,6 @@ div.curved {
  
 /* opera viewport */
 @-o-viewport {
-    width: device-width;
-    zoom: 1;
-}
- 
-/* chrome viewport - maybe it isn't work... */
-@-webkit-viewport {
-    width: device-width;
-    zoom: 1;
-}
- 
-/* firefox viewport - maybe it isn't work too... */
-@-moz-viewport {
     width: device-width;
     zoom: 1;
 }

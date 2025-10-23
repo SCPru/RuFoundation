@@ -29,7 +29,7 @@ def background_reload():
             state['all_users'] = [render_user_to_json(user) for user in all_users]
             time.sleep(BACKGROUND_RELOAD_DELAY)
         except Exception as e:
-            logging.error('Failed to background-reload users', exc_info=e)
+            logging.error('%s: Failed to background-reload users', threading.current_thread().ident, exc_info=e)
             time.sleep(BACKGROUND_RELOAD_DELAY / 2)
 
 

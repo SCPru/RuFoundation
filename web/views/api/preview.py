@@ -29,10 +29,10 @@ class PreviewView(APIView):
         data = self.json_input
         self._validate_preview_data()
         # find page
-        article = articles.get_article(data["pageId"])
-        path_params = data["pathParams"] if "pathParams" in data else {}
-        title = data["title"] if "title" in data else ""
-        source = data["source"]
+        article = articles.get_article(data['pageId'])
+        path_params = data['pathParams'] if 'pathParams' in data else {}
+        title = data['title'] if 'title' in data else ''
+        source = data['source']
 
         template_page_vars = get_page_vars(article)
         template_page_vars['content'] = source
@@ -55,4 +55,5 @@ class PreviewView(APIView):
         source = page_to_listpages_vars(article, template_source, index=1, total=1, page_vars=template_page_vars)
         source = apply_template(source, lambda param: ArticleView.get_this_page_params(path_params, param, {'canonical_url': canonical_url}))
         context = RenderContext(article, article, path_params, self.request.user)
-        return self.render_json(200, {"title": title, "content": single_pass_render(source, context)})
+        content = single_pass_render(source, context)
+        return self.render_json(200, {'title': title, 'content': content, 'style': context.computed_style})

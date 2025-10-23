@@ -1,0 +1,201 @@
+@charset "UTF-8";
+@import './highlight.js/github.css';
+
+.rimg img,
+.limg img,
+.cimg img,
+.img img,
+.scp-image-block img {
+  /*
+  compatibility patch for some unobvious stuff that started working differently after moving away from XHTML
+  https://stackoverflow.com/questions/10844205/html-5-strange-img-always-adds-3px-margin-at-bottom 
+  */
+  vertical-align: middle;
+}
+
+.w-list-pages {
+  position: relative;
+}
+
+.printuser.avatarhover img.small {
+  padding: 0;
+  border: 1px solid #777;
+  transition: all 0.25s ease;
+  pointer-events: none;
+}
+
+.printuser.avatarhover a:hover img.small,
+.printuser span:hover img.small {
+  transform: scale(4);
+  z-index: 100;
+  position: relative;
+}
+
+.printuser {
+  white-space: nowrap;
+}
+
+.mod-by .printuser {
+  white-space: initial;
+}
+
+.printuser a {
+  margin-right: 0;
+}
+
+.w-stars-rate-module {
+  width: 128px;
+  display: inline-block;
+  color: black;
+  margin-bottom: 16px;
+}
+.w-stars-rate-module .w-stars-rate-number {
+  color: #4e6b6b;
+  font-weight: bold;
+}
+.w-stars-rate-module .w-stars-rate-rating {
+  position: relative;
+  z-index: 0;
+  background: #ddd;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 100%, 0 100%);
+  padding: 2px 8px;
+  text-align: center;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+.w-stars-rate-module .w-stars-rate-control {
+  position: relative;
+  z-index: 1;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 4px rgba(102, 102, 102, 0.3098039216);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  height: 24px;
+}
+.w-stars-rate-module .w-stars-rate-control .w-stars-rate-stars-wrapper {
+  position: relative;
+  font-size: 150%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.w-stars-rate-module .w-stars-rate-control .w-stars-rate-stars-wrapper:before {
+  font-family: "Font Awesome 5 Free";
+  position: relative;
+  left: 1px;
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 13px;
+  content: "\f005\f005\f005\f005\f005";
+  letter-spacing: 2px;
+  color: #eee;
+  white-space: nowrap;
+}
+.w-stars-rate-module .w-stars-rate-control .w-stars-rate-stars-wrapper .w-stars-rate-stars-view {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.w-stars-rate-module .w-stars-rate-control .w-stars-rate-stars-wrapper .w-stars-rate-stars-view:before {
+  font-family: "Font Awesome 5 Free";
+  position: relative;
+  left: 1px;
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 13px;
+  content: "\f005\f005\f005\f005\f005";
+  letter-spacing: 2px;
+  white-space: nowrap;
+  color: var(--rated-var, #4e6b6b);
+}
+.w-stars-rate-module .w-stars-rate-control .w-stars-rate-stars-wrapper .w-stars-rate-stars-view {
+  overflow: hidden;
+}
+.w-stars-rate-module .w-stars-rate-control .w-stars-rate-stars-wrapper:hover .w-stars-rate-stars-view:before {
+  color: #f0ac00;
+}
+.w-stars-rate-module .w-stars-rate-control .w-stars-rate-cancel {
+  width: 16px;
+  height: 16px;
+  background: #eee;
+  cursor: pointer;
+  border-radius: 3px;
+  margin-left: 8px;
+  text-align: center;
+}
+.w-stars-rate-module .w-stars-rate-control .w-stars-rate-cancel:before {
+  content: "×";
+}
+.w-stars-rate-module .w-stars-rate-control .w-stars-rate-cancel:hover {
+  background: #ec3f3f;
+  color: white;
+}
+.w-stars-rate-module .w-stars-rate-votes {
+  position: relative;
+  z-index: 0;
+  background: #ddd;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 8px 100%);
+  padding: 2px 8px;
+  font-size: 75%;
+  text-align: center;
+  margin-left: 8px;
+  margin-right: 8px;
+  color: #4e6b6b;
+  font-weight: bold;
+}
+
+.w-code {
+  white-space: pre !important;
+}
+
+/* User rate on forum post */
+.thread-container .post .long .head .vote {
+  flex-grow: 1;
+  text-align: right;
+  color: #666;
+}
+.thread-container .post .long .head .rate {
+  font-weight: bold;
+}
+.thread-container .post .long .head .rate::before {
+  font-family: "Font Awesome 5 Free";
+  content: "\f005";
+  letter-spacing: 2px;
+  color: #666;
+}
+/* ======================= */
+
+/* New forum triks */
+.thread-container .post .long .head.op-post {
+  background: #e4f0c8;
+}
+/* =============== */
+
+.printuser .badge {
+  background: gray;
+  padding: 0px 2px 0px 2px;
+  border-radius: 3px;
+  color: white;
+  font-weight: 500;
+  font-size: 0.75em;
+  height: 1.5em;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: text-top;
+  box-sizing: border-box;
+}
+
+.printuser .icon {
+  display: inline-flex;
+  vertical-align: text-top;
+  height: 14.4px;
+  width: 14.4px;
+}

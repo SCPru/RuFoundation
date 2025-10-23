@@ -1,3 +1,5 @@
+@charset "UTF-8";
+
 body{
 	margin: 0px;
 	padding: 0px;
@@ -1092,7 +1094,7 @@ a.avatar-hover div span{
 	height: 40px;
 	background-repeat: no-repeat;
 	background-position: center center;
-	background-image: url(http://www.napyfab.com/ajax-indicators/images/indicator_medium.gif);
+	background-image: url(./images/indicator_medium.gif);
 }
 
 .wait-progress{
@@ -1516,7 +1518,6 @@ version: 2.3.1
 .yui-navset .yui-navset-bottom .yui-nav li {
     display:inline-block;
     display:-moz-inline-stack;
-    *display:inline; /* IE */
     vertical-align:bottom; /* safari: for overlap */
     cursor:pointer; /* gecko: due to -moz-inline-stack on anchor */
     zoom:1; /* IE: kill space between horizontal tabs */
@@ -2984,15 +2985,12 @@ and have an super awesome onclick state
 
     /* those guys don't need images: */
     background-image: linear-gradient(top, rgba(255,255,255,.2), rgba(150,150,150,.2), rgba(0,0,0,.0)) !important;
-    background-image: -moz-linear-gradient(top, rgba(255,255,255,.2), rgba(150,150,150,.2), rgba(0,0,0,.0)) !important;
-    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(255,255,255,.2)), color-stop(0.5, rgba(150,150,150,.2)), to(rgba(0,0,0,.0))) !important;
 
     /* cross browser inline block hack 
     see http://blog.mozilla.com/webdev/2009/02/20/cross-browser-inline-block/ */
     display: -moz-inline-stack;
     display: inline-block;
     vertical-align: middle !important;
-    *display: inline !important;
     position: relative;
 
     /*disable text selection (Firefox only)*/
@@ -3022,12 +3020,9 @@ if there is no border set, Opera shows a transparent background-color if border-
 .awesome:hover {
     background-image: linear-gradient(top, rgba(255,255,255,.4), rgba(150,150,150,.3), rgba(0,0,0,.0)) !important;
     background-image: -moz-linear-gradient(top, rgba(255,255,255,.4), rgba(150,150,150,.3), rgba(0,0,0,.0)) !important;
-    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(255,255,255,.4)), color-stop(0.5, rgba(150,150,150,.3)), to(rgba(0,0,0,.0))) !important;
 }
 .awesome:active	{ 
     background-image: linear-gradient(top, rgba(0,0,0,.2), rgba(150,150,150,.2), rgba(255,255,255,.2)) !important;
-    background-image: -moz-linear-gradient(top, rgba(0,0,0,.2), rgba(150,150,150,.2), rgba(255,255,255,.2)) !important;
-    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(0,0,0,.2)), color-stop(0.5, rgba(150,150,150,.2)), to(rgba(255,255,255,.2))) !important;
 
     box-shadow: inset 0 1px 2px rgba(0,0,0,0.7) !important;
     -moz-box-shadow: inset 0 1px 2px rgba(0,0,0,0.7) !important; 

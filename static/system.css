@@ -1,0 +1,178 @@
+@charset "UTF-8";
+
+:root {
+  --background-color: rgb(235 235 235);
+  --input-background: rgb(250 250 250);
+  --icon-color: rgb(75 85 99);
+  --hover-color: #ddd;
+  --shadow: 0 0 #000, 0 0 #000, 0 0 15px -6px rgb(0 0 0 / 0.5);
+  --btn-background: rgb(115 115 115);
+  --btn-color: rgb(250 250 250);
+  --under-text-color: rgb(163 163 163);
+  --error-color: rgb(127 29 29);
+  --error-border: rgb(252 165 165);
+  --error-background: rgb(254 226 226);
+}
+
+html {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+.system,
+.system * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.system-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #505b5b;
+  padding: 32px 0;
+}
+.system-container .back-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+}
+.system-container .back-link:hover {
+  color: var(--hover-color);
+}
+
+.system-content {
+  border: 3px solid white;
+  box-shadow: 0 0 0 1px #aaa inset, 2px 2px 8px rgba(0, 0, 0, 0.4980392157);
+  background: #eee;
+}
+.system-content .heading {
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.062745098), transparent 4px), linear-gradient(to bottom, #000000, #446060);
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.4980392157) inset;
+  color: white;
+  padding: 16px;
+  overflow: hidden;
+}
+.system-content .heading h1 {
+  font-size: 20px;
+  font-weight: 600;
+  text-shadow: 1px 1px 3px black;
+}
+.system-content .heading .edit-button {
+  float: right;
+  padding: 7px;
+  border-radius: 30%;
+  display: flex;
+}
+.system-content .heading .edit-button a {
+  color: var(--btn-color);
+  text-decoration: none;
+  font-size: small;
+}
+.system-content .heading .edit-button a:hover {
+  color: var(--hover-color);
+}
+.system-content .error {
+  background: #ffeeee;
+  border: 1px #ffcccc dashed;
+  padding: 4px;
+  font-size: 14px;
+}
+.system-content .content {
+  padding: 16px;
+}
+.system-content .content form > p {
+  margin-bottom: 8px;
+}
+.system-content .content form label:first-child {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+  font-size: 14px;
+}
+.system-content .content form .helptext {
+  font-size: 12px;
+  display: block;
+  margin-top: 2px;
+  font-style: italic;
+}
+.system-content .content input[type=text],
+.system-content .content input[type=password],
+.system-content .content input[type=email],
+.system-content .content textarea {
+  border: 1px solid #444;
+  padding: 4px;
+  font-size: 14px;
+  width: 100%;
+}
+.system-content .content button,
+.system-content .content input[type=submit] {
+  margin-top: 16px;
+  background: #263636;
+  border: 0;
+  border-radius: 3px;
+  padding: 8px 16px;
+  display: flex;
+  margin-left: auto;
+  margin-right: auto;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+.system-content .content button:hover,
+.system-content .content input[type=submit]:hover {
+  background: #446060;
+}
+.system-content .content button:active,
+.system-content .content input[type=submit]:active {
+  background: #0e1414;
+  color: #4e6b6b;
+}
+
+.system-content .login-form {
+  max-width: 300px;
+}
+.system-content .login-form .text-input {
+  position: relative;
+  margin-top: 8px;
+}
+.system-content .login-form .text-input .icon {
+  position: absolute;
+  left: 6px;
+  top: 3px;
+}
+.system-content .login-form .text-input .icon.end {
+  right: 6px;
+  left: auto;
+}
+.system-content .login-form input[type=text],
+.system-content .login-form input[type=password] {
+  padding: 4px 24px;
+}
+.system-content .login-form .under-text {
+  margin-top: 16px;
+}
+
+.system-content .profile-form {
+  min-width: 300px;
+  max-width: 600px;
+  word-break: break-word;
+}
+
+.system-heading-avatar {
+  float: left;
+  display: block;
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  margin-right: 16px;
+}
+
+.user-heading-subtitle {
+  font-size: 13px;
+}

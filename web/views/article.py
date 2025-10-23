@@ -1,28 +1,24 @@
+import re
+import json
 import datetime
+import urllib.parse
+
+from typing import Optional, Tuple
 
 from django.conf import settings
-
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 from django.template.loader import render_to_string
 from django.http import HttpResponseRedirect
-import urllib.parse
 
+from web.models.site import get_current_site
+from web.models.articles import Article, Category
+from web.models.notifications import UserNotificationMapping
+from web.controllers import articles, notifications
+from modules.listpages import page_to_listpages_vars
 from renderer.templates import apply_template
 from renderer.utils import render_user_to_json
-from web.models.articles import Article, Category
-from web.controllers import articles, notifications
-
 from renderer import single_pass_render, single_pass_render_with_excerpt
 from renderer.parser import RenderContext
-from modules.listpages import page_to_listpages_vars
-
-from typing import Optional, Tuple
-import json
-
-from web.models.notifications import UserNotificationMapping
-from web.models.site import get_current_site
-
-import re
 
 
 class ArticleView(TemplateResponseMixin, ContextMixin, View):
@@ -55,8 +51,9 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
     def _render_nav(self, name: str, article: Article, path_params: dict[str, str]) -> str:
         nav = articles.get_article(name)
         if nav:
-            return single_pass_render(articles.get_latest_source(nav), RenderContext(article, nav, path_params, self.request.user))
-        return ""
+            context = RenderContext(article, nav, path_params, self.request.user)
+            return single_pass_render(articles.get_latest_source(nav), context), context.computed_style
+        return '', ''
 
     @staticmethod
     def get_this_page_params(path_params: dict[str, str], param: str, more_params: Optional[dict[str, str]]=None):
@@ -83,6 +80,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         image = None
         rev_number = 0
         updated_at = None
+        computed_style = ''
         if article is not None:
             if not self.request.user.has_perm('roles.view_articles', article):
                 context = {'page_id': fullname}
@@ -105,6 +103,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 redirect_to = context.redirect_to
                 title = context.title
                 status = context.status
+                computed_style = context.computed_style
 
                 rev_number = articles.get_latest_log_entry(article).rev_number
                 updated_at = article.updated_at
@@ -120,7 +119,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             redirect_to = None
             title = ''
             status = 404
-        return content, status, redirect_to, excerpt, image, title, rev_number, updated_at
+        return content, status, redirect_to, excerpt, image, title, rev_number, updated_at, computed_style
 
     def get_context_data(self, **kwargs):
         path = kwargs["path"]
@@ -165,13 +164,13 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             return {'redirect_to': '/forum/t-%d/%s' % (comment_thread_id, articles.normalize_article_name(article.display_name))}
 
         # this is needed for parser debug logging so that page content is always the last printed
-        nav_top = self._render_nav("nav:top", article, path_params)
-        nav_side = self._render_nav("nav:side", article, path_params)
+        nav_top, nav_top_styles = self._render_nav("nav:top", article, path_params)
+        nav_side, nav_side_styles = self._render_nav("nav:side", article, path_params)
 
         site = get_current_site()
         canonical_url = '//%s/%s%s' % (site.domain, article.full_name if article else article_name, encoded_params)
 
-        content, status, redirect_to, excerpt, image, title, rev_number, updated_at = self.render(article_name, article, path_params, canonical_url)
+        content, status, redirect_to, excerpt, image, title, rev_number, updated_at, computed_style = self.render(article_name, article, path_params, canonical_url)
 
         context = super(ArticleView, self).get_context_data(**kwargs)
 
@@ -215,6 +214,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
         tags_categories = articles.get_tags_categories(article)
 
+        computed_style = nav_top_styles + nav_side_styles + computed_style
+
         context.update({
             'site_name': site.title,
             'site_headline': site.headline,
@@ -239,8 +240,10 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'login_status_config': json.dumps(login_status_config),
             'options_config': json.dumps(options_config),
 
+            'computed_style': computed_style,
+
             'status': status,
-            'redirect_to': redirect_to,
+            'redirect_to': redirect_to
         })
 
         if settings.GOOGLE_TAG_ID:

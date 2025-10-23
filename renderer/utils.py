@@ -3,6 +3,7 @@ import urllib.parse
 from enum import Enum
 from typing import Literal, Union
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.conf import settings
 from django.template import Context, Template
@@ -11,9 +12,12 @@ from web.models.articles import Vote
 from web.models.roles import Role, RoleBadgeJSON, RoleIconJSON
 from web.models.settings import Settings
 from web.models.site import Site, get_current_site
-from web.models.users import User
+# from web.models.users import User
 from web.controllers import articles
 from web.util.pydantic import JSONInterface
+
+
+User = get_user_model()
 
 
 _templates = dict()

@@ -281,6 +281,7 @@ const PageOptions: React.FC<Props> = ({
             onClose={onCancelSubView}
             previewTitleElement={document.getElementById('page-title')}
             previewBodyElement={document.getElementById('page-content')}
+            previewStyleElement={document.getElementById('computed-style')}
           />
         )
 

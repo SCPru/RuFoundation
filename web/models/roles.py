@@ -6,6 +6,7 @@ from urllib.parse import quote
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Permission
 from django.db import models
+from django.dispatch import receiver
 
 import web.permissions.articles
 import web.permissions.forum

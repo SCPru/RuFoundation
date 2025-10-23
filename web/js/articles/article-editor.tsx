@@ -15,6 +15,7 @@ interface Props {
   onClose?: () => void
   previewTitleElement?: HTMLElement | (() => HTMLElement)
   previewBodyElement?: HTMLElement | (() => HTMLElement)
+  previewStyleElement?: HTMLElement | (() => HTMLElement)
 }
 
 interface State {
@@ -32,7 +33,7 @@ interface State {
   previewOriginalBody?: string
 }
 
-function guessTitle(pageId) {
+function guessTitle(pageId: string) {
   const pageIdSplit = pageId.split(':', 2)
   if (pageIdSplit.length === 2) pageId = pageIdSplit[1]
   else pageId = pageIdSplit[0]
@@ -91,7 +92,7 @@ const Styles = styled.div`
   }
 `
 
-const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, previewTitleElement, previewBodyElement }) => {
+const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, previewTitleElement, previewBodyElement, previewStyleElement }) => {
   const [title, setTitle] = useState('')
   const [source, setSource] = useState('')
   const [comment, setComment] = useState('')
@@ -104,12 +105,14 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, pr
   const [previewOriginalTitle, setPreviewOriginalTitle] = useState('')
   const [previewOriginalTitleDisplay, setPreviewOriginalTitleDisplay] = useState('')
   const [previewOriginalBody, setPreviewOriginalBody] = useState('')
+  const [previewOriginalStyle, setPreviewOriginalStyle] = useState('')
 
   useEffect(() => {
     setTitle(isNew ? guessTitle(pageId) : '')
     setPreviewOriginalTitle(getElement(previewTitleElement)?.innerText)
     setPreviewOriginalTitleDisplay(getElement(previewTitleElement)?.style?.display)
     setPreviewOriginalBody(getElement(previewBodyElement)?.innerHTML)
+    setPreviewOriginalStyle(getElement(previewStyleElement)?.innerHTML)
 
     window.addEventListener('beforeunload', handleRefresh)
 
@@ -212,6 +215,7 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, pr
       getElement(previewTitleElement).innerText = resp.title
       getElement(previewTitleElement).style.display = ''
       getElement(previewBodyElement).innerHTML = resp.content
+      getElement(previewStyleElement).innerHTML = resp.style
     })
   })
 
@@ -227,6 +231,9 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, pr
     }
     if (typeof previewOriginalBody === 'string') {
       getElement(previewBodyElement).innerHTML = previewOriginalBody
+    }
+    if (typeof previewOriginalStyle === 'string') {
+      getElement(previewStyleElement).innerHTML = previewOriginalStyle
     }
     if (onClose) onClose()
   })

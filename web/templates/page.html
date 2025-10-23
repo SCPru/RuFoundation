@@ -34,6 +34,10 @@
     <script src="{% md5url "app.js" %}" type="text/javascript"></script>
     <link rel="stylesheet" type="text/css" href="{% md5url "app.css" %}">
 
+    {% if computed_style %}
+        <style id="computed-style">{{ computed_style|safe }}</style>
+    {% endif %}
+
     {% if google_tag_id %}
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_tag_id }}"></script>
@@ -76,7 +80,7 @@
                         </div>
                         <div id="main-content">
                             <div id="action-area-top"></div>
-                            <div id="page-title" style="{%  if not title %}display: none{% endif %}">
+                            <div id="page-title" style="{% if not title %}display: none{% endif %}">
                                 {{ title }}
                             </div>
                             {% if breadcrumbs|length > 1 %}

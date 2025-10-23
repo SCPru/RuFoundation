@@ -10,6 +10,7 @@ export interface PreviewData {
 export interface PreviewResponse {
   title: string
   content: string
+  style: string
 }
 
 export function makePreview(data: PreviewData) {

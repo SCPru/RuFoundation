@@ -54,7 +54,7 @@ def background_reload():
             state[site.slug] = stored_articles
             time.sleep(BACKGROUND_RELOAD_DELAY)
         except Exception as e:
-            logging.error('Failed to background-reload pages', exc_info=e)
+            logging.error('%s: Failed to background-reload articles', threading.current_thread().ident, exc_info=e)
             time.sleep(BACKGROUND_RELOAD_DELAY / 2)
 
 
