@@ -15,3 +15,4 @@ langcodes==3.4.0
 requests==2.32.3
 django-solo==2.4.0
 tqdm==4.67
+rcssmin==1.2.2

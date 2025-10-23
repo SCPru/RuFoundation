@@ -1,12 +1,5 @@
 import re
 
-def simple_minify_css(css: str) -> str:
-    css = re.sub(r'/\*.*?\*/', '', css, flags=re.S)
-    css = re.sub(r'\s*([:;{}>,])\s*', r'\1', css)
-    css = re.sub(r'\s+', ' ', css)
-    css = css.strip()
-
-    return css
 
 def normalize_computed_style(css: str) -> str:
     import_pattern = r'(@import\s*(?:(?:url\s*\(\s*)?(["\']?)([^"\'\)]*?)\2\s*\)?\s*)(?:[^;]*);?)'
