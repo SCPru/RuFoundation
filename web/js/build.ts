@@ -1,7 +1,6 @@
 const esbuild = require('esbuild')
 const tsPaths = require("esbuild-ts-paths")
 const fs = require('fs');
-const path = require('path');
 
 const args = process.argv.slice(2)
 const watch = args.includes('--watch')
@@ -31,7 +30,7 @@ async function build() {
     console.log('Building CSS...')
   }
 }
-fs.mkdirSync('../../static/highlight.js/', { recursive: true });
-fs.copyFileSync('./node_modules/highlight.js/styles/github.css', '../../static/highlight.js/github.css');
+
+fs.copyFileSync('./node_modules/highlight.js/styles/github.css', '../../static/highlight.js.css');
 
 build()

@@ -15,6 +15,7 @@ static/app.js
 static/app.js.map
 static/system.js
 static/system.js.map
+static/highlight.js.css
 ftml/target
 ftml/pkg
 ftml/*.pyd
