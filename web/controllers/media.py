@@ -10,6 +10,9 @@ from web.models.files import File
 
 
 def symlinks_full_update():
+    if not settings.CREATE_SYMLINKS:
+        return
+    
     logging.info('%s: Reloading symlinks in background', threading.current_thread().ident)
 
     files = File.objects.filter(deleted_at__isnull=True)
@@ -40,6 +43,9 @@ def symlinks_full_update():
 
 
 def symlinks_article_update(article: Article, old_name: str=None):
+    if not settings.CREATE_SYMLINKS:
+        return
+    
     files = File.objects.filter(article=article, deleted_at__isnull=True)
 
     symlinks_dir = Path(settings.MEDIA_ROOT) / 'symlinks'
@@ -62,10 +68,16 @@ def symlinks_article_update(article: Article, old_name: str=None):
 
 
 def symlinks_article_delete(article: Article):
+    if not settings.CREATE_SYMLINKS:
+        return
+    
     article_dir = Path(settings.MEDIA_ROOT) / 'symlinks' / article.full_name
     shutil.rmtree(article_dir, ignore_errors=True)
 
 
 def update_all_symlinks_in_background():
+    if not settings.CREATE_SYMLINKS:
+        return
+    
     t = threading.Thread(target=symlinks_full_update, daemon=True)
     t.start()

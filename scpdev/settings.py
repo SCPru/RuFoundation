@@ -171,6 +171,8 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 MEDIA_HOST = os.environ.get('MEDIA_HOST', None)
 MEDIA_ROOT = BASE_DIR / 'files'
 
+CREATE_SYMLINKS = not DEBUG
+
 
 def parse_size(size):
     import re

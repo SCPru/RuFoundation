@@ -14,7 +14,10 @@ from web.models.site import get_current_site
 from web.models.articles import Article, Category
 from web.models.notifications import UserNotificationMapping
 from web.controllers import articles, notifications
+from web.util.css import normalize_computed_style
+
 from modules.listpages import page_to_listpages_vars
+
 from renderer.templates import apply_template
 from renderer.utils import render_user_to_json
 from renderer import single_pass_render, single_pass_render_with_excerpt
@@ -214,7 +217,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
         tags_categories = articles.get_tags_categories(article)
 
-        computed_style = nav_top_styles + nav_side_styles + computed_style
+        computed_style = normalize_computed_style(nav_top_styles + nav_side_styles + computed_style)
 
         context.update({
             'site_name': site.title,
