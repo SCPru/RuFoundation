@@ -27,7 +27,7 @@ def background_reload():
             site = Site.objects.get()
             with threadvars.context():
                 threadvars.put('current_site', site)
-                logging.info('%s: Reloading articles for %s', threading.current_thread().ident, site.slug)
+                logging.info('Shared worker (%s): Reloading articles for %s', threading.current_thread().ident, site.slug)
                 db_articles = Article.objects.prefetch_related('votes', 'tags')
                 stored_articles = []
                 for article in db_articles:
@@ -50,11 +50,11 @@ def background_reload():
                         },
                         'tags': articles.get_tags(article)
                     })
-                logging.info('%s: Finished reloading articles for %s', threading.current_thread().ident, site.slug)
+                logging.info('Shared worker (%s): Finished reloading articles for %s', threading.current_thread().ident, site.slug)
             state[site.slug] = stored_articles
             time.sleep(BACKGROUND_RELOAD_DELAY)
         except Exception as e:
-            logging.error('%s: Failed to background-reload articles', threading.current_thread().ident, exc_info=e)
+            logging.error('Shared worker (%s): Failed to background-reload articles', threading.current_thread().ident, exc_info=e)
             time.sleep(BACKGROUND_RELOAD_DELAY / 2)
 
 
