@@ -3,10 +3,14 @@ import multiprocessing
 import threading
 import time
 
+from django.db.models import Max, Subquery, OuterRef
+
 from renderer.utils import render_user_to_json
+
 from web import threadvars
 from web.controllers import articles
 from web.models.articles import ArticleLogEntry, Article
+from web.models.settings import Settings
 from web.models.site import Site, get_current_site
 
 
@@ -19,6 +23,84 @@ state = None
 lock = None
 
 
+def reload_once(site):
+    latest_entries_sq = ArticleLogEntry.objects.filter(
+        article_id=OuterRef('article_id')
+    ).order_by('-rev_number')
+
+    latest_events_qs = ArticleLogEntry.objects.filter(
+        pk=Subquery(latest_entries_sq.values('pk')[:1])
+    ).select_related(
+        'user'
+    ).prefetch_related(
+        'user__roles',
+        'user__roles__permissions',
+        'user__roles__restrictions'
+    )
+
+    last_events = {e.article_id: e for e in latest_events_qs}
+
+    db_articles_qs = (
+        Article.objects
+        .select_related(
+            'author'
+        )
+        .prefetch_related(
+            'votes',
+            'tags',
+            'tags__category',
+            'author__roles',
+            'author__roles__permissions',
+            'author__roles__restrictions'
+        )
+        
+    )
+
+    ratings_map = articles.get_all_ratings(db_articles_qs)
+
+    # If we using skip_perms in render_user_to_json we don't need this cache
+    _users_cache = {}
+    def _get_user_json_cached(user):
+        nonlocal _users_cache
+        if user in _users_cache:
+            return _users_cache[user]
+        _users_cache[user] = render_user_to_json(article.author)
+        return _users_cache[user]
+
+    stored_articles = []
+    for article in db_articles_qs:
+        last_event = last_events.get(article.id)
+        rating, rating_votes, popularity, rating_mode = ratings_map.get(article.id, (0, 0, 0, Settings.RatingMode.Disabled))
+        
+        created_by = _get_user_json_cached(article.author)
+
+        updated_by = (
+            created_by if not last_event or last_event.user == article.author 
+            else _get_user_json_cached(last_event.user)
+        )
+
+        article_tags = list(sorted([tag.full_name.lower() for tag in article.tags.all()]))
+
+        stored_articles.append({
+            'uid': article.id,
+            'pageId': article.full_name,
+            'title': article.title,
+            'canonicalUrl': f"//{site.domain}/{article.full_name}",
+            'createdAt': article.created_at.isoformat(),
+            'updatedAt': article.updated_at.isoformat(),
+            'createdBy': created_by,
+            'updatedBy': updated_by,
+            'rating': {
+                'value': rating,
+                'votes': rating_votes,
+                'popularity': popularity,
+                'mode': str(rating_mode)
+            },
+            'tags': article_tags
+        })
+        
+    return stored_articles
+
 def background_reload():
     global state
 
@@ -28,28 +110,9 @@ def background_reload():
             with threadvars.context():
                 threadvars.put('current_site', site)
                 logging.info('Shared worker (%s): Reloading articles for %s', threading.current_thread().ident, site.slug)
-                db_articles = Article.objects.prefetch_related('votes', 'tags')
-                stored_articles = []
-                for article in db_articles:
-                    last_event = ArticleLogEntry.objects.filter(article=article).order_by('-rev_number')[0]
-                    rating, rating_votes, popularity, rating_mode = articles.get_rating(article)
-                    stored_articles.append({
-                        'uid': article.id,
-                        'pageId': article.full_name,
-                        'title': article.title,
-                        'canonicalUrl': '//%s/%s' % (site.domain, article.full_name),
-                        'createdAt': article.created_at.isoformat(),
-                        'updatedAt': article.updated_at.isoformat(),
-                        'createdBy': render_user_to_json(article.author),
-                        'updatedBy': render_user_to_json(last_event.user),
-                        'rating': {
-                            'value': rating,
-                            'votes': rating_votes,
-                            'popularity': popularity,
-                            'mode': str(rating_mode)
-                        },
-                        'tags': articles.get_tags(article)
-                    })
+
+                stored_articles = reload_once(site)
+
                 logging.info('Shared worker (%s): Finished reloading articles for %s', threading.current_thread().ident, site.slug)
             state[site.slug] = stored_articles
             time.sleep(BACKGROUND_RELOAD_DELAY)

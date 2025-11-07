@@ -10,8 +10,8 @@ from typing import Optional, Union, Sequence, Tuple, Dict
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser as _UserType
 from django.db import transaction
-from django.db.models import QuerySet, Sum, Avg, Count, Max, TextField, Value, IntegerField, Q, F
-from django.db.models.functions import Coalesce, Concat, Lower
+from django.db.models import QuerySet, Sum, Avg, Count, Max, IntegerField, Q, F
+from django.db.models.functions import Coalesce
 
 import renderer
 from web.events import EventBase
@@ -19,6 +19,7 @@ from web.controllers import notifications, media
 from web.models.articles import Article, ArticleLogEntry, ArticleVersion, Category, ExternalLink, Tag, TagsCategory, Vote
 from web.models.files import File
 from web.models.settings import Settings
+from web.models.site import get_current_site
 from web.models.users import User
 from web.models.forum import ForumThread, ForumPost
 from web.models.roles import Role
@@ -881,6 +882,62 @@ def get_rating(full_name_or_article: _FullNameOrArticle) -> tuple[int | float, i
         return 0, 0, 0, obj_settings.rating_mode
     else:
         raise ValueError('Unsupported rate type "%s"' % obj_settings.rating_mode)
+    
+
+# Returns dict {article_id: (rating, votes_count, popularity, mode)}
+def get_all_ratings(articles_qs):
+    category_names = list(
+        articles_qs.values_list("category", flat=True).distinct()
+    )
+    categories_map = {
+        c.name: c for c in Category.objects.filter(name__in=category_names).select_related("_settings")
+    }
+
+    current_site = get_current_site()
+    site_settings = current_site.settings
+    default_settings = Settings.get_default_settings()
+
+    vote_stats = (
+        Vote.objects
+        .values("article_id")
+        .annotate(
+            sum_rate=Coalesce(Sum("rate"), 0.0),
+            count_rate=Count("rate"),
+            good_updown=Count("rate", filter=Q(rate=1)),
+            avg_rate=Coalesce(Avg("rate"), 0.0),
+            good_stars=Count("rate", filter=Q(rate__gte=3))
+        )
+    )
+    votes_map = {v["article_id"]: v for v in vote_stats}
+
+    results = {}
+    for article in articles_qs:
+        cat = categories_map.get(article.category)
+        category_settings = getattr(cat, "_settings", None)
+        merged_settings = default_settings.merge(site_settings).merge(category_settings)
+
+        rating_mode = merged_settings.rating_mode
+        votes = votes_map.get(article.id, {})
+
+        if rating_mode == Settings.RatingMode.UpDown:
+            rating_value = votes.get("sum_rate", 0)
+            votes_count = votes.get("count_rate", 0)
+            popularity = round((votes.get("good_updown", 0) / (votes_count or 1)) * 100)
+        elif rating_mode == Settings.RatingMode.Stars:
+            rating_value = round(votes.get("avg_rate", 0.0), 1)
+            votes_count = votes.get("count_rate", 0)
+            popularity = round((votes.get("good_stars", 0) / (votes_count or 1)) * 100)
+        else:
+            rating_value = votes_count = popularity = 0
+
+        results[article.id] = (
+            rating_value,
+            votes_count,
+            popularity,
+            rating_mode,
+        )
+
+    return results
 
 
 def get_formatted_rating(full_name_or_article: _FullNameOrArticle) -> str:

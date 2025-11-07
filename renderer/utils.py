@@ -166,11 +166,11 @@ class UserJSON(JSONInterface):
     showAvatar: bool=False
     admin:bool=False
     staff: bool=False
-    editor: bool=False
+    editor: bool | None=False
     roles: list[str]=None
 
 
-def render_user_to_json(user: User, show_avatar=True):
+def render_user_to_json(user: User, show_avatar=True, skip_perms=False):
     if user is None:
         return UserJSON(type=User.UserType.System)
     if isinstance(user, AnonymousUser):
@@ -190,7 +190,7 @@ def render_user_to_json(user: User, show_avatar=True):
         showAvatar=show_avatar,
         admin=user.is_superuser,
         staff=user.is_staff,
-        editor=user.has_perm('roles.edit_articles'),
+        editor=user.has_perm('roles.edit_articles') if not skip_perms else None,
         roles=[role.slug for role in user.roles.all() if role.is_visual]
     )
 
