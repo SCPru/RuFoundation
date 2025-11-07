@@ -5,8 +5,6 @@ from web.permissions import _ROLE_PERMISSIONS_REPR_CACHE
 
 class RolesBackend(BaseBackend):
     def get_all_permissions(self, user_obj, obj: PermissionsOverrideMixin=None):
-        if hasattr(user_obj, '_roles_perms_cache'):
-            return getattr(user_obj, '_roles_perms_cache')
         if not user_obj.is_active and not user_obj.is_anonymous:
             return set()
         if not hasattr(user_obj, '_roles_cache'):
@@ -33,8 +31,6 @@ class RolesBackend(BaseBackend):
 
         if has_override:
             perms = obj.override_perms(user_obj, perms, user_obj._roles_cache)
-
-        user_obj._roles_perms_cache = perms
 
         return perms
     
