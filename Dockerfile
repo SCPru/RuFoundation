@@ -28,6 +28,8 @@ RUN yarn run build
 # Python stuff
 FROM python:3.13.2
 
+RUN apt-get update && apt-get install -y tini && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY requirements.txt .
@@ -50,4 +52,4 @@ RUN python manage.py collectstatic
 RUN chmod 775 entrypoint.sh
 
 EXPOSE 8000
-ENTRYPOINT [ "./entrypoint.sh" ]
+ENTRYPOINT ["/usr/bin/tini", "--", "./entrypoint.sh"]
