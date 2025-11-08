@@ -85,37 +85,30 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         updated_at = None
         computed_style = ''
         if article is not None:
-            if not self.request.user.has_perm('roles.view_articles', article):
-                context = {'page_id': fullname}
-                content = render_to_string(self.template_403, context)
-                redirect_to = None
-                title = ''
-                status = 403
-            else:
-                template_source = '%%content%%'
+            template_source = '%%content%%'
 
-                if article.name != '_template':
-                    template = articles.get_article('%s:_template' % article.category)
-                    if template:
-                        template_source = articles.get_latest_source(template)
+            if article.name != '_template':
+                template = articles.get_article('%s:_template' % article.category)
+                if template:
+                    template_source = articles.get_latest_source(template)
 
-                source = page_to_listpages_vars(article, template_source, index=1, total=1)
-                source = apply_template(source, lambda param: self.get_this_page_params(path_params, param, {'canonical_url': canonical_url}))
-                context = RenderContext(article, article, path_params, self.request.user)
-                content, excerpt, image = single_pass_render_with_excerpt(source, context)
-                redirect_to = context.redirect_to
-                title = context.title
-                status = context.status
-                computed_style = context.computed_style
+            source = page_to_listpages_vars(article, template_source, index=1, total=1)
+            source = apply_template(source, lambda param: self.get_this_page_params(path_params, param, {'canonical_url': canonical_url}))
+            context = RenderContext(article, article, path_params, self.request.user)
+            content, excerpt, image = single_pass_render_with_excerpt(source, context)
+            redirect_to = context.redirect_to
+            title = context.title
+            status = context.status
+            computed_style = context.computed_style
 
-                rev_number = articles.get_latest_log_entry(article).rev_number
-                updated_at = article.updated_at
-                if context.og_image:
-                    image = context.og_image
-                if context.og_description:
-                    excerpt = context.og_description
+            rev_number = articles.get_latest_log_entry(article).rev_number
+            updated_at = article.updated_at
+            if context.og_image:
+                image = context.og_image
+            if context.og_description:
+                excerpt = context.og_description
         else:
-            category, name = articles.get_name(fullname)
+            category, _ = articles.get_name(fullname)
             options = {'page_id': fullname, 'pathParams': path_params}
             context = {'options': json.dumps(options), 'allow_create': articles.is_full_name_allowed(fullname) and self.request.user.has_perm('roles.create_articles', Category.get_or_default_category(category))}
             content = render_to_string(self.template_404, context)
@@ -126,6 +119,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
     def get_context_data(self, **kwargs):
         path = kwargs["path"]
+        status = None
+        content = None
 
         # wikidot hack: rewrite forum URLs to forum:start, forum:category, forum:thread
         # why do they need to support templates here?
@@ -157,8 +152,14 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         normalized_article_name = articles.normalize_article_name(article_name)
         if normalized_article_name != article_name:
             return {'redirect_to': '/%s%s' % (normalized_article_name, encoded_params)}
-
+        
         article = articles.get_article(article_name)
+        perms_obj = article or articles.get_article_category(article_name)
+        if perms_obj and not self.request.user.has_perm('roles.view_articles', perms_obj):
+            content = render_to_string(self.template_403, {'page_id': article_name})
+            status = 403
+            article = None
+        
         comment_thread_id, comment_count = articles.get_comment_info(article)
         breadcrumbs = [{'url': '/' + articles.get_full_name(x), 'title': x.title} for x in
                        articles.get_breadcrumbs(article)]
@@ -173,7 +174,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         site = get_current_site()
         canonical_url = '//%s/%s%s' % (site.domain, article.full_name if article else article_name, encoded_params)
 
-        content, status, redirect_to, excerpt, image, title, rev_number, updated_at, computed_style = self.render(article_name, article, path_params, canonical_url)
+        rendered_content, rendered_status, redirect_to, excerpt, image, title, rev_number, updated_at, computed_style = self.render(article_name, article, path_params, canonical_url)
 
         context = super(ArticleView, self).get_context_data(**kwargs)
 
@@ -234,7 +235,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'nav_side': nav_side,
 
             'title': title,
-            'content': content,
+            'content': content or rendered_content,
             'tags_categories': tags_categories,
             'breadcrumbs': breadcrumbs,
             'rev_number': rev_number,
@@ -245,7 +246,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
             'computed_style': computed_style,
 
-            'status': status,
+            'status': status or rendered_status,
             'redirect_to': redirect_to
         })
 
@@ -265,6 +266,6 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
     def get(self, request, *args, **kwargs):
         path = request.META['RAW_PATH'][1:]
         context = self.get_context_data(path=path)
-        if context['redirect_to']:
+        if context.get('redirect_to'):
             return HttpResponseRedirect(context['redirect_to'])
         return self.render_to_response(context, status=context['status'])

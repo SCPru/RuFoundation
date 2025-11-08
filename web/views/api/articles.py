@@ -1,3 +1,4 @@
+import logging
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 
@@ -69,6 +70,9 @@ class CreateView(ArticleView):
 
 class FetchOrUpdateView(ArticleView):
     def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        category = articles.get_article_category(full_name)
+        if not request.user.has_perm('roles.view_articles', category):
+            raise APIError('Недостаточно прав', 403)
         # find page
         article = articles.get_article(full_name)
         if article is None:
@@ -94,6 +98,9 @@ class FetchOrUpdateView(ArticleView):
         # find page
         article = articles.get_article(full_name)
         if article is None:
+            category = articles.get_article_category(full_name)
+            if not request.user.has_perm('roles.view_articles', category):
+                raise APIError('Недостаточно прав', 403)
             raise APIError('Страница не найдена', 404)
 
         can_edit_articles = request.user.has_perm('roles.edit_articles', article)
@@ -103,9 +110,11 @@ class FetchOrUpdateView(ArticleView):
 
         # check if renaming
         if data['pageId'] != full_name:
-            if not request.user.has_perm('roles.move_articles', article):
-                raise APIError('Недостаточно прав', 403)
             new_name = articles.normalize_article_name(data['pageId'])
+            new_category = articles.get_article_category(new_name)
+            if not request.user.has_perm('roles.move_articles', article) or \
+               not request.user.has_perm('roles.move_articles', new_category) if new_category else False:
+                raise APIError('Недостаточно прав', 403)
             article2 = articles.get_article(new_name)
             if article2 is not None and article2.id != article.id and not data.get('forcePageId'):
                 raise APIError('Страница с таким ID уже существует', 409)
@@ -153,6 +162,9 @@ class FetchOrUpdateView(ArticleView):
         # find page
         article = articles.get_article(full_name)
         if article is None:
+            category = articles.get_article_category(full_name)
+            if not request.user.has_perm('roles.view_articles', category):
+                raise APIError('Недостаточно прав', 403)
             raise APIError('Страница не найдена', 404)
 
         if not request.user.has_perm('roles.delete_articles', article):
@@ -166,6 +178,9 @@ class FetchOrUpdateView(ArticleView):
 
 class FetchOrRevertLogView(APIView):
     def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        category = articles.get_article_category(full_name)
+        if not request.user.has_perm('roles.view_articles', category):
+            raise APIError('Недостаточно прав', 403)
         try:
             c_from = int(request.GET.get('from', '0'))
             c_to = int(request.GET.get('to', '25'))
@@ -192,6 +207,9 @@ class FetchOrRevertLogView(APIView):
     def put(self, request: HttpRequest, full_name: str) -> HttpResponse:
         article = articles.get_article(full_name)
         if article is None:
+            category = articles.get_article_category(full_name)
+            if not request.user.has_perm('roles.view_articles', category):
+                raise APIError('Недостаточно прав', 403)
             raise APIError('Страница не найдена', 404)
 
         if not request.user.has_perm('roles.edit_articles', article):
@@ -213,6 +231,10 @@ class FetchOrRevertLogView(APIView):
 
 class FetchVersionView(APIView):
     def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        category = articles.get_article_category(full_name)
+        if not request.user.has_perm('roles.view_articles', category):
+            raise APIError('Недостаточно прав', 403)
+        
         article = articles.get_article(full_name)
         source = articles.get_source_at_rev_num(article, int(request.GET.get('revNum')))
 
@@ -227,6 +249,10 @@ class FetchVersionView(APIView):
 
 class FetchExternalLinks(APIView):
     def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        category = articles.get_article_category(full_name)
+        if not request.user.has_perm('roles.view_articles', category):
+            raise APIError('Недостаточно прав', 403)
+        
         article = articles.get_article(full_name)
         if not article:
             raise APIError('Страница не найдена', 404)
@@ -254,6 +280,10 @@ class FetchExternalLinks(APIView):
 
 class FetchOrUpdateVotesView(APIView):
     def get(self, request: HttpRequest, full_name: str) -> HttpResponse:
+        category = articles.get_article_category(full_name)
+        if not request.user.has_perm('roles.view_articles', category):
+            raise APIError('Недостаточно прав', 403)
+        
         article = articles.get_article(full_name)
         if not article:
             raise APIError('Страница не найдена', 404)
@@ -265,7 +295,10 @@ class FetchOrUpdateVotesView(APIView):
 
     def delete(self, request: HttpRequest, full_name: str) -> HttpResponse:
         article = articles.get_article(full_name)
-        if not article:
+        if article is None:
+            category = articles.get_article_category(full_name)
+            if not request.user.has_perm('roles.view_articles', category):
+                raise APIError('Недостаточно прав', 403)
             raise APIError('Страница не найдена', 404)
 
         if not request.user.has_perm('roles.reset_article_votes', article):

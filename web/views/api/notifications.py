@@ -61,10 +61,18 @@ class NotificationsSubscribeView(APIView):
             raise APIError('Некорректные параметры подписки', 400)
 
         return args
+    
+    @staticmethod
+    def _verify_access(request: HttpRequest, args):
+        if args.get('article') and not request.user.has_perm('roles.view_articles', args.get('article')):
+            raise APIError('Недостаточно прав', 403)
+        if args.get('forum_thread') and not request.user.has_perm('roles.view_forum_threads', args.get('forum_thread')):
+            raise APIError('Недостаточно прав', 403)
 
     @takes_json
     def post(self, request: HttpRequest, *args, **kwargs):
         args = self._get_subscription_info(self.json_input)
+        self._verify_access(request, args)
         subscription = notifications.subscribe_to_notifications(request.user, **args)
 
         if subscription:
@@ -75,6 +83,7 @@ class NotificationsSubscribeView(APIView):
     @takes_json
     def delete(self, request: HttpRequest, *args, **kwargs):
         args = self._get_subscription_info(self.json_input)
+        self._verify_access(request, args)
         subscription = notifications.unsubscribe_from_notifications(request.user, **args)
 
         if subscription:

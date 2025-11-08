@@ -1134,3 +1134,7 @@ def fetch_articles_by_names(original_names):
         dumb_name = ('_default:%s' % name).lower() if ':' not in name else name.lower()
         articles_dict[name] = ret_map[dumb_name]
     return articles_dict
+
+
+def get_hidden_categories_for(user: User):
+    pass

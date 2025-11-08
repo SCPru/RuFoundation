@@ -3,7 +3,7 @@ import multiprocessing
 import threading
 import time
 
-from django.db.models import Max, Subquery, OuterRef
+from django.db.models import Subquery, OuterRef
 
 from renderer.utils import render_user_to_json
 

@@ -35,12 +35,22 @@ class RolesBackend(BaseBackend):
         return perms
     
     def has_perm(self, user_obj, perm, obj: PermissionsOverrideMixin=None):
+        is_cachable = obj is None or (obj.pk if hasattr(obj, 'pk') else (hasattr(obj, '__hash__') and obj.__hash__ is not None))
+        if is_cachable and hasattr(user_obj, '_roles_perms_cache') and (obj, perm) in user_obj._roles_perms_cache:
+            return user_obj._roles_perms_cache[(obj, perm)]
+        else:
+            user_obj._roles_perms_cache = {}
         all_perms = self.get_all_permissions(user_obj, obj)
         if perm in _ROLE_PERMISSIONS_REPR_CACHE:
             for role_perm in _ROLE_PERMISSIONS_REPR_CACHE[perm]:
                 if role_perm in all_perms:
+                    if is_cachable:
+                        user_obj._roles_perms_cache[(obj, perm)] = True
                     return True
-        return perm in all_perms
+        result = perm in all_perms
+        if is_cachable:
+            user_obj._roles_perms_cache[(obj, perm)] = result
+        return result
     
     def has_module_perms(self, user_obj, app_label):
         return True

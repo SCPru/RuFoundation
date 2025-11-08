@@ -8,7 +8,7 @@ def is_perms_collection():
 class ViewArticlesPermission(BaseRolePermission):
     name = 'Просматривать статьи'
     codename = 'view_articles'
-    description = 'Позволяет просматривать статьи'
+    description = 'Позволяет просматривать статьи, их файлы, теги, обратные ссылки и родителей'
     group = 'Статьи'
 
 

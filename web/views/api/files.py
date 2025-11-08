@@ -18,6 +18,9 @@ class FileView(APIView):
     def _validate_request(request: HttpRequest, article_name_or_article, edit=True):
         article = articles.get_article(article_name_or_article)
         if article is None:
+            category = articles.get_article_category(article_name_or_article)
+            if not request.user.has_perm('roles.view_articles', category):
+                raise APIError('Недостаточно прав', 403)
             raise APIError('Страница не найдена', 404)
         if edit and not request.user.has_perm('roles.manage_articles_files', article):
             raise APIError('Недостаточно прав', 403)
@@ -26,6 +29,9 @@ class FileView(APIView):
 
 class GetOrUploadView(FileView):
     def get(self, request: HttpRequest, article_name):
+        category = articles.get_article_category(article_name)
+        if not request.user.has_perm('roles.view_articles', category):
+            raise APIError('Недостаточно прав', 403)
         article = self._validate_request(request, article_name, edit=False)
         files = articles.get_files_in_article(article)
         output = []
