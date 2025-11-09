@@ -74,6 +74,8 @@ class ForumThread(auto_prefetch.Model, PermissionsOverrideMixin):
             )
         ]
 
+    roles_override_pipeline = ['article']
+
     name = models.TextField(verbose_name='Название')
     description = models.TextField(verbose_name='Описание', blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
