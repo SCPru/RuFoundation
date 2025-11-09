@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Optional, Union, Sequence, Tuple, Dict
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser as _UserType
+from django.contrib.auth.models import AbstractUser as _UserType, AnonymousUser
 from django.db import transaction
 from django.db.models import QuerySet, Sum, Avg, Count, Max, IntegerField, Q, F
 from django.db.models.functions import Coalesce
@@ -1137,6 +1137,8 @@ def fetch_articles_by_names(original_names):
 
 
 def get_hidden_categories_for(user: User) -> list[Category]:
+    if user is None:
+        user = AnonymousUser()
     all_categories = Category.objects.all()
     hidden_categories = []
     for category in all_categories:

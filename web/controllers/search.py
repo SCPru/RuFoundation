@@ -1,27 +1,28 @@
+import json
+import base64
+
 from typing import Literal
+from uuid import uuid4
 
 from django.db import models
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector, SearchHeadline, TrigramSimilarity
-from django.core.paginator import Paginator
-import shlex
-from uuid import uuid4
-from django.db import connection
-import base64
-import json
-
-from django.db.models.functions import Cast
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector, SearchHeadline
 
 from renderer import RenderContext, single_pass_render_text
+
 from web.controllers import articles
 from web.models import ArticleSearchIndex, Article
+from web.models.users import User
 
 
-def search_articles(text, is_source=False, cursor=None, limit=25, explain=False):
+def search_articles(text, user: User=None, is_source=False, cursor=None, limit=25, explain=False):
+    hidden_categories = articles.get_hidden_categories_for(user)
     if is_source:
         cursor_parameters = decode_cursor(cursor, 'source', ['id__lt', 'id'])
 
         results = ArticleSearchIndex.objects.filter(
             content_source__icontains=text,
+        ).exclude(
+            article__category__in=hidden_categories
         ).order_by('-id')
         if cursor_parameters:
             results = results.filter(cursor_parameters)
@@ -92,6 +93,8 @@ def search_articles(text, is_source=False, cursor=None, limit=25, explain=False)
             )
         ).filter(
             models.Q(vector_plaintext=search_query)
+        ).exclude(
+            article__category__in=hidden_categories
         ).order_by('-rank_str', '-id')
         if cursor_parameters:
             results = results.filter(cursor_parameters)
