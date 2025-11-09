@@ -88,6 +88,12 @@ def new_forum_post_notification(e: OnForumNewPost):
             reply_subscribers.remove(user)
         notification_subscribers -= reply_subscribers
 
+        restricted_users = []
+        for user in reply_subscribers:
+            if not user.has_perm('roles.view_forum_posts', e.post):
+                restricted_users.append(user)
+        reply_subscribers.difference_update(restricted_users)
+
         origin_post_url = '%s#post-%d' % (thread_url, e.post.reply_to.id)
 
         reply_meta = dict(meta)
@@ -103,6 +109,12 @@ def new_forum_post_notification(e: OnForumNewPost):
             referred_to=post_url,
             meta=reply_meta
         )
+
+    restricted_users = []
+    for user in notification_subscribers:
+        if not user.has_perm('roles.view_forum_posts', e.post):
+            restricted_users.append(user)
+    notification_subscribers.difference_update(restricted_users)
     
     send_user_notification(
         recipients=notification_subscribers,
@@ -115,9 +127,8 @@ def new_forum_post_notification(e: OnForumNewPost):
 @on_trigger(OnEditArticle)
 def new_article_revision_notification(e: OnEditArticle):
     log_entry: ArticleLogEntry = e.log_entry
-    notification_subscribers = [subscription.subscriber for subscription in get_notification_subscribtions(article=log_entry.article) if subscription.subscriber != log_entry.user]
-
     article = log_entry.article
+    notification_subscribers = [subscription.subscriber for subscription in get_notification_subscribtions(article=log_entry.article) if subscription.subscriber != log_entry.user and subscription.subscriber.has_perm('roles.view_articles', article)]
 
     send_user_notification(notification_subscribers, UserNotification.NotificationType.NewArticleRevision, meta={
         'user': render_user_to_json(log_entry.user),
