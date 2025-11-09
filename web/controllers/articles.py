@@ -1136,5 +1136,10 @@ def fetch_articles_by_names(original_names):
     return articles_dict
 
 
-def get_hidden_categories_for(user: User):
-    pass
+def get_hidden_categories_for(user: User) -> list[Category]:
+    all_categories = Category.objects.all()
+    hidden_categories = []
+    for category in all_categories:
+        if not user.has_perm('roles.view_articles', category):
+            hidden_categories.append(category)
+    return hidden_categories
