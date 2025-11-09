@@ -1,17 +1,19 @@
+import math
 import json
-from functools import reduce
 import operator
+
+from functools import reduce
 
 from django.db.models import Q
 
-from modules.listpages import render_pagination, render_date
 from renderer import RenderContext, render_template_from_string, render_user_to_html
-import math
+
+from modules.listpages import render_pagination, render_date
 
 from web.models.users import User
-
 from web.models.articles import ArticleLogEntry, Article
 from web.models.settings import Settings
+from web.controllers import articles
 
 
 def has_content():
@@ -43,37 +45,37 @@ def log_entry_default_comment(entry: ArticleLogEntry) -> str:
         return 'Создание новой страницы'
 
     if entry.type == ArticleLogEntry.LogEntryType.Title:
-        return 'Заголовок изменён с "%s" на "%s"' % (entry.meta['prev_title'], entry.meta['title'])
+        return f'Заголовок изменён с "{entry.meta['prev_title']}" на "{entry.meta['title']}"'
 
     if entry.type == ArticleLogEntry.LogEntryType.Name:
-        return 'Страница переименована из "%s" в "%s"' % (entry.meta['prev_name'], entry.meta['name'])
+        return f'Страница переименована из "{entry.meta['prev_name']}" в "{entry.meta['name']}"'
 
     if entry.type == ArticleLogEntry.LogEntryType.Tags:
-        added_tags = map(lambda x: x['name'], entry.meta.get('added_tags', []))
-        removed_tags = map(lambda x: x['name'], entry.meta.get('removed_tags', []))
+        added_tags = [x['name'] for x in entry.meta.get('added_tags', [])]
+        removed_tags = [x['name'] for x in entry.meta.get('removed_tags', [])]
         if added_tags and removed_tags:
-            return 'Добавлены теги: %s. Удалены теги: %s.' % (', '.join(added_tags), ', '.join(removed_tags))
+            return f'Добавлены теги: {', '.join(added_tags)}. Удалены теги: {', '.join(removed_tags)}.'
         if added_tags:
-            return 'Добавлены теги: %s.' % ', '.join(added_tags)
+            return f'Добавлены теги: {', '.join(added_tags)}.'
         if removed_tags:
-            return 'Удалены теги: %s.' % ', '.join(removed_tags)
+            return f'Удалены теги: {', '.join(removed_tags)}.'
 
     if entry.type == ArticleLogEntry.LogEntryType.Parent:
         if entry.meta['prev_parent'] and entry.meta['parent']:
-            return 'Родительская страница изменена с "%s" на "%s"' % (entry.meta['prev_parent'], entry.meta['parent'])
+            return f'Родительская страница изменена с "{entry.meta['prev_parent']}" на "{entry.meta['parent']}"'
         if entry.meta['prev_parent']:
-            return 'Убрана родительская страница "%s"' % entry.meta['prev_parent']
+            return f'Убрана родительская страница "{entry.meta['prev_parent']}"'
         if entry.meta['parent']:
-            return 'Установлена родительская страница "%s"' % entry.meta['parent']
+            return f'Установлена родительская страница "{entry.meta['parent']}"'
 
     if entry.type == ArticleLogEntry.LogEntryType.FileAdded:
-        return 'Загружен файл: "%s"' % entry.meta['name']
+        return f'Загружен файл: "{entry.meta['name']}"'
 
     if entry.type == ArticleLogEntry.LogEntryType.FileDeleted:
-        return 'Удалён файл: "%s"' % entry.meta['name']
+        return f'Удалён файл: "{entry.meta['name']}"'
 
     if entry.type == ArticleLogEntry.LogEntryType.FileRenamed:
-        return 'Переименован файл: "%s" в "%s"' % (entry.meta['prev_name'], entry.meta['name'])
+        return f'Переименован файл: "{entry.meta['prev_name']}" в "{entry.meta['name']}"'
 
     if entry.type == ArticleLogEntry.LogEntryType.VotesDeleted:
         rating_str = 'n/a'
@@ -81,10 +83,10 @@ def log_entry_default_comment(entry: ArticleLogEntry) -> str:
             rating_str = '%+d' % int(entry.meta['rating'])
         elif entry.meta['rating_mode'] == Settings.RatingMode.Stars:
             rating_str = '%.1f' % float(entry.meta['rating'])
-        return 'Сброшен рейтинг страницы: %s (голосов: %d, популярность: %d%%)' % (rating_str, entry.meta['votes_count'], entry.meta['popularity'])
+        return f'Сброшен рейтинг страницы: {rating_str} (голосов: {entry.meta['votes_count']}, популярность: {entry.meta['popularity']}%)'
 
     if entry.type == ArticleLogEntry.LogEntryType.Revert:
-        return 'Откат страницы к версии №%d' % (entry.meta['rev_number'])
+        return f'Откат страницы к версии №{entry.meta['rev_number']}'
 
     return ''
 
@@ -108,6 +110,9 @@ def render(context: RenderContext, params):
     user_name = context.path_params.get('username', '').lower().strip()
 
     q = ArticleLogEntry.objects.all()
+
+    hidden_categories = articles.get_hidden_categories_for(context.user)
+    q = q.exclude(article__category__in=hidden_categories)
 
     if filter_types:
         q = q.filter(Q(type__in=filter_types) | reduce(operator.or_, (Q(meta__subtypes__contains=x) for x in filter_types)))
@@ -164,7 +169,7 @@ def render(context: RenderContext, params):
             'article_url': '/%s' % entry.article.full_name
         })
 
-    categories = sorted(Article.objects.distinct('category').values_list('category', flat=True))
+    categories = sorted(Article.objects.distinct('category').exclude(category__in=hidden_categories).values_list('category', flat=True))
 
     type_filter = []
     type_filter_empty = not filter_types
