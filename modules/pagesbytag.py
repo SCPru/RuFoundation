@@ -1,6 +1,8 @@
 from renderer.utils import render_template_from_string
+
 from web.controllers.articles import get_tag
 from web.models.articles import Tag
+from web.controllers import articles as web_articles
 
 
 def render(context, params):
@@ -11,10 +13,11 @@ def render(context, params):
         return ''
 
     tag = get_tag(params["tag"])
+    hidden_categories = web_articles.get_hidden_categories_for(context.user)
 
     # find articles by tag
     try:
-        articles = tag.articles.order_by('title')
+        articles = tag.articles.exclude(category__in=hidden_categories).order_by('title')
     except (AttributeError, Tag.DoesNotExist):
         return ''
 
