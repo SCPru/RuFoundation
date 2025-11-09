@@ -67,7 +67,7 @@ def reload_once(site):
         _users_cache[user] = render_user_to_json(article.author)
         return _users_cache[user]
 
-    stored_articles = []
+    stored_articles = {}
     for article in db_articles_qs:
         last_event = last_events.get(article.id)
         rating, rating_votes, popularity, rating_mode = ratings_map.get(article.id, (0, 0, 0, Settings.RatingMode.Disabled))
@@ -81,7 +81,10 @@ def reload_once(site):
 
         article_tags = list(sorted([tag.full_name.lower() for tag in article.tags.all()]))
 
-        stored_articles.append({
+        if article.category not in stored_articles:
+            stored_articles[article.category] = []
+
+        stored_articles[article.category].append({
             'uid': article.id,
             'pageId': article.full_name,
             'title': article.title,
@@ -121,11 +124,11 @@ def background_reload():
             time.sleep(BACKGROUND_RELOAD_DELAY / 2)
 
 
-def get_all_articles():
+def get_all_articles() -> dict[str, list]:
     global state
 
     site = get_current_site()
-    return state.get(site.slug, [])
+    return state.get(site.slug, {})
 
 
 def init():

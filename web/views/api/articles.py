@@ -21,7 +21,13 @@ from modules import rate, ModuleError
 
 class AllArticlesView(APIView):
     def get(self, request: HttpRequest):
-        return self.render_json(200, shared_articles.get_all_articles())
+        result = []
+        hidden_categories = articles.get_hidden_categories_for(request.user)
+        for category, entries in shared_articles.get_all_articles().items():
+            if category in hidden_categories:
+                continue
+            result.extend(entries)
+        return self.render_json(200, result)
 
 
 class ArticleView(APIView):

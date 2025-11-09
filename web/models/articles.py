@@ -106,6 +106,14 @@ class Category(auto_prefetch.Model, RolePermissionsOverrideMixin):
 
     def __str__(self) -> str:
         return self.name
+    
+    def __eq__(self, value):
+        if isinstance(value, str) and self.name == value:
+            return True
+        return super().__eq__(value)
+    
+    def __hash__(self):
+        return super().__hash__()
 
     # this function returns site settings overridden by category settings.
     # if neither is set, falls back to defaults defined in Settings class.
