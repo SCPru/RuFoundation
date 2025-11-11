@@ -24,9 +24,14 @@ def background_reload():
         try:
             with threadvars.context():
                 logging.info('Shared worker (%s): Reloading users', threading.current_thread().ident)
-                all_users = User.objects.all()
+                all_users = User.objects.all() \
+                .prefetch_related(
+                    'roles',
+                    'roles__permissions',
+                    'roles__restrictions'
+                )
+                state['all_users'] = [render_user_to_json(user) for user in all_users]
                 logging.info('Shared worker (%s): Finished reloading users', threading.current_thread().ident)
-            state['all_users'] = [render_user_to_json(user) for user in all_users]
             time.sleep(BACKGROUND_RELOAD_DELAY)
         except Exception as e:
             logging.error('Shared worker (%s): Failed to background-reload users', threading.current_thread().ident, exc_info=e)
