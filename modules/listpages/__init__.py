@@ -92,6 +92,9 @@ def get_page_vars(page: Article):
             authors = [author for author in page.authors.all()]
         return authors
     
+    get_created_by_linked = lambda plain: lambda: ' '.join((f'[[{'*'*(not plain)}user %s]]' % author.username) if author and 'username' in author.__dict__ else render_user_to_text(author) for author in get_authors())
+    get_updated_by_linked = lambda plain: lambda: (f'[[{'*'*(not plain)}user %s]]' % get_updated_by().username) if get_updated_by() and 'username' in get_updated_by().__dict__ else render_user_to_text(get_updated_by())
+
     page_vars = LazyDict({
         'name': lambda: page.name,
         'category': lambda: page.category,
@@ -106,9 +109,11 @@ def get_page_vars(page: Article):
         'popularity': lambda: str(get_rating('popularity')),
         'revisions': lambda: str(len(ArticleLogEntry.objects.filter(article=page))),
         'created_by': lambda: ' '.join([f'<span>{render_user_to_text(author)}</span>' for author in get_authors()]),
-        'created_by_linked': lambda: ' '.join(('[[*user %s]]' % author.username) if author and 'username' in author.__dict__ else render_user_to_text(author) for author in get_authors()),
+        'created_by_linked': get_created_by_linked(False),
+        'created_by_linked_plain': get_created_by_linked(True),
         'updated_by': lambda: render_user_to_text(get_updated_by()),
-        'updated_by_linked': lambda: ('[[*user %s]]' % get_updated_by().username) if get_updated_by() and 'username' in get_updated_by().__dict__ else render_user_to_text(get_updated_by()),
+        'updated_by_linked': get_updated_by_linked(False),
+        'updated_by_linked_plain': get_updated_by_linked(True),
         'authors_count': lambda: str(len(get_authors())),
         # content{n} = content sections are not supported yet
         # preview and preview(n) = first characters of the page are not supported yet
