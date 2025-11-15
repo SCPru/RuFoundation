@@ -108,7 +108,7 @@ def get_page_vars(page: Article):
         'current_user_voted': lambda: 'True' if page.votes.filter(user=current_user).exists() else 'False',
         'popularity': lambda: str(get_rating('popularity')),
         'revisions': lambda: str(len(ArticleLogEntry.objects.filter(article=page))),
-        'created_by': lambda: ' '.join([f'<span>{render_user_to_text(author)}</span>' for author in get_authors()]),
+        'created_by': lambda: ' '.join([f'[[span]]{render_user_to_text(author)}[[/span]]' for author in get_authors()]),
         'created_by_linked': get_created_by_linked(False),
         'created_by_linked_plain': get_created_by_linked(True),
         'updated_by': lambda: render_user_to_text(get_updated_by()),
