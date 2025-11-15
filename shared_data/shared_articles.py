@@ -42,29 +42,26 @@ def reload_once(site):
 
     db_articles_qs = (
         Article.objects
-        .select_related(
-            'author'
-        )
         .prefetch_related(
             'votes',
             'tags',
             'tags__category',
-            'author__roles',
-            'author__roles__permissions',
-            'author__roles__restrictions'
+            'authors',
+            'authors__roles',
+            'authors__roles__permissions',
+            'authors__roles__restrictions'
         )
         
     )
 
     ratings_map = articles.get_all_ratings(db_articles_qs)
 
-    # If we using skip_perms in render_user_to_json we don't need this cache
     _users_cache = {}
     def _get_user_json_cached(user):
         nonlocal _users_cache
         if user in _users_cache:
             return _users_cache[user]
-        _users_cache[user] = render_user_to_json(article.author)
+        _users_cache[user] = render_user_to_json(user)
         return _users_cache[user]
 
     stored_articles = {}
@@ -72,12 +69,9 @@ def reload_once(site):
         last_event = last_events.get(article.id)
         rating, rating_votes, popularity, rating_mode = ratings_map.get(article.id, (0, 0, 0, Settings.RatingMode.Disabled))
         
-        created_by = _get_user_json_cached(article.author)
-
-        updated_by = (
-            created_by if not last_event or last_event.user == article.author 
-            else _get_user_json_cached(last_event.user)
-        )
+        authors = [_get_user_json_cached(author) for author in article.authors.all()]
+        created_by = authors[0]
+        updated_by = _get_user_json_cached(last_event.user)
 
         article_tags = list(sorted([tag.full_name.lower() for tag in article.tags.all()]))
 
@@ -93,6 +87,7 @@ def reload_once(site):
             'updatedAt': article.updated_at.isoformat(),
             'createdBy': created_by,
             'updatedBy': updated_by,
+            'authors': authors,
             'rating': {
                 'value': rating,
                 'votes': rating_votes,

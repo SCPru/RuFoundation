@@ -91,7 +91,7 @@ def migrate_categories(apps: Apps, schema_editor):
 
         if category.readers_can_edit:
             reader_perms.append(get_permission('edit_articles'))
-            reader_perms.append(get_permission('manage_articles_files'))
+            reader_perms.append(get_permission('manage_article_files'))
             reader_perms.append(get_permission('tag_articles'))
             reader_perms.append(get_permission('move_articles'))
 
@@ -112,7 +112,7 @@ def migrate_categories(apps: Apps, schema_editor):
 
         if not category.users_can_edit:
             editor_perms.append(get_permission('edit_articles'))
-            editor_perms.append(get_permission('manage_articles_files'))
+            editor_perms.append(get_permission('manage_article_files'))
             editor_perms.append(get_permission('tag_articles'))
             editor_perms.append(get_permission('move_articles'))
 

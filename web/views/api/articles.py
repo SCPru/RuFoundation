@@ -86,8 +86,9 @@ class FetchOrUpdateView(ArticleView):
 
         return self.render_article(article)
 
-    def render_article(self, article):
+    def render_article(self, article: Article):
         source = articles.get_latest_source(article)
+        authors = [render_user_to_json(author) for author in article.authors.all()]
 
         return self.render_json(200, {
             'uid': article.id,
@@ -95,6 +96,8 @@ class FetchOrUpdateView(ArticleView):
             'title': article.title,
             'source': source,
             'tags': articles.get_tags(article),
+            'author': authors[0],
+            'authors': authors,
             'parent': articles.get_parent(article),
             'locked': article.locked
         })
@@ -159,6 +162,15 @@ class FetchOrUpdateView(ArticleView):
                     articles.set_lock(article, data['locked'], request.user)
                 else:
                     raise APIError('Недостаточно прав', 403)
+                
+        # check if changing authors
+        if 'authorsIds' in data:
+            if isinstance(data['authorsIds'], list) and all(map(lambda a: isinstance(a, str), data)):
+                if can_edit_articles and request.user.has_perm('roles.manage_article_authors', article):
+                    articles.set_authors(article, data['authorsIds'])
+                else:
+                    raise APIError('Недостаточно прав', 403)
+
 
         article.refresh_from_db()
         update_search_index(article)

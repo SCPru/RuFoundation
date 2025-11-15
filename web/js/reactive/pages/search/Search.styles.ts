@@ -185,7 +185,7 @@ export const CheckboxContainer = styled.div`
   border-radius: 8px;
   background: ${({ theme }) => theme.windowBackground}7f;
   display: inline-block;
-  
+
   label {
     cursor: pointer;
   }

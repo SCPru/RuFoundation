@@ -24,13 +24,15 @@ class SearchView(APIView):
         for result in results:
             article = result['article'].article
             rating, votes, popularity, mode = articles.get_rating(article)
+            authors = [render_user_to_json(author) for author in article.authors.all()]
             output_results.append({
                 'uid': article.id,
                 'pageId': article.full_name,
                 'title': article.title,
                 'createdAt': article.created_at.isoformat(),
                 'updatedAt': article.updated_at.isoformat(),
-                'createdBy': render_user_to_json(article.author),
+                'createdBy': authors[0],
+                'authors': authors,
                 'rating': {
                     'value': rating,
                     'votes': votes,

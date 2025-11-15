@@ -4,6 +4,7 @@ import * as ReactDOM from 'react-dom'
 import { sprintf } from 'sprintf-js'
 import { NotificationSubscriptionData, subscribeToNotifications, unsubscribeFromNotifications } from '../api/notifications'
 import { RatingMode } from '../api/rate'
+import ArticleAuthorship from '../articles/article-authorship'
 import ArticleBacklinksView from '../articles/article-backlinks'
 import ArticleChild from '../articles/article-child'
 import ArticleDelete from '../articles/article-delete'
@@ -39,6 +40,7 @@ interface Props {
   canManageFiles?: boolean
   canRename?: boolean
   canCreateHere?: boolean
+  canManageAuthors?: boolean
   canResetVotes?: boolean
   canWatch?: boolean
   isWatching?: boolean
@@ -57,6 +59,7 @@ type SubViewType =
   | 'files'
   | 'delete'
   | 'backlinks'
+  | 'authorship'
   | null
 
 const PageOptions: React.FC<Props> = ({
@@ -79,6 +82,7 @@ const PageOptions: React.FC<Props> = ({
   canManageFiles,
   canRename,
   canCreateHere,
+  canManageAuthors,
   canResetVotes,
   canWatch,
   isWatching,
@@ -220,6 +224,15 @@ const PageOptions: React.FC<Props> = ({
     })
   })
 
+  const onAuthorship = useConstCallback(e => {
+    e.preventDefault()
+    e.stopPropagation()
+    setSubView('authorship')
+    setTimeout(() => {
+      window.scrollTo(window.scrollX, document.body.scrollHeight)
+    })
+  })
+
   const onWatch = useConstCallback(e => {
     e.preventDefault()
     e.stopPropagation()
@@ -318,6 +331,9 @@ const PageOptions: React.FC<Props> = ({
       case 'backlinks':
         return <ArticleBacklinksView pageId={pageId} onClose={onCancelSubView} />
 
+      case 'authorship':
+        return <ArticleAuthorship user={null} pageId={pageId} onClose={onCancelSubView} editable={canManageAuthors} />
+
       default:
         return null
     }
@@ -384,7 +400,7 @@ const PageOptions: React.FC<Props> = ({
             Теги
           </a>
         )}
-        {canViewComments  && (
+        {canViewComments && (
           <a id="discuss-button" className="btn btn-default" href={commentThread || '/forum/start'}>
             {canComment ? 'Обсудить' : 'Обсуждение'} ({commentCount || 0})
           </a>
@@ -406,6 +422,9 @@ const PageOptions: React.FC<Props> = ({
           </a>
           <a id="view-source-button" className="btn btn-default" href="#" onClick={onSource}>
             Исходник страницы
+          </a>
+          <a id="view-authorship-button" className="btn btn-default" href="#" onClick={onAuthorship}>
+            Авторство
           </a>
           {editable && (
             <a id="parent-page-button" className="btn btn-default" href="#" onClick={onParent}>

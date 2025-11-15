@@ -44,7 +44,7 @@ def get_post_info(context, thread, posts, show_replies=True):
             rating_mode = thread.article.settings.rating_mode
             author_vote = Vote.objects.filter(user=post.author, article=thread.article).last()
             author_vote = render_vote_to_html(author_vote, rating_mode)
-            if thread.article.author == post.author:
+            if post.author in thread.article.authors.all():
                 is_op = True
 
         
@@ -120,7 +120,13 @@ def render(context: RenderContext, params):
     t = context.path_params.get('t')
     try:
         t = int(t)
-        thread = ForumThread.objects.filter(id=t)
+        thread = ForumThread.objects.filter(id=t) \
+            .select_related(
+                'article'
+            ) \
+            .prefetch_related(
+                'article__authors'
+            )
         thread = thread[0] if thread else None
     except:
         thread = None
@@ -134,7 +140,7 @@ def render(context: RenderContext, params):
         if not context.user.has_perm('roles.view_forum_threads', thread):
             raise ModuleError('Недостаточно прав для просмотра темы')
     else:
-        if not context.user.has_perm('roles.view_articles_comments', thread):
+        if not context.user.has_perm('roles.view_article_comments', thread):
             raise ModuleError(f'Недостаточно прав для просмотра обсуждения')
         
         # find first category that matches

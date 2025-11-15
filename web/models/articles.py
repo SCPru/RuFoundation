@@ -20,7 +20,6 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.contrib.auth import get_user_model
 
-from web import threadvars
 from web.fields import CITextField
 from .roles import Role, PermissionsOverrideMixin, RolePermissionsOverrideMixin
 from .settings import Settings
@@ -155,7 +154,7 @@ class Article(auto_prefetch.Model, PermissionsOverrideMixin):
 
     parent = auto_prefetch.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Родитель')
     tags = models.ManyToManyField(Tag, blank=True, related_name='articles', verbose_name='Тэги')
-    author = auto_prefetch.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Автор')
+    authors = models.ManyToManyField(User, blank=False, related_name='authored_by', verbose_name='Авторы')
 
     locked = models.BooleanField('Страница защищена', default=False)
 
@@ -190,9 +189,12 @@ class Article(auto_prefetch.Model, PermissionsOverrideMixin):
         return f'{self.title} ({self.full_name})'
     
     def override_perms(self, user_obj, perms: set, roles=[]):
-        if self.locked and 'roles.lock_articles' not in perms:
-            lockable_perms = {'roles.edit_articles', 'roles.manage_articles_files', 'roles.tag_articles', 'roles.move_articles', 'roles.delete_articles'}
-            perms = perms.difference(lockable_perms)
+        if self.locked:
+            if 'roles.lock_articles' not in perms:
+                lockable_perms = {'roles.edit_articles', 'roles.manage_article_authors', 'roles.manage_article_files', 'roles.tag_articles', 'roles.move_articles', 'roles.delete_articles'}
+                perms = perms.difference(lockable_perms)
+        elif user_obj and user_obj in self.authors.all():
+            perms.add('roles.manage_article_authors')
         return super().override_perms(user_obj, perms, roles)
 
 

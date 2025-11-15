@@ -8,8 +8,8 @@ import { highlightWords } from '~reactive/pages/search/Search.utils'
 import useConstCallback from '~util/const-callback'
 import formatDate from '~util/date-format'
 import UserView from '~util/user-view'
-import * as Styled from './Search.styles'
 import WikidotModal from '~util/wikidot-modal'
+import * as Styled from './Search.styles'
 
 export const Search: React.FC = () => {
   const theme = useTheme()
@@ -44,7 +44,7 @@ export const Search: React.FC = () => {
     setIsSearching(true)
     try {
       const results = await fetchSearch(searchText, {
-        mode: isSource ? 'source' : 'plain'
+        mode: isSource ? 'source' : 'plain',
       })
       setLastSearchText(searchText)
       setLastSource(isSource)
@@ -81,7 +81,7 @@ export const Search: React.FC = () => {
     try {
       const results = await fetchSearch(lastSearchText, {
         cursor: searchResults.cursor,
-        mode: lastSource ? 'source' : 'plain'
+        mode: lastSource ? 'source' : 'plain',
       })
       setSearchResults({
         results: [...searchResults.results, ...results.results],
@@ -120,9 +120,7 @@ export const Search: React.FC = () => {
           <Styled.CheckboxContainer>
             <label>
               <input type="checkbox" checked={isSource} onChange={handleSourceChange} />
-              <span>
-                Поиск по исходнику
-              </span>
+              <span>Поиск по исходнику</span>
             </label>
           </Styled.CheckboxContainer>
         </Styled.SearchFieldContainer>
@@ -131,16 +129,20 @@ export const Search: React.FC = () => {
             return (
               <Styled.SearchResult key={index}>
                 <Styled.SearchResultTitle>
-                  <a href={`${window.location.origin}/${article.pageId}`} target="_blank">{highlightWords(article.title, article.words)}</a>
+                  <a href={`${window.location.origin}/${article.pageId}`} target="_blank">
+                    {highlightWords(article.title, article.words)}
+                  </a>
                 </Styled.SearchResultTitle>
-                <Styled.SearchResultSlug>
-                  {article.pageId}
-                </Styled.SearchResultSlug>
+                <Styled.SearchResultSlug>{article.pageId}</Styled.SearchResultSlug>
                 <Styled.SearchResultMeta>
                   <Styled.SearchResultMetaItem>
                     <Styled.SearchResultMetaKey>От:</Styled.SearchResultMetaKey>
                     <Styled.SearchResultMetaValue>
-                      <UserView data={article.createdBy} />
+                      {article.authors?.map(author => (
+                        <React.Fragment>
+                          <UserView data={author} /> {" "}
+                        </React.Fragment>
+                      ))}
                     </Styled.SearchResultMetaValue>
                   </Styled.SearchResultMetaItem>
                   <Styled.SearchResultMetaItem>

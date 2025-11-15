@@ -34,7 +34,7 @@ def get_post_info(context, posts, category_for_comments):
             rating_mode = thread.article.settings.rating_mode
             author_vote = Vote.objects.filter(user=post.author, article=thread.article).last()
             author_vote = render_vote_to_html(author_vote, rating_mode)
-            if thread.article.author == post.author:
+            if post.author in thread.article.authors.all():
                 is_op = True
         
         render_post = {

@@ -78,11 +78,19 @@ def get_page_vars(page: Article):
     
     rating_cache = {}
     def get_rating(key: str):
+        nonlocal rating_cache
         if not rating_cache:
             _, votes, popularity, _ = articles.get_rating(page)
             rating_cache['votes'] = votes
             rating_cache['popularity'] = popularity
         return rating_cache[key]
+    
+    authors = []
+    def get_authors():
+        nonlocal authors
+        if not authors:
+            authors = [author for author in page.authors.all()]
+        return authors
     
     page_vars = LazyDict({
         'name': lambda: page.name,
@@ -97,10 +105,11 @@ def get_page_vars(page: Article):
         'current_user_voted': lambda: 'True' if page.votes.filter(user=current_user).exists() else 'False',
         'popularity': lambda: str(get_rating('popularity')),
         'revisions': lambda: str(len(ArticleLogEntry.objects.filter(article=page))),
-        'created_by': lambda: render_user_to_text(page.author),
-        'created_by_linked': lambda: ('[[*user %s]]' % page.author.username) if page.author and 'username' in page.author.__dict__ else render_user_to_text(page.author),
+        'created_by': lambda: ' '.join([f'<span>{render_user_to_text(author)}</span>' for author in get_authors()]),
+        'created_by_linked': lambda: ' '.join(('[[*user %s]]' % author.username) if author and 'username' in author.__dict__ else render_user_to_text(author) for author in get_authors()),
         'updated_by': lambda: render_user_to_text(get_updated_by()),
         'updated_by_linked': lambda: ('[[*user %s]]' % get_updated_by().username) if get_updated_by() and 'username' in get_updated_by().__dict__ else render_user_to_text(get_updated_by()),
+        'authors_count': lambda: str(len(get_authors())),
         # content{n} = content sections are not supported yet
         # preview and preview(n) = first characters of the page are not supported yet
         # summary = wtf is this?
@@ -278,7 +287,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
             case param.NotParent(parent=parent):
                 q = q.filter(~Q(parent=parent))
             case param.CreatedBy(user=user):
-                q = q.filter(author=user)
+                q = q.filter(authors=user)
             # ---- start CreatedAt
             case param.CreatedAt(type='range', start=start, end=end):
                 q = q.filter(created_at__gte=start, created_at__lte=end)

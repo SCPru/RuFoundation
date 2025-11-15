@@ -6,12 +6,14 @@ export interface ArticleData {
   pageId: string
   title?: string
   source?: string
-  tags?: Array<string>
+  tags?: string[]
+  authors?: UserData[]
   parent?: string
   locked?: boolean
 }
 
 export interface ArticleUpdateRequest extends ArticleData {
+  authorsIds?: number[]
   forcePageId?: boolean
 }
 
@@ -34,6 +36,7 @@ export interface FullArticleData {
   createdAt: string
   updatedAt: string
   createdBy: UserData
+  authors: UserData[]
   updatedBy: UserData
   rating: FullArticleRating
   tags: string[]

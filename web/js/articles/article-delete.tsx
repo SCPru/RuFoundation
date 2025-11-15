@@ -9,7 +9,7 @@ import WikidotModal from '../util/wikidot-modal'
 interface Props {
   pageId: string
   onClose?: () => void
-  canDelete?: boolean,
+  canDelete?: boolean
   canRename?: boolean
 }
 
@@ -113,8 +113,7 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
   const onChange = useConstCallback(e => {
     switch (e.target.name) {
       case 'permanent':
-        if (canRename)
-          setPermanent(!permanent)
+        if (canRename) setPermanent(!permanent)
         break
     }
   })
@@ -182,9 +181,9 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
                   onChange={onChange}
                   id="page-rename-input"
                   checked={!permanent}
-                  disabled={loading || saving || !canRename }
+                  disabled={loading || saving || !canRename}
                 />
-                <label htmlFor="page-rename-input">Переименовать{!canRename && (' (недоступно)')}</label>
+                <label htmlFor="page-rename-input">Переименовать{!canRename && ' (недоступно)'}</label>
               </td>
             </tr>
             <tr>

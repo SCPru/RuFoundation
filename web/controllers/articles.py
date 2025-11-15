@@ -29,6 +29,7 @@ from web.util import lock_table
 _FullNameOrArticle = Optional[Union[str, Article]]
 _FullNameOrCategory = Optional[Union[str, Category]]
 _FullNameOrTag = Optional[Union[str, Tag]]
+_UserIdOrUser = Optional[Union[int, User]]
 
 
 class AbstractArticleEvent(EventBase, is_abstract=True):
@@ -155,9 +156,9 @@ def create_article(full_name: str, user: Optional[_UserType] = None) -> Article:
         name=name,
         created_at=datetime.datetime.now(),
         title=name,
-        author=user
     )
     article.save()
+    article.authors.add(user)
     OnCreateArticle(user, article).emit()
     return article
 
@@ -860,8 +861,9 @@ def get_comment_info(full_name_or_article: _FullNameOrArticle) -> tuple[int, int
         return 0, 0
     with transaction.atomic():
         thread, created = ForumThread.objects.get_or_create(article=article)
-    if created:
-        notifications.subscribe_to_notifications(subscriber=article.author, forum_thread=thread)
+        if created:
+            for author in article.authors.all():
+                notifications.subscribe_to_notifications(subscriber=author, forum_thread=thread)
     post_count = ForumPost.objects.filter(thread=thread).count()
     return thread.id, post_count
 
@@ -1136,6 +1138,7 @@ def fetch_articles_by_names(original_names):
     return articles_dict
 
 
+# Get hidden categories for specific user (none -> AnonymousUser)
 def get_hidden_categories_for(user: User) -> list[Category]:
     if user is None:
         user = AnonymousUser()
@@ -1145,3 +1148,13 @@ def get_hidden_categories_for(user: User) -> list[Category]:
         if not user.has_perm('roles.view_articles', category):
             hidden_categories.append(category)
     return hidden_categories
+
+
+# Set article lock status
+def set_authors(full_name_or_article: _FullNameOrArticle, authors: list[_UserIdOrUser]):
+    if not authors:
+        return
+    article = get_article(full_name_or_article)
+    authors = User.objects.filter(id__in=[author.id if isinstance(author, User) else author for author in authors])
+    if authors.count():
+        article.authors.set(authors)
