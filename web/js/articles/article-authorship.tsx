@@ -88,7 +88,7 @@ const ArticleAuthorship: React.FC<Props> = ({ user, pageId, editable, onClose })
 
   const onAskSubmit = useConstCallback(async () => {
     if (authors.length == 0) {
-      setError('Должен быть указан хотя-бы один автор')
+      setError('Должен быть указан хотя бы один автор')
       return
     }
     if (user && originAuthors.includes(user) && !authors.includes(user)) {
