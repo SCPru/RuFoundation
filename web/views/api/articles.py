@@ -2,6 +2,7 @@ import logging
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 
+from modules.sitechanges import log_entry_default_comment
 from shared_data import shared_articles
 from . import APIView, APIError, takes_json
 
@@ -167,7 +168,7 @@ class FetchOrUpdateView(ArticleView):
         if 'authorsIds' in data:
             if isinstance(data['authorsIds'], list) and all(map(lambda a: isinstance(a, str), data)):
                 if can_edit_articles and request.user.has_perm('roles.manage_article_authors', article):
-                    articles.set_authors(article, data['authorsIds'])
+                    articles.set_authors(article, data['authorsIds'], request.user)
                 else:
                     raise APIError('Недостаточно прав', 403)
 
@@ -214,6 +215,7 @@ class FetchOrRevertLogView(APIView):
                 'revNumber': entry.rev_number,
                 'user': render_user_to_json(entry.user),
                 'comment': entry.comment,
+                'defaultComment': log_entry_default_comment(entry),
                 'createdAt': entry.created_at.isoformat(),
                 'type': entry.type,
                 'meta': entry.meta

@@ -163,6 +163,8 @@ export function renderArticleHistoryComment(entry: ArticleLogEntry) {
   if (entry.comment.trim()) {
     return entry.comment
   }
+  return entry.defaultComment
+  
   switch (entry.type) {
     case 'new':
       return 'Создание новой страницы'
@@ -252,6 +254,22 @@ export function renderArticleHistoryComment(entry: ArticleLogEntry) {
           Сброшен рейтинг страницы: {ratingStr} (голосов: {entry.meta.votes_count}, популярность: {entry.meta.popularity}%)
         </>
       )
+    }
+
+    case 'authorship':{
+      let added_authors = entry.meta.added_authors
+      let removed_authors = entry.meta.removed_authors
+      if (Array.isArray(added_authors) && added_authors.length && Array.isArray(removed_authors) && removed_authors.length) {
+        return (
+          <>
+            Добавлены авторы: {added_authors.join(', ')}. Удалены авторы: {removed_authors.join(', ')}.
+          </>
+        )
+      } else if (Array.isArray(added_authors) && added_authors.length) {
+        return <>Добавлены авторы: {added_authors.join(', ')}.</>
+      } else if (Array.isArray(removed_authors) && removed_authors.length) {
+        return <>Удалены авторы: {removed_authors.join(', ')}.</>
+      }
     }
 
     case 'revert':

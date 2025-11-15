@@ -270,6 +270,25 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
             pass
         elif entry.type == ArticleLogEntry.LogEntryType.VotesDeleted:
             new_props['votes'] = entry.meta
+        elif entry.type == ArticleLogEntry.LogEntryType.Authorship:
+            if 'added_authors' not in new_props:
+                new_props['added_authors'] = []
+            if 'removed_authors' not in new_props:
+                new_props['removed_authors'] = []
+            # logic: authors that were removed are now added
+            #        authors that were added are now removed
+            for author in entry.meta['added_authors']:
+                try:
+                    new_props['added_authors'].remove(author)
+                except ValueError:
+                    pass
+                new_props['removed_authors'].append(author)
+            for author in entry.meta['removed_authors']:
+                try:
+                    new_props['removed_authors'].remove(author)
+                except ValueError:
+                    pass
+                new_props['added_authors'].append(author)
         elif entry.type == ArticleLogEntry.LogEntryType.Revert:
             if 'source' in entry.meta:
                 new_props['source'] = get_previous_version(entry.meta['source']['version_id']).source
@@ -315,6 +334,25 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
                     new_props['files_renamed'][f['id']] = f['prev_name']
             if 'votes' in entry.meta:
                 new_props['votes'] = entry.meta['votes']
+            if 'authorship' in entry.meta:
+                if 'added_authors' not in new_props:
+                    new_props['added_authors'] = []
+                if 'removed_authors' not in new_props:
+                    new_props['removed_authors'] = []
+                # logic: authors that were removed are now added
+                #        authors that were added are now removed
+                for author in entry.meta['authorship']['added']:
+                    try:
+                        new_props['added_authors'].remove(author)
+                    except ValueError:
+                        pass
+                    new_props['removed_authors'].append(author)
+                for author in entry.meta['authorship']['removed']:
+                    try:
+                        new_props['removed_authors'].remove(author)
+                    except ValueError:
+                        pass
+                    new_props['added_authors'].append(author)
 
     subtypes = []
 
@@ -458,6 +496,29 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
                 new_vote.save()
                 new_vote.date = vote_date
                 new_vote.save()
+
+    authors_added_meta = []
+    authors_removed_meta = []
+
+    authors = [x.id for x in get_authors(article)]
+    for author in new_props.get('removed_authors', []):
+        try:
+            authors.remove(author)
+            authors_removed_meta.append(author)
+        except ValueError:
+            pass
+    for author in new_props.get('added_authors', []):
+        authors.append(author)
+        authors_added_meta.append(author)
+    new_authors = list(User.objects.filter(id__in=authors))
+    set_authors(article, new_authors, user)
+
+    if authors_added_meta or authors_removed_meta:
+        subtypes.append(ArticleLogEntry.LogEntryType.Authorship)
+        meta['authorship'] = {
+            'added': tags_added_meta,
+            'removed': tags_removed_meta
+        }
 
     meta['rev_number'] = rev_number
     meta['subtypes'] = subtypes
@@ -1150,11 +1211,31 @@ def get_hidden_categories_for(user: User) -> list[Category]:
     return hidden_categories
 
 
+def get_authors(full_name_or_article):
+    article = get_article(full_name_or_article)
+    return article.authors.all()
+
+
 # Set article lock status
-def set_authors(full_name_or_article: _FullNameOrArticle, authors: list[_UserIdOrUser]):
+def set_authors(full_name_or_article: _FullNameOrArticle, authors: list[_UserIdOrUser], user: Optional[_UserType]):
     if not authors:
         return
+    
     article = get_article(full_name_or_article)
     authors = User.objects.filter(id__in=[author.id if isinstance(author, User) else author for author in authors])
+
     if authors.count():
+        old_authors = set(article.authors.all())
         article.authors.set(authors)
+        new_authors = set(authors)
+
+        added_authors = [author.id for author in (new_authors - old_authors)]
+        removed_authors = [author.id for author in (old_authors - new_authors)]
+
+        log = ArticleLogEntry(
+            article=article,
+            user=user,
+            type=ArticleLogEntry.LogEntryType.Authorship,
+            meta={'added_authors': added_authors, 'removed_authors': removed_authors}
+        )
+        add_log_entry(article, log)

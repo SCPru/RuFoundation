@@ -233,6 +233,7 @@ class ArticleLogEntry(auto_prefetch.Model):
         FileDeleted = ('file_deleted', 'Удаление файлов')
         FileRenamed = ('file_renamed', 'Переименование файлов')
         VotesDeleted = ('votes_deleted', 'Сброс рейтинга')
+        Authorship = ('authorship', 'Изменение авторства')
         Wikidot = ('wikidot', 'Правка с Wikidot')
         Revert = ('revert', 'Откат правки')
 

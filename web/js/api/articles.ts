@@ -62,6 +62,7 @@ export interface ArticleLogEntry {
   revNumber: number
   user: UserData
   comment: string
+  defaultComment: string
   createdAt: string
   type: string
   meta: Record<string, any>

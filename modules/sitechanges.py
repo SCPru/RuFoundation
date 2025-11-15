@@ -10,6 +10,7 @@ from renderer import RenderContext, render_template_from_string, render_user_to_
 
 from modules.listpages import render_pagination, render_date
 
+from renderer.utils import render_user_to_text
 from web.models.users import User
 from web.models.articles import ArticleLogEntry, Article
 from web.models.settings import Settings
@@ -32,6 +33,7 @@ def log_entry_type_name(entry: ArticleLogEntry.LogEntryType) -> tuple[str, str]:
         ArticleLogEntry.LogEntryType.FileDeleted: ('F', 'файл удалён'),
         ArticleLogEntry.LogEntryType.FileRenamed: ('F', 'файл переименован'),
         ArticleLogEntry.LogEntryType.VotesDeleted: ('V', 'голоса изменены'),
+        ArticleLogEntry.LogEntryType.Authorship: ('C', 'авторство изменено'),
         ArticleLogEntry.LogEntryType.Wikidot: ('W', 'правка, портированная с Wikidot')
     }
     return mapping.get(entry, ('?', '?'))
@@ -53,12 +55,11 @@ def log_entry_default_comment(entry: ArticleLogEntry) -> str:
     if entry.type == ArticleLogEntry.LogEntryType.Tags:
         added_tags = [x['name'] for x in entry.meta.get('added_tags', [])]
         removed_tags = [x['name'] for x in entry.meta.get('removed_tags', [])]
-        if added_tags and removed_tags:
-            return f'Добавлены теги: {', '.join(added_tags)}. Удалены теги: {', '.join(removed_tags)}.'
-        if added_tags:
-            return f'Добавлены теги: {', '.join(added_tags)}.'
-        if removed_tags:
-            return f'Удалены теги: {', '.join(removed_tags)}.'
+        log = [
+            added_tags and f'Добавлены теги: {', '.join(added_tags)}.',
+            removed_tags and f'Удалены теги: {', '.join(removed_tags)}.'
+        ]
+        return ' '.join(l for l in log if l)
 
     if entry.type == ArticleLogEntry.LogEntryType.Parent:
         if entry.meta['prev_parent'] and entry.meta['parent']:
@@ -84,6 +85,17 @@ def log_entry_default_comment(entry: ArticleLogEntry) -> str:
         elif entry.meta['rating_mode'] == Settings.RatingMode.Stars:
             rating_str = '%.1f' % float(entry.meta['rating'])
         return f'Сброшен рейтинг страницы: {rating_str} (голосов: {entry.meta['votes_count']}, популярность: {entry.meta['popularity']}%)'
+    
+    if entry.type == ArticleLogEntry.LogEntryType.Authorship:
+        added_authors = User.objects.filter(id__in=entry.meta.get('added_authors', []))
+        removed_authors = User.objects.filter(id__in=entry.meta.get('removed_authors', []))
+        added_authors = [render_user_to_text(a) for a in added_authors]
+        removed_authors = [render_user_to_text(a) for a in removed_authors]
+        log = [
+            added_authors and f'Добавлены авторы: {', '.join(added_authors)}.',
+            removed_authors and f'Удалены авторы: {', '.join(removed_authors)}.'
+        ]
+        return ' '.join(l for l in log if l)
 
     if entry.type == ArticleLogEntry.LogEntryType.Revert:
         return f'Откат страницы к версии №{entry.meta['rev_number']}'
