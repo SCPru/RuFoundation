@@ -5,8 +5,6 @@ from renderer.parser import RenderContext
 from renderer.templates import apply_template
 from renderer.utils import get_boolean_param, render_user_to_html, render_user_to_text
 
-from ._csrf_protection import csrf_safe_method
-
 
 def allow_api():
     return True

@@ -1232,10 +1232,11 @@ def set_authors(full_name_or_article: _FullNameOrArticle, authors: list[_UserIdO
         added_authors = [author.id for author in (new_authors - old_authors)]
         removed_authors = [author.id for author in (old_authors - new_authors)]
 
-        log = ArticleLogEntry(
-            article=article,
-            user=user,
-            type=ArticleLogEntry.LogEntryType.Authorship,
-            meta={'added_authors': added_authors, 'removed_authors': removed_authors}
-        )
-        add_log_entry(article, log)
+        if added_authors or removed_authors:
+            log = ArticleLogEntry(
+                article=article,
+                user=user,
+                type=ArticleLogEntry.LogEntryType.Authorship,
+                meta={'added_authors': added_authors, 'removed_authors': removed_authors}
+            )
+            add_log_entry(article, log)
