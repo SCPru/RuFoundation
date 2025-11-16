@@ -1,10 +1,11 @@
 import * as React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import styled from 'styled-components'
 import { fetchForumPost, previewForumPost } from '../api/forum'
 import useConstCallback from '../util/const-callback'
 import Loader from '../util/loader'
 import WikidotModal from '../util/wikidot-modal'
+import { fetchAllUsers, UserData } from '../api/user'
 
 export interface ForumPostPreviewData {
   name: string
@@ -53,6 +54,40 @@ const Styles = styled.div`
   }
 `
 
+const StyledTextarea = styled.textarea`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 250px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  box-sizing: border-box;
+  background: transparent;
+  color: transparent;
+  caret-color: black;
+  resize: vertical;
+  z-index: 2;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+`
+
+const FakeEditor = styled.pre`
+  font-family: verdana, arial, helvetica, sans-serif;
+  text-align: left;
+  margin: 0;
+  height: 250px;
+  pointer-events: none;
+  border: 1px solid #ccc;
+  padding: 10px;
+  box-sizing: border-box;
+  overflow: auto;
+  background: #fff;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  z-index: 1;
+`
+
 const ForumPostEditor: React.FC<Props> = ({
   initialTitle,
   isThread,
@@ -70,6 +105,8 @@ const ForumPostEditor: React.FC<Props> = ({
   const [savingSuccess, setSavingSuccess] = useState(false)
   const [error, setError] = useState('')
   const [fatalError, setFatalError] = useState(false)
+  const [usernameSet, setUsernameSet] = useState<Set<string>>()
+  const [highlightedSource, setHighlightedSource] = useState<React.ReactNode[]>([])
 
   const handleRefresh = useConstCallback(e => {
     if (!saving) {
@@ -99,11 +136,55 @@ const ForumPostEditor: React.FC<Props> = ({
         })
     }
 
+    fetchAllUsers()
+    .then(users => {
+      setUsernameSet(new Set(users.map(u => u.username.toLowerCase())))
+    })
+    .catch(e => {
+      setFatalError(false)
+      setError(e.error || 'Ошибка связи с сервером')
+    })
+
     return () => {
       window.removeEventListener('beforeunload', handleRefresh)
       ;(window as any)._closePostEditor = undefined
     }
   }, [])
+
+  useEffect(() => {
+    setHighlightedSource(highlightMentions(source))
+  }, [source, usernameSet])
+
+  const highlightMentions = useConstCallback((text: string) => {
+    const result: React.ReactNode[] = [];
+
+    const regex = /@[\w.-]+/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(text)) !== null) {
+      const full = match[0];
+      const username = full.slice(1);
+
+      if (match.index > lastIndex) {
+        result.push(text.slice(lastIndex, match.index));
+      }
+
+      if (usernameSet.has(username.toLowerCase())) {
+        result.push(<span className="user-mention-highlight" key={match.index}>{full}</span>);
+      } else {
+        result.push(full);
+      }
+
+      lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      result.push(text.slice(lastIndex));
+    }
+
+    return result;
+  });
 
   const onSubmit = useConstCallback(async e => {
     if (e) {
@@ -250,16 +331,18 @@ const ForumPostEditor: React.FC<Props> = ({
         {/* This is not supported right now but we have to add empty div for BHL */}
         <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
         <div className={`w-editor-area ${loading ? 'loading' : ''}`}>
-          <textarea
+          <StyledTextarea
             className="form-control"
             value={source}
             onChange={onChange}
             name="source"
             rows={10}
             cols={60}
-            style={{ width: '95%' }}
             disabled={loading || saving}
           />
+          <FakeEditor>
+            <React.Fragment>{highlightedSource.map(e => (e))}</React.Fragment>
+          </FakeEditor>
           {loading && <Loader className="loader" />}
         </div>
         <div className="buttons alignleft">

@@ -1,14 +1,19 @@
 import json
 import math
+import re
 
-from modules import ModuleError
-from modules.listpages import render_date, render_pagination
-from renderer import RenderContext
+from django.db.models.functions import Lower
+from django.utils.safestring import SafeString
 
 import renderer
 
+from modules import ModuleError
+from modules.listpages import render_date, render_pagination
 from renderer.utils import render_user_to_json, render_user_to_html, render_template_from_string, render_vote_to_html
+from renderer import RenderContext
+
 from web.controllers import articles
+from web.models.users import User
 from web.models.articles import Vote
 from web.models.forum import ForumCategory, ForumThread, ForumSection, ForumPost, ForumPostVersion
 
@@ -21,7 +26,6 @@ def has_content():
 def allow_api():
     return True
 
-
 def get_post_contents(posts):
     post_ids = [x.id for x in posts]
     post_contents = ForumPostVersion.objects.order_by('post_id', '-created_at').distinct('post_id').filter(post_id__in=post_ids)
@@ -31,9 +35,26 @@ def get_post_contents(posts):
     return ret
 
 
-def get_post_info(context, thread, posts, show_replies=True):
+def highlight_mentions(text: str, usernames: set[str]) -> str:
+    regex = re.compile(r'@[\w.-]+')
+
+    def repl(match: re.Match) -> str:
+        full = match.group(0)
+        username = full[1:]
+
+        if username.lower() in usernames:
+            return f'<span class="user-mention-highlight">{full}</span>'
+        return full
+
+    return SafeString(regex.sub(repl, text))
+
+
+def get_post_info(context, thread, posts, show_replies=True, usernames: set[str]=None):
     post_contents = get_post_contents(posts)
     post_info = []
+
+    if usernames is None:
+        usernames = set(User.objects.all().values_list(Lower('username'), flat=True))
 
     for post in posts:
         replies = ForumPost.objects.filter(reply_to=post).order_by('created_at') if show_replies else []
@@ -47,8 +68,10 @@ def get_post_info(context, thread, posts, show_replies=True):
             if post.author in thread.article.authors.all():
                 is_op = True
 
-        
-        
+        content = highlight_mentions(
+            renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user), 'message'),
+            usernames
+        )
         render_post = {
             'id': post.id,
             'name': post.name,
@@ -57,8 +80,8 @@ def get_post_info(context, thread, posts, show_replies=True):
             'author_rate': author_vote,
             'created_at': render_date(post.created_at),
             'updated_at': render_date(post.updated_at),
-            'content': renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user), 'message'),
-            'replies': get_post_info(context, thread, replies, show_replies),
+            'content': content,
+            'replies': get_post_info(context, thread, replies, show_replies, usernames),
             'rendered_replies': None,
             'options_config': json.dumps({
                 'threadId': thread.id,
@@ -203,6 +226,7 @@ def render(context: RenderContext, params):
 
     posts = q[(page-1)*per_page:page*per_page]
     post_info = get_post_info(context, thread, posts)
+
 
     context.path_params['p'] = str(page)
 

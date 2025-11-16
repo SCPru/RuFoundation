@@ -199,3 +199,9 @@
   height: 14.4px;
   width: 14.4px;
 }
+
+.user-mention-highlight {
+  color: #1f6feb;
+  background: rgba(31, 110, 235, 0.08);
+  border-radius: 3px;
+}
