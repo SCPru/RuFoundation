@@ -392,7 +392,7 @@ const PageOptions: React.FC<Props> = ({
         )}
         {ratingMode != 'disabled' && (
           <a id="pagerate-button" className="btn btn-default" href="#" onClick={onRate}>
-            {canRate ? 'Оценить' : 'Оценки'} ({renderRating()})
+            {canRate ? 'Оценить' : 'Оценки'}&nbsp;({renderRating()})
           </a>
         )}
         {tagable && (
@@ -402,7 +402,7 @@ const PageOptions: React.FC<Props> = ({
         )}
         {canViewComments && (
           <a id="discuss-button" className="btn btn-default" href={commentThread || '/forum/start'}>
-            {canComment ? 'Обсудить' : 'Обсуждение'} ({commentCount || 0})
+            {canComment ? 'Обсудить' : 'Обсуждение'}&nbsp;({commentCount || 0})
           </a>
         )}
         <a id="history-button" className="btn btn-default" href="#" onClick={onHistory}>
@@ -412,7 +412,7 @@ const PageOptions: React.FC<Props> = ({
           Файлы
         </a>
         <a id="more-options-button" className="btn btn-default" href="#" onClick={toggleExtOptions}>
-          {extOptions ? '- Опции' : '+ Опции'}
+          {extOptions ? '-' : '+'}&nbsp;{'Опции'}
         </a>
       </div>
       {extOptions && (
