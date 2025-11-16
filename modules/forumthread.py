@@ -49,12 +49,9 @@ def highlight_mentions(text: str, usernames: set[str]) -> str:
     return SafeString(regex.sub(repl, text))
 
 
-def get_post_info(context, thread, posts, show_replies=True, usernames: set[str]=None):
+def get_post_info(context, thread, posts, show_replies=True, usernames: set[str]=set()):
     post_contents = get_post_contents(posts)
     post_info = []
-
-    if usernames is None:
-        usernames = set(User.objects.all().values_list(Lower('username'), flat=True))
 
     for post in posts:
         replies = ForumPost.objects.filter(reply_to=post).order_by('created_at') if show_replies else []
@@ -224,8 +221,9 @@ def render(context: RenderContext, params):
     if page > max_page:
         page = max_page
 
+    usernames = set(User.objects.all().values_list(Lower('username'), flat=True))
     posts = q[(page-1)*per_page:page*per_page]
-    post_info = get_post_info(context, thread, posts)
+    post_info = get_post_info(context, thread, posts, usernames=usernames)
 
 
     context.path_params['p'] = str(page)

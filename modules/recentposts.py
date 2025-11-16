@@ -1,17 +1,21 @@
 import json
+import math
+import re
 
 from django.db.models import Q
+from django.db.models.functions import Lower
+from django.utils.safestring import SafeString
+
+import renderer
 
 from modules.forumthread import get_post_contents
 from modules.listpages import render_pagination, render_date
 from renderer import RenderContext, render_template_from_string, render_user_to_html
-import math
-
-import renderer
-
 from renderer.utils import render_vote_to_html
+
 from web.controllers import articles
 from web.models.articles import Vote
+from web.models.users import User
 from web.models.forum import ForumCategory, ForumSection, ForumPost
 
 
@@ -19,10 +23,23 @@ def has_content():
     return False
 
 
-def get_post_info(context, posts, category_for_comments):
+def highlight_mentions(text: str, usernames: set[str]) -> str:
+    regex = re.compile(r'@[\w.-]+')
+
+    def repl(match: re.Match) -> str:
+        full = match.group(0)
+        username = full[1:]
+
+        if username.lower() in usernames:
+            return f'<span class="user-mention-highlight">{full}</span>'
+        return full
+
+    return SafeString(regex.sub(repl, text))
+
+
+def get_post_info(context, posts, category_for_comments, usernames: set[str]=set()):
     post_contents = get_post_contents(posts)
     post_info = []
-    
 
     for post in posts:
         thread = post.thread
@@ -37,6 +54,10 @@ def get_post_info(context, posts, category_for_comments):
             if post.author in thread.article.authors.all():
                 is_op = True
         
+        content = highlight_mentions(
+            renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user), 'message'),
+            usernames
+        )
         render_post = {
             'id': post.id,
             'name': post.name.strip() or 'Перейти к сообщению',
@@ -44,7 +65,7 @@ def get_post_info(context, posts, category_for_comments):
             'author': render_user_to_html(post.author),
             'author_rate': author_vote,
             'created_at': render_date(post.created_at),
-            'content': renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user), 'message'),
+            'content': content,
             'url': '%s#post-%d' % (thread_url, post.id),
             'category': {
                 'id': post.thread.category.id,
@@ -131,8 +152,9 @@ def render(context: RenderContext, params):
     if category and category.is_for_comments:
         category_for_comments = category
 
+    usernames = set(User.objects.all().values_list(Lower('username'), flat=True))
     posts = q[(page - 1) * per_page:page * per_page]
-    post_info = get_post_info(context, posts, category_for_comments)
+    post_info = get_post_info(context, posts, category_for_comments, usernames=usernames)
 
     categories = []
     raw_categories = all_categories
