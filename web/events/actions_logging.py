@@ -66,7 +66,7 @@ def log_forum_new_post(e: OnForumNewPost):
     meta = {
         'author_id': e.post.author.id,
         'post': model_to_dict(e.post),
-        'title': e.post.name,
+        'title': e.title,
         'source': e.source
     }
     

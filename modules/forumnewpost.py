@@ -6,12 +6,15 @@ from renderer import RenderContext, single_pass_render
 from web.events import EventBase
 from web.controllers import articles
 from web.models.forum import ForumThread, ForumPost, ForumPostVersion
+from web.models.users import User
 
 from ._csrf_protection import csrf_safe_method
 
 
 class OnForumNewPost(EventBase):
+    user: User
     post: ForumPost
+    title: str
     source: str
 
 
@@ -74,6 +77,6 @@ def api_submit(context, params):
     thread.updated_at = datetime.now(timezone.utc)
     thread.save()
 
-    OnForumNewPost(post=post, source=source).emit()
+    OnForumNewPost(context.user, post, title, source).emit()
 
     return {'url': '/forum/t-%d/%s#post-%d' % (thread.id, articles.normalize_article_name(thread.name), post.id)}

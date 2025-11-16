@@ -20,11 +20,10 @@ class NotificationsView(APIView):
             'id': notification.id,
             'type': notification.type,
             'created_at': notification.created_at.isoformat(),
-            'referred_to': notification.referred_to,
             'is_viewed': is_viewed,
         }, **notification.meta)
 
-        if notification.type in [UserNotification.NotificationType.NewThreadPost, UserNotification.NotificationType.NewPostReply]:
+        if notification.type in [UserNotification.NotificationType.NewThreadPost, UserNotification.NotificationType.NewPostReply, UserNotification.NotificationType.ForumMention]:
             base_notification['message'] = single_pass_render(base_notification['message_source'], render_context, mode='message'),
 
         return base_notification

@@ -25,13 +25,13 @@ class ForumSection(auto_prefetch.Model, PermissionsOverrideMixin):
         verbose_name = 'Категория форума'
         verbose_name_plural = 'Категории форума'
 
-    name = models.TextField(verbose_name='Название')
-    description = models.TextField(verbose_name='Описание', blank=True)
-    order = models.IntegerField(verbose_name='Порядок сортировки', default=0, blank=True)
+    name = models.TextField('Название')
+    description = models.TextField('Описание', blank=True)
+    order = models.IntegerField('Порядок сортировки', default=0, blank=True)
     # this is hidden for anyone unless they click 'show hidden'
-    is_hidden = models.BooleanField(verbose_name='Скрытая категория', default=False)
+    is_hidden = models.BooleanField('Скрытая категория', default=False)
     # this is displayed for moderators and admins but completely hidden for users
-    is_hidden_for_users = models.BooleanField(verbose_name='Видна только модераторам', default=False)
+    is_hidden_for_users = models.BooleanField('Видна только модераторам', default=False)
 
     def __str__(self):
         return self.name
@@ -47,11 +47,11 @@ class ForumCategory(auto_prefetch.Model):
         verbose_name = 'Раздел форума'
         verbose_name_plural = 'Разделы форума'
 
-    name = models.TextField(verbose_name='Название')
-    description = models.TextField(verbose_name='Описание', blank=True)
-    order = models.IntegerField(verbose_name='Порядок сортировки', default=0, blank=True)
+    name = models.TextField('Название')
+    description = models.TextField('Описание', blank=True)
+    order = models.IntegerField('Порядок сортировки', default=0, blank=True)
     section = auto_prefetch.ForeignKey(ForumSection, on_delete=models.DO_NOTHING, verbose_name='Категория')  # to-do: review later
-    is_for_comments = models.BooleanField(verbose_name='Отображать комментарии к статьям в этом разделе', default=False)
+    is_for_comments = models.BooleanField('Отображать комментарии к статьям в этом разделе', default=False)
 
     def __str__(self):
         return self.name
@@ -76,15 +76,15 @@ class ForumThread(auto_prefetch.Model, PermissionsOverrideMixin):
 
     roles_override_pipeline = ['article']
 
-    name = models.TextField(verbose_name='Название')
-    description = models.TextField(verbose_name='Описание', blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
-    updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Время изменения')
+    name = models.TextField('Название')
+    description = models.TextField('Описание', blank=True)
+    created_at = models.DateTimeField('Время создания', auto_now_add=True)
+    updated_at = models.DateTimeField('Время изменения', auto_now_add=True)
     category = auto_prefetch.ForeignKey(ForumCategory, on_delete=models.DO_NOTHING, null=True, verbose_name='Раздел (если это тема)')  # to-do: review later
     article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, null=True, verbose_name='Статья (если это комментарии)')
     author = auto_prefetch.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name='Автор')
-    is_pinned = models.BooleanField(verbose_name='Пришпилено', default=False)
-    is_locked = models.BooleanField(verbose_name='Закрыто', default=False)
+    is_pinned = models.BooleanField('Пришпилено', default=False)
+    is_locked = models.BooleanField('Закрыто', default=False)
 
     def override_perms(self, user_obj, perms: set, roles=[]):
         if user_obj == self.author:
@@ -102,9 +102,9 @@ class ForumPost(auto_prefetch.Model, PermissionsOverrideMixin):
 
     perms_override_pipeline = ['thread']
 
-    name = models.TextField(verbose_name='Название', blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
-    updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Время изменения')
+    name = models.TextField('Название', blank=True)
+    created_at = models.DateTimeField('Время создания', auto_now_add=True, )
+    updated_at = models.DateTimeField('Время изменения', auto_now_add=True)
     author = auto_prefetch.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name='Автор')
     reply_to = auto_prefetch.ForeignKey('ForumPost', on_delete=models.SET_NULL, null=True, verbose_name='Ответ на комментарий')
     thread = auto_prefetch.ForeignKey(ForumThread, on_delete=models.CASCADE, verbose_name='Тема')
@@ -121,6 +121,6 @@ class ForumPostVersion(auto_prefetch.Model):
         verbose_name_plural = 'Версии сообщений форума'
 
     post = auto_prefetch.ForeignKey(ForumPost, on_delete=models.CASCADE, verbose_name='Сообщение')
-    source = models.TextField(verbose_name='Текст сообщения')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
+    source = models.TextField('Текст сообщения')
+    created_at = models.DateTimeField('Время создания', auto_now_add=True)
     author = auto_prefetch.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name='Автор правки')

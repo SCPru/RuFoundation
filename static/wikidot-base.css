@@ -421,6 +421,7 @@ a.newpage{
 	margin: 2px 2px;
 	font-size: 95%;
 	padding: 0 8px;
+	display: inline-block;
 }
 
 .page-watch-options{

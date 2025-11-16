@@ -137,8 +137,6 @@
         const roleId = e.target.id.slice(5)
         const oldPermsList = document.getElementsByClassName(`selected`)[0]
         const newPermsList = document.getElementsByClassName(`role-${roleId}`)[0]
-
-        console.log()
         
         oldPermsList.classList.remove('selected')
         newPermsList.classList.add('selected')

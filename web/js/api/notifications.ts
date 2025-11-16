@@ -10,7 +10,6 @@ interface NotificationEntity {
 interface BaseNotification {
   id: number
   created_at: string
-  referred_to: string
   is_viewed: boolean
 }
 
@@ -54,7 +53,17 @@ interface NotificationNewPostReply extends BaseNotification {
   message: string
 }
 
-export type Notification = NotificationNewPostReply | NotificationNewThreadPost | NotificationWelcome | NotificationNewArticleRevision
+interface NotificationForumMention extends BaseNotification {
+  type: 'forum_mention'
+  author: UserData
+  section: NotificationEntity
+  category: NotificationEntity
+  thread: NotificationEntity
+  post: NotificationEntity
+  message: string
+}
+
+export type Notification = NotificationNewPostReply | NotificationNewThreadPost | NotificationWelcome | NotificationNewArticleRevision | NotificationForumMention
 
 export interface NotificationsResponse {
   cursor: number

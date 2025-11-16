@@ -9,12 +9,13 @@ from web.models import ForumPost, ForumPostVersion, User
 
 from ._csrf_protection import csrf_safe_method
 
+
 class OnForumEditPost(EventBase):
     user: User
     post: ForumPost
     title: str
-    prev_title: str
     source: str
+    prev_title: str
     prev_source: str
 
 
@@ -99,7 +100,7 @@ def api_update(context, params):
 
     post.save()
 
-    OnForumEditPost(context.user, post, title, prev_title, source, prev_source).emit()
+    OnForumEditPost(context.user, post, title, source, prev_title, prev_source).emit()
 
     content = single_pass_render(source, RenderContext(None, None, {}, context.user), 'message')
 
