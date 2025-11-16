@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('web', '0065_alter_articlelogentry_type'),
+        ('web', '0066_actionlogentry_user_origin_ip_idx'),
     ]
 
     operations = [
