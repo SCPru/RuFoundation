@@ -22,8 +22,7 @@ RUN mkdir -p /build/static
 
 WORKDIR /build/web/js
 COPY web/js .
-RUN yarn install
-RUN yarn run build
+RUN --mount=type=cache,target=/build/.yarn YARN_CACHE_FOLDER=/build/.yarn yarn install && yarn run build
 
 # Python stuff
 FROM python:3.13.2
