@@ -15,6 +15,13 @@ class ActionLogEntry(auto_prefetch.Model):
         verbose_name = 'Действие'
         verbose_name_plural = 'Действия'
 
+        indexes = [
+            models.Index(
+                fields=['user', 'origin_ip'],
+                name='user_origin_ip_idx'
+            ),
+        ]
+
     class ActionType(models.TextChoices):
         Vote = ('vote', 'Оценка')
         NewArticle = ('create_article', 'Страница создана')

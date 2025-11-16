@@ -22,9 +22,16 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
             {'model': models.roles.Role},
             {'model': models.users.User},
         )),
+        ('Активность', (
+            {'model': models.logs.ActionLogEntry},
+            {
+                'name': 'Подозрительная',
+                'url': '/-/admin/web/user/sus/',
+                'permissions': ['roles.view_sensetive_info']
+            },
+        )),
         ('Структура', (
             {'model': models.site.Site},
-            {'model': models.logs.ActionLogEntry},
             {'model': models.articles.Category},
             {'model': models.articles.TagsCategory},
             {'model': models.articles.Tag},
@@ -52,18 +59,28 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
         app["name"] = section[0]
         app["models"] = []
         for model in section[1]:
-            app_label = app_label_by_model.get(model["model"])
-            model = model_meta_by_model.get(model["model"])
-            if not model or not app_label:
-                continue
-            model_str = "{app_label}.{model}".format(app_label=app_label, model=model["object_name"]).lower()
-            if model_str in options.get("hide_models", []):
-                continue
-            item = copy.deepcopy(model)
-            item["url"] = item["admin_url"]
-            item["model_str"] = model_str
-            item["icon"] = options["icons"].get(model_str, options["default_icon_children"])
-            app["models"].append(item)
+            if 'model' in model:
+                app_label = app_label_by_model.get(model["model"])
+                model = model_meta_by_model.get(model["model"])
+                if not model or not app_label:
+                    continue
+                model_str = "{app_label}.{model}".format(app_label=app_label, model=model["object_name"]).lower()
+                if model_str in options.get("hide_models", []):
+                    continue
+                item = copy.deepcopy(model)
+                item["url"] = item["admin_url"]
+                item["model_str"] = model_str
+                item["icon"] = options["icons"].get(model_str, options["default_icon_children"])
+                app["models"].append(item)
+            else:
+                item = copy.deepcopy(model)
+                if 'permissions' in item:
+                    does_not_have_any = [x for x in item["permissions"] if not context.get('user').has_perm(x)]
+                    if does_not_have_any:
+                        continue
+                    del item["permissions"]
+                item["icon"] = item.get("icon") or options["default_icon_children"]
+                app["models"].append(item)
         if not app["models"]:
             continue
         menu.append(app)

@@ -16,3 +16,15 @@ export interface UserData {
 export function fetchAllUsers(): Promise<UserData[]> {
   return wFetch<UserData[]>('/api/users')
 }
+
+export interface AdminSusUser {
+  user: {
+    id: number
+    name: string
+  }
+  ip: string
+}
+
+export function fetchAdminSusUsers(): Promise<AdminSusUser[]> {
+  return wFetch<AdminSusUser[]>('/api/admin/users/sus')
+}

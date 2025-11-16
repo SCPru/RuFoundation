@@ -135,10 +135,13 @@ class Command(BaseRunserverCommand):
             def updated(self, filename):
                 filename = filename.replace('\\', '/')
                 # filename must start with ./
-                if filename.endswith('.py') or filename.startswith(base_project_dir + '/src/') or filename == base_project_dir + '/src':
+                if filename.endswith('.py')\
+                        or filename.endswith('.html')\
+                        or filename.startswith(base_project_dir + '/src/')\
+                        or filename == base_project_dir + '/src':
                     with self.lock:
                         self.is_updated = True
-                        self.updated_rust = not filename.endswith('.py')
+                        self.updated_rust = not filename.endswith('.py') and not filename.endswith('.html')
 
         w = FtmlWatcher()
         observer.schedule(w, '.', recursive=True)

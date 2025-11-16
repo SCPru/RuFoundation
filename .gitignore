@@ -4,6 +4,8 @@ db.sqlite3
 files/*
 !files/.gitkeep
 static_dist
+static/app.css.map
+static/system.css.map
 node_modules
 *.log
 .env

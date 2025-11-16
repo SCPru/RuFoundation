@@ -26,6 +26,7 @@ import { makeRecentPosts } from './forum/recent-posts-pagination'
 import { makeForumThread } from './forum/thread-pagination'
 import ReactivePage from './reactive/router'
 import { makePasswordToggle } from './util/password'
+import AdminSusUsers from './entrypoints/admin-sus-users'
 
 function renderTo(where: HTMLElement, what: any) {
   ReactDOM.render(what, where)
@@ -85,6 +86,8 @@ window.addEventListener('DOMContentLoaded', () => {
         makeRefForm(node)
       } else if (node.classList.contains('w-interwiki')) {
         makeInterwiki(node)
+      } else if (node.classList.contains('w-admin-sus-users')) {
+        renderTo(node, <AdminSusUsers />)
       }
     } catch (e) {
       console.error('Failed to process node', node, e)

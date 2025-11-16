@@ -3,7 +3,7 @@ from adminsortable2.admin import SortableAdminMixin
 
 from django.db.models.query import QuerySet
 from django.db.models import ExpressionWrapper, Min, F, Case, When, BooleanField
-from django.contrib.admin import SimpleListFilter
+from django.contrib.admin import SimpleListFilter, AdminSite, sites
 from django.contrib.auth.models import Permission
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
@@ -20,6 +20,32 @@ from .views.bot import CreateBotView
 from .views.reset_votes import ResetUserVotesView
 from .controllers import logging
 from .permissions import get_role_permissions_content_type
+
+
+class CustomAdminSite(AdminSite):
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'web/user/sus/',
+                self.admin_view(self.sus_view),
+                name='custom_page'
+            ),
+        ]
+        return custom_urls + urls
+
+    def sus_view(self, request):
+        from django.template.response import TemplateResponse
+        # Your custom view logic here. Use TemplateResponse for full admin context.
+        context = {
+            **self.each_context(request),
+            'title': 'Подозрительная активность',
+            'available_apps': self.get_app_list(request)
+        }
+        return TemplateResponse(request, 'admin/web/user/sus.html', context)
+
+
+sites.site = admin.site = CustomAdminSite('custom_admin')
 
 
 class TagsCategoryForm(forms.ModelForm):
