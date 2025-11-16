@@ -22,7 +22,7 @@ __all__ = [
     'RolesMixin',
     'PermissionsOverrideMixin',
     'RolePermissionsOverrideMixin',
-    'ProtectSensetiveAdminMixin'
+    'ProtectsensitiveAdminMixin'
 ]
 
 
@@ -374,31 +374,31 @@ class RolePermissionsOverrideMixin(models.Model, PermissionsOverrideMixin):
         return perms
     
 
-class ProtectSensetiveAdminMixin:
-    sensetive_fields = []
+class ProtectsensitiveAdminMixin:
+    sensitive_fields = []
 
     def __init__(self, *args, **kwargs):
-        self.sensetive_fields = self.__class__.sensetive_fields
+        self.sensitive_fields = self.__class__.sensitive_fields
         super().__init__(*args, **kwargs)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        if not request.user.has_perm('roles.view_sensetive_info'):
+        if not request.user.has_perm('roles.view_sensitive_info'):
             for _, fieldset in fieldsets:
-                fieldset['fields'] = [field for field in fieldset['fields'] if field not in self.sensetive_fields]
+                fieldset['fields'] = [field for field in fieldset['fields'] if field not in self.sensitive_fields]
         return fieldsets
     
     def get_list_filter(self, request):
-        if not request.user.has_perm('roles.view_sensetive_info'):
-            return [field for field in self.list_filter if field not in self.sensetive_fields]
+        if not request.user.has_perm('roles.view_sensitive_info'):
+            return [field for field in self.list_filter if field not in self.sensitive_fields]
         return self.list_filter
     
     def get_list_display(self, request):
-        if not request.user.has_perm('roles.view_sensetive_info'):
-            return [field for field in self.list_display if field not in self.sensetive_fields]
+        if not request.user.has_perm('roles.view_sensitive_info'):
+            return [field for field in self.list_display if field not in self.sensitive_fields]
         return self.list_display
     
     def get_search_fields(self, request):
-        if not request.user.has_perm('roles.view_sensetive_info'):
-            return [field for field in self.search_fields if field not in self.sensetive_fields]
+        if not request.user.has_perm('roles.view_sensitive_info'):
+            return [field for field in self.search_fields if field not in self.sensitive_fields]
         return self.search_fields

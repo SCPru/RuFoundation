@@ -102,7 +102,6 @@ export function makeForumThread(node: HTMLElement) {
         window.history.pushState({ forumThread: fNewPathParams.t, forumThreadPage: fNewPathParams.p }, '', newUrl + window.location.hash)
       }
     } catch (e) {
-      console.log(e)
       ReactDOM.unmountComponentAtNode(loaderInto)
       loaderInto.innerHTML = ''
       loaderInto.style.display = 'none'

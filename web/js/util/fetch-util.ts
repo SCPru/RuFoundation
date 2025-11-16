@@ -60,7 +60,6 @@ const readErrorFromBody = (e: Response): Promise<APIError | null> => {
           }
           resolve(null)
         } catch (e) {
-          console.log(e)
           resolve(null)
         }
       })
@@ -116,7 +115,6 @@ async function doFetch(url: string, props?: WRequestInit): Promise<Response> {
     })
     xhr.addEventListener('load', () => {
       if (xhr.readyState === 4) {
-        console.log(xhr)
         const response: Response = {
           headers: new Headers({}),
           ok: true,

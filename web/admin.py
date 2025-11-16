@@ -262,14 +262,14 @@ class AdvancedUserChangeForm(UserChangeForm):
 
 
 @admin.register(User)
-class AdvancedUserAdmin(ProtectSensetiveAdminMixin, UserAdmin):
+class AdvancedUserAdmin(ProtectsensitiveAdminMixin, UserAdmin):
     form = AdvancedUserChangeForm
 
     list_filter = ['is_superuser', 'is_active', 'roles']
     list_display = ['username_or_wd', 'email', 'is_active']
     search_fields = ['username', 'wikidot_username', 'email']
     readonly_fields = ['api_key', '_op_index']
-    sensetive_fields = ['email']
+    sensitive_fields = ['email']
 
     fieldsets = UserAdmin.fieldsets
     fieldsets[0][1]['fields'] = ('username', 'wikidot_username', 'type', 'password', 'api_key', '_op_index')
@@ -349,12 +349,12 @@ class ActionsLogForm(forms.ModelForm):
 
 
 @admin.register(ActionLogEntry)
-class ActionsLogAdmin(ProtectSensetiveAdminMixin, admin.ModelAdmin):
+class ActionsLogAdmin(ProtectsensitiveAdminMixin, admin.ModelAdmin):
     form = ActionsLogForm
     list_filter = ['user', 'type', 'created_at', 'origin_ip']
     list_display = ['user_or_name', 'type', 'info', 'created_at', 'origin_ip']
     search_fields = ['meta']
-    sensetive_fields = ['origin_ip']
+    sensitive_fields = ['origin_ip']
 
     @admin.display(description=User.Meta.verbose_name)
     def user_or_name(self, obj):

@@ -68,9 +68,9 @@ class ManageForumPermission(BaseRolePermission):
     admin_only = True
 
 
-class ViewSensetiveInfoPermission(BaseRolePermission):
+class ViewsensitiveInfoPermission(BaseRolePermission):
     name = 'Проссматривать чувствительную информацию'
-    codename = 'view_sensetive_info'
+    codename = 'view_sensitive_info'
     description = 'Позволяет просматривать чувствительную информацию пользователей, такую как почта или ip адрес'
     group = 'Админка'
     admin_only = True

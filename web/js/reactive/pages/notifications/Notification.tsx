@@ -12,10 +12,15 @@ interface Props {
 
 const Notification: React.FC<Props> = ({ notification }) => {
   const notificationContent = useMemo(() => {
-    if (notification.type === 'new_post_reply' || notification.type === 'new_thread_post') {
+    if (notification.type === 'new_post_reply' || notification.type === 'new_thread_post' || notification.type === 'forum_mention') {
+      const title = {
+        new_post_reply: 'Ответ на ваше сообщение',
+        new_thread_post: 'Новое сообщение форума',
+        forum_mention: 'Упоминание на форуме'
+      }
       return (
         <>
-          <Styled.TypeName>{notification.type === 'new_post_reply' ? 'Ответ на ваше сообщение' : 'Новое сообщение форума'}</Styled.TypeName>
+          <Styled.TypeName>{title[notification.type as keyof typeof title]}</Styled.TypeName>
           <Styled.PostFrom>
             От <UserView data={notification.author} /> в теме <a href={notification.section.url}>{notification.section.name}</a> &raquo;{' '}
             <a href={notification.category.url}>{notification.category.name}</a> &raquo;{' '}

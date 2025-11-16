@@ -13,7 +13,7 @@ class AllUsersView(APIView):
 
 class AdminSusActivityView(APIView):
     def get(self, request: HttpRequest):
-        if not request.user.has_perm('roles.view_sensetive_info'):
+        if not request.user.has_perm('roles.view_sensitive_info'):
             raise APIError('Недостаточно прав', 403)
         items = list()
         for logentry in ActionLogEntry.objects.prefetch_related('user').distinct('user', 'origin_ip'):

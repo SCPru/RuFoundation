@@ -27,7 +27,7 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
             {
                 'name': 'Подозрительная',
                 'url': '/-/admin/web/user/sus/',
-                'permissions': ['roles.view_sensetive_info']
+                'permissions': ['roles.view_sensitive_info']
             },
         )),
         ('Структура', (

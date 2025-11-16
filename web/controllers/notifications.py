@@ -7,11 +7,10 @@ from web.models.notifications import UserNotification, UserNotificationMapping, 
 from web.models.articles import Article
 
 
-def send_user_notification(recipients: _UserType | Iterable[_UserType], type: UserNotification.NotificationType, referred_to: str='', meta={}) -> UserNotification:
+def send_user_notification(recipients: _UserType | Iterable[_UserType], type: UserNotification.NotificationType, meta={}) -> UserNotification:
     notification = UserNotification(
         meta=meta,
         type=type,
-        referred_to=referred_to,
     )
 
     notification.save()
