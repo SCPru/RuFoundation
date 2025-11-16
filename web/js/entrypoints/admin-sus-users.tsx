@@ -60,10 +60,12 @@ const SettingsRow = styled.div`
   align-items: center;
 `
 
-const USER_COLOR = '#dd0000'
+const USER_COLOR = '#cc0000'
 const USER_COLOR_STRONG = '#ff0000'
-const IP_COLOR = '#00dd00'
+const USER_COLOR_DIM = '#770000'
+const IP_COLOR = '#00cc00'
 const IP_COLOR_STRONG = '#00ff00'
+const IP_COLOR_DIM = '#007700'
 const EDGE_COLOR = '#999'
 
 const USER_SIZE = 2
@@ -75,9 +77,13 @@ const AdminSusUsersGraph: React.FC<{userToIp: Record<string, string[]>, ipToUser
   const sigma = useSigma()
   const [lastNodeSizeFactor, setLastNodeSizeFactor] = useState(1)
 
+  const isSelectedUser = useConstCallback((userName: string) => {
+    return userFilter && userName.toLowerCase().includes(userFilter.toLowerCase())
+  })
+
   const filterUserName = useConstCallback((userName: string) => {
     return !ignoredUsers.includes(userName) &&
-      (!userFilter || userName.toLowerCase().includes(userFilter.toLowerCase()))
+      (!userFilter || isSelectedUser(userName))
   })
 
   const updateGraph = useConstCallback(() => {
@@ -105,12 +111,13 @@ const AdminSusUsersGraph: React.FC<{userToIp: Record<string, string[]>, ipToUser
     setLastNodeSizeFactor(nodeSizeFactor)
 
     Object.keys(filteredUserToIp).forEach((user) => {
+      const isSelected = isSelectedUser(user)
       graph.addNode(`user:${user}`, {
         x: 0,
         y: 0,
         label: user,
-        color: USER_COLOR,
-        size: USER_SIZE * nodeSizeFactor
+        color: isSelected ? USER_COLOR_STRONG : (userFilter ? USER_COLOR_DIM : USER_COLOR),
+        size: USER_SIZE * nodeSizeFactor * (isSelected ? 2 : 1)
       })
     })
 
@@ -119,7 +126,7 @@ const AdminSusUsersGraph: React.FC<{userToIp: Record<string, string[]>, ipToUser
         x: 0,
         y: 0,
         label: ip,
-        color: IP_COLOR,
+        color: userFilter ? IP_COLOR_DIM : IP_COLOR,
         size: IP_SIZE * nodeSizeFactor
       })
     })
@@ -197,8 +204,14 @@ const AdminSusUsersGraph: React.FC<{userToIp: Record<string, string[]>, ipToUser
     const graph = sigma.getGraph()
 
     graph.forEachNode((n) => {
-      graph.setNodeAttribute(n, 'color', isNodeUser(n) ? USER_COLOR : IP_COLOR)
-      graph.setNodeAttribute(n, 'size', (isNodeUser(n) ? USER_SIZE : IP_SIZE) * lastNodeSizeFactor)
+      if (isNodeUser(n)) {
+        const isSelected = isSelectedUser(n.substring(5))
+        graph.setNodeAttribute(n, 'color', isSelected ? USER_COLOR_STRONG : (userFilter ? USER_COLOR_DIM : USER_COLOR))
+        graph.setNodeAttribute(n, 'size', USER_SIZE * lastNodeSizeFactor * (isSelected ? 2 : 1))
+      } else {
+        graph.setNodeAttribute(n, 'color', userFilter ? IP_COLOR_DIM : IP_COLOR)
+        graph.setNodeAttribute(n, 'size', IP_SIZE * lastNodeSizeFactor)
+      }
     })
 
     graph.forEachEdge((edge) => {
