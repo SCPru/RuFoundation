@@ -1,13 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react'
-import useConstCallback from '~util/const-callback'
-import { AdminSusUser, fetchAdminSusUsers } from '~api/user'
-import styled, { createGlobalStyle } from 'styled-components'
 import { SigmaContainer, useLoadGraph, useRegisterEvents, useSigma } from '@react-sigma/core'
 import Graph from 'graphology'
-import forceAtlas2 from 'graphology-layout-forceatlas2';
+import forceAtlas2 from 'graphology-layout-forceatlas2'
 import random from 'graphology-layout/random'
+import React, { useEffect, useRef, useState } from 'react'
 import seedrandom from 'seedrandom'
 import { SigmaNodeEventPayload } from 'sigma/types'
+import styled, { createGlobalStyle } from 'styled-components'
+import { AdminSusUser, fetchAdminSusUsers } from '~api/user'
+import useConstCallback from '~util/const-callback'
 
 const Wrapper = createGlobalStyle`
   .w-admin-sus-users {
@@ -49,7 +49,7 @@ const MainView = styled.div`
 const ItemsColumn = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: 1fr min-content 1fr; 
+  grid-template-rows: 1fr min-content 1fr;
   gap: 8px;
 `
 
@@ -71,7 +71,13 @@ const EDGE_COLOR = '#999'
 const USER_SIZE = 2
 const IP_SIZE = 1
 
-const AdminSusUsersGraph: React.FC<{userToIp: Record<string, string[]>, ipToUser: Record<string, string[]>, ignoredUsers: string[], ignoredIPs: string[], userFilter: string}> = ({ userToIp, ipToUser, ignoredUsers, ignoredIPs, userFilter }) => {
+const AdminSusUsersGraph: React.FC<{
+  userToIp: Record<string, string[]>
+  ipToUser: Record<string, string[]>
+  ignoredUsers: string[]
+  ignoredIPs: string[]
+  userFilter: string
+}> = ({ userToIp, ipToUser, ignoredUsers, ignoredIPs, userFilter }) => {
   const loadGraph = useLoadGraph()
   const registerEvents = useRegisterEvents()
   const sigma = useSigma()
@@ -82,52 +88,57 @@ const AdminSusUsersGraph: React.FC<{userToIp: Record<string, string[]>, ipToUser
   })
 
   const filterUserName = useConstCallback((userName: string) => {
-    return !ignoredUsers.includes(userName) &&
-      (!userFilter || isSelectedUser(userName))
+    return !ignoredUsers.includes(userName) && (!userFilter || isSelectedUser(userName))
   })
 
   const updateGraph = useConstCallback(() => {
     const graph = new Graph()
 
-    const susIPAddresses = Object.entries(ipToUser).filter(([k, v]) => {
-      return !ignoredIPs.includes(k) && (userFilter ? v.filter(filterUserName).length > 0 : v.filter(filterUserName).length > 1)
-    }).map(x => x[0])
+    const susIPAddresses = Object.entries(ipToUser)
+      .filter(([k, v]) => {
+        return !ignoredIPs.includes(k) && (userFilter ? v.filter(filterUserName).length > 0 : v.filter(filterUserName).length > 1)
+      })
+      .map(x => x[0])
 
-    const susUsers = Object.entries(userToIp).filter(([k, v]) => {
-      return v.some(x => susIPAddresses.includes(x))
-    }).map(x => x[0])
+    const susUsers = Object.entries(userToIp)
+      .filter(([k, v]) => {
+        return v.some(x => susIPAddresses.includes(x))
+      })
+      .map(x => x[0])
 
-    const filteredIpToUser =
-      Object.fromEntries(Object.entries(ipToUser).filter(([k, v]) => {
+    const filteredIpToUser = Object.fromEntries(
+      Object.entries(ipToUser).filter(([k, v]) => {
         return !ignoredIPs.includes(k) && (susIPAddresses.includes(k) || v.some(x => susUsers.includes(x)))
-      }))
+      }),
+    )
 
-    const filteredUserToIp =
-      Object.fromEntries(Object.entries(userToIp).filter(([k, v]) => {
+    const filteredUserToIp = Object.fromEntries(
+      Object.entries(userToIp).filter(([k, v]) => {
         return !ignoredUsers.includes(k) && v.some(x => Boolean(filteredIpToUser[x]))
-      }))
+      }),
+    )
 
-    const nodeSizeFactor = Math.min(16, 100 / Math.sqrt((Object.keys(filteredUserToIp).length + Object.keys(filteredIpToUser).length)))
+    const nodeSizeFactor = Math.min(16, 100 / Math.sqrt(Object.keys(filteredUserToIp).length + Object.keys(filteredIpToUser).length))
     setLastNodeSizeFactor(nodeSizeFactor)
 
-    Object.keys(filteredUserToIp).forEach((user) => {
+    Object.keys(filteredUserToIp).forEach(user => {
       const isSelected = isSelectedUser(user)
       graph.addNode(`user:${user}`, {
         x: 0,
         y: 0,
         label: user,
-        color: isSelected ? USER_COLOR_STRONG : (userFilter ? USER_COLOR_DIM : USER_COLOR),
-        size: USER_SIZE * nodeSizeFactor * (isSelected ? 2 : 1)
+        color: isSelected ? USER_COLOR_STRONG : userFilter ? USER_COLOR_DIM : USER_COLOR,
+        size: USER_SIZE * nodeSizeFactor * (isSelected ? 2 : 1),
       })
     })
 
-    Object.keys(filteredIpToUser).forEach((ip) => {
+    Object.keys(filteredIpToUser).forEach(ip => {
       graph.addNode(`ip:${ip}`, {
         x: 0,
         y: 0,
         label: ip,
         color: userFilter ? IP_COLOR_DIM : IP_COLOR,
-        size: IP_SIZE * nodeSizeFactor
+        size: IP_SIZE * nodeSizeFactor,
       })
     })
 
@@ -146,7 +157,7 @@ const AdminSusUsersGraph: React.FC<{userToIp: Record<string, string[]>, ipToUser
 
     forceAtlas2.assign(graph, {
       iterations: 100,
-      settings
+      settings,
     })
 
     loadGraph(graph)
@@ -164,33 +175,33 @@ const AdminSusUsersGraph: React.FC<{userToIp: Record<string, string[]>, ipToUser
     const { node } = event
     const graph = sigma.getGraph()
 
-    graph.forEachNode((n) => {
+    graph.forEachNode(n => {
       graph.setNodeAttribute(n, 'color', '#ccc')
       graph.setNodeAttribute(n, 'size', lastNodeSizeFactor)
     })
 
     graph.setNodeAttribute(node, 'color', isNodeUser(node) ? USER_COLOR_STRONG : IP_COLOR_STRONG)
     graph.setNodeAttribute(node, 'size', (isNodeUser(node) ? USER_SIZE : IP_SIZE) * lastNodeSizeFactor * 2)
-    graph.forEachNeighbor(node, (neighbor) => {
+    graph.forEachNeighbor(node, neighbor => {
       if (isNodeUser(neighbor) || graph.neighbors(neighbor).length > 1) {
         graph.setNodeAttribute(neighbor, 'color', isNodeUser(neighbor) ? USER_COLOR_STRONG : IP_COLOR_STRONG)
         graph.setNodeAttribute(neighbor, 'size', (isNodeUser(neighbor) ? USER_SIZE : IP_SIZE) * lastNodeSizeFactor * 2)
-        graph.forEachNeighbor(neighbor, (secondLevel) => {
+        graph.forEachNeighbor(neighbor, secondLevel => {
           graph.setNodeAttribute(secondLevel, 'color', isNodeUser(secondLevel) ? USER_COLOR_STRONG : IP_COLOR_STRONG)
           graph.setNodeAttribute(secondLevel, 'size', (isNodeUser(secondLevel) ? USER_SIZE : IP_SIZE) * lastNodeSizeFactor * 2)
         })
       }
     })
 
-    graph.forEachEdge((edge) => {
+    graph.forEachEdge(edge => {
       graph.setEdgeAttribute(edge, 'color', '#ccc')
     })
 
-    graph.forEachEdge(node, (edge) => {
+    graph.forEachEdge(node, edge => {
       graph.setEdgeAttribute(edge, 'color', '#FF00FF')
-      graph.forEachNeighbor(node, (neighbor) => {
+      graph.forEachNeighbor(node, neighbor => {
         if (graph.neighbors(neighbor).length > 1) {
-          graph.forEachEdge(neighbor, (secondLevel) => {
+          graph.forEachEdge(neighbor, secondLevel => {
             graph.setEdgeAttribute(secondLevel, 'color', '#FF00FF')
           })
         }
@@ -203,10 +214,10 @@ const AdminSusUsersGraph: React.FC<{userToIp: Record<string, string[]>, ipToUser
   const onClickStage = useConstCallback(() => {
     const graph = sigma.getGraph()
 
-    graph.forEachNode((n) => {
+    graph.forEachNode(n => {
       if (isNodeUser(n)) {
         const isSelected = isSelectedUser(n.substring(5))
-        graph.setNodeAttribute(n, 'color', isSelected ? USER_COLOR_STRONG : (userFilter ? USER_COLOR_DIM : USER_COLOR))
+        graph.setNodeAttribute(n, 'color', isSelected ? USER_COLOR_STRONG : userFilter ? USER_COLOR_DIM : USER_COLOR)
         graph.setNodeAttribute(n, 'size', USER_SIZE * lastNodeSizeFactor * (isSelected ? 2 : 1))
       } else {
         graph.setNodeAttribute(n, 'color', userFilter ? IP_COLOR_DIM : IP_COLOR)
@@ -214,7 +225,7 @@ const AdminSusUsersGraph: React.FC<{userToIp: Record<string, string[]>, ipToUser
       }
     })
 
-    graph.forEachEdge((edge) => {
+    graph.forEachEdge(edge => {
       graph.setEdgeAttribute(edge, 'color', EDGE_COLOR)
     })
 
@@ -224,13 +235,12 @@ const AdminSusUsersGraph: React.FC<{userToIp: Record<string, string[]>, ipToUser
   useEffect(() => {
     registerEvents({
       clickNode: onClickNode,
-      clickStage: onClickStage
+      clickStage: onClickStage,
     })
   }, [registerEvents, sigma, onClickNode, onClickStage])
 
   return null
 }
-
 
 const AdminSusUsers: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
@@ -264,28 +274,29 @@ const AdminSusUsers: React.FC = () => {
     loadUsers()
   }, [])
 
-  const renderSelect = useConstCallback((ref: React.MutableRefObject<HTMLSelectElement>, items: Record<string, Array<string>>, filterFunc: (item: string) => boolean) => {
-    const renderedItems =
-      Object.entries(items)
+  const renderSelect = useConstCallback(
+    (ref: React.MutableRefObject<HTMLSelectElement>, items: Record<string, Array<string>>, filterFunc: (item: string) => boolean) => {
+      const renderedItems = Object.entries(items)
         .filter(([k]) => filterFunc(k))
         .sort(([, v1], [, v2]) => v2.length - v1.length)
-    return (
-      <select ref={ref} multiple>
-        {renderedItems.map(([name, value]) => (
-          <option key={name} value={name}>{name} ({value.length})</option>
-        ))}
-      </select>
-    )
-  })
+      return (
+        <select ref={ref} multiple>
+          {renderedItems.map(([name, value]) => (
+            <option key={name} value={name}>
+              {name} ({value.length})
+            </option>
+          ))}
+        </select>
+      )
+    },
+  )
 
   const handleIgnoreUsers = useConstCallback(() => {
     if (!ignoredUsersRef.current || !allUsersRef.current) {
       return
     }
     const usersToIgnore = [...allUsersRef.current.selectedOptions].map(x => x.value)
-    setIgnoredUsers(prev => (
-      [...prev, ...usersToIgnore]
-    ))
+    setIgnoredUsers(prev => [...prev, ...usersToIgnore])
   })
 
   const handleUnignoreUsers = useConstCallback(() => {
@@ -301,9 +312,7 @@ const AdminSusUsers: React.FC = () => {
       return
     }
     const ipsToIgnore = [...allIPsRef.current.selectedOptions].map(x => x.value)
-    setIgnoredIPs(prev => (
-      [...prev, ...ipsToIgnore]
-    ))
+    setIgnoredIPs(prev => [...prev, ...ipsToIgnore])
   })
 
   const handleUnignoreIPs = useConstCallback(() => {
@@ -356,15 +365,11 @@ const AdminSusUsers: React.FC = () => {
   })
 
   if (error) {
-    return (
-      <>Не удалось загрузить граф: {error}</>
-    )
+    return <>Не удалось загрузить граф: {error}</>
   }
 
   if (isLoading) {
-    return (
-      <>Загрузка...</>
-    )
+    return <>Загрузка...</>
   }
 
   return (
@@ -382,9 +387,7 @@ const AdminSusUsers: React.FC = () => {
         </label>
         <form onSubmit={handleFilterUser}>
           <label>
-            Фильтр по имени/IP (Enter, чтобы применить):
-            {' '}
-            <input type="text" style={{ padding: '8px', height: '32px' }} ref={userSearchRef} />
+            Фильтр по имени/IP (Enter, чтобы применить): <input type="text" style={{ padding: '8px', height: '32px' }} ref={userSearchRef} />
           </label>
         </form>
       </SettingsRow>
@@ -402,15 +405,10 @@ const AdminSusUsers: React.FC = () => {
         {renderSelect(ignoredUsersRef, userToIp, (x: string) => ignoredUsers.includes(x))}
         <div>
           <button className="btn btn-info" onClick={handleIgnoreUsers}>
-            <span className="fas fa-angle-up" />
-            {' '}
-            Не считается
-          </button>
-          {' '}
+            <span className="fas fa-angle-up" /> Не считается
+          </button>{' '}
           <button className="btn btn-info" onClick={handleUnignoreUsers}>
-            <span className="fas fa-angle-down" />
-            {' '}
-            Считается
+            <span className="fas fa-angle-down" /> Считается
           </button>
         </div>
         {renderSelect(allUsersRef, userToIp, (x: string) => !ignoredUsers.includes(x))}
@@ -419,15 +417,10 @@ const AdminSusUsers: React.FC = () => {
         {renderSelect(ignoredIPsRef, ipToUser, (x: string) => ignoredIPs.includes(x))}
         <div>
           <button className="btn btn-info" onClick={handleIgnoreIPs}>
-            <span className="fas fa-angle-up" />
-            {' '}
-            Не считается
-          </button>
-          {' '}
+            <span className="fas fa-angle-up" /> Не считается
+          </button>{' '}
           <button className="btn btn-info" onClick={handleUnignoreIPs}>
-            <span className="fas fa-angle-down" />
-            {' '}
-            Считается
+            <span className="fas fa-angle-down" /> Считается
           </button>
         </div>
         {renderSelect(allIPsRef, ipToUser, (x: string) => !ignoredIPs.includes(x))}
@@ -435,6 +428,5 @@ const AdminSusUsers: React.FC = () => {
     </MainView>
   )
 }
-
 
 export default AdminSusUsers

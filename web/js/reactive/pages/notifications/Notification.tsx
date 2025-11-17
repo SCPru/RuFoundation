@@ -16,7 +16,7 @@ const Notification: React.FC<Props> = ({ notification }) => {
       const title = {
         new_post_reply: 'Ответ на ваше сообщение',
         new_thread_post: 'Новое сообщение форума',
-        forum_mention: 'Упоминание на форуме'
+        forum_mention: 'Упоминание на форуме',
       }
       return (
         <>

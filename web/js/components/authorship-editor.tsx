@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { UserData } from '../api/user'
 import UserView from '../util/user-view'

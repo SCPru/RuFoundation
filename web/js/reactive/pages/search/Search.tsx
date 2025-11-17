@@ -140,7 +140,7 @@ export const Search: React.FC = () => {
                     <Styled.SearchResultMetaValue>
                       {article.authors?.map(author => (
                         <React.Fragment>
-                          <UserView data={author} /> {" "}
+                          <UserView data={author} />{' '}
                         </React.Fragment>
                       ))}
                     </Styled.SearchResultMetaValue>

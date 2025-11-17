@@ -63,7 +63,12 @@ interface NotificationForumMention extends BaseNotification {
   message: string
 }
 
-export type Notification = NotificationNewPostReply | NotificationNewThreadPost | NotificationWelcome | NotificationNewArticleRevision | NotificationForumMention
+export type Notification =
+  | NotificationNewPostReply
+  | NotificationNewThreadPost
+  | NotificationWelcome
+  | NotificationNewArticleRevision
+  | NotificationForumMention
 
 export interface NotificationsResponse {
   cursor: number

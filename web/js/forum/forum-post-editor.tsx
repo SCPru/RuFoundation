@@ -1,11 +1,11 @@
 import * as React from 'react'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { fetchForumPost, previewForumPost } from '../api/forum'
+import { fetchAllUsers } from '../api/user'
 import useConstCallback from '../util/const-callback'
 import Loader from '../util/loader'
 import WikidotModal from '../util/wikidot-modal'
-import { fetchAllUsers, UserData } from '../api/user'
 
 export interface ForumPostPreviewData {
   name: string
@@ -81,7 +81,7 @@ const FakeEditor = styled.pre`
   border: 1px solid #ccc;
   padding: 10px;
   box-sizing: border-box;
-  overflow: auto;
+  overflow: hidden;
   background: #fff;
   white-space: pre-wrap;
   overflow-wrap: break-word;
@@ -107,6 +107,8 @@ const ForumPostEditor: React.FC<Props> = ({
   const [fatalError, setFatalError] = useState(false)
   const [usernameSet, setUsernameSet] = useState<Set<string>>(new Set())
   const [highlightedSource, setHighlightedSource] = useState<React.ReactNode[]>([])
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fakeEditorRef = useRef<HTMLPreElement>(null)
 
   const handleRefresh = useConstCallback(e => {
     if (!saving) {
@@ -137,18 +139,41 @@ const ForumPostEditor: React.FC<Props> = ({
     }
 
     fetchAllUsers()
-    .then(users => {
-      setUsernameSet(new Set(users.filter(u=> u.type === 'normal' || u.type === 'bot').map(u => u.username.toLowerCase())))
-    })
-    .catch(e => {
-      setFatalError(false)
-      setError(e.error || 'Ошибка связи с сервером')
-    })
+      .then(users => {
+        setUsernameSet(new Set(users.filter(u => u.type === 'normal' || u.type === 'bot').map(u => u.username.toLowerCase())))
+      })
+      .catch(e => {
+        setFatalError(false)
+        setError(e.error || 'Ошибка связи с сервером')
+      })
 
     return () => {
       window.removeEventListener('beforeunload', handleRefresh)
       ;(window as any)._closePostEditor = undefined
     }
+  }, [])
+
+  useEffect(() => {
+    if (!textareaRef.current || !fakeEditorRef.current) return
+
+    const ta = textareaRef.current
+    const pre = fakeEditorRef.current
+
+    const observer = new ResizeObserver(() => {
+      pre.style.height = `${ta.offsetHeight}px`
+    })
+
+    observer.observe(ta)
+    pre.style.height = `${ta.offsetHeight}px`
+
+    const syncScroll = () => {
+      pre.scrollTop = ta.scrollTop
+      pre.scrollLeft = ta.scrollLeft
+    }
+
+    ta.addEventListener('scroll', syncScroll)
+
+    return () => observer.disconnect()
   }, [])
 
   useEffect(() => {
@@ -171,7 +196,11 @@ const ForumPostEditor: React.FC<Props> = ({
       }
 
       if (usernameSet.has(username.toLowerCase())) {
-        result.push(<span className="w-user-mention" key={match.index}>{full}</span>)
+        result.push(
+          <span className="w-user-mention" key={match.index}>
+            {full}
+          </span>,
+        )
       } else {
         result.push(full)
       }
@@ -184,18 +213,18 @@ const ForumPostEditor: React.FC<Props> = ({
     }
 
     return result
-  });
+  })
 
   const highlightMentionsStr = useConstCallback((text: string) => {
     const regex = /@[\w.-]+/g
 
-    return text.replace(regex, (full) => {
+    return text.replace(regex, full => {
       const username = full.slice(1)
       if (usernameSet.has(username.toLowerCase())) {
         return `<span class="w-user-mention">${full}</span>`
       }
       return full
-    });
+    })
   })
 
   const onSubmit = useConstCallback(async e => {
@@ -344,6 +373,7 @@ const ForumPostEditor: React.FC<Props> = ({
         <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
         <div className={`w-editor-area ${loading ? 'loading' : ''}`}>
           <StyledTextarea
+            ref={textareaRef}
             className="form-control"
             value={source}
             onChange={onChange}
@@ -352,8 +382,8 @@ const ForumPostEditor: React.FC<Props> = ({
             cols={60}
             disabled={loading || saving}
           />
-          <FakeEditor>
-            <React.Fragment>{highlightedSource.map(e => (e))}</React.Fragment>
+          <FakeEditor ref={fakeEditorRef}>
+            <React.Fragment>{highlightedSource.map(e => e)}</React.Fragment>
           </FakeEditor>
           {loading && <Loader className="loader" />}
         </div>

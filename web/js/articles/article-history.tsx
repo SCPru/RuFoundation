@@ -164,7 +164,7 @@ export function renderArticleHistoryComment(entry: ArticleLogEntry) {
     return entry.comment
   }
   return entry.defaultComment
-  
+
   switch (entry.type) {
     case 'new':
       return 'Создание новой страницы'
@@ -256,7 +256,7 @@ export function renderArticleHistoryComment(entry: ArticleLogEntry) {
       )
     }
 
-    case 'authorship':{
+    case 'authorship': {
       let added_authors = entry.meta.added_authors
       let removed_authors = entry.meta.removed_authors
       if (Array.isArray(added_authors) && added_authors.length && Array.isArray(removed_authors) && removed_authors.length) {
