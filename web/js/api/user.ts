@@ -1,7 +1,7 @@
 import { wFetch } from '../util/fetch-util'
 
 export interface UserData {
-  type: 'system' | 'anonymous' | 'normal' | 'wikidot'
+  type: 'system' | 'anonymous' | 'bot' | 'normal' | 'wikidot'
   id?: number
   avatar?: string
   name: string

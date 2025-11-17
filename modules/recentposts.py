@@ -31,7 +31,7 @@ def highlight_mentions(text: str, usernames: set[str]) -> str:
         username = full[1:]
 
         if username.lower() in usernames:
-            return f'<span class="user-mention-highlight">{full}</span>'
+            return f'<span class="w-user-mention">{full}</span>'
         return full
 
     return SafeString(regex.sub(repl, text))

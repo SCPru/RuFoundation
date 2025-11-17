@@ -151,7 +151,7 @@ def handle_forum_mention(e: OnForumNewPost | OnForumEditPost):
         new_mentions = set(map(str.lower, re.findall(mention_regex, e.source)))
         mentions = new_mentions - old_mentions
 
-    mentioned_users = set(User.objects.filter(username__in=mentions, is_active=True).exclude(id=e.user.id))
+    mentioned_users = set(User.objects.filter(username__in=mentions, is_active=True, type__in=[User.UserType.Normal, User.UserType.Bot]).exclude(id=e.user.id))
 
     thread = e.post.thread
     category = thread.category

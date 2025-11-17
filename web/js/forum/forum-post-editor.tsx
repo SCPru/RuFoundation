@@ -105,7 +105,7 @@ const ForumPostEditor: React.FC<Props> = ({
   const [savingSuccess, setSavingSuccess] = useState(false)
   const [error, setError] = useState('')
   const [fatalError, setFatalError] = useState(false)
-  const [usernameSet, setUsernameSet] = useState<Set<string>>()
+  const [usernameSet, setUsernameSet] = useState<Set<string>>(new Set())
   const [highlightedSource, setHighlightedSource] = useState<React.ReactNode[]>([])
 
   const handleRefresh = useConstCallback(e => {
@@ -138,7 +138,7 @@ const ForumPostEditor: React.FC<Props> = ({
 
     fetchAllUsers()
     .then(users => {
-      setUsernameSet(new Set(users.map(u => u.username.toLowerCase())))
+      setUsernameSet(new Set(users.filter(u=> u.type === 'normal' || u.type === 'bot').map(u => u.username.toLowerCase())))
     })
     .catch(e => {
       setFatalError(false)
@@ -156,35 +156,47 @@ const ForumPostEditor: React.FC<Props> = ({
   }, [source, usernameSet])
 
   const highlightMentions = useConstCallback((text: string) => {
-    const result: React.ReactNode[] = [];
+    const result: React.ReactNode[] = []
 
-    const regex = /@[\w.-]+/g;
-    let lastIndex = 0;
-    let match: RegExpExecArray | null;
+    const regex = /@[\w.-]+/g
+    let lastIndex = 0
+    let match: RegExpExecArray | null
 
     while ((match = regex.exec(text)) !== null) {
-      const full = match[0];
-      const username = full.slice(1);
+      const full = match[0]
+      const username = full.slice(1)
 
       if (match.index > lastIndex) {
-        result.push(text.slice(lastIndex, match.index));
+        result.push(text.slice(lastIndex, match.index))
       }
 
       if (usernameSet.has(username.toLowerCase())) {
-        result.push(<span className="user-mention-highlight" key={match.index}>{full}</span>);
+        result.push(<span className="w-user-mention" key={match.index}>{full}</span>)
       } else {
-        result.push(full);
+        result.push(full)
       }
 
-      lastIndex = regex.lastIndex;
+      lastIndex = regex.lastIndex
     }
 
     if (lastIndex < text.length) {
-      result.push(text.slice(lastIndex));
+      result.push(text.slice(lastIndex))
     }
 
-    return result;
+    return result
   });
+
+  const highlightMentionsStr = useConstCallback((text: string) => {
+    const regex = /@[\w.-]+/g
+
+    return text.replace(regex, (full) => {
+      const username = full.slice(1)
+      if (usernameSet.has(username.toLowerCase())) {
+        return `<span class="w-user-mention">${full}</span>`
+      }
+      return full
+    });
+  })
 
   const onSubmit = useConstCallback(async e => {
     if (e) {
@@ -226,7 +238,7 @@ const ForumPostEditor: React.FC<Props> = ({
       const input: ForumPostPreviewData = {
         name: name,
         description,
-        content: rendered,
+        content: highlightMentionsStr(rendered),
       }
       onPreviewDelegate(input)
     }

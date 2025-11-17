@@ -43,7 +43,7 @@ def highlight_mentions(text: str, usernames: set[str]) -> str:
         username = full[1:]
 
         if username.lower() in usernames:
-            return f'<span class="user-mention-highlight">{full}</span>'
+            return f'<span class="w-user-mention">{full}</span>'
         return full
 
     return SafeString(regex.sub(repl, text))
@@ -375,7 +375,7 @@ def api_update(context, params):
 
     if 'ispinned' in params:
         if not context.user.has_perm('roles.pin_forum_threads', thread):
-            raise ModuleError('Недостаточно прав для прикрепления темы')
+            raise ModuleError('Недостаточно прав для закрепления темы')
         thread.is_pinned = bool(params['ispinned'])
 
     if 'categoryid' in params:
