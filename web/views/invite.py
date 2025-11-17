@@ -51,7 +51,7 @@ class InviteView(FormView):
         if user:
             context["title"] = "Активировать пользователя wd:%s" % user.wikidot_username
             context["submit_btn"] = "Активировать"
-        context.update(site._wrapped.each_context(self.request))
+        context.update(site.each_context(self.request))
         return context
 
     def get_success_url(self):

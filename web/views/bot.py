@@ -25,7 +25,7 @@ class CreateBotView(FormView):
         context = super(CreateBotView, self).get_context_data(**kwargs)
         context["title"] = "Создать бота"
         context["submit_btn"] = "Создать"
-        context.update(site._wrapped.each_context(self.request))
+        context.update(site.each_context(self.request))
         return context
 
     def get_success_url(self):

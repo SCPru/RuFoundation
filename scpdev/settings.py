@@ -14,6 +14,9 @@ from pathlib import Path
 import os
 import mimetypes
 
+# Hack: import custom admin before anything Django can do anything with it. Loaded apps, etc.
+import custom_admin
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

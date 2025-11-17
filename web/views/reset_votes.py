@@ -38,7 +38,7 @@ class ResetUserVotesView(FormView):
         context['after_text_style'] = 'color: red'
         context['is_danger'] = True
         context['submit_btn'] = 'Сбросить'
-        context.update(site._wrapped.each_context(self.request))
+        context.update(site.each_context(self.request))
         return context
 
     def get_success_url(self):
