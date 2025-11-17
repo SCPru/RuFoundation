@@ -2,8 +2,8 @@ from solo.admin import SingletonModelAdmin
 from adminsortable2.admin import SortableAdminMixin
 
 from django.db.models.query import QuerySet
-from django.db.models import ExpressionWrapper, Min, F, Case, When, BooleanField
-from django.contrib.admin import SimpleListFilter, AdminSite, sites
+from django.db.models import ExpressionWrapper, F, Case, When, BooleanField
+from django.contrib.admin import SimpleListFilter
 from django.contrib.auth.models import Permission
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
@@ -12,12 +12,14 @@ from django.urls import path
 from django import forms
 
 import web.fields
+from web.views.sus_users import AdminSusActivityView
 
 from .models import *
 from .fields import CITextField
 from .views.invite import InviteView
 from .views.bot import CreateBotView
 from .views.reset_votes import ResetUserVotesView
+from .views.api.users import AdminSusActivityApiView
 from .controllers import logging
 from .permissions import get_role_permissions_content_type
 
@@ -259,7 +261,7 @@ class AdvancedUserAdmin(ProtectsensitiveAdminMixin, UserAdmin):
         return obj.operation_index
 
     def get_urls(self):
-        urls = super(AdvancedUserAdmin, self).get_urls()
+        urls = super().get_urls()
         new_urls = [
             path('invite/', InviteView.as_view()),
             path('newbot/', CreateBotView.as_view()),
@@ -348,6 +350,14 @@ class ActionsLogAdmin(ProtectsensitiveAdminMixin, admin.ModelAdmin):
     
     def has_change_permission(self, request, obj=None):
         return False
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        new_urls = [
+            path('api-sus', AdminSusActivityApiView.as_view()),
+            path('sus', AdminSusActivityView.as_view())
+        ]
+        return new_urls + urls
 
 
 class RoleCategoryForm(forms.ModelForm):

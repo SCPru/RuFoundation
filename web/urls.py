@@ -45,7 +45,6 @@ def make_reactive(routes: list[str]):
 
 api_patterns = [
     path('users', users.AllUsersView.as_view()),
-    path('admin/users/sus', users.AdminSusActivityView.as_view()),
     path('articles', articles.AllArticlesView.as_view()),
     path('articles/new', articles.CreateView.as_view()),
     path('articles/<str:full_name>/version', articles.FetchVersionView.as_view()),

@@ -11,7 +11,7 @@ class AllUsersView(APIView):
         return self.render_json(200, shared_users.get_all_users())
 
 
-class AdminSusActivityView(APIView):
+class AdminSusActivityApiView(APIView):
     def get(self, request: HttpRequest):
         if not request.user.has_perm('roles.view_sensitive_info'):
             raise APIError('Недостаточно прав', 403)

@@ -34,7 +34,7 @@ class InviteView(FormView):
     user = None
 
     def get_initial(self):
-        initial = super(InviteView, self).get_initial()
+        initial = super().get_initial()
         return initial
 
     def get_user(self) -> User | None:
@@ -44,7 +44,7 @@ class InviteView(FormView):
         return None
 
     def get_context_data(self, **kwargs):
-        context = super(InviteView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context["title"] = "Пригласить пользователя"
         context["submit_btn"] = "Отправить"
         user = self.get_user()

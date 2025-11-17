@@ -26,5 +26,5 @@ export interface AdminSusUser {
 }
 
 export function fetchAdminSusUsers(): Promise<AdminSusUser[]> {
-  return wFetch<AdminSusUser[]>('/api/admin/users/sus')
+  return wFetch<AdminSusUser[]>('/-/admin/web/actionlogentry/api-sus')
 }

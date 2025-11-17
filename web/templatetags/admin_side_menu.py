@@ -26,7 +26,7 @@ def get_side_menu(context: Context, using: str = "available_apps") -> list[dict]
             {'model': models.logs.ActionLogEntry},
             {
                 'name': 'Подозрительная',
-                'url': '/-/admin/web/user/sus/',
+                'url': '/-/admin/web/actionlogentry/sus',
                 'permissions': ['roles.view_sensitive_info']
             },
         )),
