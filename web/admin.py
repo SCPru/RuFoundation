@@ -19,7 +19,6 @@ from .fields import CITextField
 from .views.invite import InviteView
 from .views.bot import CreateBotView
 from .views.reset_votes import ResetUserVotesView
-from .views.api.users import AdminSusActivityApiView
 from .controllers import logging
 from .permissions import get_role_permissions_content_type
 
@@ -354,7 +353,6 @@ class ActionsLogAdmin(ProtectsensitiveAdminMixin, admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         new_urls = [
-            path('api-sus', AdminSusActivityApiView.as_view()),
             path('sus', AdminSusActivityView.as_view())
         ]
         return new_urls + urls
