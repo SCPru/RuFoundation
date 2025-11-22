@@ -186,6 +186,6 @@ def render(context: RenderContext, params):
         canonical_url=canonical_url,
         short_url=short_url,
         threads=render_threads,
-        can_create_thread=context.user.has_perm('roles.create_forum_thread', category),
+        can_create_thread=context.user.has_perm('roles.create_forum_threads', category),
         pagination=render_pagination(short_url, page, max_page) if max_page != 1 else ''
     )
