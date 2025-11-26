@@ -43,7 +43,7 @@ You can change it with given environment variables.
 
 To start working, the following objects are required:
 
-- Minimally one website record (for localhost)
+- Website record (for localhost)
 - Some pages (such as `nav:top` or `nav:side`) that are critical for proper appearance 
 
 You can provision these basic structures by running the following commands:
