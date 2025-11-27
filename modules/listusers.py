@@ -27,7 +27,7 @@ def api_get(context, params):
         'title': name,
         'name': name,
         'avatar': avatar,
-        'is_authenticated': True
+        'is_authenticated': is_authenticated
     }
 
 
