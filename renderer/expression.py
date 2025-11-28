@@ -60,15 +60,23 @@ def _eval_ast(node):
             if len(args) != 1:
                 raise ValueError(args)
             return floor(args[0])
+        elif id == 'div':
+            if len(args) != 2:
+                raise ValueError(args)
+            return args[0] // args[1]
         elif id == 'random':
             if len(args) != 2:
                 raise ValueError(args)
             return randint(args[0], args[1])
-        elif id in ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sqrt']:
+        elif id in ['sin', 'cos', 'tan', 'asin', 'acos', 'atan']:
             if len(args) != 1:
                 raise ValueError(args)
-            f = {'sin': sin, 'cos': cos, 'tan': tan, 'asin': asin, 'acos': acos, 'atan': atan, 'sqrt': sqrt}
+            f = {'sin': sin, 'cos': cos, 'tan': tan, 'asin': asin, 'acos': acos, 'atan': atan}
             return f[id][args[0]]
+        elif id == 'sqrt':
+            if len(args) != 1:
+                raise ValueError(args)
+            return sqrt(args[0])
         elif id == 'pow':
             if len(args) != 2:
                 raise ValueError(args)
@@ -78,6 +86,10 @@ def _eval_ast(node):
                 raise ValueError(args)
             s = str(args[0])
             return s.startswith('%%') and s.endswith('%%')
+        elif id == 'len':
+            if len(args) != 1 or not isinstance(args[0], str):
+                raise ValueError(args)
+            return len(args[0])
         elif id == 'lower':
             if len(args) != 1 or not isinstance(args[0], str):
                 raise ValueError(args)
