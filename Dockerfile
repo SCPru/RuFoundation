@@ -24,19 +24,26 @@ WORKDIR /build/web/js
 COPY web/js .
 RUN --mount=type=cache,target=/build/.yarn YARN_CACHE_FOLDER=/build/.yarn yarn install && yarn run build
 
-# Python stuff
-FROM python:3.13.2
+FROM python:3.13.2 AS python_build
 
-RUN apt-get update && apt-get install -y tini && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
+RUN apt-get update && apt-get install -y tini
 
 COPY requirements.txt .
 
 RUN python -m pip install -r requirements.txt
 RUN python -m pip install gunicorn
 
+# Python stuff
+FROM python:3.13.2-slim
+
+WORKDIR /app
+
 COPY . .
+
+COPY --from=python_build /usr/local/lib /usr/local/lib
+COPY --from=python_build /usr/bin/tini /usr/bin/tini
+COPY --from=python_build /usr/local/bin/gunicorn /usr/local/bin/gunicorn
+
 COPY --from=js_build /build/static/* ./static/
 COPY --from=rust_build /build/target/release/libftml.so ./ftml/ftml.so
 
@@ -51,4 +58,5 @@ RUN python manage.py collectstatic
 RUN chmod 775 entrypoint.sh
 
 EXPOSE 8000
-ENTRYPOINT ["/usr/bin/tini", "--", "./entrypoint.sh"]
+ENTRYPOINT [ "/usr/bin/tini", "--" ]
+CMD [ "./entrypoint.sh" ]
