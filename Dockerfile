@@ -55,7 +55,7 @@ USER scpwiki
 
 RUN python manage.py collectstatic
 
-RUN chmod 775 entrypoint.sh
+RUN chmod 755 entrypoint.sh
 
 EXPOSE 8000
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
