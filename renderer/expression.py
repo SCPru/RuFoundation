@@ -1,5 +1,7 @@
 import ast
 import operator as op
+from math import ceil, floor, sin, cos, tan, asin, acos, atan, sqrt, pow
+from random import randint
 
 
 def _eval_ast(node):
@@ -33,7 +35,7 @@ def _eval_ast(node):
         return _eval_ast(node.body[0])
     elif isinstance(node, ast.Expr):  # expr
         return _eval_ast(node.value)
-    elif isinstance(node, ast.Call):  # function. allowed functions: min, max, abs
+    elif isinstance(node, ast.Call):  # function
         if len(node.keywords):
             raise ValueError(node.keywords)
         id = node.func.id.lower()
@@ -47,9 +49,30 @@ def _eval_ast(node):
                 raise ValueError(args)
             return abs(args[0])
         elif id == 'round':
+            if len(args) not in [1, 2]:
+                raise ValueError(args)
+            return round(args[0], args [1] if len(args) == 2 else 0)
+        elif id == 'ceil':
             if len(args) != 1:
                 raise ValueError(args)
-            return round(args[0])
+            return ceil(args[0])
+        elif id == 'floor':
+            if len(args) != 1:
+                raise ValueError(args)
+            return floor(args[0])
+        elif id == 'random':
+            if len(args) != 2:
+                raise ValueError(args)
+            return randint(args[0], args[1])
+        elif id in ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sqrt']:
+            if len(args) != 1:
+                raise ValueError(args)
+            f = {'sin': sin, 'cos': cos, 'tan': tan, 'asin': asin, 'acos': acos, 'atan': atan, 'sqrt': sqrt}
+            return f[id][args[0]]
+        elif id == 'pow':
+            if len(args) != 2:
+                raise ValueError(args)
+            return pow(args[0], args[1])
         elif id == 'unset':
             if len(args) != 1:
                 raise ValueError(args)
@@ -63,6 +86,10 @@ def _eval_ast(node):
             if len(args) != 1 or not isinstance(args[0], str):
                 raise ValueError(args)
             return args[0].upper()
+        elif id == 'substr':
+            if len(args) not in [2, 3] or not isinstance(args[0], str):
+                raise ValueError(args)
+            return args[0][ args[1] : args[2] if len(args) == 3 else None]
         else:
             raise ValueError(id)
     else:
