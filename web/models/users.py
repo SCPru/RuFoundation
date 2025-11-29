@@ -13,6 +13,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser
+from django.db.models.functions import Lower
 from django.db import models
 
 import web.fields
@@ -34,6 +35,11 @@ class User(AbstractUser, RolesMixin):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+        constraints = [
+            models.UniqueConstraint(Lower('email'), name='user_email_ci_uniqueness',
+            condition=models.Q(email__isnull=False) & ~models.Q(email=''))
+        ]
 
     class UserType(models.TextChoices):
         Normal = ('normal', 'Обычный')
@@ -121,11 +127,9 @@ class UsedToken(auto_prefetch.Model):
 
     @classmethod
     def is_used(cls, token):
-        used_sensitive = cls.objects.filter(token=token)
-        if used_sensitive:
+        if cls.objects.filter(token=token, is_case_sensitive=True).exists():
             return True
-        used_insensitive = cls.objects.filter(token=token)
-        return used_insensitive and not used_insensitive[0].is_case_sensitive
+        return cls.objects.filter(token__iexact=token, is_case_sensitive=False).exists()
 
     @classmethod
     def mark_used(cls, token, is_case_sensitive):
