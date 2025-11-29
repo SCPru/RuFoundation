@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from django.utils.http import urlsafe_base64_encode
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -64,7 +65,10 @@ class InviteView(FormView):
         if user:
             created = not user.email
         else:
-            user, created = User.objects.get_or_create(email=email)
+            try:
+                user, created = User.objects.get_or_create(email=email)
+            except IntegrityError:
+                created = False
         site = get_current_site()
         if created:
             user.roles.set(roles)
