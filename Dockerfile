@@ -58,5 +58,6 @@ RUN python manage.py collectstatic
 RUN chmod 755 entrypoint.sh
 
 EXPOSE 8000
+
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
-CMD [ "./entrypoint.sh" ]
+CMD [ "/app/entrypoint.sh" ]
