@@ -352,7 +352,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
             case param.Sort(column=column, direction=direction):
                 allowed_sort_columns = {
                     'created_at': F('created_at'),
-                    'created_by': F('author'),
+                    'created_by': F('authors__username'),
                     'name': F('name'),
                     'title': F('title'),
                     'updated_at': F('updated_at'),
