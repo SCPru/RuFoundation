@@ -1,5 +1,5 @@
 __all__ = [
-    'ExtendedJSONEncoder'
+    'replace_json_dumps_default'
 ]
 
 import json
