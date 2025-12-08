@@ -194,7 +194,10 @@ def render_user_to_json(user: User, show_avatar=True, skip_perms=False):
         roles=[role.slug for role in user.roles.all() if role.is_visual]
     )
 
-def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Stars, capitalize=True):
+def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Default, capitalize=True):
+    if mode == Settings.RatingMode.Disabled:
+        return ''
+
     rate = vote.rate if vote else None
 
     if vote is None:
@@ -207,6 +210,9 @@ def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Stars, capitalize=T
             """,
             msg=msg
         )
+
+    if mode == Settings.RatingMode.Default:
+        mode = Settings.get_default_settings().rating_mode
 
     if mode == Settings.RatingMode.UpDown:
         visual_rate = '%+d' % rate
