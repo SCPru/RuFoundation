@@ -32,7 +32,7 @@ class Settings(auto_prefetch.Model):
     # DEFAULT_SETTINGS -> site settings -> category settings
     @classmethod
     def get_default_settings(cls):
-        return cls(rating_mode=Settings.RatingMode.UpDown, can_user_create_tags=Settings.UserCreateTagsMode.Enabled)
+        return cls(rating_mode=Settings.RatingMode.Stars, can_user_create_tags=Settings.UserCreateTagsMode.Disabled)
 
     # overwrites whatever fields that are not null with values from the other object.
     # returns a copy.
