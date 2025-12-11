@@ -102,7 +102,7 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, pr
   const monacoRef = useRef(null)
 
   const monacoOptions = {
-
+    wordWrap: 'on',
   }
 
   useEffect(() => {
