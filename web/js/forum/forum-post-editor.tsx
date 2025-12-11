@@ -6,6 +6,8 @@ import { fetchAllUsers } from '../api/user'
 import useConstCallback from '../util/const-callback'
 import Loader from '../util/loader'
 import WikidotModal from '../util/wikidot-modal'
+import { Editor } from '@monaco-editor/react'
+import { editor } from 'monaco-editor'
 
 export interface ForumPostPreviewData {
   name: string
@@ -54,38 +56,8 @@ const Styles = styled.div`
   }
 `
 
-const StyledTextarea = styled.textarea`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 250px;
+const StyledEditor = styled(Editor)`
   border: 1px solid #ccc;
-  padding: 10px;
-  box-sizing: border-box;
-  background: transparent;
-  color: transparent;
-  caret-color: black;
-  resize: vertical;
-  z-index: 2;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-`
-
-const FakeEditor = styled.pre`
-  font-family: verdana, arial, helvetica, sans-serif;
-  text-align: left;
-  margin: 0;
-  height: 250px;
-  pointer-events: none;
-  border: 1px solid #ccc;
-  padding: 10px;
-  box-sizing: border-box;
-  overflow: hidden;
-  background: #fff;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-  z-index: 1;
 `
 
 const ForumPostEditor: React.FC<Props> = ({
@@ -106,9 +78,20 @@ const ForumPostEditor: React.FC<Props> = ({
   const [error, setError] = useState('')
   const [fatalError, setFatalError] = useState(false)
   const [usernameSet, setUsernameSet] = useState<Set<string>>(new Set())
-  const [highlightedSource, setHighlightedSource] = useState<React.ReactNode[]>([])
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const fakeEditorRef = useRef<HTMLPreElement>(null)
+  const [mentionDecorationIds, setMentionDecorationIds] = useState<string[]>([]);
+
+  const editorRef = useRef(null)
+  const monacoRef = useRef(null)
+
+  const monacoOptions = {
+    minimap: { enabled: false },
+    wordWrap: true,
+    lineNumbers: 'off',
+    lineDecorationsWidth: 0,
+    lineNumbersMinChars: 0,
+    glyphMargin: false,
+    folding: false,
+  }
 
   const handleRefresh = useConstCallback(e => {
     if (!saving) {
@@ -154,65 +137,46 @@ const ForumPostEditor: React.FC<Props> = ({
   }, [])
 
   useEffect(() => {
-    if (!textareaRef.current || !fakeEditorRef.current) return
-
-    const ta = textareaRef.current
-    const pre = fakeEditorRef.current
-
-    const observer = new ResizeObserver(() => {
-      pre.style.height = `${ta.offsetHeight}px`
-    })
-
-    observer.observe(ta)
-    pre.style.height = `${ta.offsetHeight}px`
-
-    const syncScroll = () => {
-      pre.scrollTop = ta.scrollTop
-      pre.scrollLeft = ta.scrollLeft
-    }
-
-    ta.addEventListener('scroll', syncScroll)
-
-    return () => observer.disconnect()
-  }, [])
-
-  useEffect(() => {
-    setHighlightedSource(highlightMentions(source))
+    highlightMentions(source)
   }, [source, usernameSet])
 
+  const onEditorDidMount = useConstCallback((editor, monaco) => {
+    editorRef.current = editor
+    monacoRef.current = monaco
+  })
+
   const highlightMentions = useConstCallback((text: string) => {
-    const result: React.ReactNode[] = []
+    const editor = editorRef.current
+    const monaco = monacoRef.current
+    if (!editor || !monaco) return
 
-    const regex = /@[\w.-]+/g
-    let lastIndex = 0
-    let match: RegExpExecArray | null
+    const model = editorRef.current.getModel()
+    if (!model) return
 
-    while ((match = regex.exec(text)) !== null) {
-      const full = match[0]
-      const username = full.slice(1)
+    const mentionRegex = /@[\w.-]+/g
+    const newDecorations: editor.IModelDeltaDecoration[] = []
+    let match
 
-      if (match.index > lastIndex) {
-        result.push(text.slice(lastIndex, match.index))
-      }
+    while ((match = mentionRegex.exec(source)) !== null) {
+        const mention = match[0]
+        const username = mention.substring(1)
 
-      if (usernameSet.has(username.toLowerCase())) {
-        result.push(
-          <span className="w-user-mention" key={match.index}>
-            {full}
-          </span>,
-        )
-      } else {
-        result.push(full)
-      }
+        if (usernameSet.has(username)) {
+            const startPos = model.getPositionAt(match.index)
+            const endPos = model.getPositionAt(match.index + mention.length)
+            const range = new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column)
 
-      lastIndex = regex.lastIndex
+            newDecorations.push({
+                range: range,
+                options: {
+                    inlineClassName: 'w-user-mention'
+                }
+            })
+        }
     }
 
-    if (lastIndex < text.length) {
-      result.push(text.slice(lastIndex))
-    }
-
-    return result
+    const newMentionIds = editor.deltaDecorations(mentionDecorationIds, newDecorations)
+    setMentionDecorationIds(newMentionIds)
   })
 
   const highlightMentionsStr = useConstCallback((text: string) => {
@@ -283,18 +247,17 @@ const ForumPostEditor: React.FC<Props> = ({
     }
   })
 
-  const onChange = useConstCallback(e => {
-    switch (e.target.name) {
-      case 'name':
-        setName(e.target.value)
-        break
-      case 'source':
-        setSource(e.target.value)
-        break
-      case 'description':
-        setDescription(e.target.value)
-        break
+  const onInputChange = useConstCallback(e => {
+    const { name, value } = e.target
+    if (name === 'name') {
+      setName(value)
+    } else if (name === 'description') {
+      setDescription(value)
     }
+  })
+
+  const onSourceChange = useConstCallback((value: string) => {
+    setSource(value || '')
   })
 
   const onCloseError = useConstCallback(() => {
@@ -340,7 +303,7 @@ const ForumPostEditor: React.FC<Props> = ({
                 <input
                   className="text form-control"
                   value={name}
-                  onChange={onChange}
+                  onChange={onInputChange}
                   name="name"
                   type="text"
                   size={35}
@@ -359,7 +322,7 @@ const ForumPostEditor: React.FC<Props> = ({
                     rows={2}
                     className="form-control"
                     value={description}
-                    onChange={onChange}
+                    onChange={onInputChange}
                     name="description"
                     maxLength={1000}
                     disabled={loading || saving}
@@ -372,19 +335,16 @@ const ForumPostEditor: React.FC<Props> = ({
         {/* This is not supported right now but we have to add empty div for BHL */}
         <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
         <div className={`w-editor-area ${loading ? 'loading' : ''}`}>
-          <StyledTextarea
-            ref={textareaRef}
-            className="form-control"
+          <StyledEditor
+            className='form-control'
+            loading='Загрузка, терпите, карлики...'
+            height='250px'
             value={source}
-            onChange={onChange}
-            name="source"
-            rows={10}
-            cols={60}
+            onChange={onSourceChange}
+            onMount={onEditorDidMount}
+            options={monacoOptions}
             disabled={loading || saving}
           />
-          <FakeEditor ref={fakeEditorRef}>
-            <React.Fragment>{highlightedSource.map(e => e)}</React.Fragment>
-          </FakeEditor>
           {loading && <Loader className="loader" />}
         </div>
         <div className="buttons alignleft">

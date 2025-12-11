@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { createArticle, fetchArticle, updateArticle } from '../api/articles'
 import { makePreview } from '../api/preview'
@@ -7,6 +7,7 @@ import useConstCallback from '../util/const-callback'
 import Loader from '../util/loader'
 import { removeMessage, showPreviewMessage } from '../util/wikidot-message'
 import WikidotModal from '../util/wikidot-modal'
+import { Editor } from '@monaco-editor/react'
 
 interface Props {
   pageId: string
@@ -16,21 +17,6 @@ interface Props {
   previewTitleElement?: HTMLElement | (() => HTMLElement)
   previewBodyElement?: HTMLElement | (() => HTMLElement)
   previewStyleElement?: HTMLElement | (() => HTMLElement)
-}
-
-interface State {
-  title: string
-  source: string
-  comment: string
-  loading: boolean
-  saving: boolean
-  savingSuccess?: boolean
-  error?: string
-  fatalError?: boolean
-  saved?: boolean
-  previewOriginalTitle?: string
-  previewOriginalTitleDisplay?: string
-  previewOriginalBody?: string
 }
 
 function guessTitle(pageId: string) {
@@ -92,6 +78,11 @@ const Styles = styled.div`
   }
 `
 
+const StyledEditor = styled(Editor)`
+  border: 1px solid #ccc;
+  width: 95%;
+`
+
 const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, previewTitleElement, previewBodyElement, previewStyleElement }) => {
   const [title, setTitle] = useState('')
   const [source, setSource] = useState('')
@@ -106,6 +97,13 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, pr
   const [previewOriginalTitleDisplay, setPreviewOriginalTitleDisplay] = useState('')
   const [previewOriginalBody, setPreviewOriginalBody] = useState('')
   const [previewOriginalStyle, setPreviewOriginalStyle] = useState('')
+
+  const editorRef = useRef(null)
+  const monacoRef = useRef(null)
+
+  const monacoOptions = {
+
+  }
 
   useEffect(() => {
     setTitle(isNew ? guessTitle(pageId) : '')
@@ -142,6 +140,11 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, pr
       event.preventDefault()
       event.returnValue = ''
     }
+  })
+
+  const onEditorDidMount = useConstCallback((editor, monaco) => {
+    editorRef.current = editor
+    monacoRef.current = monaco
   })
 
   const onSubmit = useConstCallback(() => {
@@ -238,19 +241,17 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, pr
     if (onClose) onClose()
   })
 
-  const onChange = useConstCallback(e => {
-    setSaved(false)
-    switch (e.target.name) {
-      case 'title':
-        setTitle(e.target.value)
-        break
-      case 'source':
-        setSource(e.target.value)
-        break
-      case 'comment':
-        setComment(e.target.value)
-        break
+  const onInputChange = useConstCallback(e => {
+    const { name, value } = e.target
+    if (name === 'title') {
+      setTitle(value)
+    } else if (name === 'comment') {
+      setComment(value)
     }
+  })
+
+  const onSourceChange = useConstCallback((value: string) => {
+    setSource(value || '')
   })
 
   const onCloseError = useConstCallback(() => {
@@ -289,7 +290,7 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, pr
                 <input
                   id="edit-page-title"
                   value={title}
-                  onChange={onChange}
+                  onChange={onInputChange}
                   name="title"
                   type="text"
                   size={35}
@@ -304,21 +305,21 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, pr
         {/* This is not supported right now but we have to add empty div for BHL */}
         <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
         <div className={`editor-area ${loading ? 'loading' : ''}`}>
-          <textarea
-            id="edit-page-textarea"
+          <StyledEditor
+            id='edit-page-textarea'
+            loading='Загрузка, терпите, карлики...'
+            height='350px'
             value={source}
-            onChange={onChange}
-            name="source"
-            rows={20}
-            cols={60}
-            style={{ width: '95%' }}
+            onChange={onSourceChange}
+            onMount={onEditorDidMount}
+            options={monacoOptions}
             disabled={loading || saving}
           />
           <p>Краткое описание изменений:</p>
           <textarea
             id="edit-page-comments"
             value={comment}
-            onChange={onChange}
+            onChange={onInputChange}
             name="comment"
             rows={3}
             cols={20}

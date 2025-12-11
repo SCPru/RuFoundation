@@ -201,8 +201,7 @@
 }
 
 .w-user-mention {
-  color: #1f6feb;
+  color: #1f6feb !important;
   background: rgba(31, 110, 235, 0.08);
   border-radius: 3px;
-
 }
