@@ -85,8 +85,8 @@ const ForumPostEditor: React.FC<Props> = ({
 
   const monacoOptions = {
     minimap: { enabled: false },
-    wordWrap: true,
-    lineNumbers: false,
+    wordWrap: 'on',
+    lineNumbers: 'off',
     lineDecorationsWidth: 0,
     lineNumbersMinChars: 0,
     glyphMargin: false,
