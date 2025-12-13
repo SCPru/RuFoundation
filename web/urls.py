@@ -93,6 +93,8 @@ sys_patterns = [
 
     path('accept/<uidb64>/<token>', signup.AcceptInvitationView.as_view(), name="accept"),
 
+    re_path(r'^preferences/', include('dynamic_preferences.urls')),
+
     *make_path("admin", admin.site.urls),
     *make_reactive(reactive_pages)
 ]
