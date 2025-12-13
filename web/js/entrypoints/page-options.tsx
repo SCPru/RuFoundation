@@ -44,6 +44,7 @@ interface Props {
   canResetVotes?: boolean
   canWatch?: boolean
   isWatching?: boolean
+  preferences?: { [key: string]: any }
 }
 
 type SubViewType =
@@ -86,6 +87,7 @@ const PageOptions: React.FC<Props> = ({
   canResetVotes,
   canWatch,
   isWatching,
+  preferences
 }: Props) => {
   const [subView, setSubView] = useState<SubViewType>(null)
   const [extOptions, setExtOptions] = useState(false)
@@ -291,6 +293,7 @@ const PageOptions: React.FC<Props> = ({
           <ArticleEditor
             pageId={pageId}
             pathParams={pathParams}
+            useAdvancedEditor={preferences['qol__advanced_source_editor_enabled'] === true}
             onClose={onCancelSubView}
             previewTitleElement={document.getElementById('page-title')}
             previewBodyElement={document.getElementById('page-content')}

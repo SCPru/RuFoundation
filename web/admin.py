@@ -225,11 +225,6 @@ class AdvancedUserChangeForm(UserChangeForm):
             'wikidot_username': forms.TextInput(attrs={'class': 'vTextField'})
         }
 
-    # _op_index = forms.CharField(
-    #     label='Уровень превилегий',
-    #     help_text='Показывает индекс самой приоритетной роли, чем ниже значение, тем выше приоритет'
-    # )
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'roles' in self.fields:

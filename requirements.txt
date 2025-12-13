@@ -10,7 +10,8 @@ beautifulsoup4==4.12.3
 django-admin-sortable2==2.2.8
 django-auto-prefetch==1.11.0
 django-debug-toolbar==6.0.0
-pydantic # The version is not specified to avoid dependency resolving issues
+django-dynamic-preferences==1.17.0
+pydantic==2.12.5
 langcodes==3.4.0
 requests==2.32.4
 django-solo==2.4.0

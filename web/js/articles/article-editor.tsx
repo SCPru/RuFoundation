@@ -13,6 +13,7 @@ interface Props {
   pageId: string
   pathParams?: { [key: string]: string }
   isNew?: boolean
+  useAdvancedEditor?: boolean
   onClose?: () => void
   previewTitleElement?: HTMLElement | (() => HTMLElement)
   previewBodyElement?: HTMLElement | (() => HTMLElement)
@@ -78,12 +79,20 @@ const Styles = styled.div`
   }
 `
 
-const StyledEditor = styled(Editor)`
+const StyledEditor = styled(Editor)<{ isFullscreen: boolean }>`
   border: 1px solid #ccc;
-  width: 95%;
+  ${p => p.isFullscreen && 
+    `
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    `
+  }
 `
 
-const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, previewTitleElement, previewBodyElement, previewStyleElement }) => {
+const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, useAdvancedEditor, onClose, previewTitleElement, previewBodyElement, previewStyleElement }) => {
   const [title, setTitle] = useState('')
   const [source, setSource] = useState('')
   const [comment, setComment] = useState('')
@@ -93,6 +102,7 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, pr
   const [error, setError] = useState(false)
   const [fatalError, setFatalError] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [fullscreenEditor, setFullScreenEditor] = useState(false)
   const [previewOriginalTitle, setPreviewOriginalTitle] = useState('')
   const [previewOriginalTitleDisplay, setPreviewOriginalTitleDisplay] = useState('')
   const [previewOriginalBody, setPreviewOriginalBody] = useState('')
@@ -145,6 +155,24 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, pr
   const onEditorDidMount = useConstCallback((editor, monaco) => {
     editorRef.current = editor
     monacoRef.current = monaco
+
+    editor.addAction({
+      id: 'toggle-fullscreen',
+      label: 'Toggle fullscreen',
+
+      keybindings: [
+        monaco.KeyCode.F11
+      ],
+
+      precondition: null,
+      keybindingContext: null,
+      contextMenuGroupId: 'navigation',
+      contextMenuOrder: 1.5,
+
+      run: () => {
+        setFullScreenEditor(prevFullScreenEditor => !prevFullScreenEditor)
+      },
+    })
   })
 
   const onSubmit = useConstCallback(() => {
@@ -305,16 +333,31 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, onClose, pr
         {/* This is not supported right now but we have to add empty div for BHL */}
         <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
         <div className={`editor-area ${loading ? 'loading' : ''}`}>
-          <StyledEditor
-            id='edit-page-textarea'
-            loading='Загрузка, терпите, карлики...'
-            height='350px'
-            value={source}
-            onChange={onSourceChange}
-            onMount={onEditorDidMount}
-            options={monacoOptions}
-            disabled={loading || saving}
-          />
+          {!useAdvancedEditor && (
+            <textarea
+              id="edit-page-textarea"
+              value={source}
+              onChange={e => onSourceChange(e.target.value)}
+              name="source"
+              rows={20}
+              cols={60}
+              style={{ width: '95%' }}
+              disabled={loading || saving}
+            />
+          )}
+          {useAdvancedEditor && (
+            <StyledEditor
+              id='edit-page-textarea'
+              loading='Загрузка, терпите, карлики...'
+              height='350px'
+              value={source}
+              isFullscreen={fullscreenEditor}
+              onChange={onSourceChange}
+              onMount={onEditorDidMount}
+              options={monacoOptions}
+              disabled={loading || saving}
+            />
+          )}
           <p>Краткое описание изменений:</p>
           <textarea
             id="edit-page-comments"

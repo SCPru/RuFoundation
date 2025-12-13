@@ -211,6 +211,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'canManageAuthors': self.request.user.has_perm('roles.manage_article_authors', article),
             'canResetVotes': self.request.user.has_perm('roles.reset_article_votes', article),
             'canWatch': not self.request.user.is_anonymous,
+            'preferences': {} if self.request.user.is_anonymous else self.request.user.preferences.all(),
             'isWatching': not self.request.user.is_anonymous and (
                 notifications.is_subscribed(self.request.user, article=article) or \
                 notifications.is_subscribed(self.request.user, forum_thread=path_params.get("t"))

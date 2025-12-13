@@ -58,6 +58,10 @@ const Styles = styled.div`
 
 const StyledEditor = styled(Editor)`
   border: 1px solid #ccc;
+
+  div {
+    max-width: none !important;
+  }
 `
 
 const ForumPostEditor: React.FC<Props> = ({
@@ -91,6 +95,7 @@ const ForumPostEditor: React.FC<Props> = ({
     lineNumbersMinChars: 0,
     glyphMargin: false,
     folding: false,
+    quickSuggestions: false,
   }
 
   const handleRefresh = useConstCallback(e => {

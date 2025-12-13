@@ -45,6 +45,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.postgres',
 
+    'dynamic_preferences',
+    'dynamic_preferences.users.apps.UserPreferencesConfig',
+
     'web',
     'adminsortable2',
 
