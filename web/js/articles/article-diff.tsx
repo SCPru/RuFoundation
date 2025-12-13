@@ -70,10 +70,6 @@ const ArticleDiffView: React.FC<Props> = ({ pageId, pathParams, onClose: onClose
 
   useEffect(() => {
     compareSource()
-  }, [])
-
-  useEffect(() => {
-    compareSource()
   }, [firstEntry, secondEntry])
 
   const compareSource = useConstCallback(async () => {
