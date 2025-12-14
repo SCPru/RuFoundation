@@ -69,7 +69,8 @@ def reload_once(site):
         last_event = last_events.get(article.id)
         rating, rating_votes, popularity, rating_mode = ratings_map.get(article.id, (0, 0, 0, Settings.RatingMode.Disabled))
         
-        authors = [_get_user_json_cached(author) for author in article.authors.all()]
+        authors = list(article.authors.all())
+        authors = [_get_user_json_cached(author) for author in authors] if authors else [_get_user_json_cached(None)]
         created_by = authors[0]
         updated_by = _get_user_json_cached(last_event.user)
 
