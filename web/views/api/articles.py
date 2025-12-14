@@ -89,7 +89,8 @@ class FetchOrUpdateView(ArticleView):
 
     def render_article(self, article: Article):
         source = articles.get_latest_source(article)
-        authors = [render_user_to_json(author) for author in article.authors.all()]
+        authors = article.authors.all()
+        authors = [render_user_to_json(author) for author in authors] if authors else [render_user_to_json(None)]
 
         return self.render_json(200, {
             'uid': article.id,

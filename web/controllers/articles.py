@@ -158,7 +158,8 @@ def create_article(full_name: str, user: Optional[_UserType] = None) -> Article:
         title=name,
     )
     article.save()
-    article.authors.add(user)
+    if user:
+        article.authors.add(user)
     OnCreateArticle(user, article).emit()
     return article
 
