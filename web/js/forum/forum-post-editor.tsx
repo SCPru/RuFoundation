@@ -1,3 +1,5 @@
+import { Editor } from '@monaco-editor/react'
+import { editor } from 'monaco-editor'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
@@ -6,8 +8,6 @@ import { fetchAllUsers } from '../api/user'
 import useConstCallback from '../util/const-callback'
 import Loader from '../util/loader'
 import WikidotModal from '../util/wikidot-modal'
-import { Editor } from '@monaco-editor/react'
-import { editor } from 'monaco-editor'
 
 export interface ForumPostPreviewData {
   name: string
@@ -82,12 +82,12 @@ const ForumPostEditor: React.FC<Props> = ({
   const [error, setError] = useState('')
   const [fatalError, setFatalError] = useState(false)
   const [usernameSet, setUsernameSet] = useState<Set<string>>(new Set())
-  const [mentionDecorationIds, setMentionDecorationIds] = useState<string[]>([]);
+  const [mentionDecorationIds, setMentionDecorationIds] = useState<string[]>([])
 
   const editorRef = useRef(null)
   const monacoRef = useRef(null)
 
-  const monacoOptions = {
+  const monacoOptions: editor.IStandaloneEditorConstructionOptions = {
     minimap: { enabled: false },
     wordWrap: 'on',
     lineNumbers: 'off',
@@ -96,6 +96,7 @@ const ForumPostEditor: React.FC<Props> = ({
     glyphMargin: false,
     folding: false,
     quickSuggestions: false,
+    readOnly: loading || saving,
   }
 
   const handleRefresh = useConstCallback(e => {
@@ -163,21 +164,21 @@ const ForumPostEditor: React.FC<Props> = ({
     let match
 
     while ((match = mentionRegex.exec(source)) !== null) {
-        const mention = match[0]
-        const username = mention.substring(1)
+      const mention = match[0]
+      const username = mention.substring(1)
 
-        if (usernameSet.has(username)) {
-            const startPos = model.getPositionAt(match.index)
-            const endPos = model.getPositionAt(match.index + mention.length)
-            const range = new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column)
+      if (usernameSet.has(username)) {
+        const startPos = model.getPositionAt(match.index)
+        const endPos = model.getPositionAt(match.index + mention.length)
+        const range = new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column)
 
-            newDecorations.push({
-                range: range,
-                options: {
-                    inlineClassName: 'w-user-mention'
-                }
-            })
-        }
+        newDecorations.push({
+          range: range,
+          options: {
+            inlineClassName: 'w-user-mention',
+          },
+        })
+      }
     }
 
     const newMentionIds = editor.deltaDecorations(mentionDecorationIds, newDecorations)
@@ -341,14 +342,13 @@ const ForumPostEditor: React.FC<Props> = ({
         <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
         <div className={`w-editor-area ${loading ? 'loading' : ''}`}>
           <StyledEditor
-            className='form-control'
-            loading='Загрузка, терпите, карлики...'
-            height='250px'
+            className="form-control"
+            loading="Загрузка, терпите, карлики..."
+            height="250px"
             value={source}
             onChange={onSourceChange}
             onMount={onEditorDidMount}
             options={monacoOptions}
-            disabled={loading || saving}
           />
           {loading && <Loader className="loader" />}
         </div>

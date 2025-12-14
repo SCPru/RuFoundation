@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
+import { useTheme } from 'styled-components'
 import { getNotifications, Notification as INotification } from '~api/notifications'
 import useConstCallback from '~util/const-callback'
 import Loader from '~util/loader'
@@ -13,6 +14,7 @@ interface Props {
 }
 
 const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, isForceUpdate }) => {
+  const theme = useTheme()
   const [items, setItems] = useState<INotification[]>([])
   const [cursor, setCursor] = useState(-1)
   const [hasMore, setHasMore] = useState(true)
@@ -91,7 +93,7 @@ const NotificationsInfiniteScroll: React.FC<Props> = ({ batchSize, showUnread, i
       </Styled.List>
       {hasMore && (
         <Styled.LoaderContainer ref={loaderRef}>
-          <Loader />
+          <Loader color={theme.primary} />
         </Styled.LoaderContainer>
       )}
       {!hasMore && items.length === 0 && <Styled.EmptyMessage>Уведомлений пока нет :(</Styled.EmptyMessage>}

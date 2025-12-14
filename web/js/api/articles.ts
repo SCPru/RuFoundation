@@ -1,5 +1,5 @@
 import { wFetch } from '../util/fetch-util'
-import { ModuleRateVote, ModuleRateVotesResponse, RatingMode } from './rate'
+import { ModuleRateVotesResponse, RatingMode } from './rate'
 import { UserData } from './user'
 
 export interface ArticleData {
@@ -24,7 +24,7 @@ export async function createArticle(data: ArticleData) {
 export interface FullArticleRating {
   value: number
   mode: RatingMode
-  votes: Array<ModuleRateVote>
+  votes: number
   popularity: number
 }
 

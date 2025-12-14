@@ -1,23 +1,23 @@
 import { fetchAllArticles, fetchArticle, fetchArticleBacklinks, fetchArticleLog, fetchArticleVersion, fetchArticleVotes } from '../api/articles'
 import { fetchArticleFiles } from '../api/files'
 import { fetchForumPost, fetchForumPostVersions, previewForumPost } from '../api/forum'
-import { callModule } from '../api/modules'
+import { callModule, ModuleRequest } from '../api/modules'
 import { makePreview } from '../api/preview'
 import { fetchPageRating, fetchPageVotes } from '../api/rate'
 import { fetchAllTags } from '../api/tags'
 import { fetchAllUsers } from '../api/user'
 
-function onApiMessage(e) {
+function onApiMessage(e: MessageEvent) {
   if (!e.data.hasOwnProperty('type') || !e.data.hasOwnProperty('target') || !e.data.hasOwnProperty('callId') || e.data.type !== 'ApiCall') return
 
-  const avaliableModules = ['listpages', 'listusers', 'countpages', 'interwiki']
+  const availableModules = ['listpages', 'listusers', 'countpages', 'interwiki']
 
-  const callModuleWrapper = (module, method, data) => {
-    if (!avaliableModules.includes(module)) throw new Error(`Unexpected or restricted module name: ${module}`)
-    return callModule({ module, method, ...data })
+  const callModuleWrapper = (module: string, method: string, data: Partial<ModuleRequest>) => {
+    if (!availableModules.includes(module)) throw new Error(`Unexpected or restricted module name: ${module}`)
+    return callModule({ ...data, module, method })
   }
 
-  const avaliableApiCalls = {
+  const availableApiCalls: Record<string, (...args: any[]) => any> = {
     fetchAllArticles, // [no args]
     fetchArticle, // pageId
     fetchArticleLog, // pageId, from?, to?
@@ -36,22 +36,24 @@ function onApiMessage(e) {
     callModule: callModuleWrapper, // module, method, data?
   }
 
-  if (!avaliableApiCalls.hasOwnProperty(e.data.target)) {
+  if (!availableApiCalls.hasOwnProperty(e.data.target)) {
     console.error(`Unexpected ApiCall target: ${e.data.target}`)
     return
   }
 
-  avaliableApiCalls[e.data.target](...e.data.args)
-    .then(response => {
+  availableApiCalls[e.data.target](...e.data.args)
+    .then((response: any) => {
       const data = {
         type: 'ApiResponse',
         target: e.data.target,
         callId: e.data.callId,
         response,
       }
-      e.source.postMessage(data, '*')
+      e.source.postMessage(data, {
+        targetOrigin: '*',
+      })
     })
-    .catch(err => {
+    .catch((err: any) => {
       console.error('ApiCall error with target:', e.data.target, err)
     })
 }

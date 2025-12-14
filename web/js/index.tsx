@@ -1,5 +1,4 @@
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
+import React from 'react'
 import './articles/auto-resize-iframe'
 import { makeCodeBlock } from './articles/codeblock'
 import { makeCollapsible } from './articles/collapsible'
@@ -27,10 +26,7 @@ import { makeForumThread } from './forum/thread-pagination'
 import ReactivePage from './reactive/router'
 import { makePasswordToggle } from './util/password'
 import AdminSusUsers from './entrypoints/admin-sus-users'
-
-function renderTo(where: HTMLElement, what: any) {
-  ReactDOM.render(what, where)
-}
+import { renderTo } from '~util/react-render-into'
 
 attachApiMessageListener()
 

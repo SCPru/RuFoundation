@@ -1,8 +1,8 @@
-function padString(paddingValue, str) {
+function padString(paddingValue: string, str: string) {
   return String(paddingValue + str).slice(-paddingValue.length)
 }
 
-function formatDaysAgo(days) {
+function formatDaysAgo(days: number) {
   const localizedDaysAgo = ['день', 'дня', 'дней']
 
   days = Math.ceil(days)
@@ -25,17 +25,17 @@ export default function formatDate(date: Date, format: string = '%H:%M %d.%m.%Y'
   var days = localizedDayNames
   if (!months || !days || !format) {
     return (
-      padString('00', date.getDate()) +
+      padString('00', date.getDate().toString()) +
       '.' +
-      padString('00', date.getMonth() + 1) +
+      padString('00', (date.getMonth() + 1).toString()) +
       '.' +
-      padString('0000', date.getFullYear()) +
+      padString('0000', date.getFullYear().toString()) +
       ' ' +
-      padString('00', date.getHours()) +
+      padString('00', date.getHours().toString()) +
       ':' +
-      padString('00', date.getMinutes()) +
+      padString('00', date.getMinutes().toString()) +
       ':' +
-      padString('00', date.getSeconds())
+      padString('00', date.getSeconds().toString())
     )
   }
 
@@ -78,23 +78,23 @@ export default function formatDate(date: Date, format: string = '%H:%M %d.%m.%Y'
     .replace(/%r/g, '%I:%M:%s %p')
     .replace(/%R/g, '%H:%M')
     .replace(/%a/g, days[dayWeekU])
-    .replace(/%d/g, padString('00', date.getDate()))
-    .replace(/%e/g, padString('  ', date.getDate()))
+    .replace(/%d/g, padString('00', date.getDate().toString()))
+    .replace(/%e/g, padString('  ', date.getDate().toString()))
     .replace(/%u/g, String(dayWeekU + 1))
     .replace(/%w/g, String(dayWeekW))
     .replace(/%b/g, months[date.getMonth()])
-    .replace(/%m/g, padString('00', date.getMonth() + 1))
+    .replace(/%m/g, padString('00', (date.getMonth() + 1).toString()))
     .replace(/%C/g, String(Math.ceil(date.getFullYear() / 100)))
-    .replace(/%y/g, padString('00', date.getFullYear().toString().substr(2)))
-    .replace(/%Y/g, padString('0000', date.getFullYear()))
-    .replace(/%H/g, padString('00', date.getHours()))
-    .replace(/%k/g, padString('  ', date.getHours()))
-    .replace(/%I/g, padString('00', hour12))
-    .replace(/%l/g, padString('  ', hour12))
-    .replace(/%M/g, padString('00', date.getMinutes()))
+    .replace(/%y/g, padString('00', date.getFullYear().toString().substring(2)))
+    .replace(/%Y/g, padString('0000', date.getFullYear().toString()))
+    .replace(/%H/g, padString('00', date.getHours().toString()))
+    .replace(/%k/g, padString('  ', date.getHours().toString()))
+    .replace(/%I/g, padString('00', hour12.toString()))
+    .replace(/%l/g, padString('  ', hour12.toString()))
+    .replace(/%M/g, padString('00', date.getMinutes().toString()))
     .replace(/%p/g, isPM ? 'PM' : 'AM')
     .replace(/%P/g, isPM ? 'pm' : 'am')
-    .replace(/%S/g, padString('00', date.getSeconds()))
+    .replace(/%S/g, padString('00', date.getSeconds().toString()))
     .replace(/%s/g, String(Math.floor(date.getTime() / 1000)))
     .replace(/%O/g, formatDaysAgo((new Date().getTime() - date.getTime()) / 1000 / 86400))
   return s

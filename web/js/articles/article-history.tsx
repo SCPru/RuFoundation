@@ -71,7 +71,7 @@ const Styles = styled.div<{ loading?: boolean }>`
 `
 
 export function renderArticleHistoryFlags(entry: ArticleLogEntry) {
-  const renderType = type => {
+  const renderType = (type: string) => {
     switch (type) {
       case 'new':
         return (
@@ -153,7 +153,7 @@ export function renderArticleHistoryFlags(entry: ArticleLogEntry) {
   }
 
   if (entry.meta.subtypes) {
-    return entry.meta.subtypes.map(x => <React.Fragment key={x}>{renderType(x)}</React.Fragment>)
+    return entry.meta.subtypes.map((x: any) => <React.Fragment key={x}>{renderType(x)}</React.Fragment>)
   } else {
     return renderType(entry.type)
   }
@@ -184,8 +184,8 @@ export function renderArticleHistoryComment(entry: ArticleLogEntry) {
       )
 
     case 'tags':
-      let added_tags = entry.meta.added_tags.map(tag => tag['name'])
-      let removed_tags = entry.meta.removed_tags.map(tag => tag['name'])
+      let added_tags = entry.meta.added_tags.map((tag: any) => tag['name'])
+      let removed_tags = entry.meta.removed_tags.map((tag: any) => tag['name'])
       if (Array.isArray(added_tags) && added_tags.length && Array.isArray(removed_tags) && removed_tags.length) {
         return (
           <>

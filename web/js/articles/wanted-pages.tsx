@@ -1,5 +1,5 @@
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
+import React from 'react'
+import { renderTo, unmountFromRoot } from '~util/react-render-into'
 import { callModule, ModuleRenderResponse } from '../api/modules'
 import Loader from '../util/loader'
 import { showErrorModal } from '../util/wikidot-modal'
@@ -38,7 +38,7 @@ export function makeWantedPages(node: HTMLElement) {
     e.stopPropagation()
     loaderInto.style.display = 'flex'
     // because our loader is React, we should display it like this.
-    ReactDOM.render(<Loader size={80} borderSize={8} />, loaderInto)
+    renderTo(loaderInto, <Loader size={80} borderSize={8} />)
     //
     try {
       const { result: rendered } = await callModule<ModuleRenderResponse>({
@@ -48,7 +48,7 @@ export function makeWantedPages(node: HTMLElement) {
         pathParams: Object.assign(wpBasePathParams, { p: page }),
         params: wpBaseParams,
       })
-      ReactDOM.unmountComponentAtNode(loaderInto)
+      unmountFromRoot(loaderInto)
       loaderInto.innerHTML = ''
       loaderInto.style.display = 'none'
       const tmp = document.createElement('div')
@@ -56,7 +56,7 @@ export function makeWantedPages(node: HTMLElement) {
       const newNode = tmp.firstElementChild!
       node.parentNode!.replaceChild(newNode, node)
     } catch (e) {
-      ReactDOM.unmountComponentAtNode(loaderInto)
+      unmountFromRoot(loaderInto)
       loaderInto.innerHTML = ''
       loaderInto.style.display = 'none'
       showErrorModal(e.error || 'Ошибка связи с сервером')

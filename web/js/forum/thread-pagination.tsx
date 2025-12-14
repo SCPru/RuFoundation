@@ -1,5 +1,5 @@
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
+import React from 'react'
+import { renderTo, unmountFromRoot } from '~util/react-render-into'
 import { callModule, ModuleRenderResponse } from '../api/modules'
 import Loader from '../util/loader'
 import { showErrorModal } from '../util/wikidot-modal'
@@ -61,7 +61,7 @@ export function makeForumThread(node: HTMLElement) {
     }
     loaderInto.style.display = 'flex'
     // because our loader is React, we should display it like this.
-    ReactDOM.render(<Loader size={80} borderSize={8} />, loaderInto)
+    renderTo(loaderInto, <Loader size={80} borderSize={8} />)
     //
     try {
       const pathParams = Object.assign({}, fBasePathParams)
@@ -78,7 +78,7 @@ export function makeForumThread(node: HTMLElement) {
         pathParams: pathParams,
         params: Object.assign({}, fBaseParams, { contentOnly: 'yes' }),
       })
-      ReactDOM.unmountComponentAtNode(loaderInto)
+      unmountFromRoot(loaderInto)
       loaderInto.innerHTML = ''
       loaderInto.style.display = 'none'
       const tmp = document.createElement('div')
@@ -102,7 +102,7 @@ export function makeForumThread(node: HTMLElement) {
         window.history.pushState({ forumThread: fNewPathParams.t, forumThreadPage: fNewPathParams.p }, '', newUrl + window.location.hash)
       }
     } catch (e) {
-      ReactDOM.unmountComponentAtNode(loaderInto)
+      unmountFromRoot(loaderInto)
       loaderInto.innerHTML = ''
       loaderInto.style.display = 'none'
       showErrorModal(e.error || 'Ошибка связи с сервером')

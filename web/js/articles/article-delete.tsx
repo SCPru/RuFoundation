@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { deleteArticle, fetchArticle, updateArticle } from '../api/articles'
+import { ArticleUpdateRequest, deleteArticle, fetchArticle, updateArticle } from '../api/articles'
 import sleep from '../util/async-sleep'
 import useConstCallback from '../util/const-callback'
 import WikidotModal from '../util/wikidot-modal'
@@ -74,7 +74,7 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
     try {
       let actualNewName = newName
       if (!permanent) {
-        const input = {
+        const input: ArticleUpdateRequest = {
           pageId: newName,
           tags: [],
           forcePageId: true,

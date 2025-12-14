@@ -166,7 +166,7 @@ const Styles = styled.div<{ loading?: boolean }>`
 `
 
 class ArticleFiles extends Component<Props, State> {
-  constructor(props) {
+  constructor(props: Props) {
     super(props)
     this.state = {
       loading: false,
@@ -192,7 +192,7 @@ class ArticleFiles extends Component<Props, State> {
     }
   }
 
-  onClose = e => {
+  onClose = (e: React.UIEvent) => {
     if (e) {
       e.preventDefault()
       e.stopPropagation()
@@ -205,12 +205,12 @@ class ArticleFiles extends Component<Props, State> {
     this.onClose(null)
   }
 
-  formatSize(size) {
+  formatSize(size: number) {
     const sizeKb = 1024
     const sizeMb = 1024 * 1024
     const sizeGb = 1024 * 1024 * 1024
 
-    const roundTo2 = value => Math.round(value * 100) / 100
+    const roundTo2 = (value: number) => Math.round(value * 100) / 100
 
     if (size < sizeKb) {
       return `${size} б`
@@ -224,7 +224,7 @@ class ArticleFiles extends Component<Props, State> {
     return `${roundTo2(size / sizeGb)} гб`
   }
 
-  onFileChange = e => {
+  onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadFiles = [...this.state.uploadFiles]
     ;[...e.target.files].forEach(file => {
       uploadFiles.push({
@@ -263,7 +263,7 @@ class ArticleFiles extends Component<Props, State> {
     }
   }
 
-  onUploadFile = (e, file) => {
+  onUploadFile = (e: React.UIEvent, file: UploadFileRecord) => {
     if (e) {
       e.preventDefault()
       e.stopPropagation()
@@ -275,7 +275,7 @@ class ArticleFiles extends Component<Props, State> {
     this.doUpload(file)
   }
 
-  onUploadAll = e => {
+  onUploadAll = (e: React.UIEvent) => {
     e.preventDefault()
     e.stopPropagation()
     this.state.uploadFiles.forEach(file => {
@@ -330,7 +330,7 @@ class ArticleFiles extends Component<Props, State> {
     )
   }
 
-  onOptions = (e, i) => {
+  onOptions = (e: React.UIEvent, i: number) => {
     e.preventDefault()
     e.stopPropagation()
     if (i === this.state.optionsIndex) {
@@ -340,14 +340,14 @@ class ArticleFiles extends Component<Props, State> {
     }
   }
 
-  onOptionsRename = async (e, i) => {
+  onOptionsRename = async (e: React.UIEvent, i: number) => {
     const { pageId } = this.props
     e.preventDefault()
     e.stopPropagation()
     this.setState({ renameIndex: i, renameName: this.state.files[i].name })
   }
 
-  onOptionsDelete = async (e, i) => {
+  onOptionsDelete = async (e: React.UIEvent, i: number) => {
     const { pageId } = this.props
     e.preventDefault()
     e.stopPropagation()
@@ -379,7 +379,7 @@ class ArticleFiles extends Component<Props, State> {
     }
   }
 
-  onRenameChange = e => {
+  onRenameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ renameName: e.target.value })
   }
 

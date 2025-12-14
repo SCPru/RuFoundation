@@ -56,14 +56,14 @@ export function makeFootnote(node: HTMLElement) {
     textNodeToProcess.nodeValue = textNodeToProcess.nodeValue.substring(2)
   }
 
-  const enableAndPosition = (x, y) => {
+  const enableAndPosition = (x: number, y: number) => {
     footnoteHovertip.style.display = 'block'
     footnoteHeading.textContent = shouldBeHeading
     footnoteContent.innerHTML = shouldBeContent.innerHTML
     position(x, y)
   }
 
-  const position = (x, y) => {
+  const position = (x: number, y: number) => {
     // add explicit max width
     const maxWidth = document.getElementById('content-wrap').getBoundingClientRect().width
 

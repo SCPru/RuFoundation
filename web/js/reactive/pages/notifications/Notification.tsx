@@ -42,6 +42,7 @@ const Notification: React.FC<Props> = ({ notification }) => {
         revNumber: notification.rev_number,
         type: notification.rev_type,
         user: notification.user,
+        defaultComment: '',
       }
 
       const pageName = notification.article.pageId.indexOf(':')

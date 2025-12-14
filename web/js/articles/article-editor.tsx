@@ -1,3 +1,5 @@
+import { Editor } from '@monaco-editor/react'
+import { editor } from 'monaco-editor'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
@@ -7,7 +9,6 @@ import useConstCallback from '../util/const-callback'
 import Loader from '../util/loader'
 import { removeMessage, showPreviewMessage } from '../util/wikidot-message'
 import WikidotModal from '../util/wikidot-modal'
-import { Editor } from '@monaco-editor/react'
 
 interface Props {
   pageId: string
@@ -81,18 +82,27 @@ const Styles = styled.div`
 
 const StyledEditor = styled(Editor)<{ isFullscreen: boolean }>`
   border: 1px solid #ccc;
-  ${p => p.isFullscreen && 
+  ${p =>
+    p.isFullscreen &&
     `
     width: 100vw;
     height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
-    `
-  }
+    `}
 `
 
-const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, useAdvancedEditor, onClose, previewTitleElement, previewBodyElement, previewStyleElement }) => {
+const ArticleEditor: React.FC<Props> = ({
+  pageId,
+  pathParams,
+  isNew,
+  useAdvancedEditor,
+  onClose,
+  previewTitleElement,
+  previewBodyElement,
+  previewStyleElement,
+}) => {
   const [title, setTitle] = useState('')
   const [source, setSource] = useState('')
   const [comment, setComment] = useState('')
@@ -111,8 +121,9 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, useAdvanced
   const editorRef = useRef(null)
   const monacoRef = useRef(null)
 
-  const monacoOptions = {
+  const monacoOptions: editor.IStandaloneEditorConstructionOptions = {
     wordWrap: 'on',
+    readOnly: loading || saving,
   }
 
   useEffect(() => {
@@ -160,9 +171,7 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, useAdvanced
       id: 'toggle-fullscreen',
       label: 'Toggle fullscreen',
 
-      keybindings: [
-        monaco.KeyCode.F11
-      ],
+      keybindings: [monaco.KeyCode.F11],
 
       precondition: null,
       keybindingContext: null,
@@ -347,15 +356,13 @@ const ArticleEditor: React.FC<Props> = ({ pageId, pathParams, isNew, useAdvanced
           )}
           {useAdvancedEditor && (
             <StyledEditor
-              id='edit-page-textarea'
-              loading='Загрузка, терпите, карлики...'
-              height='350px'
+              loading="Загрузка, терпите, карлики..."
+              height="350px"
               value={source}
               isFullscreen={fullscreenEditor}
               onChange={onSourceChange}
               onMount={onEditorDidMount}
               options={monacoOptions}
-              disabled={loading || saving}
             />
           )}
           <p>Краткое описание изменений:</p>

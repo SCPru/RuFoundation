@@ -4,6 +4,7 @@ import { IConfigContext } from './ConfigContext.types'
 
 interface Props {
   config: IConfigContext
+  children?: React.ReactNode
 }
 
 const ConfigContextProvider: React.FC<Props> = ({ config, children }) => {

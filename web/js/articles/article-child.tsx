@@ -59,7 +59,7 @@ const ArticleChild: React.FC<Props> = ({ pageId, onClose }) => {
     if (onClose) onClose()
   })
 
-  const onChange = e => {
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     switch (e.target.name) {
       case 'child':
         setChild(e.target.value)

@@ -3,7 +3,11 @@ import Navigation from './Navigation'
 import Page from './Page'
 import * as Styled from './Page.styles'
 
-export const ProfilePage: React.FC = ({ children }) => {
+interface Props {
+  children?: React.ReactNode
+}
+
+export const ProfilePage: React.FC<Props> = ({ children }) => {
   return (
     <Page title="Профиль" hasBorder={true}>
       <Styled.NavContainer>

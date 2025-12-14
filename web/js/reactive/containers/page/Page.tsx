@@ -1,11 +1,12 @@
 import React from 'react'
-import { Helmet } from 'react-helmet'
+import { Helmet } from 'react-helmet-async'
 import Header from './Header'
 import * as Styled from './Page.styles'
 
 interface Props {
   title: string
   hasBorder?: boolean
+  children?: React.ReactNode
 }
 
 export const Page: React.FC<Props> = ({ children, title, hasBorder = false }) => {

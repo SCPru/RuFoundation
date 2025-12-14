@@ -1,8 +1,8 @@
-import * as React from 'react'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import * as ReactDOM from 'react-dom'
 import styled from 'styled-components'
 import { v4 as uuid4 } from 'uuid'
+import { renderTo, unmountFromRoot } from '~util/react-render-into'
 import { ArticleLogEntry, revertArticleRevision } from '../api/articles'
 import useConstCallback from './const-callback'
 
@@ -16,6 +16,7 @@ interface Props {
   isLoading?: boolean
   isError?: boolean
   buttons?: Array<Button>
+  children?: React.ReactNode
 }
 
 const WikidotModal: React.FC<Props> = ({ children, isLoading, isError, buttons }) => {
@@ -116,45 +117,45 @@ function getModalContainerElement() {
   return document.getElementById('w-modals')
 }
 
-function addModalContainer(id) {
+function addModalContainer(id: string) {
   const node = document.createElement('div')
   node.setAttribute('id', `modal-${id}`)
   getModalContainerElement()?.appendChild(node)
   return node
 }
 
-function getModalContainer(id) {
+function getModalContainer(id: string) {
   return getModalContainerElement()?.querySelector(`#modal-${id}`)
 }
 
-function removeModalContainer(id) {
+function removeModalContainer(id: string) {
   const node = getModalContainer(id)
   node?.parentNode.removeChild(node)
 }
 
-export function addUnmanagedModal(modal) {
+export function addUnmanagedModal(modal: React.ReactNode) {
   const id = uuid4()
   const container = addModalContainer(id)
-  ReactDOM.render(modal, container)
+  renderTo(container, modal)
   return id
 }
 
-export function updateUnmanagedModal(id, modal) {
+export function updateUnmanagedModal(id: string, modal: React.ReactNode) {
   const container = getModalContainer(id)
   if (container) {
-    ReactDOM.render(modal, container)
+    renderTo(container, modal)
   }
 }
 
-export function removeUnmanagedModal(id) {
+export function removeUnmanagedModal(id: string) {
   const container = getModalContainer(id)
   if (container) {
-    ReactDOM.unmountComponentAtNode(container)
+    unmountFromRoot(container)
   }
   removeModalContainer(id)
 }
 
-export function showErrorModal(error) {
+export function showErrorModal(error: string) {
   let uuid: string | null = null
 
   const onCloseError = () => {

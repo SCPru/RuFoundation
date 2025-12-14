@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { HelmetProvider } from 'react-helmet-async'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from 'styled-components'
 import ConfigContextProvider from '~reactive/config'
@@ -19,16 +20,18 @@ export default function ReactivePage() {
   }
 
   return (
-    <ConfigContextProvider config={config}>
-      <ThemeProvider theme={SYSTEM_THEME}>
-        <BrowserRouter basename="/-">
-          <Routes>
-            <Route path={Paths.profile} element={<Profile />} />
-            <Route path={`${Paths.notifications}/*`} element={<Notifications />} />
-            <Route path={Paths.search} element={<Search />} />
-          </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
-    </ConfigContextProvider>
+    <HelmetProvider>
+      <ConfigContextProvider config={config}>
+        <ThemeProvider theme={SYSTEM_THEME}>
+          <BrowserRouter basename="/-">
+            <Routes>
+              <Route path={Paths.profile} element={<Profile />} />
+              <Route path={`${Paths.notifications}/*`} element={<Notifications />} />
+              <Route path={Paths.search} element={<Search />} />
+            </Routes>
+          </BrowserRouter>
+        </ThemeProvider>
+      </ConfigContextProvider>
+    </HelmetProvider>
   )
 }

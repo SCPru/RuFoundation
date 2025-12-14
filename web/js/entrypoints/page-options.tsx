@@ -1,6 +1,5 @@
-import * as React from 'react'
-import { useEffect, useState } from 'react'
-import * as ReactDOM from 'react-dom'
+import React, { useEffect, useState } from 'react'
+import ReactDOM from 'react-dom'
 import { sprintf } from 'sprintf-js'
 import { NotificationSubscriptionData, subscribeToNotifications, unsubscribeFromNotifications } from '../api/notifications'
 import { RatingMode } from '../api/rate'
@@ -87,7 +86,7 @@ const PageOptions: React.FC<Props> = ({
   canResetVotes,
   canWatch,
   isWatching,
-  preferences
+  preferences,
 }: Props) => {
   const [subView, setSubView] = useState<SubViewType>(null)
   const [extOptions, setExtOptions] = useState(false)

@@ -1,6 +1,5 @@
-import * as React from 'react'
-import { useEffect, useRef, useState } from 'react'
-import * as ReactDOM from 'react-dom'
+import React, { useEffect, useRef, useState } from 'react'
+import { renderTo, unmountFromRoot } from '~util/react-render-into'
 import {
   createForumPost,
   deleteForumPost,
@@ -85,7 +84,7 @@ const ForumPostOptions: React.FC<Props> = ({
   const onReplyClose = useConstCallback(() => {
     setIsReplying(false)
     if (refReplyPreview.current.firstChild) {
-      ReactDOM.unmountComponentAtNode(refReplyPreview.current)
+      unmountFromRoot(refReplyPreview.current)
       refReplyPreview.current.innerHTML = ''
     }
   })
@@ -109,7 +108,7 @@ const ForumPostOptions: React.FC<Props> = ({
   })
 
   const onReplyPreview = useConstCallback((input: ForumPostPreviewData) => {
-    ReactDOM.render(<ForumPostPreview preview={input} user={user} />, refReplyPreview.current)
+    renderTo(refReplyPreview.current, <ForumPostPreview preview={input} user={user} />)
   })
 
   const onReply = useConstCallback(e => {
@@ -168,7 +167,7 @@ const ForumPostOptions: React.FC<Props> = ({
         // successful deletion. reflect the changes (drop the current post / tree)
         // first, unmount self. this makes sure any editors are taken care of
         const post = refSelf.current.parentElement.parentElement // should point to class .post
-        ReactDOM.unmountComponentAtNode(refSelf.current)
+        unmountFromRoot(refSelf.current)
         const parent = post.parentElement
         parent.removeChild(post)
         if (parent.classList.contains('post-container') && parent.parentElement.classList.contains('post-container')) {

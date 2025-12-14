@@ -121,7 +121,6 @@ async function doFetch(url: string, props?: WRequestInit): Promise<Response> {
           redirected: false,
           status: xhr.status,
           statusText: xhr.statusText,
-          trailer: null,
           type: 'basic',
           url,
           clone() {
@@ -137,7 +136,7 @@ async function doFetch(url: string, props?: WRequestInit): Promise<Response> {
           bodyUsed: false,
           async arrayBuffer(): Promise<ArrayBuffer> {
             const chunkEncoder = new TextEncoder()
-            return chunkEncoder.encode(xhr.response)
+            return chunkEncoder.encode(xhr.response).buffer as ArrayBuffer
           },
           async blob(): Promise<Blob> {
             return new Blob([xhr.response])
@@ -150,6 +149,10 @@ async function doFetch(url: string, props?: WRequestInit): Promise<Response> {
           },
           async text(): Promise<string> {
             return xhr.responseText
+          },
+          async bytes(): Promise<Uint8Array> {
+            const chunkEncoder = new TextEncoder()
+            return chunkEncoder.encode(xhr.response)
           },
         }
         if (response.status >= 200 && response.status <= 299) {

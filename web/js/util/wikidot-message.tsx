@@ -1,6 +1,6 @@
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
+import React from 'react'
 import styled from 'styled-components'
+import { renderTo, unmountFromRoot } from '~util/react-render-into'
 import { UserData } from '../api/user'
 import useConstCallback from './const-callback'
 import formatDate from './date-format'
@@ -14,6 +14,7 @@ interface Button {
 interface Props {
   buttons?: Array<Button>
   background?: string
+  children?: React.ReactNode
 }
 
 const Styles = styled.div`
@@ -56,12 +57,12 @@ function getMessageContainer() {
 }
 
 function addMessage(message: JSX.Element) {
-  ReactDOM.render(message, getMessageContainer())
+  renderTo(getMessageContainer(), message)
 }
 
 export function removeMessage() {
   const node = getMessageContainer()
-  ReactDOM.unmountComponentAtNode(node)
+  unmountFromRoot(node)
 }
 
 export function showPreviewMessage() {
