@@ -145,10 +145,14 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
 
         encoded_params = ''
         lowercase_params = {k.lower(): v for k, v in path_params.items()}
-        for param in sorted(lowercase_params):
+        not_none_params = [k for k, v in lowercase_params.items() if v is not None]
+        for param in sorted(not_none_params):
             encoded_params += '/%s' % param
-            if lowercase_params[param] is not None:
-                encoded_params += '/%s' % urllib.parse.quote(lowercase_params[param], safe='')
+            if not_none_params[param] is not None:
+                encoded_params += '/%s' % urllib.parse.quote(not_none_params[param], safe='')
+        none_params = [k for k, v in lowercase_params.items() if v is None]
+        if none_params:
+            encoded_params += '/%s' % none_params[0]
 
         normalized_article_name = articles.normalize_article_name(article_name)
         if normalized_article_name != article_name:
