@@ -1,14 +1,16 @@
 import * as React from 'react'
 import styled from 'styled-components'
 
-interface Props {
-  size?: number
-  borderSize?: number
-  color?: string
+interface StyledProps {
+  size: number
+  borderSize: number
+  color: string
   className?: string
 }
 
-const LoaderStyle = styled.div<Props>`
+type Props = Partial<StyledProps>
+
+const LoaderStyle = styled.div<StyledProps>`
   @keyframes ldio-rmqiozoxwgk {
     0% {
       transform: translate(-50%, -50%) rotate(0deg);

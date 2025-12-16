@@ -40,8 +40,8 @@ const WikidotMessage: React.FC<Props> = ({ children, buttons, background }: Prop
     <Styles>
       <div className="w-message" style={{ background: background }}>
         {children}
-        <br />
-        {buttons.map((button, i) => (
+        {buttons && <br />}
+        {buttons?.map((button, i) => (
           <React.Fragment key={i}>
             <a onClick={e => handleCallback(e, button.onClick)}>{button.title}</a>
             {i !== buttons.length - 1 && ' | '}
@@ -53,7 +53,7 @@ const WikidotMessage: React.FC<Props> = ({ children, buttons, background }: Prop
 }
 
 function getMessageContainer() {
-  return document.getElementById('action-area-top')
+  return document.getElementById('action-area-top')!
 }
 
 function addMessage(message: JSX.Element) {

@@ -65,7 +65,7 @@ const ArticleRename: React.FC<Props> = ({ pageId, isNew, onClose }) => {
     }
 
     setSaving(true)
-    setError(undefined)
+    setError('')
     setSavingSuccess(false)
 
     const input = {
@@ -105,7 +105,7 @@ const ArticleRename: React.FC<Props> = ({ pageId, isNew, onClose }) => {
   })
 
   const onCloseError = useConstCallback(() => {
-    setError(undefined)
+    setError('')
     if (fatalError) {
       onCancel(null)
     }

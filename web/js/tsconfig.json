@@ -10,6 +10,7 @@
     "moduleResolution": "node",
     "baseUrl": ".",
     "skipLibCheck": true,
+    "strictNullChecks": true,
     "paths": {
       "~reactive/*": ["reactive/*"],
       "~forum/*": ["forum/*"],

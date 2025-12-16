@@ -48,7 +48,10 @@ function guessTitle(pageId: string) {
   return result
 }
 
-function getElement(e: HTMLElement | (() => HTMLElement)) {
+function getElement(e?: HTMLElement | (() => HTMLElement | undefined)) {
+  if (!e) {
+    return undefined
+  }
   if (typeof e === 'function') {
     return e()
   }
@@ -109,14 +112,14 @@ const ArticleEditor: React.FC<Props> = ({
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savingSuccess, setSavingSuccess] = useState(false)
-  const [error, setError] = useState(false)
+  const [error, setError] = useState('')
   const [fatalError, setFatalError] = useState(false)
   const [saved, setSaved] = useState(false)
   const [fullscreenEditor, setFullScreenEditor] = useState(false)
-  const [previewOriginalTitle, setPreviewOriginalTitle] = useState('')
-  const [previewOriginalTitleDisplay, setPreviewOriginalTitleDisplay] = useState('')
-  const [previewOriginalBody, setPreviewOriginalBody] = useState('')
-  const [previewOriginalStyle, setPreviewOriginalStyle] = useState('')
+  const [previewOriginalTitle, setPreviewOriginalTitle] = useState<string>()
+  const [previewOriginalTitleDisplay, setPreviewOriginalTitleDisplay] = useState<string>()
+  const [previewOriginalBody, setPreviewOriginalBody] = useState<string>()
+  const [previewOriginalStyle, setPreviewOriginalStyle] = useState<string>()
 
   const editorRef = useRef(null)
   const monacoRef = useRef(null)
@@ -139,8 +142,8 @@ const ArticleEditor: React.FC<Props> = ({
       setLoading(true)
       fetchArticle(pageId)
         .then(data => {
-          setSource(data.source)
-          setTitle(data.title)
+          setSource(data.source ?? '')
+          setTitle(data.title ?? '')
         })
         .catch(e => {
           setFatalError(true)
@@ -186,7 +189,7 @@ const ArticleEditor: React.FC<Props> = ({
 
   const onSubmit = useConstCallback(() => {
     setSaving(true)
-    setError(undefined)
+    setError('')
     setSavingSuccess(false)
 
     const input = {
@@ -194,7 +197,7 @@ const ArticleEditor: React.FC<Props> = ({
       title: title,
       source: source,
       comment: comment,
-      parent: pathParams['parent'],
+      parent: pathParams?.['parent'],
     }
 
     if (isNew) {
@@ -223,7 +226,7 @@ const ArticleEditor: React.FC<Props> = ({
           setTimeout(() => {
             setSavingSuccess(false)
             window.scrollTo(window.scrollX, 0)
-            if (pathParams['edit']) {
+            if (pathParams?.['edit']) {
               window.location.href = `/${pageId}`
             } else {
               window.location.reload()
@@ -252,10 +255,19 @@ const ArticleEditor: React.FC<Props> = ({
 
     makePreview(data).then(function (resp) {
       showPreviewMessage()
-      getElement(previewTitleElement).innerText = resp.title
-      getElement(previewTitleElement).style.display = ''
-      getElement(previewBodyElement).innerHTML = resp.content
-      getElement(previewStyleElement).innerHTML = resp.style
+      const titleEl = getElement(previewTitleElement)
+      if (titleEl) {
+        titleEl.innerText = resp.title
+        titleEl.style.display = ''
+      }
+      const bodyEl = getElement(previewBodyElement)
+      if (bodyEl) {
+        bodyEl.innerHTML = resp.content
+      }
+      const styleEl = getElement(previewStyleElement)
+      if (styleEl) {
+        styleEl.innerHTML = resp.style
+      }
     })
   })
 
@@ -265,15 +277,20 @@ const ArticleEditor: React.FC<Props> = ({
       e.stopPropagation()
     }
     removeMessage()
-    if (typeof previewOriginalTitle === 'string') {
-      getElement(previewTitleElement).innerText = previewOriginalTitle
-      getElement(previewTitleElement).style.display = previewOriginalTitleDisplay
+    const titleEl = getElement(previewTitleElement)
+    if (typeof previewOriginalTitle === 'string' && titleEl) {
+      titleEl.innerText = previewOriginalTitle
     }
-    if (typeof previewOriginalBody === 'string') {
-      getElement(previewBodyElement).innerHTML = previewOriginalBody
+    if (typeof previewOriginalTitleDisplay === 'string' && titleEl) {
+      titleEl.style.display = previewOriginalTitleDisplay
     }
-    if (typeof previewOriginalStyle === 'string') {
-      getElement(previewStyleElement).innerHTML = previewOriginalStyle
+    const bodyEl = getElement(previewBodyElement)
+    if (typeof previewOriginalBody === 'string' && bodyEl) {
+      bodyEl.innerHTML = previewOriginalBody
+    }
+    const styleEl = getElement(previewStyleElement)
+    if (typeof previewOriginalStyle === 'string' && styleEl) {
+      styleEl.innerHTML = previewOriginalStyle
     }
     if (onClose) onClose()
   })
@@ -292,7 +309,7 @@ const ArticleEditor: React.FC<Props> = ({
   })
 
   const onCloseError = useConstCallback(() => {
-    setError(undefined)
+    setError('')
     if (fatalError) {
       onCancel(null)
     }

@@ -30,7 +30,7 @@ export interface ModuleRateVotesResponse {
 
 export interface ModuleRateRequest {
   pageId: string
-  value: number
+  value: number | null
 }
 
 export async function ratePage({ pageId, value }: ModuleRateRequest): Promise<ModuleRateResponse> {

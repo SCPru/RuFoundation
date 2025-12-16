@@ -65,27 +65,32 @@ const ForumPostOptions: React.FC<Props> = ({
   const refReplyPreview = useRef<HTMLElement>()
 
   useEffect(() => {
-    if (!refSelf.current) {
+    if (!refSelf.current || !refPreviewTitle.current || !refPreviewContent.current) {
       // something bad happened
       return
     }
     const longPost = refSelf.current.parentNode
-    refPreviewTitle.current = longPost.querySelector('.head .title')
-    refPreviewContent.current = longPost.querySelector('.content')
-    let newRefReplyPreview: HTMLElement = longPost.querySelector('.w-reply-preview')
+    if (!longPost) {
+      return
+    }
+    refPreviewTitle.current = (longPost.querySelector('.head .title') as HTMLElement) ?? undefined
+    refPreviewContent.current = (longPost.querySelector('.content') as HTMLElement) ?? undefined
+    let newRefReplyPreview: HTMLElement = (longPost.querySelector('.w-reply-preview') as HTMLElement) ?? undefined
     if (!newRefReplyPreview) {
       newRefReplyPreview = document.createElement('div')
       newRefReplyPreview.className = 'w-reply-preview'
-      refSelf.current.parentNode.insertBefore(newRefReplyPreview, refSelf.current)
+      if (refSelf.current.parentNode) {
+        refSelf.current.parentNode.insertBefore(newRefReplyPreview, refSelf.current)
+      }
     }
     refReplyPreview.current = newRefReplyPreview
-    setOriginalPreviewTitle(refPreviewTitle.current.textContent)
+    setOriginalPreviewTitle(refPreviewTitle.current.textContent ?? '')
     setOriginalPreviewContent(refPreviewContent.current.innerHTML)
   }, [])
 
   const onReplyClose = useConstCallback(() => {
     setIsReplying(false)
-    if (refReplyPreview.current.firstChild) {
+    if (refReplyPreview.current?.firstChild) {
       unmountFromRoot(refReplyPreview.current)
       refReplyPreview.current.innerHTML = ''
     }
@@ -110,6 +115,9 @@ const ForumPostOptions: React.FC<Props> = ({
   })
 
   const onReplyPreview = useConstCallback((input: ForumPostPreviewData) => {
+    if (!refReplyPreview.current) {
+      return
+    }
     renderTo(refReplyPreview.current, <ForumPostPreview preview={input} user={user} />)
   })
 
@@ -124,8 +132,12 @@ const ForumPostOptions: React.FC<Props> = ({
   })
 
   const onEditClose = useConstCallback(() => {
-    refPreviewTitle.current.textContent = originalPreviewTitle
-    refPreviewContent.current.innerHTML = originalPreviewContent
+    if (refPreviewTitle.current) {
+      refPreviewTitle.current.textContent = originalPreviewTitle
+    }
+    if (refPreviewContent.current) {
+      refPreviewContent.current.innerHTML = originalPreviewContent
+    }
     setIsEditing(false)
   })
 
@@ -136,18 +148,26 @@ const ForumPostOptions: React.FC<Props> = ({
       source: input.source,
     }
     const result = await updateForumPost(request)
-    refPreviewTitle.current.textContent = result.name
-    refPreviewContent.current.innerHTML = result.content
+    if (refPreviewTitle.current) {
+      refPreviewTitle.current.textContent = result.name
+    }
+    if (refPreviewContent.current) {
+      refPreviewContent.current.innerHTML = result.content
+    }
     setOriginalPreviewTitle(result.name)
     setOriginalPreviewContent(result.content)
     onEditClose()
   })
 
   const onEditPreview = useConstCallback((input: ForumPostPreviewData) => {
-    refPreviewTitle.current.textContent = input.name
-    refPreviewContent.current.innerHTML = input.content
+    if (refPreviewTitle.current) {
+      refPreviewTitle.current.textContent = input.name
+    }
+    if (refPreviewContent.current) {
+      refPreviewContent.current.innerHTML = input.content
+    }
     setRevisionsOpen(false)
-    setCurrentRevision(undefined)
+    setCurrentRevision('')
   })
 
   const onEdit = useConstCallback(e => {
@@ -168,14 +188,18 @@ const ForumPostOptions: React.FC<Props> = ({
       .then(() => {
         // successful deletion. reflect the changes (drop the current post / tree)
         // first, unmount self. this makes sure any editors are taken care of
-        const post = refSelf.current.parentElement.parentElement // should point to class .post
-        unmountFromRoot(refSelf.current)
-        const parent = post.parentElement
-        parent.removeChild(post)
-        if (parent.classList.contains('post-container') && parent.parentElement.classList.contains('post-container')) {
-          // check if parent element has no children anymore
-          if (!parent.firstElementChild) {
-            parent.parentNode.removeChild(parent)
+        const post = refSelf.current?.parentElement?.parentElement // should point to class .post
+        if (refSelf.current) {
+          unmountFromRoot(refSelf.current)
+        }
+        const parent = post?.parentElement
+        if (parent) {
+          parent.removeChild(post)
+          if (parent.classList.contains('post-container') && parent.parentElement?.classList.contains('post-container')) {
+            // check if parent element has no children anymore
+            if (!parent.firstElementChild) {
+              parent.parentNode?.removeChild(parent)
+            }
           }
         }
       })
@@ -192,7 +216,7 @@ const ForumPostOptions: React.FC<Props> = ({
   })
 
   const onCloseError = useConstCallback(() => {
-    setDeleteError(undefined)
+    setDeleteError('')
   })
 
   const onOpenRevisions = useConstCallback(e => {
@@ -215,11 +239,15 @@ const ForumPostOptions: React.FC<Props> = ({
     e.stopPropagation()
 
     if (currentRevision) {
-      refPreviewTitle.current.textContent = originalPreviewTitle
-      refPreviewContent.current.innerHTML = originalPreviewContent
+      if (refPreviewTitle.current) {
+        refPreviewTitle.current.textContent = originalPreviewTitle
+      }
+      if (refPreviewContent.current) {
+        refPreviewContent.current.innerHTML = originalPreviewContent
+      }
     }
     setRevisionsOpen(false)
-    setCurrentRevision(undefined)
+    setCurrentRevision('')
   })
 
   const onShowRevision = useConstCallback((e, date) => {
@@ -228,8 +256,12 @@ const ForumPostOptions: React.FC<Props> = ({
 
     fetchForumPost(postId, date).then(data => {
       setCurrentRevision(date)
-      refPreviewTitle.current.textContent = data.name
-      refPreviewContent.current.innerHTML = data.content
+      if (refPreviewTitle.current) {
+        refPreviewTitle.current.textContent = data.name
+      }
+      if (refPreviewContent.current) {
+        refPreviewContent.current.innerHTML = data.content
+      }
     })
   })
 
@@ -272,7 +304,7 @@ const ForumPostOptions: React.FC<Props> = ({
           </table>
         </div>
       )}
-      <div style={{ display: 'none' }} ref={r => (refSelf.current = r?.parentElement)} />
+      <div style={{ display: 'none' }} ref={r => (refSelf.current = r?.parentElement ?? undefined)} />
       {deleteError && (
         <WikidotModal buttons={[{ title: 'Закрыть', onClick: onCloseError }]} isError>
           <p>
@@ -310,7 +342,7 @@ const ForumPostOptions: React.FC<Props> = ({
         <div className="post-container">
           <ForumPostEditor
             isNew
-            useAdvancedEditor={preferences['qol__advanced_source_editor_enabled'] === true}
+            useAdvancedEditor={preferences?.['qol__advanced_source_editor_enabled'] === true}
             onClose={onReplyClose}
             onSubmit={onReplySubmit}
             onPreview={onReplyPreview}
@@ -319,9 +351,9 @@ const ForumPostOptions: React.FC<Props> = ({
         </div>
       )}
       {isEditing && (
-        <ForumPostEditor 
+        <ForumPostEditor
           postId={postId}
-          useAdvancedEditor={preferences['qol__advanced_source_editor_enabled'] === true}
+          useAdvancedEditor={preferences?.['qol__advanced_source_editor_enabled'] === true}
           onClose={onEditClose}
           onSubmit={onEditSubmit}
           onPreview={onEditPreview}

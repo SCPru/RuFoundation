@@ -50,7 +50,7 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
     fetchArticle(pageId)
       .then(data => {
         setNewName('deleted:' + data.pageId)
-        setPermanent(canDelete && !canRename)
+        setPermanent(Boolean(canDelete && !canRename))
       })
       .catch(e => {
         setFatalError(true)
@@ -68,7 +68,7 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
     }
 
     setSaving(true)
-    setError(undefined)
+    setError('')
     setSavingSuccess(false)
 
     try {
@@ -119,7 +119,7 @@ const ArticleDelete: React.FC<Props> = ({ pageId, onClose, canDelete, canRename 
   })
 
   const onCloseError = useConstCallback(() => {
-    setError(undefined)
+    setError('')
     if (fatalError) {
       onCancel(null)
     }

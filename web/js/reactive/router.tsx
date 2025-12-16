@@ -11,8 +11,8 @@ import { Paths } from '~reactive/paths'
 import { SYSTEM_THEME } from '~reactive/theme/Theme.consts'
 
 export default function ReactivePage() {
-  const reactiveRoot: HTMLElement = document.querySelector('#reactive-root')
-  const config: IConfigContext = JSON.parse(reactiveRoot.dataset.config)
+  const reactiveRoot: HTMLElement = document.querySelector('#reactive-root')!
+  const config: IConfigContext = JSON.parse(reactiveRoot.dataset.config!)
 
   if (config.user.type !== 'normal') {
     window.location.href = `/-/login?to=${encodeURIComponent(window.location.href)}`

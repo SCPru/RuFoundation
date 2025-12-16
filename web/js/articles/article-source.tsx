@@ -52,10 +52,10 @@ const ArticleSource: React.FC<Props> = ({ pageId, onClose: onCloseDeligate, sour
   const loadSource = useConstCallback(async () => {
     if (!source) {
       setLoading(true)
-      setError(null)
+      setError('')
       try {
         const article = await fetchArticle(pageId)
-        setError(null)
+        setError('')
         setSource(article.source)
       } catch (e) {
         setError(e.error || 'Ошибка связи с сервером')
@@ -74,7 +74,7 @@ const ArticleSource: React.FC<Props> = ({ pageId, onClose: onCloseDeligate, sour
   })
 
   const onCloseError = useConstCallback(() => {
-    setError(null)
+    setError('')
     onClose(null)
   })
 

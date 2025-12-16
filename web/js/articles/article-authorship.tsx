@@ -10,7 +10,7 @@ import Loader from '../util/loader'
 import WikidotModal from '../util/wikidot-modal'
 
 interface Props {
-  user: UserData
+  user: UserData | null
   pageId: string
   isNew?: boolean
   editable?: boolean
@@ -66,15 +66,15 @@ const ArticleAuthorship: React.FC<Props> = ({ user, pageId, editable, onClose })
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savingSuccess, setSavingSuccess] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<string>('')
   const [fatalError, setFatalError] = useState(false)
 
   useEffect(() => {
     setLoading(true)
     Promise.all([fetchArticle(pageId), fetchAllUsers()])
       .then(([data, allUsers]) => {
-        setOriginAuthors(data.authors)
-        setAuthors(data.authors)
+        setOriginAuthors(data?.authors || [])
+        setAuthors(data?.authors || [])
         setAllUsers(allUsers)
       })
       .catch(e => {
@@ -100,12 +100,12 @@ const ArticleAuthorship: React.FC<Props> = ({ user, pageId, editable, onClose })
 
   const onSubmit = useConstCallback(async () => {
     setSaving(true)
-    setError(undefined)
+    setError('')
     setSavingSuccess(false)
 
     const input = {
       pageId: pageId,
-      authorsIds: authors.map(x => x.id),
+      authorsIds: authors.map(x => x.id).filter(x => x !== undefined),
     }
 
     try {
@@ -145,7 +145,7 @@ const ArticleAuthorship: React.FC<Props> = ({ user, pageId, editable, onClose })
   })
 
   const onCloseError = useConstCallback(() => {
-    setError(null)
+    setError('')
     if (fatalError) {
       onCancel(null)
     }

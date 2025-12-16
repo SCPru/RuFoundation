@@ -36,7 +36,7 @@ const Styles = styled.div`
 const ArticleChild: React.FC<Props> = ({ pageId, onClose }) => {
   const [child, setChild] = useState('')
   const [error, setError] = useState('')
-  const inputRef = useRef<HTMLInputElement>()
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
   const onSubmit = useConstCallback(async e => {
     if (e) {
@@ -68,13 +68,13 @@ const ArticleChild: React.FC<Props> = ({ pageId, onClose }) => {
   }
 
   const onCloseError = () => {
-    setError(undefined)
+    setError('')
   }
 
   const onSnippet = useConstCallback((e: React.MouseEvent, value: string) => {
     e.preventDefault()
     e.stopPropagation()
-    inputRef.current.focus()
+    inputRef.current?.focus()
     setChild(value)
   })
 

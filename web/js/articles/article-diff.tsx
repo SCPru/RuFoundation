@@ -74,7 +74,7 @@ const ArticleDiffView: React.FC<Props> = ({ pageId, pathParams, onClose: onClose
 
   const compareSource = useConstCallback(async () => {
     setLoading(true)
-    setError(undefined)
+    setError('')
 
     try {
       const first = await fetchArticleVersion(pageId, firstEntry.revNumber, pathParams)
@@ -98,7 +98,7 @@ const ArticleDiffView: React.FC<Props> = ({ pageId, pathParams, onClose: onClose
   })
 
   const onCloseError = useConstCallback(() => {
-    setError(undefined)
+    setError('')
     onClose(null)
   })
 

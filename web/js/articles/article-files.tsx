@@ -183,16 +183,16 @@ class ArticleFiles extends Component<Props, State> {
 
   async loadFiles() {
     const { pageId } = this.props
-    this.setState({ loading: true, error: null })
+    this.setState({ loading: true, error: undefined })
     try {
       const { files, softLimit, hardLimit, softUsed, hardUsed } = await fetchArticleFiles(pageId)
-      this.setState({ loading: false, error: null, files, softLimit, hardLimit, softUsed, hardUsed, optionsIndex: null, renameIndex: null })
+      this.setState({ loading: false, error: undefined, files, softLimit, hardLimit, softUsed, hardUsed, optionsIndex: null, renameIndex: null })
     } catch (e) {
       this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' })
     }
   }
 
-  onClose = (e: React.UIEvent) => {
+  onClose = (e?: React.UIEvent) => {
     if (e) {
       e.preventDefault()
       e.stopPropagation()
@@ -201,8 +201,8 @@ class ArticleFiles extends Component<Props, State> {
   }
 
   onCloseError = () => {
-    this.setState({ error: null })
-    this.onClose(null)
+    this.setState({ error: undefined })
+    this.onClose()
   }
 
   formatSize(size: number) {
@@ -226,7 +226,7 @@ class ArticleFiles extends Component<Props, State> {
 
   onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadFiles = [...this.state.uploadFiles]
-    ;[...e.target.files].forEach(file => {
+    ;[...(e.target.files ?? [])].forEach(file => {
       uploadFiles.push({
         file,
         name: file.name,
@@ -235,7 +235,7 @@ class ArticleFiles extends Component<Props, State> {
         error: null,
       })
     })
-    e.target.value = null
+    e.target.value = ''
     this.setState({ uploadFiles })
   }
 
@@ -263,7 +263,7 @@ class ArticleFiles extends Component<Props, State> {
     }
   }
 
-  onUploadFile = (e: React.UIEvent, file: UploadFileRecord) => {
+  onUploadFile = (e: React.UIEvent | null, file: UploadFileRecord) => {
     if (e) {
       e.preventDefault()
       e.stopPropagation()
@@ -344,6 +344,9 @@ class ArticleFiles extends Component<Props, State> {
     const { pageId } = this.props
     e.preventDefault()
     e.stopPropagation()
+    if (!this.state.files?.[i]) {
+      return
+    }
     this.setState({ renameIndex: i, renameName: this.state.files[i].name })
   }
 
@@ -351,6 +354,9 @@ class ArticleFiles extends Component<Props, State> {
     const { pageId } = this.props
     e.preventDefault()
     e.stopPropagation()
+    if (!this.state.files?.[i]) {
+      return
+    }
     const file = this.state.files[i]
     try {
       this.setState({ loading: true })
@@ -367,8 +373,10 @@ class ArticleFiles extends Component<Props, State> {
   }
 
   onRename = async () => {
-    const { pageId } = this.props
     const { files, renameIndex, renameName } = this.state
+    if (renameName === null || renameIndex === null || !files?.[renameIndex]) {
+      return
+    }
     try {
       this.setState({ loading: true })
       await renameFile(files[renameIndex].id, renameName)
@@ -385,7 +393,7 @@ class ArticleFiles extends Component<Props, State> {
 
   render() {
     const { editable, pageId } = this.props
-    const { error, loading, files, optionsIndex, hardLimit, hardUsed, softLimit, softUsed, renameIndex, renameName } = this.state
+    const { error, loading, files, optionsIndex, hardLimit = 0, hardUsed = 0, softLimit = 0, softUsed = 0, renameIndex, renameName } = this.state
     return (
       <Styles>
         {error && (
@@ -408,12 +416,12 @@ class ArticleFiles extends Component<Props, State> {
                 <tbody>
                   <tr>
                     <td>Текущее имя:</td>
-                    <td>{files[renameIndex].name}</td>
+                    <td>{files?.[renameIndex].name}</td>
                   </tr>
                   <tr>
                     <td>Новое имя:</td>
                     <td>
-                      <input type="text" value={renameName} onChange={this.onRenameChange} />
+                      <input type="text" value={renameName ?? ''} onChange={this.onRenameChange} />
                     </td>
                   </tr>
                 </tbody>

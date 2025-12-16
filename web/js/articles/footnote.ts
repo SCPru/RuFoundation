@@ -6,7 +6,7 @@ export function makeFootnote(node: HTMLElement) {
   ;(node as any)._footnote = true
   // end hack
 
-  const el: HTMLElement = document.querySelector(node.getAttribute('href'))
+  const el: HTMLElement | null = document.querySelector(node.getAttribute('href')!)
 
   if (!el) {
     return
@@ -25,7 +25,7 @@ export function makeFootnote(node: HTMLElement) {
     document.body.appendChild(footnoteContainer)
   }
 
-  let footnoteHovertip: HTMLElement = footnoteContainer.querySelector('.hovertip.w-footnote-hovertip')
+  let footnoteHovertip: HTMLElement | null = footnoteContainer.querySelector('.hovertip.w-footnote-hovertip')
   if (!footnoteHovertip) {
     footnoteHovertip = document.createElement('div')
     footnoteHovertip.setAttribute('class', 'hovertip w-footnote-hovertip')
@@ -40,20 +40,22 @@ export function makeFootnote(node: HTMLElement) {
     footnoteContainer.appendChild(footnoteHovertip)
   }
 
-  const footnoteHeading: HTMLElement = footnoteHovertip.querySelector('.f-heading')
-  const footnoteContent: HTMLElement = footnoteHovertip.querySelector('.f-content')
+  const footnoteHeading: HTMLElement = footnoteHovertip.querySelector('.f-heading')!
+  const footnoteContent: HTMLElement = footnoteHovertip.querySelector('.f-content')!
 
-  const shouldBeHeading = `Сноска ${node.textContent.trim()}.`
+  const shouldBeHeading = `Сноска ${(node.textContent ?? '').trim()}.`
   const shouldBeContent: HTMLElement = el.cloneNode(true) as HTMLElement
 
   // drop the initial link and dot from shouldBeContent
   const linkToRemove = shouldBeContent.querySelector('a')
-  linkToRemove.parentNode.removeChild(linkToRemove)
+  if (linkToRemove?.parentNode) {
+    linkToRemove.parentNode.removeChild(linkToRemove)
+  }
 
   // find first text node with the dot and remove the dot
   const textNodeToProcess = document.createNodeIterator(shouldBeContent, NodeFilter.SHOW_TEXT).nextNode()
   if (textNodeToProcess) {
-    textNodeToProcess.nodeValue = textNodeToProcess.nodeValue.substring(2)
+    textNodeToProcess.nodeValue = (textNodeToProcess.nodeValue ?? '').substring(2)
   }
 
   const enableAndPosition = (x: number, y: number) => {
@@ -65,7 +67,7 @@ export function makeFootnote(node: HTMLElement) {
 
   const position = (x: number, y: number) => {
     // add explicit max width
-    const maxWidth = document.getElementById('content-wrap').getBoundingClientRect().width
+    const maxWidth = document.getElementById('content-wrap')!.getBoundingClientRect().width
 
     footnoteHovertip.style.maxWidth = `min(100vw, ${maxWidth}px)`
     footnoteHovertip.style.left = '0'

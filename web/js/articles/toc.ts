@@ -6,9 +6,9 @@ export function makeTOC(node: HTMLElement) {
   ;(node as any)._toc = true
   // end hack
 
-  const hideButton: HTMLElement = node.querySelector('.w-toc-hide')
-  const showButton: HTMLElement = node.querySelector('.w-toc-show')
-  const list: HTMLElement = node.querySelector('.w-toc-content')
+  const hideButton: HTMLElement = node.querySelector('.w-toc-hide')!
+  const showButton: HTMLElement = node.querySelector('.w-toc-show')!
+  const list: HTMLElement = node.querySelector('.w-toc-content')!
 
   hideButton.addEventListener('click', e => {
     e.preventDefault()

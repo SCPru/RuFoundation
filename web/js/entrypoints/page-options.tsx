@@ -20,7 +20,7 @@ import useConstCallback from '../util/const-callback'
 import WikidotModal from '../util/wikidot-modal'
 
 interface Props {
-  pageId?: string
+  pageId: string
   optionsEnabled?: boolean
   editable?: boolean
   lockable?: boolean
@@ -106,7 +106,7 @@ const PageOptions: React.FC<Props> = ({
         setIsNewEditor(true)
       }
     }
-    if (pathParams['edit']) (window as any)._openNewEditor()
+    if (pathParams?.['edit']) (window as any)._openNewEditor()
   }, [])
 
   const onEdit = useConstCallback(e => {
@@ -241,7 +241,7 @@ const PageOptions: React.FC<Props> = ({
     let request: NotificationSubscriptionData = {}
 
     if (e.target.id === 'watchPage') request = { pageId }
-    else if (e.target.id === 'watchThread') request = { forumThreadId: +pathParams.t }
+    else if (e.target.id === 'watchThread') request = { forumThreadId: +(pathParams?.t ?? '-1') }
 
     const action = isNowWatching ? unsubscribeFromNotifications : subscribeToNotifications
 
@@ -282,7 +282,7 @@ const PageOptions: React.FC<Props> = ({
   })
 
   const renderSubView = useConstCallback(() => {
-    return ReactDOM.createPortal(pickSubView(), document.getElementById('action-area'))
+    return ReactDOM.createPortal(pickSubView(), document.getElementById('action-area')!)
   })
 
   const pickSubView = useConstCallback(() => {
@@ -292,16 +292,24 @@ const PageOptions: React.FC<Props> = ({
           <ArticleEditor
             pageId={pageId}
             pathParams={pathParams}
-            useAdvancedEditor={preferences['qol__advanced_source_editor_enabled'] === true}
+            useAdvancedEditor={preferences?.['qol__advanced_source_editor_enabled'] === true}
             onClose={onCancelSubView}
-            previewTitleElement={document.getElementById('page-title')}
-            previewBodyElement={document.getElementById('page-content')}
-            previewStyleElement={document.getElementById('computed-style')}
+            previewTitleElement={document.getElementById('page-title') ?? undefined}
+            previewBodyElement={document.getElementById('page-content') ?? undefined}
+            previewStyleElement={document.getElementById('computed-style') ?? undefined}
           />
         )
 
       case 'rating':
-        return <ArticleRating pageId={pageId} rating={rating} canEdit={editable} canResetVotes={canResetVotes} onClose={onCancelSubView} />
+        return (
+          <ArticleRating
+            pageId={pageId}
+            rating={rating ?? 0}
+            canEdit={Boolean(editable)}
+            canResetVotes={Boolean(canResetVotes)}
+            onClose={onCancelSubView}
+          />
+        )
 
       case 'tags':
         return <ArticleTags pageId={pageId} onClose={onCancelSubView} canCreateTags={canCreateTags} />
@@ -325,7 +333,7 @@ const PageOptions: React.FC<Props> = ({
         return <ArticleRename pageId={pageId} onClose={onCancelSubView} />
 
       case 'files':
-        return <ArticleFiles pageId={pageId} onClose={onCancelSubView} editable={canManageFiles} />
+        return <ArticleFiles pageId={pageId} onClose={onCancelSubView} editable={Boolean(canManageFiles)} />
 
       case 'delete':
         return <ArticleDelete pageId={pageId} canDelete={canDelete} canRename={canRename} onClose={onCancelSubView} />
@@ -347,10 +355,10 @@ const PageOptions: React.FC<Props> = ({
         pageId={pageId}
         isNew
         pathParams={pathParams}
-        useAdvancedEditor={preferences['qol__advanced_source_editor_enabled'] === true}
+        useAdvancedEditor={preferences?.['qol__advanced_source_editor_enabled'] === true}
         onClose={onCancelSubView}
-        previewTitleElement={document.getElementById('page-title')}
-        previewBodyElement={document.getElementById('page-content')}
+        previewTitleElement={document.getElementById('page-title') ?? undefined}
+        previewBodyElement={document.getElementById('page-content') ?? undefined}
       />
     )
   }

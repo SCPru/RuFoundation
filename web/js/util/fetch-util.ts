@@ -55,7 +55,7 @@ const readErrorFromBody = (e: Response): Promise<APIError | null> => {
           const e = j.error || null
           const fields = j.fields || null
           if (e) {
-            resolve(new APIError(e.charAt(0).toUpperCase() + e.substr(1), e.status, fields, null))
+            resolve(new APIError(e.charAt(0).toUpperCase() + e.substr(1), e.status, fields, undefined))
             return
           }
           resolve(null)
@@ -89,10 +89,10 @@ export async function wFetch<T>(url: string, props?: WRequestInit): Promise<T> {
     j = await rsp.json()
   } catch (e) {
     const error: any = (await readErrorFromBody(e)) || {}
-    throw new APIError(error.error || 'Ошибка чтения ответа', e.status || 0, error.fields || null, null)
+    throw new APIError(error.error || 'Ошибка чтения ответа', e.status || 0, error.fields || null, undefined)
   }
   if (!rsp.ok) {
-    throw new APIError(j.error, rsp.status, j.fields || null, null)
+    throw new APIError(j.error, rsp.status, j.fields || null, undefined)
   }
   return j as T
 }

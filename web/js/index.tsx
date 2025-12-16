@@ -31,18 +31,18 @@ import { renderTo } from '~util/react-render-into'
 attachApiMessageListener()
 
 window.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('#create-new-page').forEach((node: HTMLElement) => renderTo(node, <Page404 {...JSON.parse(node.dataset.config)} />))
+  document.querySelectorAll('#create-new-page').forEach((node: HTMLElement) => renderTo(node, <Page404 {...JSON.parse(node.dataset.config!)} />))
   document
     .querySelectorAll('#page-options-container')
-    .forEach((node: HTMLElement) => renderTo(node, <PageOptions {...JSON.parse(node.dataset.config)} />))
-  document.querySelectorAll('#login-status').forEach((node: HTMLElement) => renderTo(node, <PageLoginStatus {...JSON.parse(node.dataset.config)} />))
+    .forEach((node: HTMLElement) => renderTo(node, <PageOptions {...JSON.parse(node.dataset.config!)} />))
+  document.querySelectorAll('#login-status').forEach((node: HTMLElement) => renderTo(node, <PageLoginStatus {...JSON.parse(node.dataset.config!)} />))
   document
     .querySelectorAll('.w-forum-new-thread')
-    .forEach((node: HTMLElement) => renderTo(node, <ForumNewThread {...JSON.parse(node.dataset.config)} />))
-  document.querySelectorAll('.w-forum-new-post').forEach((node: HTMLElement) => renderTo(node, <ForumNewPost {...JSON.parse(node.dataset.config)} />))
+    .forEach((node: HTMLElement) => renderTo(node, <ForumNewThread {...JSON.parse(node.dataset.config!)} />))
+  document.querySelectorAll('.w-forum-new-post').forEach((node: HTMLElement) => renderTo(node, <ForumNewPost {...JSON.parse(node.dataset.config!)} />))
   document
     .querySelectorAll('.w-forum-thread-options')
-    .forEach((node: HTMLElement) => renderTo(node, <ForumThreadOptions {...JSON.parse(node.dataset.config)} />))
+    .forEach((node: HTMLElement) => renderTo(node, <ForumThreadOptions {...JSON.parse(node.dataset.config!)} />))
 
   makePasswordToggle()
 
@@ -65,7 +65,7 @@ window.addEventListener('DOMContentLoaded', () => {
       } else if (node.classList.contains('w-toc')) {
         makeTOC(node)
       } else if (node.classList.contains('w-forum-post-options')) {
-        renderTo(node, <ForumPostOptions {...JSON.parse(node.dataset.config)} />)
+        renderTo(node, <ForumPostOptions {...JSON.parse(node.dataset.config!)} />)
       } else if (node.classList.contains('w-forum-thread')) {
         makeForumThread(node)
       } else if (node.classList.contains('w-forum-recent-posts')) {
@@ -97,7 +97,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   })
 
-  const reactiveRoot: HTMLElement = document.querySelector('#reactive-root')
+  const reactiveRoot: HTMLElement | null = document.querySelector('#reactive-root')
   if (reactiveRoot) {
     renderTo(reactiveRoot, <ReactivePage />)
   }

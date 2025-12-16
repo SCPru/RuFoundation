@@ -49,9 +49,11 @@ function onApiMessage(e: MessageEvent) {
         callId: e.data.callId,
         response,
       }
-      e.source.postMessage(data, {
-        targetOrigin: '*',
-      })
+      if (e.source) {
+        e.source.postMessage(data, {
+          targetOrigin: '*',
+        })
+      }
     })
     .catch((err: any) => {
       console.error('ApiCall error with target:', e.data.target, err)

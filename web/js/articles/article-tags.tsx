@@ -59,7 +59,7 @@ const Styles = styled.div`
 
 const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags }) => {
   const [tags, setTags] = useState<Array<string>>([])
-  const [allTags, setAllTags] = useState<FetchAllTagsResponse>(null)
+  const [allTags, setAllTags] = useState<FetchAllTagsResponse>()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savingSuccess, setSavingSuccess] = useState(false)
@@ -70,7 +70,7 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
     setLoading(true)
     Promise.all([fetchArticle(pageId), fetchAllTags()])
       .then(([data, allTags]) => {
-        setTags(data.tags)
+        setTags(data.tags ?? [])
         setAllTags(allTags)
       })
       .catch(e => {
@@ -89,7 +89,7 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
     }
 
     setSaving(true)
-    setError(undefined)
+    setError('')
     setSavingSuccess(false)
 
     const input = {
@@ -130,7 +130,7 @@ const ArticleTags: React.FC<Props> = ({ pageId, isNew, onClose, canCreateTags })
   })
 
   const onCloseError = useConstCallback(() => {
-    setError(null)
+    setError('')
     if (fatalError) {
       onCancel(null)
     }

@@ -2,7 +2,7 @@ import { sprintf } from 'sprintf-js'
 import { ModuleRateResponse, ratePage } from '../api/rate'
 import { showErrorModal } from '../util/wikidot-modal'
 
-async function onClick(e: MouseEvent, pageId: string, vote: number): Promise<ModuleRateResponse> {
+async function onClick(e: MouseEvent, pageId: string, vote: number | null): Promise<ModuleRateResponse> {
   e.preventDefault()
   e.stopPropagation()
   try {
@@ -26,17 +26,17 @@ export function makeStarsRateModule(node: HTMLElement) {
   }
   ;(node as any)._rateStars = true
 
-  const pageId = node.dataset.pageId
+  const pageId = node.dataset.pageId!
 
-  const number: HTMLElement = node.querySelector('.w-stars-rate-rating .w-stars-rate-number')
-  const votes: HTMLElement = node.querySelector('.w-stars-rate-votes .w-stars-rate-number')
-  const popularity: HTMLElement = node.querySelector('.w-stars-rate-votes .w-stars-rate-popularity')
-  const rateWrapper: HTMLElement = node.querySelector('.w-stars-rate-stars-wrapper')
-  const control: HTMLElement = rateWrapper.querySelector('.w-stars-rate-stars-view')
-  const cancel: HTMLElement = node.querySelector('.w-stars-rate-cancel')
+  const number: HTMLElement = node.querySelector('.w-stars-rate-rating .w-stars-rate-number')!
+  const votes: HTMLElement = node.querySelector('.w-stars-rate-votes .w-stars-rate-number')!
+  const popularity: HTMLElement = node.querySelector('.w-stars-rate-votes .w-stars-rate-popularity')!
+  const rateWrapper: HTMLElement = node.querySelector('.w-stars-rate-stars-wrapper')!
+  const control: HTMLElement = rateWrapper.querySelector('.w-stars-rate-stars-view')!
+  const cancel: HTMLElement = node.querySelector('.w-stars-rate-cancel')!
 
   let originalRateWidth = control.style.width
-  let rateWith: number = null
+  let rateWith: number | null = null
 
   const callback = function (votesData: ModuleRateResponse) {
     updateRating(number, votes, popularity, control, votesData)

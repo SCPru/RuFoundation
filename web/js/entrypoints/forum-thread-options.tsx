@@ -69,7 +69,7 @@ const ForumThreadOptions: React.FC<Props> = ({
     e.stopPropagation()
 
     setIsLoading(true)
-    setError(null)
+    setError(undefined)
 
     try {
       await updateForumThread({
@@ -91,7 +91,7 @@ const ForumThreadOptions: React.FC<Props> = ({
     e.stopPropagation()
 
     setIsLoading(true)
-    setError(null)
+    setError(undefined)
 
     try {
       await updateForumThread({
@@ -117,7 +117,7 @@ const ForumThreadOptions: React.FC<Props> = ({
   })
 
   const onCloseError = useConstCallback(() => {
-    setError(null)
+    setError(undefined)
   })
 
   const onEditCancel = useConstCallback(() => {

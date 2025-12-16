@@ -12,7 +12,7 @@ interface Props {
 
 const PageLoginStatus: React.FC<Props> = ({ user, notificationCount }: Props) => {
   const [isOpen, setIsOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>()
+  const menuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     window.addEventListener('click', onPageClick)

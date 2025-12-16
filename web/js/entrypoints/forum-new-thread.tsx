@@ -8,7 +8,7 @@ import useConstCallback from '../util/const-callback'
 
 interface Props {
   user: UserData
-  categoryId?: number
+  categoryId: number
   cancelUrl?: string
   preferences?: { [key: string]: any }
 }
@@ -38,10 +38,10 @@ const ForumNewThread: React.FC<Props> = ({ user, categoryId, cancelUrl, preferen
   return (
     <>
       {preview && <ForumPostPreview preview={preview} user={user} />}
-      <ForumPostEditor 
+      <ForumPostEditor
         isNew
         isThread
-        useAdvancedEditor={preferences['qol__advanced_source_editor_enabled'] === true}
+        useAdvancedEditor={preferences?.['qol__advanced_source_editor_enabled'] === true}
         onClose={onClose}
         onSubmit={onSubmit}
         onPreview={onPreview}

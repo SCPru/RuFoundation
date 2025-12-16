@@ -21,8 +21,8 @@ export function makeForumThread(node: HTMLElement) {
   ;(node as any)._forumthread = true
   // end hack
 
-  const fBasePathParams = JSON.parse(node.dataset.forumThreadPathParams)
-  const fBaseParams = JSON.parse(node.dataset.forumThreadParams)
+  const fBasePathParams = JSON.parse(node.dataset.forumThreadPathParams!)
+  const fBaseParams = JSON.parse(node.dataset.forumThreadParams!)
 
   window.history.replaceState({ forumThread: fBasePathParams.t, forumThreadPage: fBasePathParams.p || '1' }, '')
 
@@ -54,7 +54,7 @@ export function makeForumThread(node: HTMLElement) {
   }
 
   //
-  const switchPage = async (e: MouseEvent, config: SwitchPageConfig) => {
+  const switchPage = async (e: MouseEvent | null, config: SwitchPageConfig) => {
     if (e) {
       e.preventDefault()
       e.stopPropagation()
@@ -90,7 +90,7 @@ export function makeForumThread(node: HTMLElement) {
       let newUrl
       if (!config.isFromHistory) {
         // take new page ID from the response
-        const fNewPathParams = JSON.parse(newNode.dataset.forumThreadPathParams)
+        const fNewPathParams = JSON.parse(newNode.dataset.forumThreadPathParams!)
         newUrl = `/forum/t-${fNewPathParams.t}`
         for (const k in fNewPathParams) {
           if (k === 'p' || k === 't' || k === 'post' || fNewPathParams[k] === null) {
@@ -111,14 +111,14 @@ export function makeForumThread(node: HTMLElement) {
 
   window.addEventListener('popstate', (e: PopStateEvent) => {
     if (e.state && e.state.forumThread === fBasePathParams.t) {
-      switchPage(undefined, { page: e.state.forumThreadPage, isFromHistory: true })
+      switchPage(null, { page: e.state.forumThreadPage, isFromHistory: true })
     }
   })
 
   window.addEventListener('hashchange', () => {
     if (window.location.hash.startsWith('#post-')) {
       // navigate to different post; ignore page
-      switchPage(undefined, { postId: window.location.hash.substring(6) })
+      switchPage(null, { postId: window.location.hash.substring(6) })
     }
   })
 
@@ -127,7 +127,7 @@ export function makeForumThread(node: HTMLElement) {
   if (window.location.hash.startsWith('#post-')) {
     node.innerHTML = ''
     setupPageSwitch()
-    switchPage(undefined, { postId: window.location.hash.substring(6) })
+    switchPage(null, { postId: window.location.hash.substring(6) })
   } else {
     setupPageSwitch()
   }

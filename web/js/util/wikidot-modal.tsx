@@ -130,7 +130,9 @@ function getModalContainer(id: string) {
 
 function removeModalContainer(id: string) {
   const node = getModalContainer(id)
-  node?.parentNode.removeChild(node)
+  if (node && node.parentNode) {
+    node?.parentNode.removeChild(node)
+  }
 }
 
 export function addUnmanagedModal(modal: React.ReactNode) {
@@ -159,6 +161,9 @@ export function showErrorModal(error: string) {
   let uuid: string | null = null
 
   const onCloseError = () => {
+    if (!uuid) {
+      return
+    }
     removeUnmanagedModal(uuid)
   }
 
@@ -177,6 +182,9 @@ export function showRevertModal(pageId: string, entry: ArticleLogEntry) {
   let uuid: string | null = null
 
   const onClose = () => {
+    if (!uuid) {
+      return
+    }
     removeUnmanagedModal(uuid)
   }
 

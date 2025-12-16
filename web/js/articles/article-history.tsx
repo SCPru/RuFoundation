@@ -284,7 +284,7 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
   const [entryCount, setEntryCount] = useState(0)
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(25)
-  const [error, setError] = useState(0)
+  const [error, setError] = useState('')
   const [fatalError, setFatalError] = useState(false)
   const [firstCompareEntry, setFirstCompareEntry] = useState<ArticleLogEntry>()
   const [secondCompareEntry, setSecondCompareEntry] = useState<ArticleLogEntry>()
@@ -295,7 +295,7 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
 
   const loadHistory = useConstCallback(async (nextPage?: number) => {
     setLoading(true)
-    setError(undefined)
+    setError('')
 
     const realPage = nextPage || page
     const from = (realPage - 1) * perPage
@@ -327,7 +327,7 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
   })
 
   const onCloseError = useConstCallback(() => {
-    setError(undefined)
+    setError('')
     if (fatalError) {
       onClose(null)
     }
@@ -372,7 +372,7 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
 
     fetchArticleVersion(pageId, entry.revNumber, pathParams).then(function (resp) {
       showVersionMessage(entry.revNumber, new Date(entry.createdAt), entry.user, pageId)
-      document.getElementById('page-content').innerHTML = resp.rendered
+      document.getElementById('page-content')!.innerHTML = resp.rendered
     })
   })
 

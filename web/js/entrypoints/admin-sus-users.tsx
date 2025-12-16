@@ -275,7 +275,7 @@ const AdminSusUsers: React.FC = () => {
   }, [])
 
   const renderSelect = useConstCallback(
-    (ref: React.MutableRefObject<HTMLSelectElement>, items: Record<string, Array<string>>, filterFunc: (item: string) => boolean) => {
+    (ref: React.MutableRefObject<HTMLSelectElement | null>, items: Record<string, Array<string>>, filterFunc: (item: string) => boolean) => {
       const renderedItems = Object.entries(items)
         .filter(([k]) => filterFunc(k))
         .sort(([, v1], [, v2]) => v2.length - v1.length)

@@ -1,4 +1,4 @@
-import { Editor } from '@monaco-editor/react'
+import { Editor, Monaco } from '@monaco-editor/react'
 import { editor } from 'monaco-editor'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
@@ -86,8 +86,8 @@ const ForumPostEditor: React.FC<Props> = ({
   const [usernameSet, setUsernameSet] = useState<Set<string>>(new Set())
   const [mentionDecorationIds, setMentionDecorationIds] = useState<string[]>([])
 
-  const editorRef = useRef(null)
-  const monacoRef = useRef(null)
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const monacoRef = useRef<Monaco | null>(null)
 
   const monacoOptions: editor.IStandaloneEditorConstructionOptions = {
     minimap: { enabled: false },
@@ -113,7 +113,7 @@ const ForumPostEditor: React.FC<Props> = ({
     ;(window as any)._closePostEditor = () => {
       onCancel(undefined)
     }
-    if (!isNew) {
+    if (!isNew && postId !== undefined) {
       setLoading(true)
       fetchForumPost(postId)
         .then(data => {
@@ -148,7 +148,7 @@ const ForumPostEditor: React.FC<Props> = ({
     highlightMentions(source)
   }, [source, usernameSet])
 
-  const onEditorDidMount = useConstCallback((editor, monaco) => {
+  const onEditorDidMount = useConstCallback((editor: editor.IStandaloneCodeEditor, monaco: Monaco) => {
     editorRef.current = editor
     monacoRef.current = monaco
   })
@@ -158,7 +158,7 @@ const ForumPostEditor: React.FC<Props> = ({
     const monaco = monacoRef.current
     if (!editor || !monaco) return
 
-    const model = editorRef.current.getModel()
+    const model = editorRef.current?.getModel()
     if (!model) return
 
     const mentionRegex = /@[\w.-]+/g
@@ -211,14 +211,14 @@ const ForumPostEditor: React.FC<Props> = ({
         source,
       }
       setSaving(true)
-      setError(null)
+      setError('')
       setSavingSuccess(false)
       try {
         await onSubmitDelegate(input)
-        setError(null)
+        setError('')
         setSavingSuccess(false)
         setSource('')
-        setName(initialTitle)
+        setName(initialTitle ?? '')
       } catch (e) {
         setLoading(false)
         setFatalError(false)
@@ -269,7 +269,7 @@ const ForumPostEditor: React.FC<Props> = ({
   })
 
   const onCloseError = useConstCallback(() => {
-    setError(null)
+    setError('')
     if (fatalError) {
       onCancel(null)
     }
@@ -345,10 +345,10 @@ const ForumPostEditor: React.FC<Props> = ({
         <div className={`w-editor-area ${loading ? 'loading' : ''}`}>
           {!useAdvancedEditor && (
             <textarea
-              className='form-control'
+              className="form-control"
               value={source}
               onChange={e => onSourceChange(e.target.value)}
-              name='source'
+              name="source"
               rows={10}
               cols={60}
               style={{ width: '95%' }}

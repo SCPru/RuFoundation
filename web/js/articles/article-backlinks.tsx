@@ -36,7 +36,7 @@ const Styles = styled.div`
 
 const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
   const [loading, setLoading] = useState(false)
-  const [data, setData] = useState<ArticleBacklinks>(null)
+  const [data, setData] = useState<ArticleBacklinks | null>(null)
   const [error, setError] = useState<string>('')
   const [fatalError, setFatalError] = useState(false)
 
@@ -64,7 +64,7 @@ const ArticleBacklinksView: React.FC<Props> = ({ pageId, onClose }) => {
   })
 
   const onCloseError = useConstCallback(() => {
-    setError(undefined)
+    setError('')
     if (fatalError) {
       onCancel(null)
     }

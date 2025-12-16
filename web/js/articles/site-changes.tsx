@@ -12,8 +12,8 @@ export function makeSiteChanges(node: HTMLElement) {
   ;(node as any)._sitechanges = true
   // end hack
 
-  const scBasePathParams = JSON.parse(node.dataset.siteChangesPathParams)
-  const scBaseParams = JSON.parse(node.dataset.siteChangesParams)
+  const scBasePathParams = JSON.parse(node.dataset.siteChangesPathParams!)
+  const scBaseParams = JSON.parse(node.dataset.siteChangesParams!)
 
   // display loader when needed.
   const loaderInto = document.createElement('div')
@@ -32,7 +32,7 @@ export function makeSiteChanges(node: HTMLElement) {
   node.appendChild(loaderInto)
 
   //
-  const switchPage = async (e: MouseEvent, page: string, addParams: {}) => {
+  const switchPage = async (e: MouseEvent | null, page: string, addParams: {}) => {
     if (e) {
       e.preventDefault()
       e.stopPropagation()
@@ -54,7 +54,9 @@ export function makeSiteChanges(node: HTMLElement) {
       const tmp = document.createElement('div')
       tmp.innerHTML = rendered
       const newNode = tmp.firstElementChild
-      node.parentNode.replaceChild(newNode, node)
+      if (newNode && node.parentNode) {
+        node.parentNode.replaceChild(newNode, node)
+      }
     } catch (e) {
       unmountFromRoot(loaderInto)
       loaderInto.innerHTML = ''
@@ -67,7 +69,7 @@ export function makeSiteChanges(node: HTMLElement) {
   const pagers = node.querySelectorAll(':scope > .changes-list > .pager')
   pagers.forEach(pager =>
     pager.querySelectorAll('*[data-pagination-target]').forEach((node: HTMLElement) => {
-      node.addEventListener('click', e => switchPage(e, node.dataset.paginationTarget, {}))
+      node.addEventListener('click', e => switchPage(e, node.dataset.paginationTarget!, {}))
     }),
   )
 
@@ -82,7 +84,8 @@ export function makeSiteChanges(node: HTMLElement) {
     }
   })
 
-  allFilter.addEventListener('change', e => {
+  // TypeScript is a bit dumb here and doesn't detect that we are setting this field from the forEach
+  ;(allFilter as HTMLInputElement | null)?.addEventListener('change', e => {
     if (!(e.target instanceof HTMLInputElement)) {
       return
     }
@@ -101,10 +104,14 @@ export function makeSiteChanges(node: HTMLElement) {
         return
       }
       if (!e.target.checked && !typeFilters.find(x => x.checked)) {
-        allFilter.checked = true
+        if (allFilter) {
+          allFilter.checked = true
+        }
         return
       }
-      allFilter.checked = false
+      if (allFilter) {
+        allFilter.checked = false
+      }
     })
   })
 

@@ -58,7 +58,7 @@ const ForumNewPost: React.FC<Props> = ({ user, threadId, threadName, preferences
       {preview && <ForumPostPreview preview={preview} user={user} />}
       <ForumPostEditor
         isNew
-        useAdvancedEditor={preferences['qol__advanced_source_editor_enabled'] === true}
+        useAdvancedEditor={preferences?.['qol__advanced_source_editor_enabled'] === true}
         onClose={onClose}
         onSubmit={onSubmit}
         onPreview={onPreview}

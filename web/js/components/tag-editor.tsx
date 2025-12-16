@@ -136,8 +136,8 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
   const [inputValue, setInputValue] = useState('')
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [selectedToAdd, setSelectedToAdd] = useState<string>()
-  const inputRef = useRef<HTMLInputElement>()
-  const suggestionsRef = useRef<HTMLDivElement>()
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const suggestionsRef = useRef<HTMLDivElement | null>(null)
 
   const parsedTags = tags.map(tag => {
     const categoryAndName = tag.split(':', 2)
@@ -220,7 +220,7 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
     setSuggestionsOpen(true)
   }
 
-  const onSelectCategory = (e: React.MouseEvent, category: string) => {
+  const onSelectCategory = (e: React.MouseEvent | null, category: string) => {
     if (e) {
       e.preventDefault()
       e.stopPropagation()
@@ -228,7 +228,7 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
     setInputValue(`${category}:`)
   }
 
-  const onSelectTag = (e: React.MouseEvent, tag: string) => {
+  const onSelectTag = (e: React.MouseEvent | null, tag: string) => {
     if (e) {
       e.preventDefault()
       e.stopPropagation()
@@ -242,7 +242,7 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
     onChange([...tags.filter(x => x.toLowerCase() !== tag.toLowerCase()), tag])
   }
 
-  const checkIfInTree = (p: Node) => {
+  const checkIfInTree = (p: Node | null) => {
     while (p) {
       if (p === inputRef.current || p === suggestionsRef.current) {
         return true
@@ -302,15 +302,15 @@ const TagEditorComponent: React.FC<Props> = ({ tags, allTags, onChange, canCreat
     let { currentCategoryIndex, currentTagIndex } = findSelectedCategoryAndTagIndex()
     if (e.key === 'Enter' && selectedToAdd && currentCategoryIndex !== undefined) {
       if (selectedToAdd.endsWith(':')) {
-        onSelectCategory(undefined, selectedToAdd.substring(0, selectedToAdd.length - 1))
+        onSelectCategory(null, selectedToAdd.substring(0, selectedToAdd.length - 1))
       } else {
-        onSelectTag(undefined, selectedToAdd)
+        onSelectTag(null, selectedToAdd)
       }
       e.preventDefault()
       e.stopPropagation()
     } else if (e.key === 'Enter' && canCreateTags) {
       setInputValue('')
-      onChange([...tags.filter(x => x.toLowerCase() !== inputValue.toLowerCase()), inputValue])
+      onChange?.([...tags.filter(x => x.toLowerCase() !== inputValue.toLowerCase()), inputValue])
       e.preventDefault()
       e.stopPropagation()
     } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {

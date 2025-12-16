@@ -103,8 +103,8 @@ const AuthorshipEditorComponent: React.FC<Props> = ({ authors, allUsers, editabl
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [selectedToAdd, setSelectedToAdd] = useState<number>()
   const [authorSet, setAuthorSet] = useState<Set<UserData>>()
-  const inputRef = useRef<HTMLInputElement>()
-  const suggestionsRef = useRef<HTMLDivElement>()
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const suggestionsRef = useRef<HTMLDivElement | null>(null)
 
   // TODO: fix seleced user filtering
   const filteredUsers = useMemo(() => {
@@ -115,7 +115,7 @@ const AuthorshipEditorComponent: React.FC<Props> = ({ authors, allUsers, editabl
         if (idx !== -1) acc.push({ ...user, index: idx })
         return acc
       }, [] as IndexedUserData[])
-      .sort((a, b) => a.index - b.index || a.name.localeCompare(b.name))
+      .sort((a, b) => (a.index !== undefined && b.index !== undefined && a.index !== b.index ? a.index - b.index : a.name.localeCompare(b.name)))
   }, [authorSet, inputValue])
 
   const onDeleteAuthor = (e: React.MouseEvent, user: UserData) => {
@@ -143,7 +143,7 @@ const AuthorshipEditorComponent: React.FC<Props> = ({ authors, allUsers, editabl
     setSuggestionsOpen(true)
   }
 
-  const onSelectAuthor = (e: React.MouseEvent, userId: number) => {
+  const onSelectAuthor = (e: React.MouseEvent | null, userId: number) => {
     if (e) {
       e.preventDefault()
       e.stopPropagation()
@@ -154,10 +154,10 @@ const AuthorshipEditorComponent: React.FC<Props> = ({ authors, allUsers, editabl
     const user = allUsers.find(x => x.id === userId)
 
     setInputValue('')
-    onChange([...authors.filter(x => x.id !== user.id), user as UserData])
+    onChange([...authors.filter(x => x.id !== user?.id), user as UserData])
   }
 
-  const checkIfInTree = (p: Node) => {
+  const checkIfInTree = (p: Node | null) => {
     while (p) {
       if (p === inputRef.current || p === suggestionsRef.current) {
         return true
@@ -213,7 +213,7 @@ const AuthorshipEditorComponent: React.FC<Props> = ({ authors, allUsers, editabl
   const onInputKeyDown = (e: React.KeyboardEvent) => {
     let currentUserIndex = findSelectedUser()
     if (e.key === 'Enter' && selectedToAdd && currentUserIndex !== undefined) {
-      onSelectAuthor(undefined, selectedToAdd)
+      onSelectAuthor(null, selectedToAdd)
       e.preventDefault()
       e.stopPropagation()
     } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -270,7 +270,7 @@ const AuthorshipEditorComponent: React.FC<Props> = ({ authors, allUsers, editabl
                     data-selector={user.id}
                     key={user.id}
                     className={selectedToAdd === user.id ? 'active' : ''}
-                    onClick={e => onSelectAuthor(e, user.id)}
+                    onClick={e => onSelectAuthor(e, user.id ?? -1)}
                   >
                     {user.name}
                   </UserSuggestion>

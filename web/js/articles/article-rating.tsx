@@ -115,7 +115,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
 
   const loadRating = useConstCallback(async () => {
     setLoading(true)
-    setError(undefined)
+    setError('')
     try {
       const rating = await fetchPageVotes(pageId)
       setVotes(rating.votes)
@@ -138,7 +138,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
 
   const onClearRating = useConstCallback(async () => {
     setLoading(true)
-    setError(undefined)
+    setError('')
     setDeleting(false)
     try {
       const rating = await deleteArticleVotes(pageId)
@@ -170,7 +170,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
   })
 
   const onCloseError = useConstCallback(() => {
-    setError(undefined)
+    setError('')
     onClose(null)
   })
 

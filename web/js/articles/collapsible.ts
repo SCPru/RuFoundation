@@ -6,10 +6,10 @@ export function makeCollapsible(node: HTMLElement) {
   ;(node as any)._collapsible = true
   // end hack
 
-  const foldedElement: HTMLElement = node.querySelector('.collapsible-block-folded')
-  const unfoldedElement: HTMLElement = node.querySelector('.collapsible-block-unfolded')
+  const foldedElement: HTMLElement = node.querySelector('.collapsible-block-folded')!
+  const unfoldedElement: HTMLElement = node.querySelector('.collapsible-block-unfolded')!
 
-  const foldedLink: HTMLElement = foldedElement.querySelector('.collapsible-block-link')
+  const foldedLink: HTMLElement = foldedElement.querySelector('.collapsible-block-link')!
   const unfoldedLinks: NodeListOf<HTMLElement> = unfoldedElement.querySelectorAll(
     ':scope > .collapsible-block-unfolded-link > .collapsible-block-link',
   )

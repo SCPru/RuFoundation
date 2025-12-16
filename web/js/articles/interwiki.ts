@@ -32,7 +32,7 @@ export function makeInterwiki(node: HTMLElement) {
   // end hack
 
   try {
-    const configuration: InterwikiConfiguration = JSON.parse(node.dataset.interwikiConfiguration)
+    const configuration: InterwikiConfiguration = JSON.parse(node.dataset.interwikiConfiguration!)
     load(configuration, node)
   } catch (e: any) {
     return
