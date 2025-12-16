@@ -172,7 +172,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         nav_side, nav_side_styles = self._render_nav("nav:side", article, path_params)
 
         site = get_current_site()
-        canonical_url = '//%s/%s%s' % (site.domain, article.full_name if article else article_name, encoded_params)
+        canonical_url = 'https://%s/%s%s' % (site.domain, article.full_name if article else article_name, encoded_params)
 
         rendered_content, rendered_status, redirect_to, excerpt, image, title, rev_number, updated_at, computed_style = self.render(article_name, article, path_params, canonical_url)
 
