@@ -148,8 +148,8 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         not_none_params = [k for k, v in lowercase_params.items() if v is not None]
         for param in sorted(not_none_params):
             encoded_params += '/%s' % param
-            if not_none_params[param] is not None:
-                encoded_params += '/%s' % urllib.parse.quote(not_none_params[param], safe='')
+            if lowercase_params[param] is not None:
+                encoded_params += '/%s' % urllib.parse.quote(lowercase_params[param], safe='')
         none_params = [k for k, v in lowercase_params.items() if v is None]
         if none_params:
             encoded_params += '/%s' % none_params[0]
