@@ -10,9 +10,10 @@ interface Props {
   user: UserData
   threadId: number
   threadName: string
+  preferences?: { [key: string]: any }
 }
 
-const ForumNewPost: React.FC<Props> = ({ user, threadId, threadName }) => {
+const ForumNewPost: React.FC<Props> = ({ user, threadId, threadName, preferences }) => {
   const [preview, setPreview] = useState<ForumPostPreviewData>()
   const [open, setOpen] = useState(false)
 
@@ -55,7 +56,14 @@ const ForumNewPost: React.FC<Props> = ({ user, threadId, threadName }) => {
   ) : (
     <>
       {preview && <ForumPostPreview preview={preview} user={user} />}
-      <ForumPostEditor isNew onClose={onClose} onSubmit={onSubmit} onPreview={onPreview} initialTitle={'Re: ' + threadName} />
+      <ForumPostEditor
+        isNew
+        useAdvancedEditor={preferences['qol__advanced_source_editor_enabled'] === true}
+        onClose={onClose}
+        onSubmit={onSubmit}
+        onPreview={onPreview}
+        initialTitle={'Re: ' + threadName}
+      />
     </>
   )
 }

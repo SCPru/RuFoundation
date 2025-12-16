@@ -10,9 +10,10 @@ interface Props {
   user: UserData
   categoryId?: number
   cancelUrl?: string
+  preferences?: { [key: string]: any }
 }
 
-const ForumNewThread: React.FC<Props> = ({ user, categoryId, cancelUrl }) => {
+const ForumNewThread: React.FC<Props> = ({ user, categoryId, cancelUrl, preferences }) => {
   const [preview, setPreview] = useState<ForumPostPreviewData>()
 
   const onClose = useConstCallback(async () => {
@@ -37,7 +38,14 @@ const ForumNewThread: React.FC<Props> = ({ user, categoryId, cancelUrl }) => {
   return (
     <>
       {preview && <ForumPostPreview preview={preview} user={user} />}
-      <ForumPostEditor isThread isNew onClose={onClose} onSubmit={onSubmit} onPreview={onPreview} />
+      <ForumPostEditor 
+        isNew
+        isThread
+        useAdvancedEditor={preferences['qol__advanced_source_editor_enabled'] === true}
+        onClose={onClose}
+        onSubmit={onSubmit}
+        onPreview={onPreview}
+      />
     </>
   )
 }

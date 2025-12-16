@@ -24,6 +24,7 @@ export interface ForumPostSubmissionData {
 interface Props {
   initialTitle?: string
   isThread?: boolean
+  useAdvancedEditor?: boolean
   onSubmit?: (input: ForumPostSubmissionData) => Promise<void>
   onPreview?: (result: ForumPostPreviewData) => void
   onClose?: () => void
@@ -67,6 +68,7 @@ const StyledEditor = styled(Editor)`
 const ForumPostEditor: React.FC<Props> = ({
   initialTitle,
   isThread,
+  useAdvancedEditor,
   onSubmit: onSubmitDelegate,
   onPreview: onPreviewDelegate,
   onClose: onCloseDelegate,
@@ -341,15 +343,29 @@ const ForumPostEditor: React.FC<Props> = ({
         {/* This is not supported right now but we have to add empty div for BHL */}
         <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
         <div className={`w-editor-area ${loading ? 'loading' : ''}`}>
-          <StyledEditor
-            className="form-control"
-            loading="Загрузка, терпите, карлики..."
-            height="250px"
-            value={source}
-            onChange={onSourceChange}
-            onMount={onEditorDidMount}
-            options={monacoOptions}
-          />
+          {!useAdvancedEditor && (
+            <textarea
+              className='form-control'
+              value={source}
+              onChange={e => onSourceChange(e.target.value)}
+              name='source'
+              rows={10}
+              cols={60}
+              style={{ width: '95%' }}
+              disabled={loading || saving}
+            />
+          )}
+          {useAdvancedEditor && (
+            <StyledEditor
+              className="form-control"
+              loading="Загрузка, терпите, карлики..."
+              height="250px"
+              value={source}
+              onChange={onSourceChange}
+              onMount={onEditorDidMount}
+              options={monacoOptions}
+            />
+          )}
           {loading && <Loader className="loader" />}
         </div>
         <div className="buttons alignleft">

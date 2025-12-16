@@ -347,6 +347,7 @@ const PageOptions: React.FC<Props> = ({
         pageId={pageId}
         isNew
         pathParams={pathParams}
+        useAdvancedEditor={preferences['qol__advanced_source_editor_enabled'] === true}
         onClose={onCancelSubView}
         previewTitleElement={document.getElementById('page-title')}
         previewBodyElement={document.getElementById('page-content')}

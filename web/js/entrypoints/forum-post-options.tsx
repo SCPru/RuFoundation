@@ -31,6 +31,7 @@ interface Props {
   hasRevisions?: boolean
   lastRevisionDate?: string
   lastRevisionAuthor?: UserData
+  preferences?: { [key: string]: any }
 }
 
 const ForumPostOptions: React.FC<Props> = ({
@@ -46,6 +47,7 @@ const ForumPostOptions: React.FC<Props> = ({
   hasRevisions,
   lastRevisionDate,
   lastRevisionAuthor,
+  preferences,
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [isReplying, setIsReplying] = useState(false)
@@ -308,6 +310,7 @@ const ForumPostOptions: React.FC<Props> = ({
         <div className="post-container">
           <ForumPostEditor
             isNew
+            useAdvancedEditor={preferences['qol__advanced_source_editor_enabled'] === true}
             onClose={onReplyClose}
             onSubmit={onReplySubmit}
             onPreview={onReplyPreview}
@@ -315,7 +318,15 @@ const ForumPostOptions: React.FC<Props> = ({
           />
         </div>
       )}
-      {isEditing && <ForumPostEditor postId={postId} onClose={onEditClose} onSubmit={onEditSubmit} onPreview={onEditPreview} />}
+      {isEditing && (
+        <ForumPostEditor 
+          postId={postId}
+          useAdvancedEditor={preferences['qol__advanced_source_editor_enabled'] === true}
+          onClose={onEditClose}
+          onSubmit={onEditSubmit}
+          onPreview={onEditPreview}
+        />
+      )}
     </>
   )
 }
