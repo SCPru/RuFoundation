@@ -432,7 +432,7 @@ const PageOptions: React.FC<Props> = ({
             Обратные ссылки
           </a>
           <a id="view-source-button" className="btn btn-default" href="#" onClick={onSource}>
-            Исходник страницы
+            Исходник
           </a>
           <a id="view-authorship-button" className="btn btn-default" href="#" onClick={onAuthorship}>
             Авторство
@@ -449,7 +449,7 @@ const PageOptions: React.FC<Props> = ({
           )}
           {lockable && (
             <a id="page-block-button" className="btn btn-default" href="#" onClick={onLock}>
-              Заблокировать страницу
+              Заблокировать
             </a>
           )}
           {canRename && (
