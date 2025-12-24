@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Optional, Union, Sequence, Tuple, Dict
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser as _UserType, AnonymousUser
+from django.contrib.auth.models import AnonymousUser
 from django.db import transaction
 from django.db.models import QuerySet, Sum, Avg, Count, Max, IntegerField, Q, F
 from django.db.models.functions import Coalesce
@@ -24,16 +24,11 @@ from web.models.users import User
 from web.models.forum import ForumThread, ForumPost
 from web.models.roles import Role
 from web.util import lock_table
-
-
-_FullNameOrArticle = Optional[Union[str, Article]]
-_FullNameOrCategory = Optional[Union[str, Category]]
-_FullNameOrTag = Optional[Union[str, Tag]]
-_UserIdOrUser = Optional[Union[int, User]]
+from web.types import _UserType, _FullNameOrArticle, _FullNameOrCategory, _FullNameOrTag, _UserIdOrUser
 
 
 class AbstractArticleEvent(EventBase, is_abstract=True):
-    user: _UserType | None
+    user: _UserType
     full_name_or_article: _FullNameOrArticle
 
     @property
@@ -50,8 +45,8 @@ class AbstractArticleEvent(EventBase, is_abstract=True):
 
 
 class OnVote(AbstractArticleEvent):
-    old_vote: Vote | None
-    new_vote: Vote | None
+    old_vote: Optional[Vote]
+    new_vote: Optional[Vote]
 
     @property
     def is_new(self):
@@ -149,7 +144,7 @@ def deduplicate_name(full_name: str, allowed_article: Optional[Article] = None) 
 
 
 # Creates article with specified id. Does not add versions
-def create_article(full_name: str, user: Optional[_UserType] = None) -> Article:
+def create_article(full_name: str, user: _UserType=None) -> Article:
     category, name = get_name(full_name)
     article = Article(
         category=category,
@@ -207,7 +202,7 @@ def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int,
 
 
 # Revert all revisions to specific revision
-def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number: int, user: Optional[_UserType] = None):
+def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number: int, user: _UserType=None):
     article = get_article(full_name_or_article)
     pref_full_name = get_full_name(full_name_or_article)
 
@@ -537,7 +532,7 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
 
 
 # Creates new article version for specified article
-def create_article_version(full_name_or_article: _FullNameOrArticle, source: str, user: Optional[_UserType] = None, comment: str = "") -> ArticleVersion:
+def create_article_version(full_name_or_article: _FullNameOrArticle, source: str, user: _UserType = None, comment: str = "") -> ArticleVersion:
     article = get_article(full_name_or_article)
     is_new = get_latest_version(article) is None
     version = ArticleVersion(
@@ -595,7 +590,7 @@ def refresh_article_links(article_version: ArticleVersion):
 
 
 # Updates name of article
-def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: str, user: Optional[_UserType] = None, log: bool = True):
+def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: str, user: _UserType = None, log: bool = True):
     article = get_article(full_name_or_article)
     prev_full_name = get_full_name(full_name_or_article)
 
@@ -649,7 +644,7 @@ def _get_article_votes_meta(full_name_or_article: _FullNameOrArticle):
         })
     return votes_meta
 
-def delete_article_votes(full_name_or_article: _FullNameOrArticle, user: Optional[_UserType] = None, log: bool = True):
+def delete_article_votes(full_name_or_article: _FullNameOrArticle, user: _UserType = None, log: bool = True):
     article = get_article(full_name_or_article)
 
     # fetch existing votes
@@ -667,7 +662,7 @@ def delete_article_votes(full_name_or_article: _FullNameOrArticle, user: Optiona
 
 
 # Updates title of article
-def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user: Optional[_UserType] = None):
+def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user: _UserType = None):
     article = get_article(full_name_or_article)
     prev_title = article.title
     article.title = new_title
@@ -781,7 +776,7 @@ def get_parent(full_name_or_article: _FullNameOrArticle) -> Optional[str]:
 
 
 # Set parent of article
-def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _FullNameOrArticle, user: Optional[_UserType] = None):
+def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _FullNameOrArticle, user: _UserType = None):
     article = get_article(full_name_or_article)
     parent = get_article(full_name_of_parent) if full_name_of_parent else None
     prev_parent = get_full_name(article.parent) if article.parent else None
@@ -873,7 +868,7 @@ def get_tags_categories(full_name_or_article: _FullNameOrArticle) -> Dict[TagsCa
 
 
 # Set tags for article
-def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[Union[str]], user: Optional[_UserType] = None, log: bool = True):
+def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[Union[str]], user: _UserType = None, log: bool = True):
     article = get_article(full_name_or_article)
 
     allow_creating = article.settings.creating_tags_allowed
@@ -882,7 +877,7 @@ def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[Union[str]
     return set_tags_internal(article, tags, user=user, log=log)
 
 
-def set_tags_internal(full_name_or_article: _FullNameOrArticle, tags: Sequence[Tag], user: Optional[_UserType] = None, log: bool = True):
+def set_tags_internal(full_name_or_article: _FullNameOrArticle, tags: Sequence[Tag], user: _UserType = None, log: bool = True):
     article = get_article(full_name_or_article)
     article_tags = article.tags.all()
 
@@ -1053,7 +1048,7 @@ def add_vote(full_name_or_article: _FullNameOrArticle, user: _UserType, rate: in
 
 
 # Set article lock status
-def set_lock(full_name_or_article: _FullNameOrArticle, locked: bool, user: Optional[_UserType] = None):
+def set_lock(full_name_or_article: _FullNameOrArticle, locked: bool, user: _UserType = None):
     article = get_article(full_name_or_article)
     article.locked = locked
     article.save()
@@ -1080,7 +1075,7 @@ def get_files_in_article(full_name_or_article: _FullNameOrArticle) -> Sequence[F
 
 
 # Add file to article
-def add_file_to_article(full_name_or_article: _FullNameOrArticle, file: File, user: Optional[_UserType] = None):
+def add_file_to_article(full_name_or_article: _FullNameOrArticle, file: File, user: _UserType = None):
     article = get_article(full_name_or_article)
     if file.article and file.article != article:
         raise ValueError('File already belongs to an article')
@@ -1105,7 +1100,7 @@ def get_file_space_usage() -> tuple[int, int]:
 # Delete file from article.
 # Permanent deletion is irreversible and should not be used unless for technical cleanup purposes or from admin panel.
 # We also cannot track who performed a permanent deletion.
-def delete_file_from_article(full_name_or_article: _FullNameOrArticle, file: File, user: Optional[_UserType] = None, permanent = False):
+def delete_file_from_article(full_name_or_article: _FullNameOrArticle, file: File, user: _UserType = None, permanent = False):
     article = get_article(full_name_or_article)
     if file.article != article:
         raise ValueError(f'File article "{get_full_name(article)}" is not the same as "{article.full_name}" for deletion')
@@ -1131,7 +1126,7 @@ def delete_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fil
 
 
 # Restore deleted file to article
-def restore_file_from_article(full_name_or_article: _FullNameOrArticle, file: File, user: Optional[_UserType] = None):
+def restore_file_from_article(full_name_or_article: _FullNameOrArticle, file: File, user: _UserType = None):
     article = get_article(full_name_or_article)
     if file.article != article:
         raise ValueError(f'File article "{get_full_name(article)}" is not the same as "{article.full_name}" for restoration')
@@ -1151,7 +1146,7 @@ def restore_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fi
 
 
 # Rename file in article
-def rename_file_in_article(full_name_or_article: _FullNameOrArticle, file: File, name: str, user: Optional[_UserType] = None):
+def rename_file_in_article(full_name_or_article: _FullNameOrArticle, file: File, name: str, user: _UserType = None):
     article = get_article(full_name_or_article)
     if file.article != article:
         raise ValueError(f'File article "{get_full_name(article)}" is not the same as "{article.full_name}" for renaming')
@@ -1218,7 +1213,7 @@ def get_authors(full_name_or_article):
 
 
 # Set article lock status
-def set_authors(full_name_or_article: _FullNameOrArticle, authors: list[_UserIdOrUser], user: Optional[_UserType]):
+def set_authors(full_name_or_article: _FullNameOrArticle, authors: list[_UserIdOrUser], user: _UserType):
     if not authors:
         return
     
