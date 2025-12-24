@@ -38,28 +38,28 @@ class RoleJSON(JSONInterface):
     category: Optional[int]=None
     staff: bool=False
     groupVotes: bool=False
-    inlineVisualMode: Role.InlineVisualMode=Role.InlineVisualMode.Hidden
-    profileVisualMode: Role.ProfileVisualMode=Role.ProfileVisualMode.Hidden
-    icons: Optional[list[RoleBadgeJSON]]=None
-    badges: Optional[list[RoleIconJSON]]=None
+    inlineVisualMode: Union[Role.InlineVisualMode, str]=Role.InlineVisualMode.Hidden
+    profileVisualMode: Union[Role.ProfileVisualMode, str]=Role.ProfileVisualMode.Hidden
+    icon: Optional[RoleIconJSON]=None
+    badge: Optional[RoleBadgeJSON]=None
 
 
 def render_role_to_json(role: Role):
     if role is None:
         return RoleJSON()
     
-    icons, badges = role.get_name_tail()
+    tail = role.get_name_tail()
     return RoleJSON(
         slug=role.slug,
         name=role.name,
-        short_name=role.short_name,
+        shortName=role.short_name,
         category=role.category.id if role.category else None,
         staff=role.is_staff,
-        group_votes=role.group_votes,
-        inline_visual_mode=role.inline_visual_mode,
-        profile_visual_mode=role.profile_visual_mode,
-        icons=icons,
-        badges=badges
+        groupVotes=role.group_votes,
+        inlineVisualMode=role.inline_visual_mode,
+        profileVisualMode=role.profile_visual_mode,
+        icon=tail if isinstance(tail, RoleIconJSON) else None,
+        badge=tail if isinstance(tail, RoleBadgeJSON) else None
     )
 
 

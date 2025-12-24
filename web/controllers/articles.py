@@ -1196,7 +1196,7 @@ def fetch_articles_by_names(original_names):
 
 
 # Get hidden categories for specific user (none -> AnonymousUser)
-def get_hidden_categories_for(user: User) -> list[Category]:
+def get_hidden_categories_for(user: _UserType=None) -> list[Category]:
     if user is None:
         user = AnonymousUser()
     all_categories = Category.objects.all()
@@ -1209,6 +1209,8 @@ def get_hidden_categories_for(user: User) -> list[Category]:
 
 def get_authors(full_name_or_article):
     article = get_article(full_name_or_article)
+    if not article:
+        return []
     return article.authors.all()
 
 

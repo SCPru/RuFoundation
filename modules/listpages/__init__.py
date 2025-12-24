@@ -14,8 +14,9 @@ from web.models.users import User
 from web.models.articles import Article, ArticleLogEntry
 from web.models.settings import Settings
 from django.db.models import Q, Value as V, F, Count, Sum, Avg, Case, When, CharField, IntegerField, FloatField
-from django.db.models.functions import Concat, Random, Coalesce, Round, Cast
+from django.db.models.functions import Concat, Random, Coalesce, Round, Cast # pyright: ignore[reportAttributeAccessIssue]
 from web import threadvars
+from web.types import _ArticleType
 
 from .params import ListPagesParams
 from . import param
@@ -59,7 +60,7 @@ def render_var(var, page_vars, page):
             return page_vars['updated_at']
     return None
 
-def get_page_vars(page: Article):
+def get_page_vars(page: _ArticleType):
     if page is None:
         return dict()
 
