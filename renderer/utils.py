@@ -1,9 +1,9 @@
 import threading
 import urllib.parse
-from enum import Enum
-from typing import Literal, Union
 
-from django.contrib.auth import get_user_model
+from enum import Enum
+from typing import Literal, Optional, Union
+
 from django.contrib.auth.models import AnonymousUser
 from django.conf import settings
 from django.template import Context, Template
@@ -11,13 +11,11 @@ from django.template import Context, Template
 from web.models.articles import Vote
 from web.models.roles import Role, RoleBadgeJSON, RoleIconJSON
 from web.models.settings import Settings
-from web.models.site import Site, get_current_site
-# from web.models.users import User
+from web.models.site import get_current_site
+from web.models.users import User
 from web.controllers import articles
 from web.util.pydantic import JSONInterface
-
-
-User = get_user_model()
+from web.types import _UserType
 
 
 _templates = dict()
@@ -35,22 +33,22 @@ def render_template_from_string(template: str, **context: object) -> object:
 
 class RoleJSON(JSONInterface):
     slug: str
-    name: str | None=None
-    shortName: str | None=None
-    category: int | None=None
+    name: Optional[str]=None
+    shortName: Optional[str]=None
+    category: Optional[int]=None
     staff: bool=False
     groupVotes: bool=False
     inlineVisualMode: Role.InlineVisualMode=Role.InlineVisualMode.Hidden
     profileVisualMode: Role.ProfileVisualMode=Role.ProfileVisualMode.Hidden
-    icons: list[RoleBadgeJSON]=None,
-    badges: list[RoleIconJSON]=None
+    icons: Optional[list[RoleBadgeJSON]]=None
+    badges: Optional[list[RoleIconJSON]]=None
 
 
 def render_role_to_json(role: Role):
     if role is None:
         return RoleJSON()
     
-    icons, badges = role.get_name_tails()
+    icons, badges = role.get_name_tail()
     return RoleJSON(
         slug=role.slug,
         name=role.name,
@@ -65,7 +63,7 @@ def render_role_to_json(role: Role):
     )
 
 
-def render_user_to_text(user: User):
+def render_user_to_text(user: _UserType):
     if user is None:
         return 'system'
     if isinstance(user, AnonymousUser):
@@ -75,7 +73,7 @@ def render_user_to_text(user: User):
     return user.username
 
 
-def render_user_to_html(user: User, avatar=True, hover=True):
+def render_user_to_html(user: _UserType, avatar=True, hover=True):
     if user is None:
         return render_template_from_string(
             '<span class="printuser{{class_add}}"><strong>system</strong></span>',
@@ -157,20 +155,20 @@ class APIUserType(Enum):
 
 
 class UserJSON(JSONInterface):
-    type: Union[User.UserType, Literal['anonymous']]='anonymous'
-    id: int | None=None
-    name: str | None=None
-    username: str | None=None
+    type: Union[Literal[User.UserType.Normal, User.UserType.Wikidot, User.UserType.System, User.UserType.Bot], Literal['anonymous']]='anonymous'
+    id: Optional[int]=None
+    name: Optional[str]=None
+    username: Optional[str]=None
     isActive: bool=True
-    avatar: str | None=None
+    avatar: Optional[str]=None
     showAvatar: bool=False
-    admin:bool=False
+    admin: bool=False
     staff: bool=False
-    editor: bool | None=False
-    roles: list[str]=None
+    editor: Optional[bool]=False
+    roles: Optional[list[str]]=None
 
 
-def render_user_to_json(user: User, show_avatar=True, skip_perms=False):
+def render_user_to_json(user: _UserType, show_avatar=True, skip_perms=False):
     if user is None:
         return UserJSON(type=User.UserType.System)
     if isinstance(user, AnonymousUser):

@@ -2,10 +2,12 @@ import auto_prefetch
 
 from functools import cached_property
 from urllib.parse import quote
+from typing import Optional, Sequence
 
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Permission
 from django.db import models
+from django.contrib import admin
 from django.dispatch import receiver
 
 import web.permissions.articles
@@ -22,7 +24,7 @@ __all__ = [
     'RolesMixin',
     'PermissionsOverrideMixin',
     'RolePermissionsOverrideMixin',
-    'ProtectsensitiveAdminMixin'
+    'ProtectSensitiveAdmin'
 ]
 
 
@@ -41,16 +43,16 @@ def svg_file_validator(file):
 
 class RoleBadgeJSON(JSONInterface):
     text: str
-    bg: str=None
-    text_color: str=None
+    bg: Optional[str]=None
+    text_color: Optional[str]=None
     show_border: bool=False
-    tooltip: str=None
+    tooltip: Optional[str]=None
 
 
 class RoleIconJSON(JSONInterface):
     icon: str
-    color: str=None
-    tooltip: str=None
+    color: Optional[str]=None
+    tooltip: Optional[str]=None
 
 
 class RoleCategory(models.Model):
@@ -202,9 +204,10 @@ class RolesMixin(models.Model):
         abstract = True
 
     roles = models.ManyToManyField(Role, verbose_name='Роли', blank=True, related_name='users', related_query_name='user')
+
     @property
     def is_staff(self):
-        if self.is_superuser:
+        if hasattr(self, 'is_superuser') and getattr(self, 'is_superuser'):
             return True
         for role in self.roles.all():
             if role.is_staff:
@@ -374,8 +377,8 @@ class RolePermissionsOverrideMixin(models.Model, PermissionsOverrideMixin):
         return perms
     
 
-class ProtectsensitiveAdminMixin:
-    sensitive_fields = []
+class ProtectSensitiveAdmin(admin.ModelAdmin):
+    sensitive_fields: list[str] = []
 
     def __init__(self, *args, **kwargs):
         self.sensitive_fields = self.__class__.sensitive_fields
@@ -388,17 +391,17 @@ class ProtectsensitiveAdminMixin:
                 fieldset['fields'] = [field for field in fieldset['fields'] if field not in self.sensitive_fields]
         return fieldsets
     
-    def get_list_filter(self, request):
+    def get_list_filter(self, request) -> list[str]:
         if not request.user.has_perm('roles.view_sensitive_info'):
             return [field for field in self.list_filter if field not in self.sensitive_fields]
         return self.list_filter
     
-    def get_list_display(self, request):
+    def get_list_display(self, request) -> list[str]:
         if not request.user.has_perm('roles.view_sensitive_info'):
             return [field for field in self.list_display if field not in self.sensitive_fields]
         return self.list_display
     
-    def get_search_fields(self, request):
+    def get_search_fields(self, request) -> list[str]:
         if not request.user.has_perm('roles.view_sensitive_info'):
             return [field for field in self.search_fields if field not in self.sensitive_fields]
-        return self.search_fields
+        return list(self.search_fields)

@@ -32,7 +32,7 @@ class CSSValueValidator(RegexValidator):
 
 
 class User(AbstractUser, RolesMixin):
-    class Meta:
+    class Meta(RolesMixin.Meta):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
@@ -40,6 +40,8 @@ class User(AbstractUser, RolesMixin):
             models.UniqueConstraint(Lower('email'), name='user_email_ci_uniqueness',
             condition=models.Q(email__isnull=False) & ~models.Q(email=''))
         ]
+
+        abstract = False
 
     class UserType(models.TextChoices):
         Normal = ('normal', 'Обычный')
@@ -70,7 +72,7 @@ class User(AbstractUser, RolesMixin):
     is_active = models.BooleanField('Активирован', default=True)
     inactive_until = models.DateTimeField('Деактивировать до', null=True)
 
-    is_staff = RolesMixin.is_staff
+    is_staff = RolesMixin.is_staff # pyright: ignore[reportIncompatibleMethodOverride]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

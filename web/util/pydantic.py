@@ -1,5 +1,5 @@
-from dataclasses import asdict, dataclass
-
+from typing import dataclass_transform
+from dataclasses import asdict, dataclass, is_dataclass
 
 def drop_nones(fields_to_drop=None):
     def wrapper(cls):
@@ -15,6 +15,7 @@ def drop_nones(fields_to_drop=None):
     return wrapper
 
 
+@dataclass_transform()
 class JSONInterface:
     def __init_subclass__(cls, **kwargs):
         dataclass_params = {
@@ -26,7 +27,9 @@ class JSONInterface:
         cls = dataclass(**dataclass_params)(cls)
 
     def dump(self):
-        return asdict(self)
+        if is_dataclass(self):
+            return asdict(self)
+        return {}
     
     def _drop_none_fields(self, fields):
         return fields

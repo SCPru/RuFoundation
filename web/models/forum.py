@@ -6,7 +6,6 @@ __all__ = [
     'ForumPostVersion'
 ]
 
-from django.conf import settings
 import auto_prefetch
 from django.db import models
 from django.db.models import Func, Value

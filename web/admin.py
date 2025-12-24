@@ -232,7 +232,7 @@ class AdvancedUserChangeForm(UserChangeForm):
 
 
 @admin.register(User)
-class AdvancedUserAdmin(ProtectsensitiveAdminMixin, UserAdmin):
+class AdvancedUserAdmin(ProtectSensitiveAdmin, UserAdmin):
     form = AdvancedUserChangeForm
 
     list_filter = ['is_superuser', 'is_active', 'roles']
@@ -319,7 +319,7 @@ class ActionsLogForm(forms.ModelForm):
 
 
 @admin.register(ActionLogEntry)
-class ActionsLogAdmin(ProtectsensitiveAdminMixin, admin.ModelAdmin):
+class ActionsLogAdmin(ProtectSensitiveAdmin, admin.ModelAdmin):
     form = ActionsLogForm
     list_filter = ['user', 'type', 'created_at', 'origin_ip']
     list_display = ['user_or_name', 'type', 'info', 'created_at', 'origin_ip']
