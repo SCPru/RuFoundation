@@ -24,7 +24,7 @@ def callbacks_with_context(context):
     from ftml import ftml
 
     class CallbacksWithContextImpl(ftml.Callbacks):
-        def __init__(self, context):
+        def __init__(self, context: RenderContext):
             super().__init__()
             self.context = context
 
@@ -95,11 +95,13 @@ def callbacks_with_context(context):
             from web.controllers import articles
 
             page_vars = get_page_vars(self.context.article)
+            hidden_categories = articles.get_hidden_categories_for(self.context.user)
 
             refs_as_dumb = [self._page_name_to_dumb(x.full_name) for x in include_refs]
             included = ArticleVersion.objects \
                 .select_related('article') \
                 .filter(article__complete_full_name__in=refs_as_dumb) \
+                .exclude(article__category__in=hidden_categories) \
                 .order_by('article__id', '-created_at') \
                 .distinct('article__id')
             included_map = {}
