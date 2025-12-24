@@ -1,5 +1,7 @@
 __all__ = [
     '_UserType',
+    '_ArticleType',
+
     '_FullNameOrArticle',
     '_FullNameOrCategory',
     '_FullNameOrTag',
@@ -15,6 +17,8 @@ from web.models.users import User
 
 
 _UserType = Optional[Union[User, AnonymousUser]]
+_ArticleType = Optional[Article]
+
 _FullNameOrArticle = Optional[Union[str, Article]]
 _FullNameOrCategory = Optional[Union[str, Category]]
 _FullNameOrTag = Optional[Union[str, Tag]]
