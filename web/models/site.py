@@ -4,7 +4,7 @@ __all__ = [
 ]
 
 from functools import cached_property
-from typing import Optional
+from typing import Literal, Optional, overload
 
 from solo.models import SingletonModel
 from django.db import models
@@ -40,7 +40,13 @@ class Site(SingletonModel):
         return f'{self.title} ({self.domain})'
 
 
-def get_current_site(required=True) -> Optional[Site]:
+@overload
+def get_current_site(required: Literal[True]=True) -> Site: ...
+
+@overload
+def get_current_site(required: Literal[False]) -> Optional[Site]: ...
+
+def get_current_site(required: bool=True) -> Optional[Site]:
     site = threadvars.get('current_site')
     if site is None and required:
         raise ValueError('There is no current site while it was required')

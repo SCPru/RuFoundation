@@ -1,11 +1,12 @@
+from typing import Optional
+
 from django.contrib.auth.models import AnonymousUser
-from django.contrib.auth import get_user_model
 
 from web.types import _UserType, _ArticleType
 
 
 class RenderContext(object):
-    def __init__(self, article: _ArticleType=None, source_article: _ArticleType=None, path_params: dict[str, str]=None, user:_UserType=None):
+    def __init__(self, article: _ArticleType=None, source_article: _ArticleType=None, path_params: Optional[dict[str, str]]=None, user:_UserType=None):
         self.article = article
         self.source_article = source_article
         self.path_params = path_params or dict()

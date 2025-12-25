@@ -1,3 +1,4 @@
+from multiprocessing import Value
 import unicodedata
 import shutil
 import datetime
@@ -128,7 +129,7 @@ def get_article(full_name_or_article: _FullNameOrArticle) -> Optional[Article]:
 def get_full_name(full_name_or_article: _FullNameOrArticle) -> str:
     if full_name_or_article is None:
         return ''
-    if type(full_name_or_article) == str:
+    if isinstance(full_name_or_article, str):
         return full_name_or_article
     return full_name_or_article.full_name
 
@@ -139,7 +140,7 @@ def deduplicate_name(full_name: str, allowed_article: Optional[Article] = None) 
         i += 1
         name_to_try = '%s-%d' % (full_name, i) if i > 1 else full_name
         article2 = get_article(name_to_try)
-        if not article2 or (allowed_article and article2.id == allowed_article.id):
+        if not article2 or (allowed_article and article2.pk == allowed_article.pk):
             return name_to_try
 
 
@@ -162,6 +163,9 @@ def create_article(full_name: str, user: _UserType=None) -> Article:
 # Adds log entry to article
 def add_log_entry(full_name_or_article: _FullNameOrArticle, log_entry: ArticleLogEntry):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
+
     with transaction.atomic():
         with lock_table(ArticleLogEntry):
             # this black magic forces lock of ArticleLogEntry table on this article id,
@@ -204,6 +208,9 @@ def get_log_entries_paged(full_name_or_article: _FullNameOrArticle, c_from: int,
 # Revert all revisions to specific revision
 def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number: int, user: _UserType=None):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
+    
     pref_full_name = get_full_name(full_name_or_article)
 
     new_props = {}
@@ -409,7 +416,7 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
     tags_added_meta = []
     tags_removed_meta = []
 
-    tags = [x.id for x in get_tags_internal(article)]
+    tags = [x.pk for x in get_tags_internal(article)]
     for tag in new_props.get('removed_tags', []):
         # safety: some outdated revisions have string tags here
         if not isinstance(tag, int):
@@ -443,7 +450,7 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
             rendered=None
         )
         version.save()
-        meta['source'] = {'version_id': version.id}
+        meta['source'] = {'version_id': version.pk}
 
     if 'title' in new_props:
         subtypes.append(ArticleLogEntry.LogEntryType.Title)
@@ -506,7 +513,7 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
     for author in new_props.get('added_authors', []):
         authors.append(author)
         authors_added_meta.append(author)
-    new_authors = list(User.objects.filter(id__in=authors))
+    new_authors: list[_UserIdOrUser] = list(User.objects.filter(id__in=authors))
     set_authors(article, new_authors, user)
 
     if authors_added_meta or authors_removed_meta:
@@ -532,8 +539,10 @@ def revert_article_version(full_name_or_article: _FullNameOrArticle, rev_number:
 
 
 # Creates new article version for specified article
-def create_article_version(full_name_or_article: _FullNameOrArticle, source: str, user: _UserType = None, comment: str = "") -> ArticleVersion:
+def create_article_version(full_name_or_article: _FullNameOrArticle, source: str, user: _UserType = None, comment: str='') -> ArticleVersion:
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
     is_new = get_latest_version(article) is None
     version = ArticleVersion(
         article=article,
@@ -547,7 +556,7 @@ def create_article_version(full_name_or_article: _FullNameOrArticle, source: str
             article=article,
             user=user,
             type=ArticleLogEntry.LogEntryType.New,
-            meta={'version_id': version.id, 'title': article.title},
+            meta={'version_id': version.pk, 'title': article.title},
             comment=comment
         )
     else:
@@ -555,7 +564,7 @@ def create_article_version(full_name_or_article: _FullNameOrArticle, source: str
             article=article,
             user=user,
             type=ArticleLogEntry.LogEntryType.Source,
-            meta={'version_id': version.id},
+            meta={'version_id': version.pk},
             comment=comment
         )
     add_log_entry(article, log)
@@ -592,6 +601,9 @@ def refresh_article_links(article_version: ArticleVersion):
 # Updates name of article
 def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: str, user: _UserType = None, log: bool = True):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
+
     prev_full_name = get_full_name(full_name_or_article)
 
     category, name = get_name(new_full_name)
@@ -604,13 +616,13 @@ def update_full_name(full_name_or_article: _FullNameOrArticle, new_full_name: st
     ExternalLink.objects.filter(link_from=prev_full_name).update(link_from=new_full_name)
 
     if log:
-        log = ArticleLogEntry(
+        log_entry = ArticleLogEntry(
             article=article,
             user=user,
             type=ArticleLogEntry.LogEntryType.Name,
             meta={'name': new_full_name, 'prev_name': prev_full_name}
         )
-        add_log_entry(article, log)
+        add_log_entry(article, log_entry)
 
     media.symlinks_article_update(article, prev_full_name)
 
@@ -637,9 +649,9 @@ def _get_article_votes_meta(full_name_or_article: _FullNameOrArticle):
     }
     for vote in votes:
         votes_meta['votes'].append({
-            'user_id': vote.user_id,
+            'user_id': vote.user_id,  # type: ignore
             'vote': vote.rate,
-            'role_id': vote.role_id,
+            'role_id': vote.role_id, # type: ignore
             'date': vote.date.isoformat() if vote.date else None
         })
     return votes_meta
@@ -652,18 +664,20 @@ def delete_article_votes(full_name_or_article: _FullNameOrArticle, user: _UserTy
     Vote.objects.filter(article=article).delete()
 
     if log:
-        log = ArticleLogEntry(
+        log_entry = ArticleLogEntry(
             article=article,
             user=user,
             type=ArticleLogEntry.LogEntryType.VotesDeleted,
             meta=votes_meta
         )
-        add_log_entry(article, log)
+        add_log_entry(article, log_entry)
 
 
 # Updates title of article
 def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user: _UserType = None):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
     prev_title = article.title
     article.title = new_title
     article.save()
@@ -678,12 +692,14 @@ def update_title(full_name_or_article: _FullNameOrArticle, new_title: str, user:
 
 def delete_article(full_name_or_article: _FullNameOrArticle):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
     ExternalLink.objects.filter(link_from=get_full_name(full_name_or_article)).delete()
     media.symlinks_article_delete(article)
     article.delete()
     file_storage = Path(settings.MEDIA_ROOT) / 'media' / article.media_name
     # this may have race conditions with file upload, because filesystem does not know about database transactions
-    for i in range(3):
+    for _ in range(3):
         try:
             if os.path.exists(file_storage):
                 shutil.rmtree(file_storage)
@@ -713,7 +729,7 @@ def get_version(version_id: int) -> Optional[ArticleVersion]:
 def get_previous_version(version_id: int) -> Optional[ArticleVersion]:
     try:
         version = ArticleVersion.objects.get(id=version_id)
-        prev_version = ArticleVersion.objects.filter(article_id=version.article_id, created_at__lt=version.created_at).order_by('-created_at')[:1]
+        prev_version = ArticleVersion.objects.filter(article_id=version.article_id, created_at__lt=version.created_at).order_by('-created_at')[:1] # type: ignore
         if not prev_version:
             return None
         return prev_version[0]
@@ -778,11 +794,13 @@ def get_parent(full_name_or_article: _FullNameOrArticle) -> Optional[str]:
 # Set parent of article
 def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _FullNameOrArticle, user: _UserType = None):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
     parent = get_article(full_name_of_parent) if full_name_of_parent else None
     prev_parent = get_full_name(article.parent) if article.parent else None
     if article.parent == parent:
         return
-    parent_id = parent.id if parent else None
+    parent_id = parent.pk if parent else None
     prev_parent_id = article.parent.id if article.parent else None
     article.parent = parent
     article.save()
@@ -800,16 +818,16 @@ def get_breadcrumbs(full_name_or_article: _FullNameOrArticle) -> Sequence[Articl
     article = get_article(full_name_or_article)
     output = []
     breadcrumb_ids = []
-    while article and article.id not in breadcrumb_ids:
+    while article and article.pk not in breadcrumb_ids:
         output.append(article)
-        breadcrumb_ids.append(article.id)
+        breadcrumb_ids.append(article.pk)
         article = article.parent
     return list(reversed(output))
 
 
 # Get page category
 def get_category(full_name_or_category: _FullNameOrCategory) -> Optional[Category]:
-    if type(full_name_or_category) == str:
+    if isinstance(full_name_or_category, str):
         try:
             return Category.objects.get(name=full_name_or_category)
         except Category.DoesNotExist:
@@ -818,8 +836,14 @@ def get_category(full_name_or_category: _FullNameOrCategory) -> Optional[Categor
 
 
 def get_article_category(full_name_or_article: _FullNameOrArticle) -> Optional[Category]:
-    name = get_name(full_name_or_article)[0] if type(full_name_or_article) == str else full_name_or_article.category
-    return get_category(name)
+    if isinstance(full_name_or_article, str):
+        category, _ = get_name(full_name_or_article)
+    else:
+        article = get_article(full_name_or_article)
+        if not article:
+            return None
+        category = article.category
+    return get_category(category)
 
 
 # Tag name validation
@@ -827,12 +851,12 @@ def is_tag_name_allowed(name: str) -> bool:
     return ' ' not in name
 
 
-def get_tag(full_name_or_tag_id: _FullNameOrTag, create: bool = False) -> Optional[Tag]:
-    if full_name_or_tag_id is None:
+def get_tag(full_name_or_tag: _FullNameOrTag, create: bool = False) -> Optional[Tag]:
+    if full_name_or_tag is None:
         return None
-    if type(full_name_or_tag_id) == str:
-        full_name_or_tag_id = full_name_or_tag_id.lower()
-        category_name, name = get_name(full_name_or_tag_id)
+    if type(full_name_or_tag) == str:
+        full_name_or_tag = full_name_or_tag.lower()
+        category_name, name = get_name(full_name_or_tag)
         if create:
             category, _ = TagsCategory.objects.get_or_create(slug=category_name)
             tag, _ = Tag.objects.get_or_create(category=category, name=name)
@@ -842,9 +866,9 @@ def get_tag(full_name_or_tag_id: _FullNameOrTag, create: bool = False) -> Option
             return Tag.objects.get(category=category, name=name)
         except (Tag.DoesNotExist, TagsCategory.DoesNotExist):
             return None
-    if not isinstance(full_name_or_tag_id, Tag):
+    if not isinstance(full_name_or_tag, Tag):
         raise ValueError('Expected str or Tag')
-    return full_name_or_tag_id
+    return full_name_or_tag
 
 
 # Get tags from article
@@ -852,11 +876,11 @@ def get_tags(full_name_or_article: _FullNameOrArticle) -> Sequence[str]:
     return list(sorted([x.full_name.lower() for x in get_tags_internal(full_name_or_article)]))
 
 
-def get_tags_internal(full_name_or_article: _FullNameOrArticle) -> Sequence[Tag]:
+def get_tags_internal(full_name_or_article: _FullNameOrArticle) -> QuerySet[Tag]:
     article = get_article(full_name_or_article)
     if article:
         return article.tags.select_related('category')
-    return []
+    return Tag.objects.none()
 
 
 def get_tags_categories(full_name_or_article: _FullNameOrArticle) -> Dict[TagsCategory, Sequence[Tag]]:
@@ -868,17 +892,24 @@ def get_tags_categories(full_name_or_article: _FullNameOrArticle) -> Dict[TagsCa
 
 
 # Set tags for article
-def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[Union[str]], user: _UserType = None, log: bool = True):
+def set_tags(full_name_or_article: _FullNameOrArticle, tags: Sequence[Union[str, Tag]], user: _UserType = None, log: bool = True):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
 
     allow_creating = article.settings.creating_tags_allowed
-    tags = list(filter(lambda x: x is not None, [get_tag(x, create=allow_creating) for x in tags if is_tag_name_allowed(x)]))
+    tag_objs = [
+        t for t in (get_tag(t, create=allow_creating) for t in tags if isinstance(t, Tag) or is_tag_name_allowed(t))
+        if t is not None
+    ]
 
-    return set_tags_internal(article, tags, user=user, log=log)
+    return set_tags_internal(article, tag_objs, user=user, log=log)
 
 
 def set_tags_internal(full_name_or_article: _FullNameOrArticle, tags: Sequence[Tag], user: _UserType = None, log: bool = True):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
     article_tags = article.tags.all()
 
     removed_tags = []
@@ -887,13 +918,13 @@ def set_tags_internal(full_name_or_article: _FullNameOrArticle, tags: Sequence[T
     for tag in article_tags:
         if tag not in tags:
             article.tags.remove(tag)
-            removed_tags.append({'id': tag.id, 'name': tag.full_name})
+            removed_tags.append({'id': tag.pk, 'name': tag.full_name})
 
     for tag in tags:
         if tag not in article_tags:
             # possibly create the tag here
             article.tags.add(tag)
-            added_tags.append({'id': tag.id, 'name': tag.full_name})
+            added_tags.append({'id': tag.pk, 'name': tag.full_name})
 
     if article.settings.creating_tags_allowed:
         # garbage collect tags if anything was removed
@@ -901,13 +932,13 @@ def set_tags_internal(full_name_or_article: _FullNameOrArticle, tags: Sequence[T
         TagsCategory.objects.annotate(num_tags=Count('tag')).filter(num_tags=0, slug=F('name')).delete()
 
     if (removed_tags or added_tags) and log:
-        log = ArticleLogEntry(
+        log_entry = ArticleLogEntry(
             article=article,
             user=user,
             type=ArticleLogEntry.LogEntryType.Tags,
             meta={'added_tags': added_tags, 'removed_tags': removed_tags}
         )
-        add_log_entry(article, log)
+        add_log_entry(article, log_entry)
 
 
 # Get article comment info
@@ -922,11 +953,11 @@ def get_comment_info(full_name_or_article: _FullNameOrArticle) -> tuple[int, int
             for author in article.authors.all():
                 notifications.subscribe_to_notifications(subscriber=author, forum_thread=thread)
     post_count = ForumPost.objects.filter(thread=thread).count()
-    return thread.id, post_count
+    return thread.pk, post_count
 
 
 # Get article rating
-def get_rating(full_name_or_article: _FullNameOrArticle) -> tuple[int | float, int, int, Settings.RatingMode]:
+def get_rating(full_name_or_article: _FullNameOrArticle) -> tuple[int | float, int, int, Settings.RatingMode | str]:
     article = get_article(full_name_or_article)
     if not article:
         return 0, 0, 0, Settings.RatingMode.Disabled
@@ -1050,6 +1081,8 @@ def add_vote(full_name_or_article: _FullNameOrArticle, user: _UserType, rate: in
 # Set article lock status
 def set_lock(full_name_or_article: _FullNameOrArticle, locked: bool, user: _UserType = None):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
     article.locked = locked
     article.save()
 
@@ -1066,10 +1099,10 @@ def get_file_in_article(full_name_or_article: _FullNameOrArticle, file_name: str
 
 
 # Get file(s) in article
-def get_files_in_article(full_name_or_article: _FullNameOrArticle) -> Sequence[File]:
+def get_files_in_article(full_name_or_article: _FullNameOrArticle) -> QuerySet[File]:
     article = get_article(full_name_or_article)
     if article is None:
-        return []
+        return File.objects.none()
     files = File.objects.filter(article=article, deleted_at__isnull=True)
     return files
 
@@ -1077,6 +1110,8 @@ def get_files_in_article(full_name_or_article: _FullNameOrArticle) -> Sequence[F
 # Add file to article
 def add_file_to_article(full_name_or_article: _FullNameOrArticle, file: File, user: _UserType = None):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
     if file.article and file.article != article:
         raise ValueError('File already belongs to an article')
     file.article = article
@@ -1085,7 +1120,7 @@ def add_file_to_article(full_name_or_article: _FullNameOrArticle, file: File, us
         article=article,
         user=user,
         type=ArticleLogEntry.LogEntryType.FileAdded,
-        meta={'name': file.name, 'id': file.id}
+        meta={'name': file.name, 'id': file.pk}
     )
     add_log_entry(article, log)
     media.symlinks_article_update(article)
@@ -1102,6 +1137,8 @@ def get_file_space_usage() -> tuple[int, int]:
 # We also cannot track who performed a permanent deletion.
 def delete_file_from_article(full_name_or_article: _FullNameOrArticle, file: File, user: _UserType = None, permanent = False):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
     if file.article != article:
         raise ValueError(f'File article "{get_full_name(article)}" is not the same as "{article.full_name}" for deletion')
     if file.deleted_at and not permanent:
@@ -1119,7 +1156,7 @@ def delete_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fil
             article=article,
             user=user,
             type=ArticleLogEntry.LogEntryType.FileDeleted,
-            meta={'name': file.name, 'id': file.id}
+            meta={'name': file.name, 'id': file.pk}
         )
         add_log_entry(article, log)
         media.symlinks_article_update(article)
@@ -1128,6 +1165,8 @@ def delete_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fil
 # Restore deleted file to article
 def restore_file_from_article(full_name_or_article: _FullNameOrArticle, file: File, user: _UserType = None):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
     if file.article != article:
         raise ValueError(f'File article "{get_full_name(article)}" is not the same as "{article.full_name}" for restoration')
     if not file.deleted_at:
@@ -1139,7 +1178,7 @@ def restore_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fi
         article=article,
         user=user,
         type=ArticleLogEntry.LogEntryType.FileAdded,
-        meta={'name': file.name, 'id': file.id}
+        meta={'name': file.name, 'id': file.pk}
     )
     add_log_entry(article, log)
     media.symlinks_article_update(article)
@@ -1148,6 +1187,8 @@ def restore_file_from_article(full_name_or_article: _FullNameOrArticle, file: Fi
 # Rename file in article
 def rename_file_in_article(full_name_or_article: _FullNameOrArticle, file: File, name: str, user: _UserType = None):
     article = get_article(full_name_or_article)
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
     if file.article != article:
         raise ValueError(f'File article "{get_full_name(article)}" is not the same as "{article.full_name}" for renaming')
     old_name = file.name
@@ -1158,7 +1199,7 @@ def rename_file_in_article(full_name_or_article: _FullNameOrArticle, file: File,
             article=article,
             user=user,
             type=ArticleLogEntry.LogEntryType.FileRenamed,
-            meta={'name': file.name, 'prev_name': old_name, 'id': file.id}
+            meta={'name': file.name, 'prev_name': old_name, 'id': file.pk}
         )
         add_log_entry(article, log)
     media.symlinks_article_update(article)
@@ -1220,15 +1261,17 @@ def set_authors(full_name_or_article: _FullNameOrArticle, authors: list[_UserIdO
         return
     
     article = get_article(full_name_or_article)
-    authors = User.objects.filter(id__in=[author.id if isinstance(author, User) else author for author in authors])
+    if not article:
+        raise ValueError(f'Article {full_name_or_article} does not found')
+    
+    authors_qs: QuerySet[User] = User.objects.filter(id__in=[author.pk if isinstance(author, User) else author for author in authors])
+    if authors_qs.count():
+        old_authors: set[User] = set(article.authors.all())
+        article.authors.set(authors_qs)
+        new_authors = set(authors_qs)
 
-    if authors.count():
-        old_authors = set(article.authors.all())
-        article.authors.set(authors)
-        new_authors = set(authors)
-
-        added_authors = [author.id for author in (new_authors - old_authors)]
-        removed_authors = [author.id for author in (old_authors - new_authors)]
+        added_authors = [author.pk for author in (new_authors - old_authors)]
+        removed_authors = [author.pk for author in (old_authors - new_authors)]
 
         if added_authors or removed_authors:
             log = ArticleLogEntry(

@@ -61,7 +61,7 @@ class TagsCategory(auto_prefetch.Model):
         return self.slug == '_default'
 
     def save(self, *args, **kwargs):
-        if not self.id and not self.name:
+        if not self.pk and not self.name:
             self.name = self.slug
         return super(TagsCategory, self).save(*args, **kwargs)
 

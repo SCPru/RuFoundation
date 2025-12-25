@@ -8,6 +8,7 @@ from web.models.users import User
 from web import threadvars
 from web.models.articles import ArticleVersion, Article
 from web.models.site import get_current_site
+from web.util.lazy_dict import LazyDict
 from . import expression, html
 from .parser import RenderContext
 from .utils import render_user_to_html, render_template_from_string, render_external_user_to_html
@@ -38,20 +39,20 @@ def callbacks_with_context(context):
             except modules.ModuleError as e:
                 return render_template_from_string('<div class="error-block"><p>{{error}}</p></div>', error=e.message)
 
-        def render_user(self, user: str, avatar: bool) -> str:
+        def render_user(self, username: str, avatar: bool) -> str:
             try:
-                if user.lower().startswith('external:'):
-                    user = user[len('external:'):]
+                if username.lower().startswith('external:'):
+                    user = username[len('external:'):]
                     return render_external_user_to_html(user, avatar=avatar)
-                if user.lower().startswith('wd:'):
-                    user = User.objects.get(type=User.UserType.Wikidot, wikidot_username=user[3:])
+                if username.lower().startswith('wd:'):
+                    user = User.objects.get(type=User.UserType.Wikidot, wikidot_username=username[3:])
                 else:
-                    user = User.objects.get(username=user)
+                    user = User.objects.get(username=username)
                 return render_user_to_html(user, avatar=avatar)
             except User.DoesNotExist:
                 return render_template_from_string(
                     '<span class="error-inline">Пользователь \'{{username}}\' не существует</span>',
-                    username=user
+                    username=username
                 )
 
         def get_i18n_message(self, message_id: str) -> str:
@@ -136,7 +137,7 @@ def callbacks_with_context(context):
                     result.append(ftml.PartialPageInfo(full_name=ref, exists=True, title=page_map[ref_dumb].title))
             return result
 
-        def evaluate_expression(self, expr: str) -> any:
+        def evaluate_expression(self, expr: str):
             result = expression.evaluate_expression(expr)
             return result
 
@@ -189,7 +190,7 @@ def get_this_page_params(page_vars: dict[str, str], param: str):
     return '%%' + param + '%%'
 
 
-def single_pass_render(source, context=None, mode='article') -> str:
+def single_pass_render(source, context: RenderContext, mode='article') -> str:
     from ftml import ftml
 
     with threadvars.context():
@@ -199,7 +200,7 @@ def single_pass_render(source, context=None, mode='article') -> str:
         return SafeString(html.body)
 
 
-def single_pass_render_with_excerpt(source, context=None, mode='article') -> tuple[str, str, Optional[str]]:
+def single_pass_render_with_excerpt(source, context: RenderContext, mode='article') -> tuple[str, str, Optional[str]]:
     from ftml import ftml
 
     page_vars = get_page_vars(context.article)
@@ -218,7 +219,7 @@ def single_pass_render_with_excerpt(source, context=None, mode='article') -> tup
     return SafeString(html.body), text, None
 
 
-def single_pass_render_text(source, context=None, mode='article') -> str:
+def single_pass_render_text(source, context: RenderContext, mode='article') -> str:
     from ftml import ftml
 
     page_vars = get_page_vars(context.article)
@@ -232,13 +233,14 @@ def single_pass_render_text(source, context=None, mode='article') -> str:
     return text
 
 
-def single_pass_fetch_backlinks(source, context=None, mode='system') -> tuple[list[str], list[str]]:
+def single_pass_fetch_backlinks(source, context: RenderContext, mode='system') -> tuple[list[str], list[str]]:
     from ftml import ftml
 
     text = ftml.collect_backlinks(source, callbacks_with_context(context), page_info_from_context(context), mode)
     return text.included_pages, text.linked_pages
 
-def single_pass_fetch_code_and_html(source, context=None, mode='system', includes=False) -> tuple[list[str], list[str]]:
+
+def single_pass_fetch_code_and_html(source, context: RenderContext, mode='system', includes=False) -> tuple[list[str], list[str]]:
     from ftml import ftml
 
     with threadvars.context():

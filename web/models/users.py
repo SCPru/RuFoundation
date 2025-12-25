@@ -72,7 +72,7 @@ class User(AbstractUser, RolesMixin):
     is_active = models.BooleanField('Активирован', default=True)
     inactive_until = models.DateTimeField('Деактивировать до', null=True)
 
-    is_staff = RolesMixin.is_staff # pyright: ignore[reportIncompatibleMethodOverride]
+    is_staff = RolesMixin.is_staff # type: ignore
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

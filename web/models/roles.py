@@ -2,13 +2,12 @@ import auto_prefetch
 
 from functools import cached_property
 from urllib.parse import quote
-from typing import Optional, Sequence
+from typing import Optional
 
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Permission
 from django.db import models
 from django.contrib import admin
-from django.dispatch import receiver
 
 import web.permissions.articles
 import web.permissions.forum
@@ -207,7 +206,7 @@ class RolesMixin(models.Model):
 
     @property
     def is_staff(self):
-        if hasattr(self, 'is_superuser') and getattr(self, 'is_superuser'):
+        if self.is_superuser: # type: ignore
             return True
         for role in self.roles.all():
             if role.is_staff:
@@ -226,7 +225,7 @@ class RolesMixin(models.Model):
     @cached_property
     def vote_role(self):
         everyone_role = Role.get_or_create_default_role()
-        if self.is_anonymous and everyone_role.group_votes:
+        if self.is_anonymous and everyone_role.group_votes: # type: ignore
             return everyone_role
         
         registered_role = Role.get_or_create_registered_role()
@@ -239,7 +238,7 @@ class RolesMixin(models.Model):
     
     @cached_property
     def name_tails(self):
-        if not self.is_active and not self.type == self.UserType.Wikidot:
+        if not self.is_active and not self.type == self.UserType.Wikidot: # type: ignore
             return {
                 'badges': [RoleBadgeJSON(
                     text='БАН',
@@ -250,7 +249,7 @@ class RolesMixin(models.Model):
                 )],
                 'icons': []
             }
-        elif self.type == self.UserType.Bot:
+        elif self.type == self.UserType.Bot: # type: ignore
             return {
                 'badges': [RoleBadgeJSON(
                     text='БОТ',
@@ -286,8 +285,8 @@ class RolesMixin(models.Model):
     
     @cached_property
     def showcase(self):
-        if not self.is_active:
-            if self.type == self.UserType.Wikidot:
+        if not self.is_active: # type: ignore
+            if self.type == self.UserType.Wikidot: # type: ignore
                 return {
                     'badges': [],
                     'titles': ['Неактивен']
@@ -297,7 +296,7 @@ class RolesMixin(models.Model):
                     'badges': [],
                     'titles': ['Заблокирован']
                 }
-        elif self.type == self.UserType.Bot:
+        elif self.type == self.UserType.Bot: # type: ignore
             return {
                 'badges': [],
                 'titles': ['Бот']
@@ -330,8 +329,8 @@ class RolesMixin(models.Model):
 
 
 class PermissionsOverrideMixin:
-    roles_override_pipeline = None
-    perms_override_pipeline = None
+    roles_override_pipeline: Optional[list[str]] = None
+    perms_override_pipeline: Optional[list[str]] = None
 
     def override_role(self, user_obj, perms, role=None):
         pipeline = self.__class__.roles_override_pipeline

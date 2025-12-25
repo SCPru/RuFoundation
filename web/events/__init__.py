@@ -4,6 +4,7 @@ import logging
 
 from importlib.util import module_from_spec
 from dataclasses import dataclass
+from typing import dataclass_transform
 
 from web.util import camel_to_snake
 
@@ -11,6 +12,7 @@ from web.util import camel_to_snake
 _event_handlers: dict[str, list] = {}
 
 
+@dataclass_transform()
 class EventBase:
     event_type = None
 

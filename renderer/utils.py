@@ -7,6 +7,7 @@ from typing import Literal, Optional, Union
 from django.contrib.auth.models import AnonymousUser
 from django.conf import settings
 from django.template import Context, Template
+from django.utils.safestring import SafeString
 
 from web.models.articles import Vote
 from web.models.roles import Role, RoleBadgeJSON, RoleIconJSON
@@ -22,7 +23,7 @@ _templates = dict()
 _templates_lock = threading.RLock()
 
 
-def render_template_from_string(template: str, **context: object) -> object:
+def render_template_from_string(template: str, **context: object) -> SafeString:
     with _templates_lock:
         if template in _templates:
             tpl = _templates[template]
@@ -120,7 +121,7 @@ def render_user_to_html(user: _UserType, avatar=True, hover=True):
         show_avatar=avatar,
         tails=user.name_tails,
         avatar=user_avatar,
-        user_id=user.id,
+        user_id=user.pk,
         username=user.username,
         displayname=displayname
     )
@@ -155,7 +156,7 @@ class APIUserType(Enum):
 
 
 class UserJSON(JSONInterface):
-    type: Union[Literal[User.UserType.Normal, User.UserType.Wikidot, User.UserType.System, User.UserType.Bot], Literal['anonymous']]='anonymous'
+    type: Union[User.UserType, Literal['anonymous'], str]='anonymous'
     id: Optional[int]=None
     name: Optional[str]=None
     username: Optional[str]=None
@@ -180,7 +181,7 @@ def render_user_to_json(user: _UserType, show_avatar=True, skip_perms=False):
         )
     return UserJSON(
         type=user.type,
-        id=user.id,
+        id=user.pk,
         name=user.__str__(),
         username=user.username,
         isActive=user.is_active,

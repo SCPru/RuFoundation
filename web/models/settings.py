@@ -3,6 +3,9 @@ __all__ = [
 ]
 
 import auto_prefetch
+
+from typing import Optional
+
 from django.db import models
 
 
@@ -36,7 +39,7 @@ class Settings(auto_prefetch.Model):
 
     # overwrites whatever fields that are not null with values from the other object.
     # returns a copy.
-    def merge(self, other: 'Settings') -> 'Settings':
+    def merge(self, other: Optional['Settings']) -> 'Settings':
         if other is None:
             return self
         new_settings = Settings()
