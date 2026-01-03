@@ -73,9 +73,9 @@ const ForumPostOptions: React.FC<Props> = ({
     if (!longPost) {
       return
     }
-    refPreviewTitle.current = (longPost.querySelector('.head .title') as HTMLElement) ?? undefined
-    refPreviewContent.current = (longPost.querySelector('.content') as HTMLElement) ?? undefined
-    let newRefReplyPreview: HTMLElement = (longPost.querySelector('.w-reply-preview') as HTMLElement) ?? undefined
+    refPreviewTitle.current = (longPost.querySelector('.head .title') as HTMLElement | null) ?? undefined
+    refPreviewContent.current = (longPost.querySelector('.content') as HTMLElement | null) ?? undefined
+    let newRefReplyPreview: HTMLElement | undefined = (longPost.querySelector('.w-reply-preview') as HTMLElement | null) ?? undefined
     if (!newRefReplyPreview) {
       newRefReplyPreview = document.createElement('div')
       newRefReplyPreview.className = 'w-reply-preview'
@@ -84,8 +84,8 @@ const ForumPostOptions: React.FC<Props> = ({
       }
     }
     refReplyPreview.current = newRefReplyPreview
-    setOriginalPreviewTitle(refPreviewTitle.current.textContent ?? '')
-    setOriginalPreviewContent(refPreviewContent.current.innerHTML)
+    setOriginalPreviewTitle(refPreviewTitle.current?.textContent ?? '')
+    setOriginalPreviewContent(refPreviewContent.current?.innerHTML ?? '')
   }, [])
 
   const onReplyClose = useConstCallback(() => {
