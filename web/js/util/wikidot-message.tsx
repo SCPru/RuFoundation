@@ -56,7 +56,7 @@ function getMessageContainer() {
   return document.getElementById('action-area-top')!
 }
 
-function addMessage(message: JSX.Element) {
+function addMessage(message: React.ReactNode) {
   renderTo(getMessageContainer(), message)
 }
 

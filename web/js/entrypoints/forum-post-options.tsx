@@ -65,7 +65,7 @@ const ForumPostOptions: React.FC<Props> = ({
   const refReplyPreview = useRef<HTMLElement>()
 
   useEffect(() => {
-    if (!refSelf.current || !refPreviewTitle.current || !refPreviewContent.current) {
+    if (!refSelf.current) {
       // something bad happened
       return
     }

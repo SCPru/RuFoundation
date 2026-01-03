@@ -280,7 +280,7 @@ export function renderArticleHistoryComment(entry: ArticleLogEntry) {
 const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseDelegate }) => {
   const [loading, setLoading] = useState(false)
   const [entries, setEntries] = useState<Array<ArticleLogEntry>>([])
-  const [subarea, setSubarea] = useState<JSX.Element>()
+  const [subarea, setSubarea] = useState<React.ReactNode>()
   const [entryCount, setEntryCount] = useState(0)
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(25)
@@ -404,7 +404,7 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
     }
   })
 
-  const showSubArea = useConstCallback((component: JSX.Element) => {
+  const showSubArea = useConstCallback((component: React.ReactNode) => {
     setSubarea(component)
   })
 
