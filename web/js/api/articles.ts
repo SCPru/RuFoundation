@@ -87,7 +87,7 @@ export interface ArticleVersion {
 }
 
 export async function fetchArticleVersion(pageId: string, revNum: number, pathParams?: { [key: string]: string }): Promise<ArticleVersion> {
-  return await wFetch<ArticleVersion>(`/api/articles/${pageId}/version?revNum=${revNum}&pathParams=${JSON.stringify(pathParams)}`)
+  return await wFetch<ArticleVersion>(`/api/articles/${pageId}/version?revNum=${revNum}&pathParams=${JSON.stringify(pathParams ?? {})}`)
 }
 
 export interface ArticleBacklink {
