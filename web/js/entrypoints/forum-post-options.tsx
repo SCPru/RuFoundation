@@ -156,7 +156,7 @@ const ForumPostOptions: React.FC<Props> = ({
     }
     setOriginalPreviewTitle(result.name)
     setOriginalPreviewContent(result.content)
-    onEditClose()
+    setIsEditing(false)
   })
 
   const onEditPreview = useConstCallback((input: ForumPostPreviewData) => {
