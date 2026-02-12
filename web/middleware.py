@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import render
 
 from web.models.site import Site
+from web.models.users import ExtendedAnonymousUser
 from web import threadvars
 
 import logging
@@ -175,3 +176,14 @@ class SpyRequestMiddleware(object):
             threadvars.put('current_request', request)
             threadvars.put('current_client_ip', ip)
             return self.get_response(request)
+
+
+# TODO: Handle this shit properly
+class ExtendedAnonymousMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_anonymous:
+            request.user.__class__ = ExtendedAnonymousUser
+        return self.get_response(request)

@@ -33,7 +33,8 @@ class CSSValueValidator(RegexValidator):
 
 
 class ExtendedAnonymousUser(AnonymousUser):
-    pass
+    def get_avatar(self, default=None):
+        return default or settings.DEFAULT_AVATAR
 
 class User(AbstractUser, RolesMixin):
     class Meta(RolesMixin.Meta):

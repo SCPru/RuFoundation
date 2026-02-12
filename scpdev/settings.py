@@ -65,6 +65,7 @@ MIDDLEWARE = [
     'web.middleware.DropWikidotAuthMiddleware',
     'web.middleware.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'web.middleware.ExtendedAnonymousMiddleware',
     'web.middleware.BotAuthTokenMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'web.middleware.MediaHostMiddleware',

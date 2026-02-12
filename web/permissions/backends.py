@@ -1,14 +1,10 @@
 from django.contrib.auth.backends import BaseBackend
 
 from web.models.roles import Role, PermissionsOverrideMixin
-from web.models.users import ExtendedAnonymousUser
 from web.permissions import _ROLE_PERMISSIONS_REPR_CACHE
 
 
 class RolesBackend(BaseBackend):
-    @property
-    def anonymous_user_class(self):
-        return ExtendedAnonymousUser
     
     def get_all_permissions(self, user_obj, obj: PermissionsOverrideMixin=None):
         if not user_obj.is_active and not user_obj.is_anonymous:
