@@ -13,8 +13,8 @@ from web.controllers import articles
 from web.models.users import User
 from web.models.articles import Article, ArticleLogEntry
 from web.models.settings import Settings
-from django.db.models import Q, Value as V, F, Count, Sum, Avg, Case, When, CharField, IntegerField, FloatField
-from django.db.models.functions import Concat, Random, Coalesce, Round, Cast 
+from django.db.models import Q, Value as V, F, Count, Sum, Avg, Case, When, IntegerField, FloatField
+from django.db.models.functions import Random, Coalesce, Round, Cast 
 from web import threadvars
 from web.types import _ArticleType
 
@@ -128,7 +128,7 @@ def get_page_vars(page: _ArticleType)-> dict[str, str] | LazyDict:
         # commented_at, commented_by, commented_by_unix, commented_by_id, commented_by_linked = not yet
     })
 
-    if page.parent_id is not None:
+    if page.parent_id is not None: # type: ignore
         page_vars['parent_name'] = lambda: page.parent.name
         page_vars['parent_category'] = lambda: page.parent.category
         page_vars['parent_fullname'] = lambda: articles.get_full_name(page.parent)
@@ -148,7 +148,7 @@ def page_to_listpages_vars(page: Article, template, index, total, page_vars=None
     return template
 
 
-def query_pages(article, params, viewer=None, path_params=None, allow_pagination=True, always_query=False):
+def query_pages(article: Article, params: dict[str, str], viewer=None, path_params=None, allow_pagination=True, always_query=False):
     if path_params is None:
         path_params = {}
 
@@ -172,7 +172,7 @@ def query_pages(article, params, viewer=None, path_params=None, allow_pagination
     article_param = parsed_params.get_type(param.Article)
     if article_param:
         if always_query:
-            q = Article.objects.filter(id=article_param[0].article.id).exclude(category__in=hidden_categories)
+            q = Article.objects.filter(id=article_param[0].article.pk).exclude(category__in=hidden_categories)
             return q, 0, 1, 1, q.count()
         a = article_param[0].article
         if a.category in hidden_categories:

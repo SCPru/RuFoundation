@@ -21,13 +21,13 @@ def api_get(context, params):
     is_authenticated = context.user.is_authenticated
     number = str(context.user.id) if is_authenticated else '-1'
     name = context.user.username if is_authenticated else params.get('anonname', '[АНОНИМ]')
-    avatar = context.user.get_avatar(settings.DEFAULT_AVATAR)
+    avatar = context.user.get_avatar(settings.DEFAULT_AVATAR) if is_authenticated else None
     return {
         'number': number,
         'title': name,
         'name': name,
         'avatar': avatar,
-        'is_authenticated': is_authenticated
+        'is_authenticated': 'true' if is_authenticated else 'false'
     }
 
 

@@ -12,9 +12,10 @@ from zoneinfo import ZoneInfo
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.db.models.functions import Lower
 from django.db import models
+from django.conf import settings
 
 import web.fields
 from web.models.roles import RolesMixin
@@ -30,6 +31,9 @@ class CSSValueValidator(RegexValidator):
     message = 'CSS значение не может содержать ";" и переносы строк.'
     flags = re.ASCII
 
+
+class ExtendedAnonymousUser(AnonymousUser):
+    pass
 
 class User(AbstractUser, RolesMixin):
     class Meta(RolesMixin.Meta):
