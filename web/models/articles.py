@@ -21,6 +21,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 
 from web.fields import CITextField
+from web.util import uuid4_str
 from .roles import Role, PermissionsOverrideMixin, RolePermissionsOverrideMixin
 from .settings import Settings
 from .site import get_current_site
@@ -161,7 +162,7 @@ class Article(auto_prefetch.Model, PermissionsOverrideMixin):
     created_at = models.DateTimeField('Время создания', auto_now_add=True)
     updated_at = models.DateTimeField('Время изменения', auto_now_add=True)
 
-    media_name = models.TextField('Название папки с файлами в ФС-хранилище', unique=True, default=uuid4)
+    media_name = models.TextField('Название папки с файлами в ФС-хранилище', unique=True, default=uuid4_str)
 
     @cached_property
     def settings(self):

@@ -1,4 +1,5 @@
 import re
+from uuid import uuid4
 from contextlib import contextmanager
 
 from django.db import transaction
@@ -25,3 +26,7 @@ def camel_to_snake(camel_str):
 
 def check_function_exists_and_callable(o, func):
     return func in o.__dict__ and callable(o.__dict__[func])
+
+
+def uuid4_str():
+    return str(uuid4())
