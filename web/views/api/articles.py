@@ -56,12 +56,16 @@ class CreateView(ArticleView):
         if not request.user.has_perm('roles.create_articles', Category.get_or_default_category(category)):
             raise APIError('Недостаточно прав', 403)
 
-        article = articles.get_article(data['pageId'])
+        full_name = data['pageId']
+        if data.get('isNew'):
+            full_name = articles.deduplicate_name(full_name)
+
+        article = articles.get_article(full_name)
         if article is not None:
             raise APIError('Страница с таким ID уже существует', 409)
 
         # create page
-        article = articles.create_article(articles.normalize_article_name(data['pageId']), request.user)
+        article = articles.create_article(articles.normalize_article_name(full_name), request.user)
         article.title = data['title']
         article.save()
         version = articles.create_article_version(article, data['source'], request.user)
@@ -72,7 +76,7 @@ class CreateView(ArticleView):
 
         notifications.subscribe_to_notifications(subscriber=request.user, article=article)
 
-        return self.render_json(201, {'status': 'ok'})
+        return self.render_json(201, {'status': 'ok', 'pageId': full_name})
 
 
 class FetchOrUpdateView(ArticleView):

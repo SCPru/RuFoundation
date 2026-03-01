@@ -198,16 +198,17 @@ const ArticleEditor: React.FC<Props> = ({
       source: source,
       comment: comment,
       parent: pathParams?.['parent'],
+      isNew: Boolean(pathParams?.['new']),
     }
 
-    if (isNew) {
+    if (isNew || pathParams?.['new']) {
       createArticle(input)
-        .then(() => {
+        .then(newPageId => {
           setSavingSuccess(true)
           setSaved(true)
           setTimeout(() => {
             setSavingSuccess(false)
-            window.location.href = `/${pageId}`
+            window.location.href = `/${newPageId}`
           }, 1000)
         })
         .catch(e => {

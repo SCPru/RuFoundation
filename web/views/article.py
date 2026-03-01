@@ -154,6 +154,11 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
         if none_params:
             encoded_params += '/%s' % none_params[0]
 
+        if path_params.get('new'):
+            new_article_name = articles.deduplicate_name(article_name)
+            if new_article_name != article_name:
+                return {'redirect_to': '/%s%s' % (new_article_name, encoded_params)}
+
         normalized_article_name = articles.normalize_article_name(article_name)
         if normalized_article_name != article_name:
             return {'redirect_to': '/%s%s' % (normalized_article_name, encoded_params)}

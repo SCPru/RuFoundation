@@ -8,7 +8,7 @@ interface Props {
 }
 
 const Page404: React.FC<Props> = ({ pageId, pathParams }) => {
-  const [isCreate, setIsCreate] = useState(!!pathParams?.['edit'])
+  const [isCreate, setIsCreate] = useState(!!pathParams?.['edit'] || !!pathParams?.['new'])
 
   const onCreate = useConstCallback(e => {
     e.preventDefault()

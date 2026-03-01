@@ -106,7 +106,7 @@ const PageOptions: React.FC<Props> = ({
         setIsNewEditor(true)
       }
     }
-    if (pathParams?.['edit']) (window as any)._openNewEditor()
+    if (pathParams?.['edit'] || pathParams?.['new']) (window as any)._openNewEditor()
   }, [])
 
   const onEdit = useConstCallback(e => {

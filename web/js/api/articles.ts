@@ -17,8 +17,9 @@ export interface ArticleUpdateRequest extends ArticleData {
   forcePageId?: boolean
 }
 
-export async function createArticle(data: ArticleData) {
-  await wFetch(`/api/articles/new`, { method: 'POST', sendJson: true, body: data })
+export async function createArticle(data: ArticleData): Promise<string> {
+  const { pageId } = await wFetch<{ pageId: string }>(`/api/articles/new`, { method: 'POST', sendJson: true, body: data })
+  return pageId
 }
 
 export interface FullArticleRating {
