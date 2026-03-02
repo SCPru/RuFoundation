@@ -9,11 +9,18 @@ COPY ftml/Cargo.toml .
 RUN mkdir src
 RUN touch src/lib.rs
 
-RUN cargo build --release
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/build/target \
+    cargo build --release
 
 COPY ftml .
 
-RUN cargo build --release
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/build/target \
+    cargo build --release && \
+    cp /build/target/release/libftml.so /build/libftml.so
 
 # JS stuff
 FROM node:24-slim AS js_build
@@ -45,7 +52,7 @@ COPY --from=python_build /usr/bin/tini /usr/bin/tini
 COPY --from=python_build /usr/local/bin/gunicorn /usr/local/bin/gunicorn
 
 COPY --from=js_build /build/static/* ./static/
-COPY --from=rust_build /build/target/release/libftml.so ./ftml/ftml.so
+COPY --from=rust_build /build/libftml.so ./ftml/ftml.so
 
 RUN useradd -u 8877 scpwiki
 # This wierd thing extremly speeds up chown
