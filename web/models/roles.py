@@ -1,3 +1,5 @@
+import logging
+
 import auto_prefetch
 
 from functools import cached_property
@@ -148,8 +150,12 @@ class Role(auto_prefetch.Model):
             )
         elif self.inline_visual_mode == Role.InlineVisualMode.Icon:
             if self.icon:
-                with self.icon.open('r') as f:
-                    icon = f.read()
+                try:
+                    with self.icon.open('r') as f:
+                        icon = f.read()
+                except Exception as e:
+                    logging.warning(f'Can\'t open role icon: {e}')
+                    return None
 
                 icon_parts:list = icon[icon.index('<svg'):].split('>')
                 icon_parts.insert(1, f'<style>svg{{color:{self.color}}}</style')
