@@ -13,6 +13,7 @@ import { makeSiteChanges } from './articles/site-changes'
 import { makeTabView } from './articles/tabview'
 import { makeTOC } from './articles/toc'
 import { makeWantedPages } from './articles/wanted-pages'
+import { makeFoldableListContainer } from "./articles/foldable-list-contaner";
 import ForumNewPost from './entrypoints/forum-new-post'
 import ForumNewThread from './entrypoints/forum-new-thread'
 import ForumPostOptions from './entrypoints/forum-post-options'
@@ -84,6 +85,8 @@ window.addEventListener('DOMContentLoaded', () => {
         makeInterwiki(node)
       } else if (node.classList.contains('w-admin-sus-users')) {
         renderTo(node, <AdminSusUsers />)
+      } else if (node.classList.contains('foldable-list-container')) {
+        makeFoldableListContainer(node)
       }
     } catch (e) {
       console.error('Failed to process node', node, e)
