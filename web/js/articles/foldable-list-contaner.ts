@@ -12,7 +12,7 @@ export function makeFoldableListContainer(node: HTMLElement): void {
     try {
         isDivElement(node);
     } catch (e) {
-        console.error(e);
+        // It applies only to the div elements
         return;
     }
 
