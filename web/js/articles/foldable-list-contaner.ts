@@ -3,7 +3,7 @@ function isDivElement(el: unknown): asserts el is HTMLDivElement {
 }
 
 export function makeFoldableListContainer(node: HTMLElement): void {
-    // Этот хак это просто пиздец. Оставляю его здесь просто потому что боюсь что что-либо сломается.
+    // This hack is utterly nonsensical. I'll keep it just in case everything breaks otherwise.
     // hack: mark node as already processed because it was
     if ((node as any)._foldableListContainer) return;
     (node as any)._foldableListContainer = true;
@@ -16,7 +16,7 @@ export function makeFoldableListContainer(node: HTMLElement): void {
         return;
     }
 
-    const displayMap = new WeakMap();  // Манки-патчинг в ТСе это грех
+    const displayMap = new WeakMap();  // Removes wikidot's monkey-patching
 
     const nestedLIs = node.querySelectorAll("li:has(ul)") as NodeListOf<HTMLLIElement>;
     for (const listItemElement of nestedLIs) {
@@ -34,10 +34,10 @@ export function makeFoldableListContainer(node: HTMLElement): void {
         }
     }
 
-    // Здесь я пропустила один эдж-кейс, в котором ссылка на якорь равна текущей странице - это пережиток старого
-    // интернета и в современных браузерах не работает. То есть работает, но эффекта от этого нет, поскольку страница
-    // сразу после этого закрывалась. Добавлено не будет, нигде не используется.
-    // tl;dr: лишний код убран полностью.
+    // Here I skipped an edge case in which anchor href was equal to the current page name. This is old internet's
+    // tech and doesn't work in modern browsers. I mean, it works, but it's no use as the page is immediately
+    // closed after that. Won't be added as it's not used anywhere.
+    // tl;dr: unnecessary code removed completely.
 
     const anchors = node.querySelectorAll("a") as NodeListOf<HTMLAnchorElement>;
     for (const anchor of anchors) anchor.addEventListener("click", event => {
@@ -51,8 +51,8 @@ export function makeFoldableListContainer(node: HTMLElement): void {
         if (!(li.classList.contains("folded") || li.classList.contains("unfolded"))) return;
 
         const ul = li.querySelector("ul");
-        // При отсутствии ul не выходим раньше времени из-за максимально уёбищного хака, используемого в некоторых
-        // статьях англофонда, полагающегося на *отсутствие* этого тега на странице.
+        // If ul is absent we don't return early because there's an abysmally atrocious dogshit of a hack used in
+        // some foundation articles that rely on the absence of this tag.
 
         if (li.classList.contains("folded")) {
             li.classList.replace("folded", "unfolded");
