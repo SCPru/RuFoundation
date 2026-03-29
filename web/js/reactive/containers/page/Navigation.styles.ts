@@ -10,8 +10,6 @@ export const Container = styled.div`
 
   @media (max-width: ${MOBILE_SIZE}px) {
     display: flex;
-    border-right: none;
-    border-bottom: 1px solid ${({ theme }) => theme.windowStrong};
 
     & > * {
       flex: 1 1 0;
