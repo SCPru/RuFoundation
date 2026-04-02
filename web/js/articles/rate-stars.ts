@@ -37,23 +37,10 @@ export function makeStarsRateModule(node: HTMLElement) {
 
   let originalRateWidth = control.style.width
   let rateWith: number | null = null
-  let originalRating = Number.parseFloat(originalRateWidth.replace('%', '')) / 20 || 0
-
-  const setToRating = function (rating: number) {
-    if (rating >= 3) {
-      rateWrapper.classList.replace('w-stars-rate-bad', 'w-stars-rate-good')
-    } else {
-      rateWrapper.classList.replace('w-stars-rate-good', 'w-stars-rate-bad')
-    }
-  }
-
-  rateWrapper.classList.add(originalRating >= 3 ? 'w-stars-rate-good' : 'w-stars-rate-bad')
 
   const callback = function (votesData: ModuleRateResponse) {
     updateRating(number, votes, popularity, control, votesData)
     originalRateWidth = control.style.width
-    originalRating = Number.parseFloat(originalRateWidth.replace('%', '')) / 20 || 0
-    setToRating(originalRating)
     window.postMessage({ type: 'rate_updated' })
   }
 
@@ -63,13 +50,11 @@ export function makeStarsRateModule(node: HTMLElement) {
     const offset = e.clientX - rect.x
     const value = Math.round((offset / total) * 10) / 2
     control.style.width = `${Math.floor(value * 20)}%`
-    setToRating(value)
     rateWith = value
   })
 
   rateWrapper.addEventListener('mouseout', () => {
     control.style.width = originalRateWidth
-    setToRating(originalRating)
   })
 
   rateWrapper.addEventListener('click', e => onClick(e, pageId, rateWith).then(callback))
