@@ -96,6 +96,10 @@ export function makeFootnote(node: HTMLElement) {
     footnoteContent.innerHTML = ''
   }
 
+  node.addEventListener("click", event => {
+    if (!matchMedia("(hover: hover)").matches) event.preventDefault();
+  });
+
   node.addEventListener('mouseover', e => {
     enableAndPosition(e.clientX, e.clientY)
   })
