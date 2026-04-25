@@ -70,7 +70,8 @@ class ForumThread(auto_prefetch.Model, PermissionsOverrideMixin):
                     lhs=Func('article_id', 'category_id', function='num_nonnulls', output_field=models.IntegerField()),
                     rhs=Value(1),
                 ),
-            )
+            ),
+            models.UniqueConstraint(fields=['article'], name='%(app_label)s_%(class)s_unique_article')
         ]
 
     roles_override_pipeline = ['article']
