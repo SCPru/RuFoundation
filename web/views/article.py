@@ -92,7 +92,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
                 if template:
                     template_source = articles.get_latest_source(template)
 
-            source = page_to_listpages_vars(article, template_source, index=1, total=1)
+            source = template_source.replace('%%content%%', articles.get_latest_source(article))
             source = apply_template(source, lambda param: self.get_this_page_params(path_params, param, {'canonical_url': canonical_url}))
             context = RenderContext(article, article, path_params, self.request.user)
             content, excerpt, image = single_pass_render_with_excerpt(source, context)
