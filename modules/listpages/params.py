@@ -47,7 +47,7 @@ class ListPagesParams:
             return
 
         f_type = params.get('pagetype', 'normal')
-        if f_type in ['normal', 'hidden']:
+        if f_type in ['normal', 'hidden', 'all']:
             self.params.append(param.Type(type=f_type))
 
         f_name = params.get('name', '*')

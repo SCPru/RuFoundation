@@ -268,6 +268,9 @@ def query_pages(article: Article, params: dict[str, str], viewer=None, path_para
                 q = q.filter(~Q(name__startswith='_'))
             case param.Type(type='hidden'):
                 q = q.filter(Q(name__startswith='_'))
+            case param.Type(type='all'):
+                # purposeful noop
+                q = q
             case param.Name(name=name):
                 q = q.filter(name=name)
             case param.NamePrefix(prefix=prefix):

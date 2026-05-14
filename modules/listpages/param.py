@@ -24,7 +24,7 @@ class Range:
 
 
 class Type:
-    def __init__(self, type: Literal['normal', 'hidden']):
+    def __init__(self, type: Literal['normal', 'hidden', 'all']):
         self.type = type
 
 
