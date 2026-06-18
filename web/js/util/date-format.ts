@@ -75,7 +75,7 @@ export default function formatDate(date: Date, format: string = '%H:%M %d.%m.%Y'
   var s = format
   s = s
     .replace(/%h/g, '%b')
-    .replace(/%r/g, '%I:%M:%s %p')
+    .replace(/%r/g, '%I:%M:%S %p')
     .replace(/%R/g, '%H:%M')
     .replace(/%a/g, days[dayWeekU])
     .replace(/%d/g, padString('00', date.getDate().toString()))
