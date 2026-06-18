@@ -1,5 +1,6 @@
 import re
 from typing import Optional
+import logging
 
 from django.utils.safestring import SafeString
 
@@ -190,63 +191,104 @@ def get_this_page_params(page_vars: dict[str, str], param: str):
     return '%%' + param + '%%'
 
 
-def single_pass_render(source, context: RenderContext, mode='article') -> str:
-    from ftml import ftml
+def _format_error(context: RenderContext, mode) -> str:
+    if (mode != 'article' and mode != 'system') or context is None or context.article is None:
+        return 'Ошибка отображения содержимого'
+    return f"Ошибка отображения страницы '{context.article.full_name}'"
 
-    with threadvars.context():
-        page_vars = get_page_vars(context.article) if context else {}
-        source = apply_template(source, lambda param: get_this_page_params(page_vars, param))
-        html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
-        return SafeString(html.body)
+
+def _format_internal_error(context: RenderContext, mode) -> str:
+    if mode == 'system':
+        action = 'process'
+    else:
+        action = 'render'
+    if (mode != 'article' and mode != 'system') or context is None or context.article is None:
+        return f'Failed to {action} content'
+    return f"Failed to {action} page '{context.article.full_name}'"
+
+
+def single_pass_render(source, context: RenderContext, mode='article') -> str:
+    try:
+        from ftml import ftml
+
+        with threadvars.context():
+            page_vars = get_page_vars(context.article) if context else {}
+            source = apply_template(source, lambda param: get_this_page_params(page_vars, param))
+            html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
+            return SafeString(html.body)
+    except Exception as e:
+        logging.error(_format_internal_error(context, mode), exc_info=True)
+        return render_template_from_string(
+            '<div class="error-block"><p>{{error}}</p></div>',
+            error=_format_error(context, mode)
+        )
 
 
 def single_pass_render_with_excerpt(source, context: RenderContext, mode='article') -> tuple[str, str, Optional[str]]:
-    from ftml import ftml
+    try:
+        from ftml import ftml
 
-    page_vars = get_page_vars(context.article)
-    source = apply_template(source, lambda param: get_this_page_params(page_vars, param))
+        page_vars = get_page_vars(context.article)
+        source = apply_template(source, lambda param: get_this_page_params(page_vars, param))
 
-    with threadvars.context():
-        html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
-    with threadvars.context():
-        text = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context), mode).body
+        with threadvars.context():
+            html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
+        with threadvars.context():
+            text = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context), mode).body
 
-    text = '\n'.join([x.strip() for x in text.split('\n')])
-    text = re.sub(r'\n+', '\n', text)
-    if len(text) > 384:
-        text = text[:384] + '...'
+        text = '\n'.join([x.strip() for x in text.split('\n')])
+        text = re.sub(r'\n+', '\n', text)
+        if len(text) > 384:
+            text = text[:384] + '...'
 
-    return SafeString(html.body), text, None
-
+        return SafeString(html.body), text, None
+    except Exception as e:
+        logging.error(_format_internal_error(context, mode), exc_info=True)
+        html = render_template_from_string(
+            '<div class="error-block"><p>{{error}}</p></div>',
+            error=_format_error(context, mode)
+        )
+        return html, '', None
 
 def single_pass_render_text(source, context: RenderContext, mode='article') -> str:
-    from ftml import ftml
+    try:
+        from ftml import ftml
 
-    page_vars = get_page_vars(context.article)
-    source = apply_template(source, lambda param: get_this_page_params(page_vars, param))
+        page_vars = get_page_vars(context.article)
+        source = apply_template(source, lambda param: get_this_page_params(page_vars, param))
 
-    text = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context), mode).body
+        text = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context), mode).body
 
-    text = '\n'.join([x.strip() for x in text.split('\n')])
-    text = re.sub(r'\n+', '\n', text)
+        text = '\n'.join([x.strip() for x in text.split('\n')])
+        text = re.sub(r'\n+', '\n', text)
 
-    return text
-
+        return text
+    except Exception as e:
+        logging.error(_format_internal_error(context, mode), exc_info=True)
+        return ''
 
 def single_pass_fetch_backlinks(source, context: RenderContext, mode='system') -> tuple[list[str], list[str]]:
-    from ftml import ftml
+    try:
+        from ftml import ftml
 
-    text = ftml.collect_backlinks(source, callbacks_with_context(context), page_info_from_context(context), mode)
-    return text.included_pages, text.linked_pages
+        text = ftml.collect_backlinks(source, callbacks_with_context(context), page_info_from_context(context), mode)
+        return text.included_pages, text.linked_pages
+    except Exception as e:
+        logging.error(_format_internal_error(context, mode), exc_info=True)
+        return [], []
 
 
 def single_pass_fetch_code_and_html(source, context: RenderContext, mode='system', includes=False) -> tuple[list[str], list[str]]:
-    from ftml import ftml
+    try:
+        from ftml import ftml
 
-    with threadvars.context():
-        if not includes:
-            res = ftml.collect_code_and_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
-            return res.code, res.html
-        else:
-            res = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context), mode)
-            return res.code, res.html
+        with threadvars.context():
+            if not includes:
+                res = ftml.collect_code_and_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
+                return res.code, res.html
+            else:
+                res = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context), mode)
+                return res.code, res.html
+    except Exception as e:
+        logging.error(_format_internal_error(context, mode), exc_info=True)
+        return [], []
