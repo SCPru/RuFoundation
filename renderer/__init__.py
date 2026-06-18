@@ -216,7 +216,9 @@ def single_pass_render(source, context: RenderContext, mode='article') -> str:
             source = apply_template(source, lambda param: get_this_page_params(page_vars, param))
             html = ftml.render_html(source, callbacks_with_context(context), page_info_from_context(context), mode)
             return SafeString(html.body)
-    except Exception as e:
+    except (GeneratorExit, KeyboardInterrupt, SystemExit):
+        raise
+    except BaseException as e:
         logging.error(_format_internal_error(context, mode), exc_info=True)
         return render_template_from_string(
             '<div class="error-block"><p>{{error}}</p></div>',
@@ -242,7 +244,9 @@ def single_pass_render_with_excerpt(source, context: RenderContext, mode='articl
             text = text[:384] + '...'
 
         return SafeString(html.body), text, None
-    except Exception as e:
+    except (GeneratorExit, KeyboardInterrupt, SystemExit):
+        raise
+    except BaseException as e:
         logging.error(_format_internal_error(context, mode), exc_info=True)
         html = render_template_from_string(
             '<div class="error-block"><p>{{error}}</p></div>',
@@ -263,7 +267,9 @@ def single_pass_render_text(source, context: RenderContext, mode='article') -> s
         text = re.sub(r'\n+', '\n', text)
 
         return text
-    except Exception as e:
+    except (GeneratorExit, KeyboardInterrupt, SystemExit):
+        raise
+    except BaseException as e:
         logging.error(_format_internal_error(context, mode), exc_info=True)
         return ''
 
@@ -273,7 +279,9 @@ def single_pass_fetch_backlinks(source, context: RenderContext, mode='system') -
 
         text = ftml.collect_backlinks(source, callbacks_with_context(context), page_info_from_context(context), mode)
         return text.included_pages, text.linked_pages
-    except Exception as e:
+    except (GeneratorExit, KeyboardInterrupt, SystemExit):
+        raise
+    except BaseException as e:
         logging.error(_format_internal_error(context, mode), exc_info=True)
         return [], []
 
@@ -289,6 +297,8 @@ def single_pass_fetch_code_and_html(source, context: RenderContext, mode='system
             else:
                 res = ftml.render_text(source, callbacks_with_context(context), page_info_from_context(context), mode)
                 return res.code, res.html
-    except Exception as e:
+    except (GeneratorExit, KeyboardInterrupt, SystemExit):
+        raise
+    except BaseException as e:
         logging.error(_format_internal_error(context, mode), exc_info=True)
         return [], []
