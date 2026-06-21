@@ -55,6 +55,8 @@ def reload_once(site):
     )
 
     ratings_map = articles.get_all_ratings(db_articles_qs)
+    children_map = articles.get_children_map()
+    dependencies_map = articles.get_dependency_map()
 
     _users_cache = {}
     def _get_user_json_cached(user):
@@ -75,15 +77,17 @@ def reload_once(site):
         updated_by = _get_user_json_cached(last_event.user)
 
         article_tags = list(sorted([tag.full_name.lower() for tag in article.tags.all()]))
+        article_name = article.full_name
+        article_key = article_name.lower()
 
         if article.category not in stored_articles:
             stored_articles[article.category] = []
 
         stored_articles[article.category].append({
             'uid': article.id,
-            'pageId': article.full_name,
+            'pageId': article_name,
             'title': article.title,
-            'canonicalUrl': f"//{site.domain}/{article.full_name}",
+            'canonicalUrl': f"//{site.domain}/{article_name}",
             'createdAt': article.created_at.isoformat(),
             'updatedAt': article.updated_at.isoformat(),
             'createdBy': created_by,
@@ -95,7 +99,9 @@ def reload_once(site):
                 'popularity': popularity,
                 'mode': str(rating_mode)
             },
-            'tags': article_tags
+            'tags': article_tags,
+            'children': children_map.get(article_key, []),
+            'dependencies': dependencies_map.get(article_key, [])
         })
         
     return stored_articles

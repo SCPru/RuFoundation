@@ -791,6 +791,49 @@ def get_parent(full_name_or_article: _FullNameOrArticle) -> Optional[str]:
         return article.parent.full_name
 
 
+def get_children_map(article_ids: Sequence[int] | None = None) -> dict[str, list[str]]:
+    q = Article.objects.filter(parent__isnull=False).select_related('parent').order_by('category', 'name')
+    if article_ids is not None:
+        q = q.filter(parent_id__in=article_ids)
+
+    children_by_parent: dict[str, list[str]] = {}
+    for child in q:
+        children_by_parent.setdefault(child.parent.full_name.lower(), []).append(child.full_name)
+    return children_by_parent
+
+
+def get_children(full_name_or_article: _FullNameOrArticle) -> list[str]:
+    article = get_article(full_name_or_article)
+    if article is None:
+        return []
+    return get_children_map([article.id]).get(article.full_name.lower(), [])
+
+
+def get_dependency_map(article_names: Sequence[str] | None = None) -> dict[str, list[str]]:
+    q = ExternalLink.objects.filter(link_type=ExternalLink.Type.Include).order_by('link_from', 'link_to')
+    if article_names is not None:
+        q = q.filter(link_from__in=[get_full_name(name).lower() for name in article_names])
+
+    dependencies_by_article: dict[str, list[str]] = {}
+    seen_dependencies: dict[str, set[str]] = {}
+    for link_from, link_to in q.values_list('link_from', 'link_to'):
+        source = link_from.lower()
+        target = link_to.lower()
+        seen = seen_dependencies.setdefault(source, set())
+        if target in seen:
+            continue
+        seen.add(target)
+        dependencies_by_article.setdefault(source, []).append(target)
+    return dependencies_by_article
+
+
+def get_dependencies(full_name_or_article: _FullNameOrArticle) -> list[str]:
+    article = get_article(full_name_or_article)
+    if article is None:
+        return []
+    return get_dependency_map([article.full_name]).get(article.full_name.lower(), [])
+
+
 # Set parent of article
 def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _FullNameOrArticle, user: _UserType = None):
     article = get_article(full_name_or_article)

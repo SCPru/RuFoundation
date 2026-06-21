@@ -105,6 +105,8 @@ class FetchOrUpdateView(ArticleView):
             'author': authors[0],
             'authors': authors,
             'parent': articles.get_parent(article),
+            'children': articles.get_children(article),
+            'dependencies': articles.get_dependencies(article),
             'locked': article.locked
         })
 

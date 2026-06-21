@@ -9,6 +9,8 @@ export interface ArticleData {
   tags?: string[]
   authors?: UserData[]
   parent?: string
+  children?: string[]
+  dependencies?: string[]
   locked?: boolean
 }
 
@@ -41,6 +43,8 @@ export interface FullArticleData {
   updatedBy: UserData
   rating: FullArticleRating
   tags: string[]
+  children: string[]
+  dependencies: string[]
 }
 
 export function fetchAllArticles(): Promise<FullArticleData[]> {
