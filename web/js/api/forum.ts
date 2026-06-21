@@ -1,4 +1,5 @@
 import { callModule, ModuleRenderResponse } from './modules'
+import { wFetch } from '../util/fetch-util'
 import { UserData } from './user'
 
 export interface ForumNewThreadRequest {
@@ -76,6 +77,58 @@ export interface ForumUpdateThreadResponse {
   isLocked: boolean
   isPinned: boolean
   categoryId: number
+}
+
+export interface ForumThreadExportArticle {
+  uid: number
+  pageId: string
+  title: string
+}
+
+export interface ForumThreadExportCategory {
+  id: number
+  name: string
+  section: {
+    id: number
+    name: string
+  }
+}
+
+export interface ForumThreadExportPostVersion {
+  createdAt: string
+  author: UserData
+}
+
+export interface ForumThreadExportPost {
+  id: number
+  name: string
+  createdAt: string
+  updatedAt: string
+  author: UserData
+  replyTo: number | null
+  source: string
+  content: string
+  version: ForumThreadExportPostVersion | null
+  replies: Array<ForumThreadExportPost>
+}
+
+export interface ForumThreadExport {
+  id: number
+  name: string
+  description: string
+  createdAt: string
+  updatedAt: string
+  author: UserData
+  isPinned: boolean
+  isLocked: boolean
+  article: ForumThreadExportArticle | null
+  category: ForumThreadExportCategory | null
+  postCount: number
+  posts: Array<ForumThreadExportPost>
+}
+
+export async function fetchForumThread(threadId: number) {
+  return await wFetch<ForumThreadExport>(`/api/forum/${threadId}`)
 }
 
 export async function createForumThread(request: ForumNewThreadRequest) {

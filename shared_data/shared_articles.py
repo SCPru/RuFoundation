@@ -57,6 +57,7 @@ def reload_once(site):
     ratings_map = articles.get_all_ratings(db_articles_qs)
     children_map = articles.get_children_map()
     dependencies_map = articles.get_dependency_map()
+    forum_thread_map = articles.get_forum_thread_map()
 
     _users_cache = {}
     def _get_user_json_cached(user):
@@ -101,7 +102,8 @@ def reload_once(site):
             },
             'tags': article_tags,
             'children': children_map.get(article_key, []),
-            'dependencies': dependencies_map.get(article_key, [])
+            'dependencies': dependencies_map.get(article_key, []),
+            'forumThread': forum_thread_map.get(article.id)
         })
         
     return stored_articles

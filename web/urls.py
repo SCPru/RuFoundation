@@ -24,7 +24,7 @@ from django.contrib import admin
 
 from .views import profile, signup, login
 
-from web.views.api import articles, preview, module, files, notifications, users, search
+from web.views.api import articles, preview, module, files, notifications, users, search, forum
 from web.views.article import ArticleView
 from web.views.reactive import reactive_view
 
@@ -56,6 +56,8 @@ api_patterns = [
 
     path('articles/<str:article_name>/files', files.GetOrUploadView.as_view()),
     path('files/<int:file_id>', files.RenameOrDeleteView.as_view()),
+
+    path('forum/<int:forum_thread>', forum.ForumThreadView.as_view()),
 
     path('preview', preview.PreviewView.as_view()),
 

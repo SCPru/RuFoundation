@@ -1,6 +1,6 @@
 import { fetchAllArticles, fetchArticle, fetchArticleBacklinks, fetchArticleLog, fetchArticleVersion, fetchArticleVotes } from '../api/articles'
 import { fetchArticleFiles } from '../api/files'
-import { fetchForumPost, fetchForumPostVersions, previewForumPost } from '../api/forum'
+import { fetchForumPost, fetchForumPostVersions, fetchForumThread, previewForumPost } from '../api/forum'
 import { callModule, ModuleRequest } from '../api/modules'
 import { makePreview } from '../api/preview'
 import { fetchPageRating, fetchPageVotes } from '../api/rate'
@@ -28,6 +28,7 @@ function onApiMessage(e: MessageEvent) {
     previewForumPost, // source
     fetchForumPost, // postId, atDate?
     fetchForumPostVersions, // postId
+    fetchForumThread, // threadId
     makePreview, // data
     fetchPageRating, // pageId
     fetchPageVotes, // pageId

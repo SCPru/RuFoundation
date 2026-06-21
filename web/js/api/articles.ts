@@ -11,6 +11,7 @@ export interface ArticleData {
   parent?: string
   children?: string[]
   dependencies?: string[]
+  forumThread?: number | null
   locked?: boolean
 }
 
@@ -45,6 +46,7 @@ export interface FullArticleData {
   tags: string[]
   children: string[]
   dependencies: string[]
+  forumThread: number | null
 }
 
 export function fetchAllArticles(): Promise<FullArticleData[]> {

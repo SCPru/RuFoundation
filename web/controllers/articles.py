@@ -834,6 +834,20 @@ def get_dependencies(full_name_or_article: _FullNameOrArticle) -> list[str]:
     return get_dependency_map([article.full_name]).get(article.full_name.lower(), [])
 
 
+def get_forum_thread_map(article_ids: Sequence[int] | None = None) -> dict[int, int]:
+    q = ForumThread.objects.filter(article__isnull=False).order_by('article_id')
+    if article_ids is not None:
+        q = q.filter(article_id__in=article_ids)
+    return {thread.article_id: thread.id for thread in q}
+
+
+def get_forum_thread_id(full_name_or_article: _FullNameOrArticle) -> Optional[int]:
+    article = get_article(full_name_or_article)
+    if article is None:
+        return None
+    return get_forum_thread_map([article.id]).get(article.id)
+
+
 # Set parent of article
 def set_parent(full_name_or_article: _FullNameOrArticle, full_name_of_parent: _FullNameOrArticle, user: _UserType = None):
     article = get_article(full_name_or_article)

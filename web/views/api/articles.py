@@ -107,6 +107,7 @@ class FetchOrUpdateView(ArticleView):
             'parent': articles.get_parent(article),
             'children': articles.get_children(article),
             'dependencies': articles.get_dependencies(article),
+            'forumThread': articles.get_forum_thread_id(article),
             'locked': article.locked
         })
 
