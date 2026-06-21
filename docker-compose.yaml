@@ -12,7 +12,7 @@ services:
       - ./files:/app/files
       - ./archive:/app/archive:ro
     env_file:
-      - prod-web.env
+      - .env
     environment:
       DB_ENGINE: pg
       DB_PG_HOST: postgres
