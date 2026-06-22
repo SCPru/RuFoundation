@@ -18,6 +18,7 @@ from django.db.models.functions import Random, Coalesce, Round, Cast
 from web import threadvars
 from web.types import _ArticleType
 
+from .._csrf_protection import csrf_safe_method
 from .params import ListPagesParams
 from . import param
 
@@ -31,7 +32,7 @@ def has_content():
 def allow_api():
     return True
 
-
+@csrf_safe_method
 def api_get(context, _params):
     return {"pages": [page.full_name for page in query_pages(context.article, _params, context.user, context.path_params, False)[0]]}
 
