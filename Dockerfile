@@ -54,7 +54,7 @@ COPY --from=python_build /usr/local/bin/gunicorn /usr/local/bin/gunicorn
 COPY --from=js_build /build/static/* ./static/
 COPY --from=rust_build /build/libftml.so ./ftml/ftml.so
 
-RUN useradd -u 8877 scpwiki
+RUN useradd -m -u 8877 scpwiki
 # This wierd thing extremly speeds up chown
 RUN find /app -print0 | xargs -0 -n 100 -P 32 chown scpwiki:scpwiki
 
