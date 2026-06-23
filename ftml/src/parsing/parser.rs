@@ -1047,6 +1047,44 @@ impl<'r, 't> Parser<'r, 't> {
         }
     }
 
+    pub fn consume_line_end_if_only_comments(&mut self) -> Result<bool, ParseWarning> {
+        let mut offset = 0;
+        let mut in_comment = false;
+
+        loop {
+            let token = if offset == 0 {
+                self.current().token
+            } else {
+                self.look_ahead(offset - 1)
+                    .map(|token| token.token)
+                    .unwrap_or(Token::InputEnd)
+            };
+
+            match token {
+                Token::Whitespace if !in_comment => offset += 1,
+                Token::LeftComment if !in_comment => {
+                    in_comment = true;
+                    offset += 1;
+                }
+                Token::RightComment if in_comment => {
+                    in_comment = false;
+                    offset += 1;
+                }
+                Token::LineBreak | Token::ParagraphBreak if !in_comment => {
+                    self.step_n(offset + 1)?;
+                    return Ok(true);
+                }
+                Token::InputEnd if !in_comment => {
+                    self.step_n(offset)?;
+                    return Ok(offset > 0);
+                }
+                Token::InputEnd => return Ok(false),
+                _ if in_comment => offset += 1,
+                _ => return Ok(false),
+            }
+        }
+    }
+
     // Utilities
     #[cold]
     #[inline]

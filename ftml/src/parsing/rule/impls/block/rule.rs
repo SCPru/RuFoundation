@@ -48,6 +48,8 @@ fn parse_block<'r, 't>(parser: &mut Parser<'r, 't>) -> ParseResult<'r, 't, Eleme
 where
     'r: 't,
 {
+    let at_start_of_line = parser.start_of_line();
+
     check_step(parser, Token::LeftBlock, ParseWarningKind::RuleFailed)?;
 
     // Check star flag
@@ -109,6 +111,10 @@ where
     parser.set_accepts_partial(block.accepts_partial);
 
     let result = (block.parse_fn)(parser, full_name, flag_star, flag_score, in_head)?;
+
+    if at_start_of_line && result.item.is_empty() {
+        parser.consume_line_end_if_only_comments()?;
+    }
 
     // If this is an underline block, skip whitespace to next element. This is what Wikidot does.
     // This allows not creating <br> after each <div>

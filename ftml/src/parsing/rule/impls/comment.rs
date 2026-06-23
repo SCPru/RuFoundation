@@ -31,6 +31,8 @@ fn try_consume_fn<'p, 'r, 't>(
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Consuming tokens until end of comment");
 
+    let at_start_of_line = parser.start_of_line();
+
     check_step(parser, Token::LeftComment, ParseWarningKind::RuleFailed)?;
 
     loop {
@@ -47,6 +49,9 @@ fn try_consume_fn<'p, 'r, 't>(
             Token::RightComment => {
                 debug!("Reached end of comment, returning");
                 parser.step()?;
+                if at_start_of_line {
+                    parser.consume_line_end_if_only_comments()?;
+                }
                 return ok!(Elements::None);
             }
 

@@ -91,6 +91,15 @@ impl<'t> ParagraphStack<'t> {
         // Pull out gathered elements, then make a new paragraph container
         let mut elements = mem::take(&mut self.current);
         strip_newlines(&mut elements);
+        if elements.is_empty() {
+            debug!("No paragraph created, stripped elements were empty");
+            return None;
+        }
+        if elements.iter().all(Element::is_whitespace) {
+            debug!("No paragraph created, stripped elements were only whitespace");
+            return None;
+        }
+
         let container =
             Container::new(ContainerType::Paragraph, elements, AttributeMap::new());
         let element = Element::Container(container);

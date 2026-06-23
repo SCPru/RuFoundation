@@ -21,10 +21,16 @@
 use crate::tree::Element;
 
 pub fn strip_newlines(elements: &mut Vec<Element>) {
-    let removed_start = elements
+    let removed_start = match elements
         .iter()
         .position(|x| !matches!(x, Element::LineBreak))
-        .unwrap_or(0);
+    {
+        Some(position) => position,
+        None => {
+            elements.clear();
+            return;
+        }
+    };
     let removed_end = elements
         .iter()
         .rev()
@@ -36,10 +42,13 @@ pub fn strip_newlines(elements: &mut Vec<Element>) {
 }
 
 pub fn strip_whitespace(elements: &mut Vec<Element>) {
-    let removed_start = elements
-        .iter()
-        .position(|x| !x.is_whitespace())
-        .unwrap_or(0);
+    let removed_start = match elements.iter().position(|x| !x.is_whitespace()) {
+        Some(position) => position,
+        None => {
+            elements.clear();
+            return;
+        }
+    };
     let removed_end = elements
         .iter()
         .rev()
