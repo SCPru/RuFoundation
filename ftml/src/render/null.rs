@@ -23,9 +23,9 @@
 //! This implementation of `Render` will consume any input syntax tree
 //! and produce a unit value as output.
 
-use std::rc::Rc;
-use crate::data::PageCallbacks;
 use super::prelude::*;
+use crate::data::PageCallbacks;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct NullRender;

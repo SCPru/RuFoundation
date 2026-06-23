@@ -108,7 +108,8 @@ fn regex_replace(text: &mut String, regex: &Regex, replacement: &str) {
         for _ in 0..actual_count {
             actual_replacement.push_str(replacement);
         }
-        offset = (mtch.end() as i32 + (replacement.len() as i32 - range.len() as i32)) as usize;
+        offset = (mtch.end() as i32 + (replacement.len() as i32 - range.len() as i32))
+            as usize;
         text.replace_range(range, &actual_replacement);
     }
 }

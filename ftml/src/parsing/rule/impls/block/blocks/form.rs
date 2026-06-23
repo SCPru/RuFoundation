@@ -40,7 +40,7 @@ fn parse_form<'r, 't>(
             } else {
                 target
             }
-        },
+        }
         None => Cow::from(""),
     };
 
@@ -48,11 +48,8 @@ fn parse_form<'r, 't>(
     attributes.insert("data-target-page", target.to_owned());
     attributes.insert("class", Cow::Owned(format!("w-ref-form {class}")));
 
-    let element = Element::Container(Container::new(
-        ContainerType::Form,
-        elements,
-        attributes,
-    ));
+    let element =
+        Element::Container(Container::new(ContainerType::Form, elements, attributes));
 
     ok!(paragraph_safe; element, exceptions)
 }
@@ -81,7 +78,9 @@ fn parse_form_input<'r, 't>(
 
     let arguments = parser.get_head_map(&BLOCK_FORM, in_head)?;
 
-    let element = Element::FormInput(FormInput{ attributes: arguments.to_attribute_map(parser.settings()) });
+    let element = Element::FormInput(FormInput {
+        attributes: arguments.to_attribute_map(parser.settings()),
+    });
 
     ok!(true; element, vec![])
 }

@@ -44,12 +44,12 @@ pub struct PageInfo<'a> {
     pub site: Cow<'a, str>,
 
     /// The main domain for this site.
-    /// 
+    ///
     /// Example: scpfoundation.net (replaces scp-ru.wikidot.com)
     pub domain: Cow<'a, str>,
 
     /// The media domain for this site.
-    /// 
+    ///
     /// Example: files.scpfoundation.net (replaces scp-ru.wdfiles.com)
     pub media_domain: Cow<'a, str>,
 

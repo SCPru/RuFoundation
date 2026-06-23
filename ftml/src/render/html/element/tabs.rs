@@ -36,15 +36,17 @@ pub fn render_tabview(ctx: &mut HtmlContext, tabs: &[Tab]) {
                     for (i, tab) in tabs.iter().enumerate() {
                         ctx.html()
                             .li()
-                            .attr(if i == 0 { attr!("class" => "selected", "title" => "active") } else { attr!() })
+                            .attr(if i == 0 {
+                                attr!("class" => "selected", "title" => "active")
+                            } else {
+                                attr!()
+                            })
                             .contents(|ctx| {
                                 ctx.html()
                                     .a()
                                     .attr(attr!("href" => "javascript:;"))
                                     .contents(|ctx| {
-                                        ctx.html()
-                                            .em()
-                                            .inner(&tab.label);
+                                        ctx.html().em().inner(&tab.label);
                                     });
                             });
                     }
@@ -55,7 +57,11 @@ pub fn render_tabview(ctx: &mut HtmlContext, tabs: &[Tab]) {
                 .attr(attr!("class" => "yui-content"))
                 .contents(|ctx| {
                     for (i, tab) in tabs.iter().enumerate() {
-                        let style = if i == 0 { "display: block" } else { "display: none" };
+                        let style = if i == 0 {
+                            "display: block"
+                        } else {
+                            "display: none"
+                        };
                         ctx.html()
                             .div()
                             .attr(attr!("class" => "w-tabview-tab", "style" => style))

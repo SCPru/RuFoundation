@@ -28,7 +28,7 @@ mod prelude {
     pub use crate::parsing::result::ParseResult;
     pub use crate::parsing::rule::{LineRequirement, Rule};
     pub use crate::parsing::token::{ExtractedToken, Token};
-    
+
     pub use crate::tree::{AttributeMap, ContainerType, Element, Elements};
 }
 
@@ -87,8 +87,8 @@ pub use self::header::RULE_HEADER;
 pub use self::horizontal_rule::RULE_HORIZONTAL_RULE;
 pub use self::italics::RULE_ITALICS;
 pub use self::line_break::{RULE_LINE_BREAK, RULE_LINE_BREAK_PARAGRAPH};
-pub use self::link_single::{RULE_LINK_SINGLE};
-pub use self::link_triple::{RULE_LINK_TRIPLE};
+pub use self::link_single::RULE_LINK_SINGLE;
+pub use self::link_triple::RULE_LINK_TRIPLE;
 pub use self::list::RULE_LIST;
 pub use self::math::RULE_MATH;
 pub use self::monospace::RULE_MONOSPACE;

@@ -48,11 +48,7 @@ pub fn render_footnote_block(ctx: &mut HtmlContext, title: Option<&str>) {
 
     let title = match title {
         Some(title) => String::from(title),
-        None => {
-            ctx
-                .handle()
-                .get_message("footnote-block-title")
-        }
+        None => ctx.handle().get_message("footnote-block-title"),
     };
 
     ctx.html()

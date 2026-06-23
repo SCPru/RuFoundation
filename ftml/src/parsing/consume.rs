@@ -92,7 +92,11 @@ pub fn consume<'p, 'r, 't>(
                 // Avoid caching InputStart, InputEnd or other possible null tokens; this breaks cache
                 // Avoid caching partials because they depend on the _real_ context
                 if current.span.start != current.span.end && !output.has_partials() {
-                    parser.put_cached_node(this_pos, step_orig - parser.remaining().len(), output.to_owned());
+                    parser.put_cached_node(
+                        this_pos,
+                        step_orig - parser.remaining().len(),
+                        output.to_owned(),
+                    );
                 }
 
                 return Ok(output);
@@ -130,17 +134,15 @@ pub fn consume<'p, 'r, 't>(
         // We cannot reliably cache them because in a different context they might be valid
         match error.kind() {
             ParseWarningKind::ListItemOutsideList
-            |ParseWarningKind::TableRowOutsideTable
-            |ParseWarningKind::TableCellOutsideTable
-            |ParseWarningKind::TabOutsideTabView
-            |ParseWarningKind::FootnotesNested
-            |ParseWarningKind::RubyTextOutsideRuby => {
-                is_partial_error = true
-            }
+            | ParseWarningKind::TableRowOutsideTable
+            | ParseWarningKind::TableCellOutsideTable
+            | ParseWarningKind::TabOutsideTabView
+            | ParseWarningKind::FootnotesNested
+            | ParseWarningKind::RubyTextOutsideRuby => is_partial_error = true,
             _ => {}
         }
     }
-    
+
     // Add fallback warning to exceptions list
     all_exceptions.push(ParseException::Warning(ParseWarning::new(
         ParseWarningKind::NoRulesMatch,
@@ -156,7 +158,11 @@ pub fn consume<'p, 'r, 't>(
     // Store text node to cache as well; this is the most important part so that we know to not re-parse failed nodes
     // Avoid caching InputStart, InputEnd or other possible null tokens; this breaks cache
     if current.span.start != current.span.end && !is_partial_error {
-        parser.put_cached_node(this_pos, step_orig - parser.remaining().len(), failure_output.clone().unwrap());
+        parser.put_cached_node(
+            this_pos,
+            step_orig - parser.remaining().len(),
+            failure_output.clone().unwrap(),
+        );
     }
 
     failure_output

@@ -26,8 +26,8 @@ use crate::parsing::consume::consume;
 use crate::parsing::rule::impls::prelude::check_step;
 use crate::parsing::strip::{strip_newlines, strip_whitespace};
 use crate::parsing::{
-    gather_paragraphs, parse_string, ExtractedToken, ParseResult, ParseWarning,
-    ParseWarningKind, Parser, Token, ParseException
+    gather_paragraphs, parse_string, ExtractedToken, ParseException, ParseResult,
+    ParseWarning, ParseWarningKind, Parser, Token,
 };
 use crate::tree::Element;
 use regex::Regex;
@@ -253,7 +253,7 @@ where
             self.rule(),
             Some(move |parser: &mut Parser<'r, 't>| {
                 if stop_rule(parser) {
-                    return Err(parser.make_warn(ParseWarningKind::ManualBreak))
+                    return Err(parser.make_warn(ParseWarningKind::ManualBreak));
                 }
 
                 let result = parser.verify_end_block(first, block_rule, closing_name);
@@ -280,10 +280,15 @@ where
                 // This is normally used for _ blocks. We should strip all leading/trailing whitespace and newlines from the content.
                 strip_whitespace(&mut all_elements);
                 strip_newlines(&mut all_elements);
-                all_exceptions.push(ParseException::Warning(self.make_warn(ParseWarningKind::ManualBreak)));
+                all_exceptions.push(ParseException::Warning(
+                    self.make_warn(ParseWarningKind::ManualBreak),
+                ));
                 return ok!(paragraph_safe; all_elements, all_exceptions);
             }
-            if self.verify_end_block(first, block_rule, closing_name).is_some() {
+            if self
+                .verify_end_block(first, block_rule, closing_name)
+                .is_some()
+            {
                 // This is normally used for _ blocks. We should strip all leading/trailing whitespace and newlines from the content.
                 strip_whitespace(&mut all_elements);
                 strip_newlines(&mut all_elements);
@@ -365,7 +370,7 @@ where
 
                         // Stop iterating for more argument key-value pairs
                         if args_finished {
-                            return Ok(false)
+                            return Ok(false);
                         }
 
                         // Gather argument key string slice
@@ -375,16 +380,20 @@ where
 
                     // Equal sign
                     self.get_optional_space()?;
-                    self.get_token(Token::Equals, ParseWarningKind::BlockMalformedArguments)?;
+                    self.get_token(
+                        Token::Equals,
+                        ParseWarningKind::BlockMalformedArguments,
+                    )?;
 
                     // Get the argument value
                     self.get_optional_space()?;
-                    let value_raw = self.get_quoted_string(ParseWarningKind::BlockMalformedArguments)?;
+                    let value_raw = self
+                        .get_quoted_string(ParseWarningKind::BlockMalformedArguments)?;
 
                     // Parse the string
                     let mut value = parse_string(value_raw);
                     self.replace_variables(value.to_mut());
-                    
+
                     // Add to argument map
                     map.insert(key, value);
 
@@ -392,13 +401,13 @@ where
                 })();
 
                 match is_continuing {
-                    Ok(false) => break, 
-                    Ok(true) => {},
+                    Ok(false) => break,
+                    Ok(true) => {}
                     Err(_) => {
                         if self.remaining().len() == original_position {
                             self.step()?;
                         }
-                    },
+                    }
                 }
             }
         }
@@ -407,7 +416,10 @@ where
         Ok(map)
     }
 
-    pub fn get_quoted_string(&mut self, kind: ParseWarningKind) -> Result<&'t str, ParseWarning> {
+    pub fn get_quoted_string(
+        &mut self,
+        kind: ParseWarningKind,
+    ) -> Result<&'t str, ParseWarning> {
         let first_token = self.current();
         let mut last_token;
         check_step(self, Token::StringQuote, kind)?;
@@ -416,15 +428,17 @@ where
             match last_token.token {
                 Token::StringQuote => {
                     self.step()?;
-                    break
+                    break;
                 }
                 Token::InputEnd => return Err(self.make_warn(kind)),
-                Token::LineBreak | Token::ParagraphBreak => return Err(self.make_warn(kind)),
+                Token::LineBreak | Token::ParagraphBreak => {
+                    return Err(self.make_warn(kind))
+                }
                 _ => {}
             }
             self.step()?;
         }
-        return Ok(self.full_text().slice(first_token, last_token))
+        return Ok(self.full_text().slice(first_token, last_token));
     }
 
     pub fn get_head_name_map(

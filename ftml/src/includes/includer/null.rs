@@ -32,7 +32,13 @@ impl<'t> Includer<'t> for NullIncluder {
         &mut self,
         includes: &[IncludeRef<'t>],
     ) -> Result<Vec<FetchedPage<'t>>, Void> {
-        Ok(includes.iter().map(|x| FetchedPage{page_ref: x.page_ref().to_owned(), content: None}).collect())
+        Ok(includes
+            .iter()
+            .map(|x| FetchedPage {
+                page_ref: x.page_ref().to_owned(),
+                content: None,
+            })
+            .collect())
     }
 
     #[inline]

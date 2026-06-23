@@ -35,7 +35,6 @@ mod prelude {
     pub use crate::parsing::prelude::*;
     pub use crate::parsing::rule::Rule;
     pub use crate::parsing::token::{ExtractedToken, Token};
-    
 }
 
 mod consume;

@@ -45,19 +45,17 @@ pub fn render_html(ctx: &mut HtmlContext, contents: &str, external: bool) {
     let prepended_script = ctx.handle().get_html_injected_code(&id);
 
     if !external {
-        ctx.html()
-            .iframe()
-            .attr(attr!(
-                "id" => &id,
-                "srcdoc" => &format!("{prepended_script}{contents}"),
-                "sandbox" => "allow-scripts allow-top-navigation allow-popups allow-modals",
-                "allow" => "fullscreen",
-                "allowfullscreen" => "allowfullscreen",
-                "style" => "width: 100%; height: 0",
-                "class" => "w-iframe-autoresize",
-                "frameborder" => "0",
-                "allowtransparency" => "true"
-            ));
+        ctx.html().iframe().attr(attr!(
+            "id" => &id,
+            "srcdoc" => &format!("{prepended_script}{contents}"),
+            "sandbox" => "allow-scripts allow-top-navigation allow-popups allow-modals",
+            "allow" => "fullscreen",
+            "allowfullscreen" => "allowfullscreen",
+            "style" => "width: 100%; height: 0",
+            "class" => "w-iframe-autoresize",
+            "frameborder" => "0",
+            "allowtransparency" => "true"
+        ));
     } else {
         let iframe_src = ctx.handle().get_iframe_link(&hash_hex, &id, ctx.info());
         ctx.html()

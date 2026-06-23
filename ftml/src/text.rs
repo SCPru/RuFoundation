@@ -48,7 +48,7 @@ impl<'t> FullText<'t> {
     }
 
     /// Slices by specified indices.
-    /// 
+    ///
     /// # Panics
     /// If the slices are out of range for the string, this function will panic.
     pub fn slice_indices(&self, start: usize, end: usize) -> &'t str {

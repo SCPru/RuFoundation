@@ -20,8 +20,8 @@
 
 use super::prelude::*;
 use crate::data::PageInfo;
-use crate::parsing::ElementCondition;
 use crate::parsing::parser::ParserTransactionFlags;
+use crate::parsing::ElementCondition;
 
 pub const BLOCK_IFTAGS: BlockRule = BlockRule {
     name: "block-iftags",
@@ -56,8 +56,9 @@ fn parse_fn<'r, 't>(
         })?;
 
     // Get body content, never with paragraphs
-    let (elements, mut exceptions, paragraph_safe) =
-        parser_tx.get_body_elements(&BLOCK_IFTAGS, name, false)?.into();
+    let (elements, mut exceptions, paragraph_safe) = parser_tx
+        .get_body_elements(&BLOCK_IFTAGS, name, false)?
+        .into();
 
     debug!(
         "IfTags conditions parsed (conditions length {}, elements length {})",
@@ -66,7 +67,8 @@ fn parse_fn<'r, 't>(
     );
 
     // Return elements based on condition
-    let elements = if no_conditionals || check_iftags(parser_tx.page_info(), &conditions) {
+    let elements = if no_conditionals || check_iftags(parser_tx.page_info(), &conditions)
+    {
         debug!("Conditions passed, including elements");
 
         // Confirm parser state modification caused by iftags content.

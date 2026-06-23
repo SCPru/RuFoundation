@@ -42,7 +42,7 @@ mod user;
 mod prelude {
     pub use super::super::attributes::AddedAttributes;
     pub use super::super::context::HtmlContext;
-    
+
     pub use super::{render_element, render_elements};
     pub use crate::tree::Element;
 }
@@ -62,12 +62,12 @@ use self::math::{render_equation_reference, render_math_block, render_math_inlin
 use self::module::render_module;
 use self::table::render_table;
 use self::tabs::render_tabview;
-use self::text::{render_code, render_email, render_wikitext_raw, render_html_entity};
+use self::text::{render_code, render_email, render_html_entity, render_wikitext_raw};
 use self::toc::render_table_of_contents;
 use self::user::render_user;
 use super::attributes::AddedAttributes;
 use super::HtmlContext;
-use crate::tree::{Element, ClearFloat};
+use crate::tree::{ClearFloat, Element};
 use ref_map::*;
 
 pub fn render_elements(ctx: &mut HtmlContext, elements: &[Element]) {
@@ -89,7 +89,7 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
 
     match element {
         Element::Fragment(elements) => render_elements(ctx, elements),
-        Element::AlignMarker(_) => {},
+        Element::AlignMarker(_) => {}
         Element::Container(container) => render_container(ctx, container),
         Element::Module(module) => render_module(ctx, module),
         Element::Text(text) => ctx.push_escaped(text),
@@ -205,6 +205,6 @@ pub fn render_element(ctx: &mut HtmlContext, element: &Element) {
             ctx.html().hr();
         }
         Element::Partial(_) => panic!("Encountered partial element during parsing"),
-        Element::Void => {},
+        Element::Void => {}
     }
 }

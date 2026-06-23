@@ -94,7 +94,7 @@ pub struct SyntaxTree<'t> {
     pub html: Vec<String>,
 
     /// The list of internal links referenced in the tree.
-    /// 
+    ///
     /// This is used for bulk querying the database for page titles and existence.
     pub internal_links: Vec<PageRef<'t>>,
 }

@@ -174,20 +174,18 @@ fn try_consume_html_fn<'p, 'r, 't>(
     let mut last_position = parser.current().span.start;
 
     loop {
-        let ExtractedToken {
-            token,
-            slice,
-            span,
-        } = parser.current();
+        let ExtractedToken { token, slice, span } = parser.current();
 
         match token {
             Token::RightRaw => {
                 // Possibly add more slices to the elements
                 if last_position != span.start {
-                    elements.push(text!(parser.full_text().slice_indices(last_position, span.start)));
+                    elements.push(text!(parser
+                        .full_text()
+                        .slice_indices(last_position, span.start)));
                 }
                 parser.step()?;
-                break
+                break;
             }
 
             Token::LineBreak | Token::ParagraphBreak | Token::InputEnd => {
@@ -197,7 +195,9 @@ fn try_consume_html_fn<'p, 'r, 't>(
             Token::HtmlEntity => {
                 // do not do anything yet
                 if last_position != span.start {
-                    elements.push(text!(parser.full_text().slice_indices(last_position, span.start)));
+                    elements.push(text!(parser
+                        .full_text()
+                        .slice_indices(last_position, span.start)));
                 }
                 elements.push(Element::HtmlEntity(Cow::from(*slice)));
                 last_position = span.end;

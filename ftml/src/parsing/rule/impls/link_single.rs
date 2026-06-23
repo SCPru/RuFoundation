@@ -43,11 +43,9 @@ fn link<'p, 'r, 't>(parser: &'p mut Parser<'r, 't>) -> ParseResult<'r, 't, Eleme
 /// Build a single-bracket link with the given target.
 fn try_consume_link<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
-    rule: Rule
+    rule: Rule,
 ) -> ParseResult<'r, 't, Elements<'t>> {
-    info!(
-        "Trying to create a single-bracket link"
-    );
+    info!("Trying to create a single-bracket link");
 
     // Gather path for link
     let collected_url = collect_text(

@@ -23,9 +23,9 @@
 //! This implementation of `Render` will produce the same JSON
 //! output as is used in the AST tests at `src/test.rs`.
 
-use std::rc::Rc;
-use crate::data::PageCallbacks;
 use super::prelude::*;
+use crate::data::PageCallbacks;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct JsonRender {

@@ -46,11 +46,7 @@ where
 
 impl<'r, 't, T> ParseSuccess<'r, 't, T> {
     #[inline]
-    pub fn new(
-        item: T,
-        exceptions: Vec<ParseException>,
-        paragraph_safe: bool,
-    ) -> Self {
+    pub fn new(item: T, exceptions: Vec<ParseException>, paragraph_safe: bool) -> Self {
         ParseSuccess {
             item,
             exceptions,
@@ -139,7 +135,7 @@ impl<'r, 't> ParseSuccess<'r, 't, Elements<'t>> {
         for element in &self.item {
             if matches!(element, Element::Partial(_)) {
                 has_partials = true;
-                break
+                break;
             }
         }
         has_partials

@@ -56,12 +56,14 @@ lazy_static! {
             .unwrap()
     };
     static ref NO_INCLUDE_REGEX: Regex = {
-        RegexBuilder::new(r"^\[\[\s*noinclude\s*\]\]\s*\n(.*?)\n\[\[/\s*noinclude\s*\]\]\s*$")
-            .case_insensitive(true)
-            .multi_line(true)
-            .dot_matches_new_line(true)
-            .build()
-            .unwrap()
+        RegexBuilder::new(
+            r"^\[\[\s*noinclude\s*\]\]\s*\n(.*?)\n\[\[/\s*noinclude\s*\]\]\s*$",
+        )
+        .case_insensitive(true)
+        .multi_line(true)
+        .dot_matches_new_line(true)
+        .build()
+        .unwrap()
     };
     static ref VARIABLE_REGEX: Regex =
         Regex::new(r"\{\$(?P<name>[a-zA-Z0-9_\-]+)\}").unwrap();
@@ -69,7 +71,8 @@ lazy_static! {
 
 pub fn remove_noincludes<'t>(input: &'t str) -> String {
     let no_include_regex = NO_INCLUDE_REGEX.deref();
-    let input_stripped_of_no_include = no_include_regex.replace_all(input, "${1}").to_owned();
+    let input_stripped_of_no_include =
+        no_include_regex.replace_all(input, "${1}").to_owned();
     String::from(input_stripped_of_no_include)
 }
 
@@ -96,7 +99,7 @@ where
     let mut ranges = Vec::new();
     let mut includes = Vec::new();
 
-    let regex = if settings.use_include_compatibility { 
+    let regex = if settings.use_include_compatibility {
         INCLUDE_COMPAT_REGEX.deref()
     } else {
         INCLUDE_REGEX.deref()
@@ -172,7 +175,8 @@ where
             None => includer.no_such_include(&page_ref)?,
         };
 
-        let replace_with_no_includes = no_include_regex.replace_all(replace_with.as_ref(), "");
+        let replace_with_no_includes =
+            no_include_regex.replace_all(replace_with.as_ref(), "");
 
         // Append page to final list
         pages.push(page_ref);

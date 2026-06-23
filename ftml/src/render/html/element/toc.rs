@@ -82,18 +82,14 @@ pub fn render_table_of_contents(
                 .table()
                 .attr(attr!("style" => "margin: 0; padding: 0"))
                 .contents(|ctx| {
-                    ctx.html()
-                        .tbody()
-                        .contents(|ctx| { 
+                    ctx.html().tbody().contents(|ctx| {
+                        ctx.html().tr().contents(|ctx| {
                             ctx.html()
-                                .tr()
-                                .contents(|ctx| {
-                                    ctx.html()
-                                        .table_cell(false)
-                                        .attr(attr!("style" => "margin: 0; padding: 0"))
-                                        .contents(build_toc);
-                                });
+                                .table_cell(false)
+                                .attr(attr!("style" => "margin: 0; padding: 0"))
+                                .contents(build_toc);
                         });
+                    });
                 });
         }
         _ => {

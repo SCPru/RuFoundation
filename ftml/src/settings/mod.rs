@@ -39,7 +39,7 @@ pub struct WikitextSettings {
     pub enable_page_syntax: bool,
 
     /// Whether blocks are permitted.
-    /// 
+    ///
     /// This currently refers to any block elements. Very restrictive mode.
     pub enable_block_elements: bool,
 

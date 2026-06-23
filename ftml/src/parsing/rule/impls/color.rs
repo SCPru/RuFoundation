@@ -49,9 +49,7 @@ fn try_consume_fn<'p, 'r, 't>(
     )?;
 
     match color.find(';') {
-        Some(index) => {
-            color = &color[0..index]
-        }
+        Some(index) => color = &color[0..index],
         _ => {}
     }
 

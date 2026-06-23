@@ -21,21 +21,21 @@
 use bitflags::bitflags;
 
 use super::condition::ParseCondition;
-use super::{prelude::*, parse_internal, UnstructuredParseResult, WikiScriptScope};
 use super::rule::Rule;
 use super::RULE_PAGE;
+use super::{parse_internal, prelude::*, UnstructuredParseResult, WikiScriptScope};
 use crate::data::{PageCallbacks, PageInfo, PageRef};
 use crate::render::text::TextRender;
 use crate::tokenizer::Tokenization;
-use crate::tree::{AcceptsPartial, HeadingLevel, Container, ContainerType, AttributeMap};
+use crate::tree::{AcceptsPartial, AttributeMap, Container, ContainerType, HeadingLevel};
+use regex::Regex;
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use regex::Regex;
-use std::vec;
-use std::rc::Rc;
-use std::{mem, ptr};
 use std::ops::{Deref, DerefMut};
+use std::rc::Rc;
+use std::vec;
+use std::{mem, ptr};
 
 lazy_static! {
     static ref VARIABLE_REGEX: Regex =
@@ -89,7 +89,7 @@ struct ParserState<'t> {
 
     // Flags
     has_footnote_block: bool, // Whether a [[footnoteblock]] was created.
-    has_toc_block: bool, // Whether a [[toc]] was created.
+    has_toc_block: bool,      // Whether a [[toc]] was created.
     in_footnote: bool, // Whether we're currently inside [[footnote]] ... [[/footnote]].
 
     // WikiScript variable scopes
@@ -100,7 +100,7 @@ struct ParserState<'t> {
 pub struct ParserTransaction<'a, 'r, 't> {
     flags: ParserTransactionFlags,
     parser: &'a mut Parser<'r, 't>,
-    applied: bool
+    applied: bool,
 }
 
 impl ParserTransaction<'_, '_, '_> {
@@ -113,7 +113,8 @@ impl ParserTransaction<'_, '_, '_> {
     pub fn rollback(&mut self) {
         if !self.applied {
             self.applied = true;
-            self.parser.pop_state(ParserTransactionFlags::all().difference(self.flags))
+            self.parser
+                .pop_state(ParserTransactionFlags::all().difference(self.flags))
         }
     }
 }
@@ -205,12 +206,15 @@ impl<'r, 't> Parser<'r, 't> {
             rule: RULE_PAGE,
             depth: 0,
             start_of_line: true,
-            state: vec![root_state]
+            state: vec![root_state],
         }
     }
 
     // This saves current parser state.
-    pub fn transaction(&mut self, flags: ParserTransactionFlags) -> ParserTransaction<'_, 'r, 't> {
+    pub fn transaction(
+        &mut self,
+        flags: ParserTransactionFlags,
+    ) -> ParserTransaction<'_, 'r, 't> {
         let current = self.state().clone();
 
         let cloned_toc = if flags.contains(ParserTransactionFlags::TOC) {
@@ -237,11 +241,12 @@ impl<'r, 't> Parser<'r, 't> {
             current.html
         };
 
-        let cloned_internal_links = if flags.contains(ParserTransactionFlags::InternalLinks) {
-            Rc::new(RefCell::new(current.internal_links.borrow().to_vec()))
-        } else {
-            current.internal_links
-        };
+        let cloned_internal_links =
+            if flags.contains(ParserTransactionFlags::InternalLinks) {
+                Rc::new(RefCell::new(current.internal_links.borrow().to_vec()))
+            } else {
+                current.internal_links
+            };
 
         self.state.push(ParserState {
             accepts_partial: current.accepts_partial,
@@ -259,7 +264,7 @@ impl<'r, 't> Parser<'r, 't> {
         ParserTransaction {
             parser: self,
             flags,
-            applied: false
+            applied: false,
         }
     }
 
@@ -309,35 +314,56 @@ impl<'r, 't> Parser<'r, 't> {
     #[inline]
     fn state(&self) -> &ParserState<'t> {
         assert!(!self.state.is_empty());
-        return self.state.last().unwrap()
+        return self.state.last().unwrap();
     }
 
     #[inline]
     fn state_mut(&mut self) -> &mut ParserState<'t> {
         assert!(!self.state.is_empty());
-        return self.state.last_mut().unwrap()
+        return self.state.last_mut().unwrap();
     }
 
     // This runs a sub-parser, appending state to current structure.
     #[inline]
     pub fn sub_parse(&mut self, mut tokens: Vec<ExtractedToken<'t>>) -> Vec<Element<'t>> {
         match tokens.first() {
-            Some(ExtractedToken{token: Token::InputStart, ..}) => {},
-            None => {},
+            Some(ExtractedToken {
+                token: Token::InputStart,
+                ..
+            }) => {}
+            None => {}
             _ => {
-                tokens.insert(0, ExtractedToken{token: Token::InputStart, slice: "", span: 0..0});
+                tokens.insert(
+                    0,
+                    ExtractedToken {
+                        token: Token::InputStart,
+                        slice: "",
+                        span: 0..0,
+                    },
+                );
             }
         }
 
         match tokens.last() {
-            Some(ExtractedToken{token: Token::InputEnd, ..}) => {},
-            None => {},
-            Some(ExtractedToken{span, ..}) => {
-                tokens.push(ExtractedToken{token: Token::InputEnd, slice: "", span: span.end..span.end});
+            Some(ExtractedToken {
+                token: Token::InputEnd,
+                ..
+            }) => {}
+            None => {}
+            Some(ExtractedToken { span, .. }) => {
+                tokens.push(ExtractedToken {
+                    token: Token::InputEnd,
+                    slice: "",
+                    span: span.end..span.end,
+                });
             }
         }
 
-        let tokens_as_raw_text = tokens.iter().map(|x| x.slice).collect::<Vec<&str>>().join("");
+        let tokens_as_raw_text = tokens
+            .iter()
+            .map(|x| x.slice)
+            .collect::<Vec<&str>>()
+            .join("");
         let sub_tokenization: Tokenization = Tokenization::new(self.full_text, tokens);
         let UnstructuredParseResult {
             result,
@@ -348,20 +374,30 @@ impl<'r, 't> Parser<'r, 't> {
             has_footnote_block,
             has_toc_block,
             internal_links,
-        } = parse_internal(self.page_info, self.page_callbacks.clone(), self.settings, &sub_tokenization);
+        } = parse_internal(
+            self.page_info,
+            self.page_callbacks.clone(),
+            self.settings,
+            &sub_tokenization,
+        );
 
         match result {
-            Ok(ParseSuccess{item, ..}) => {
-                let elements: Vec<Element<'static>> = item.iter().map(|element| element.to_owned()).collect();
+            Ok(ParseSuccess { item, .. }) => {
+                let elements: Vec<Element<'static>> =
+                    item.iter().map(|element| element.to_owned()).collect();
 
                 let state = self.state_mut();
 
                 for toc_depth in table_of_contents_depths {
-                    state.table_of_contents.borrow_mut().push(toc_depth.to_owned());
+                    state
+                        .table_of_contents
+                        .borrow_mut()
+                        .push(toc_depth.to_owned());
                 }
-        
+
                 for foot in footnotes {
-                    let elements = foot.iter().map(|element| element.to_owned()).collect();
+                    let elements =
+                        foot.iter().map(|element| element.to_owned()).collect();
                     state.footnotes.borrow_mut().push(elements);
                 }
 
@@ -376,10 +412,10 @@ impl<'r, 't> Parser<'r, 't> {
                 for internal in internal_links {
                     state.internal_links.borrow_mut().push(internal.to_owned());
                 }
-        
+
                 state.has_footnote_block |= has_footnote_block;
                 state.has_toc_block |= has_toc_block;
-                
+
                 elements
             }
             Err(_) => {
@@ -387,7 +423,8 @@ impl<'r, 't> Parser<'r, 't> {
                     ContainerType::Paragraph,
                     vec![text!(&tokens_as_raw_text)],
                     AttributeMap::new(),
-                )).to_owned();
+                ))
+                .to_owned();
 
                 vec![element]
             }
@@ -452,14 +489,14 @@ impl<'r, 't> Parser<'r, 't> {
 
     #[inline]
     pub fn current_scope(&self) -> &WikiScriptScope<'t> {
-        let state =  self.state();
+        let state = self.state();
 
         state.scopes.last().unwrap()
     }
 
     #[inline]
     pub fn current_scope_mut(&mut self) -> &mut WikiScriptScope<'t> {
-        let state =  self.state_mut();
+        let state = self.state_mut();
 
         state.scopes.last_mut().unwrap()
     }
@@ -467,10 +504,10 @@ impl<'r, 't> Parser<'r, 't> {
     #[inline]
     pub fn variable(&mut self, name: Cow<'t, str>) -> Cow<'t, str> {
         let scope = self.current_scope();
-        
+
         match scope.get(&name) {
             Some(value) => value.0.to_owned(),
-            None => Cow::from("")
+            None => Cow::from(""),
         }
     }
 
@@ -542,10 +579,17 @@ impl<'r, 't> Parser<'r, 't> {
         let level = usize::from(heading.value()) - 1;
 
         // Render name as text, so it lacks formatting
-        let name =
-            TextRender.render_partial(name_elements, self.page_info, self.page_callbacks.clone(), self.settings);
+        let name = TextRender.render_partial(
+            name_elements,
+            self.page_info,
+            self.page_callbacks.clone(),
+            self.settings,
+        );
 
-        self.state_mut().table_of_contents.borrow_mut().push((level, name));
+        self.state_mut()
+            .table_of_contents
+            .borrow_mut()
+            .push((level, name));
     }
 
     #[cold]
@@ -561,13 +605,13 @@ impl<'r, 't> Parser<'r, 't> {
 
         scopes.push(current_scope.clone());
     }
-    
+
     pub fn pop_scope(&mut self) {
         let state = self.state_mut();
         let last_scope = state.scopes.pop().unwrap();
         let current_depth = self.scope_depth();
         let current_scope = self.current_scope_mut();
-        
+
         for (name, (value, depth)) in last_scope.iter() {
             let last_depth = depth.to_owned();
             if last_depth <= current_depth {
@@ -576,13 +620,24 @@ impl<'r, 't> Parser<'r, 't> {
         }
     }
 
-    pub fn push_variable(&mut self, name: Cow<'t, str>, value: Cow<'t, str>, override_: bool) {
+    pub fn push_variable(
+        &mut self,
+        name: Cow<'t, str>,
+        value: Cow<'t, str>,
+        override_: bool,
+    ) {
         let scope_depth = self.scope_depth();
         let current_scope = self.current_scope_mut();
 
         let new_depth = match override_ {
-            false => if current_scope.contains_key(&name) { current_scope.get(&name).unwrap().1 } else { scope_depth },
-            true => scope_depth
+            false => {
+                if current_scope.contains_key(&name) {
+                    current_scope.get(&name).unwrap().1
+                } else {
+                    scope_depth
+                }
+            }
+            true => scope_depth,
         };
 
         current_scope.insert(name, (value, new_depth));
@@ -591,16 +646,16 @@ impl<'r, 't> Parser<'r, 't> {
     pub fn replace_variables(&self, content: &mut String) {
         let variables = self.current_scope();
         let mut matches = Vec::new();
-    
+
         for capture in VARIABLE_REGEX.captures_iter(content) {
             let mtch = capture.get(0).unwrap();
             let name = &capture["name"];
-    
+
             if let Some(value) = variables.get(name) {
                 matches.push((&value.0, mtch.range()));
             }
         }
-    
+
         matches.reverse();
         for (value, range) in matches {
             content.replace_range(range, value);
@@ -612,16 +667,16 @@ impl<'r, 't> Parser<'r, 't> {
         let mut matches = Vec::new();
 
         let mut content = content_.to_owned();
-    
+
         for capture in VARIABLE_REGEX.captures_iter(&mut content) {
             let mtch = capture.get(0).unwrap();
             let name = &capture["name"];
-    
+
             if let Some(value) = variables.get(name) {
                 matches.push((&value.0, mtch.range()));
             }
         }
-    
+
         matches.reverse();
         for (value, range) in matches {
             content.replace_range(range, value);
@@ -629,7 +684,7 @@ impl<'r, 't> Parser<'r, 't> {
 
         Cow::from(content)
     }
-    
+
     // Footnotes
     pub fn push_footnote(&mut self, contents: Vec<Element<'t>>) {
         self.state_mut().footnotes.borrow_mut().push(contents);
@@ -676,13 +731,20 @@ impl<'r, 't> Parser<'r, 't> {
         table_of_contents: &mut Vec<(usize, String)>,
         footnotes: &mut Vec<Vec<Element<'t>>>,
     ) {
-        self.state_mut().table_of_contents.borrow_mut().append(table_of_contents);
+        self.state_mut()
+            .table_of_contents
+            .borrow_mut()
+            .append(table_of_contents);
 
         self.state_mut().footnotes.borrow_mut().append(footnotes);
     }
 
     // State evaluation
-    pub fn evaluate(&self, condition: ParseCondition, match_token_count: &mut Option<&mut usize>) -> bool {
+    pub fn evaluate(
+        &self,
+        condition: ParseCondition,
+        match_token_count: &mut Option<&mut usize>,
+    ) -> bool {
         info!(
             "Evaluating parser condition (token {}, slice '{}', span {}..{})",
             self.current.token.name(),
@@ -692,43 +754,39 @@ impl<'r, 't> Parser<'r, 't> {
         );
 
         // you can tell I coded in JavaScript before
-        let (matched, token_count) = (|| { 
-            match condition {
-                ParseCondition::CurrentToken(token) => {
-                    (self.current.token == token, 1)
-                }
-                ParseCondition::TokenPair(current, next) => {
-                    if self.current().token != current {
-                        debug!(
+        let (matched, token_count) = (|| match condition {
+            ParseCondition::CurrentToken(token) => (self.current.token == token, 1),
+            ParseCondition::TokenPair(current, next) => {
+                if self.current().token != current {
+                    debug!(
                             "Current token in pair doesn't match, failing (expected '{}', actual '{}')",
                             current.name(),
                             self.current().token.name(),
                         );
-                        return (false, 0);
-                    }
+                    return (false, 0);
+                }
 
-                    match self.look_ahead(0) {
-                        Some(actual) => {
-                            if actual.token != next {
-                                debug!(
+                match self.look_ahead(0) {
+                    Some(actual) => {
+                        if actual.token != next {
+                            debug!(
                                     "Second token in pair doesn't match, failing (expected {}, actual {})",
                                     next.name(),
                                     actual.token.name(),
                                 );
-                                return (false, 0);
-                            }
-                        }
-                        None => {
-                            debug!(
-                                "Second token in pair doesn't exist (token {})",
-                                next.name(),
-                            );
                             return (false, 0);
                         }
                     }
-
-                    (true, 1)
+                    None => {
+                        debug!(
+                            "Second token in pair doesn't exist (token {})",
+                            next.name(),
+                        );
+                        return (false, 0);
+                    }
                 }
+
+                (true, 1)
             }
         })();
 
@@ -743,13 +801,19 @@ impl<'r, 't> Parser<'r, 't> {
     }
 
     #[inline]
-    pub fn evaluate_any(&self, conditions: &[ParseCondition], matched_token_count: &mut Option<&mut usize>) -> bool {
+    pub fn evaluate_any(
+        &self,
+        conditions: &[ParseCondition],
+        matched_token_count: &mut Option<&mut usize>,
+    ) -> bool {
         info!(
             "Evaluating to see if any parser condition is true (conditions length {})",
             conditions.len(),
         );
 
-        conditions.iter().any(|&condition| self.evaluate(condition, matched_token_count))
+        conditions
+            .iter()
+            .any(|&condition| self.evaluate(condition, matched_token_count))
     }
 
     #[inline]
@@ -790,16 +854,28 @@ impl<'r, 't> Parser<'r, 't> {
     }
 
     #[inline]
-    pub fn cached_node(&self, offset: usize) -> Option<(usize, ParseSuccess<'r, 't, Elements<'t>>)> {
+    pub fn cached_node(
+        &self,
+        offset: usize,
+    ) -> Option<(usize, ParseSuccess<'r, 't, Elements<'t>>)> {
         match self.ast_cache.borrow().get(&offset) {
-            Some((consumed_tokens, success)) => Some((*consumed_tokens, success.to_owned())),
-            None => None
+            Some((consumed_tokens, success)) => {
+                Some((*consumed_tokens, success.to_owned()))
+            }
+            None => None,
         }
     }
 
     #[inline]
-    pub fn put_cached_node(&mut self, offset: usize, consumed_tokens: usize, node: ParseSuccess<'r, 't, Elements<'t>>) {
-        self.ast_cache.borrow_mut().insert(offset, (consumed_tokens, node));
+    pub fn put_cached_node(
+        &mut self,
+        offset: usize,
+        consumed_tokens: usize,
+        node: ParseSuccess<'r, 't, Elements<'t>>,
+    ) {
+        self.ast_cache
+            .borrow_mut()
+            .insert(offset, (consumed_tokens, node));
     }
 
     #[inline]
@@ -822,7 +898,7 @@ impl<'r, 't> Parser<'r, 't> {
         let state = self.state_mut();
 
         *state = other_state.clone();
-        
+
         self.start_of_line = parser.start_of_line;
 
         // Token pointers

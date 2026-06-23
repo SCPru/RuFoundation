@@ -36,7 +36,7 @@ use strum_macros::IntoStaticStr;
 /// to the top level.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub enum ParseException {
-    Warning(ParseWarning)
+    Warning(ParseWarning),
 }
 
 /// An issue that occurred during parsing.

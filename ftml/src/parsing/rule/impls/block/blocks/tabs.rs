@@ -19,7 +19,10 @@
  */
 
 use super::prelude::*;
-use crate::{tree::{AcceptsPartial, PartialElement, Tab}, parsing::string::parse_string};
+use crate::{
+    parsing::string::parse_string,
+    tree::{AcceptsPartial, PartialElement, Tab},
+};
 
 pub const BLOCK_TABVIEW: BlockRule = BlockRule {
     name: "block-tabview",
@@ -55,8 +58,9 @@ fn parse_tabview<'r, 't>(
 
     parser.get_head_none(&BLOCK_TABVIEW, in_head)?;
 
-    let (elements, exceptions, _) =
-        parser.get_body_elements(&BLOCK_TABVIEW, name, false)?.into();
+    let (elements, exceptions, _) = parser
+        .get_body_elements(&BLOCK_TABVIEW, name, false)?
+        .into();
 
     // Build element and return
     let mut tabs = Vec::new();
@@ -110,7 +114,8 @@ fn parse_tab<'r, 't>(
         cow!(raw_label)
     };
 
-    let (elements, exceptions, _) = parser.get_body_elements(&BLOCK_TAB, name, true)?.into();
+    let (elements, exceptions, _) =
+        parser.get_body_elements(&BLOCK_TAB, name, true)?.into();
 
     parser.replace_variables(label.to_mut());
 

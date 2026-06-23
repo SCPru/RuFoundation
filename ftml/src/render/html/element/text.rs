@@ -73,9 +73,7 @@ pub fn render_code(ctx: &mut HtmlContext, language: Option<&str>, contents: &str
                 .div()
                 .attr(attr!("class" => "hl-main"))
                 .contents(|ctx| {
-                    ctx.html()
-                        .pre()
-                        .inner(contents);
+                    ctx.html().pre().inner(contents);
                 });
         });
 }

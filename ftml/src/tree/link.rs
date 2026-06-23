@@ -19,7 +19,7 @@
  */
 
 use super::clone::{option_string_to_owned, string_to_owned};
-use crate::data::{PageRef, PageCallbacks};
+use crate::data::{PageCallbacks, PageRef};
 use crate::settings::WikitextSettings;
 use crate::url::is_url;
 use std::borrow::Cow;
@@ -72,10 +72,12 @@ impl<'a> LinkLocation<'a> {
                 link_str = String::from(left);
                 Some(Cow::Owned(right.to_string()))
             }
-            None => None
+            None => None,
         };
 
-        link_str = page_callbacks.normalize_page_name(Cow::from(link_str)).to_string();
+        link_str = page_callbacks
+            .normalize_page_name(Cow::from(link_str))
+            .to_string();
 
         match PageRef::parse(&link_str) {
             Err(_) => LinkLocation::Url(link),

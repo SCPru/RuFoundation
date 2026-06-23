@@ -20,9 +20,9 @@
 
 //! Representation of Wikidot modules, along with their context.
 
+use crate::tree::clone::{string_map_to_owned, string_to_owned};
 use std::borrow::Cow;
 use std::collections::HashMap;
-use crate::tree::clone::{string_map_to_owned, string_to_owned};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -37,13 +37,9 @@ impl<'t> Module<'t> {
     pub fn new(
         name: Cow<'t, str>,
         params: HashMap<Cow<'t, str>, Cow<'t, str>>,
-        text: Cow<'t, str>
+        text: Cow<'t, str>,
     ) -> Self {
-        Module {
-            name,
-            params,
-            text
-        }
+        Module { name, params, text }
     }
 
     #[inline]

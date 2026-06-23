@@ -38,23 +38,21 @@ pub fn render_container(ctx: &mut HtmlContext, container: &Container) {
             ctx.html().rp().inner(")");
         }
 
-        ContainerType::Paragraph => {
-            match container.elements().first() {
-                Some(Element::AlignMarker(alignment)) => {
-                    let style = match alignment {
-                        crate::tree::Alignment::Left => "text-align: left",
-                        crate::tree::Alignment::Right => "text-align: right",
-                        crate::tree::Alignment::Center => "text-align: center",
-                        crate::tree::Alignment::Justify => "text-align: justify",
-                    };
-                    ctx.html()
-                        .tag("p")
-                        .attr(attr!("style" => style))
-                        .inner(container.elements());
-                }
-                _ => render_container_internal(ctx, container),
+        ContainerType::Paragraph => match container.elements().first() {
+            Some(Element::AlignMarker(alignment)) => {
+                let style = match alignment {
+                    crate::tree::Alignment::Left => "text-align: left",
+                    crate::tree::Alignment::Right => "text-align: right",
+                    crate::tree::Alignment::Center => "text-align: center",
+                    crate::tree::Alignment::Justify => "text-align: justify",
+                };
+                ctx.html()
+                    .tag("p")
+                    .attr(attr!("style" => style))
+                    .inner(container.elements());
             }
-        }
+            _ => render_container_internal(ctx, container),
+        },
 
         ContainerType::Align(alignment) => {
             let style = match alignment {
@@ -79,9 +77,7 @@ pub fn render_container(ctx: &mut HtmlContext, container: &Container) {
                 _ => {}
             }
             tag.contents(|ctx| {
-                ctx.html()
-                    .span()
-                    .inner(container.elements());
+                ctx.html().span().inner(container.elements());
             });
         }
 
@@ -127,7 +123,6 @@ lazy_static! {
             .unwrap()
     };
 }
-
 
 pub fn render_color(ctx: &mut HtmlContext, color: &str, elements: &[Element]) {
     info!("Rendering color container (color '{color}')");

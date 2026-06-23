@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use std::borrow::Cow;
-use crate::tree::Module;
 use super::prelude::*;
+use crate::tree::Module;
+use std::borrow::Cow;
 
 pub const BLOCK_MODULE: BlockRule = BlockRule {
     name: "block-module",

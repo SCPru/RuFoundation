@@ -25,7 +25,7 @@ mod prelude {
     pub use crate::parsing::parser::{Parser, ParserTransactionFlags};
     pub use crate::parsing::prelude::*;
     pub use crate::parsing::{ParseWarning, Token};
-    pub use crate::tree::{Container, ContainerType, Element, AcceptsPartial};
+    pub use crate::tree::{AcceptsPartial, Container, ContainerType, Element};
 
     #[cfg(debug)]
     pub fn assert_generic_name(
@@ -147,6 +147,8 @@ pub use self::toc::BLOCK_TABLE_OF_CONTENTS;
 pub use self::underline::BLOCK_UNDERLINE;
 pub use self::user::BLOCK_USER;
 
-pub use self::expression::{BLOCK_IF, BLOCK_EXPR, BLOCK_IF_WITH_BODY, BLOCK_IFEXPR_WITH_BODY};
+pub use self::expression::{
+    BLOCK_EXPR, BLOCK_IF, BLOCK_IFEXPR_WITH_BODY, BLOCK_IF_WITH_BODY,
+};
 
-pub use self::wiki_script::{BLOCK_SCOPE, BLOCK_DECLARE, BLOCK_SET};
+pub use self::wiki_script::{BLOCK_DECLARE, BLOCK_SCOPE, BLOCK_SET};

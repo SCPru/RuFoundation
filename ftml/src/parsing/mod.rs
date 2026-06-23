@@ -60,8 +60,8 @@ use crate::next_index::{NextIndex, TableOfContentsIndex};
 use crate::settings::WikitextSettings;
 use crate::tokenizer::Tokenization;
 use crate::tree::{
-    AttributeMap, Element, LinkLabel, LinkLocation, LinkType,
-    SyntaxTree, Container, ContainerType,
+    AttributeMap, Container, ContainerType, Element, LinkLabel, LinkLocation, LinkType,
+    SyntaxTree,
 };
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -216,9 +216,7 @@ where
 
 // Helper functions
 
-fn extract_exceptions(
-    exceptions: Vec<ParseException>,
-) -> Vec<ParseWarning> {
+fn extract_exceptions(exceptions: Vec<ParseException>) -> Vec<ParseWarning> {
     let mut warnings = Vec::new();
 
     for exception in exceptions {
@@ -234,9 +232,13 @@ fn extract_exceptions(
     warnings
 }
 
-fn unwrap_toc_list(depth: usize, incr: &mut Incrementer, list: DepthList<(), String>) -> Vec<Element<'static>> {
+fn unwrap_toc_list(
+    depth: usize,
+    incr: &mut Incrementer,
+    list: DepthList<(), String>,
+) -> Vec<Element<'static>> {
     let build_item = |item| match item {
-        DepthItem::List(_, list) => unwrap_toc_list(depth+1, incr, list),
+        DepthItem::List(_, list) => unwrap_toc_list(depth + 1, incr, list),
         DepthItem::Item(name) => {
             let anchor = format!("#toc{}", incr.next());
             let link = Element::Link {
@@ -247,9 +249,13 @@ fn unwrap_toc_list(depth: usize, incr: &mut Incrementer, list: DepthList<(), Str
             };
 
             let mut attrs = AttributeMap::new();
-            attrs.insert("style", Cow::from(format!("margin-left: {}em", depth*2)));
+            attrs.insert("style", Cow::from(format!("margin-left: {}em", depth * 2)));
 
-            vec![Element::Container(Container::new(ContainerType::Div, vec![link], attrs))]
+            vec![Element::Container(Container::new(
+                ContainerType::Div,
+                vec![link],
+                attrs,
+            ))]
         }
     };
 

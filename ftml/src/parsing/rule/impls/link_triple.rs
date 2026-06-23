@@ -29,7 +29,10 @@
 //! Its syntax is `[[[page-name | Label text]`.
 
 use super::prelude::*;
-use crate::{tree::{AnchorTarget, LinkLabel, LinkLocation}, url::validate_href};
+use crate::{
+    tree::{AnchorTarget, LinkLabel, LinkLocation},
+    url::validate_href,
+};
 use std::borrow::Cow;
 
 pub const RULE_LINK_TRIPLE: Rule = Rule {
@@ -47,7 +50,7 @@ fn link<'p, 'r, 't>(parser: &'p mut Parser<'r, 't>) -> ParseResult<'r, 't, Eleme
 /// Build a triple-bracket link with the given target.
 fn try_consume_link<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
-    rule: Rule
+    rule: Rule,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     debug!("Trying to create a triple-bracket link");
 
@@ -109,8 +112,11 @@ fn build_same<'p, 'r, 't>(
     let label = Some(Cow::from(strip_category(url)));
 
     // Parse out link location
-    let (link, ltype) = match LinkLocation::parse_interwiki(cow!(url), parser.settings(), parser.page_callbacks())
-    {
+    let (link, ltype) = match LinkLocation::parse_interwiki(
+        cow!(url),
+        parser.settings(),
+        parser.page_callbacks(),
+    ) {
         Some(result) => result,
         None => return Err(parser.make_warn(ParseWarningKind::RuleFailed)),
     };
@@ -118,12 +124,12 @@ fn build_same<'p, 'r, 't>(
     match &link {
         LinkLocation::Page(page_ref, _) if page_ref.site.is_none() => {
             parser.push_internal_link(page_ref.to_owned());
-        },
+        }
         LinkLocation::Url(url) => {
             if !validate_href(url, true) {
                 return Err(parser.make_warn(ParseWarningKind::RuleFailed));
             }
-        },
+        }
         _ => return Err(parser.make_warn(ParseWarningKind::CrossSiteRef)),
     }
 
@@ -175,8 +181,11 @@ fn build_separate<'p, 'r, 't>(
     };
 
     // Parse out link location
-    let (link, ltype) = match LinkLocation::parse_interwiki(cow!(url), parser.settings(), parser.page_callbacks())
-    {
+    let (link, ltype) = match LinkLocation::parse_interwiki(
+        cow!(url),
+        parser.settings(),
+        parser.page_callbacks(),
+    ) {
         Some(result) => result,
         None => return Err(parser.make_warn(ParseWarningKind::RuleFailed)),
     };
@@ -184,7 +193,7 @@ fn build_separate<'p, 'r, 't>(
     match &link {
         LinkLocation::Page(page_ref, _) => {
             parser.push_internal_link(page_ref.to_owned());
-        },
+        }
         LinkLocation::Url(url) => {
             if !validate_href(url, true) {
                 return Err(parser.make_warn(ParseWarningKind::RuleFailed));
@@ -229,7 +238,7 @@ fn strip_category(url: &str) -> &str {
                     // not containing the site.
                     strip_category(&url)
                 }
-                None => url
+                None => url,
             }
         }
 

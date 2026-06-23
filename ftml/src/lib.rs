@@ -110,11 +110,11 @@ extern crate str_macro;
 #[macro_use]
 mod macros;
 
-mod python_interface;
 mod id_prefix;
 mod next_index;
 mod non_empty_vec;
 mod preproc;
+mod python_interface;
 mod text;
 mod url;
 mod utf16;
@@ -138,8 +138,8 @@ pub use self::tokenizer::{tokenize, Tokenization};
 pub use self::utf16::Utf16IndexMap;
 
 pub mod prelude {
-    pub use super::data::PageInfo;
     pub use super::data::PageCallbacks;
+    pub use super::data::PageInfo;
     pub use super::includes::{include, remove_noincludes, Includer};
     pub use super::parsing::{parse, ParseResult, ParseWarning};
     pub use super::preprocess;

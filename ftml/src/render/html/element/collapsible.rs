@@ -82,12 +82,12 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
 
     let show_text = match show_text {
         Some(s) => String::from(s),
-        _ => ctx.handle().get_message("collapsible-open")
+        _ => ctx.handle().get_message("collapsible-open"),
     };
 
     let hide_text = match hide_text {
         Some(s) => String::from(s),
-        _ => ctx.handle().get_message("collapsible-hide")
+        _ => ctx.handle().get_message("collapsible-hide"),
     };
 
     let text_align_property = match text_align {
@@ -95,10 +95,13 @@ pub fn render_collapsible(ctx: &mut HtmlContext, collapsible: Collapsible) {
         Some(Alignment::Right) => "text-align: right",
         Some(Alignment::Center) => "text-align: center",
         Some(Alignment::Justify) => "text-align: justify",
-        _ => ""
+        _ => "",
     };
 
-    let unfold_link_stylevariants:[&str;2] = [&format!("display: none; {}", text_align_property) as &str, &format!("display: block; {}", text_align_property) as &str];
+    let unfold_link_stylevariants: [&str; 2] = [
+        &format!("display: none; {}", text_align_property) as &str,
+        &format!("display: block; {}", text_align_property) as &str,
+    ];
 
     ctx.html()
         .div()

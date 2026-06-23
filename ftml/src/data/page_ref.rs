@@ -93,7 +93,11 @@ impl<'t> PageRef<'t> {
 
     /// Like `fields()`, but uses the passed in value as the current site for local references.
     pub fn fields_or<'a>(&'a self, current_site: &'a str) -> (&'a str, &'a str, &'a str) {
-        (self.site().unwrap_or(current_site), self.category(), self.name())
+        (
+            self.site().unwrap_or(current_site),
+            self.category(),
+            self.name(),
+        )
     }
 
     pub fn parse(s: &str) -> Result<PageRef<'t>, PageRefParseError> {
@@ -117,15 +121,15 @@ impl<'t> PageRef<'t> {
 
                 // Get site and page slices
                 let site = s[1..idx].trim();
-                let page_raw = s[(idx+1)..].trim();
-                
+                let page_raw = s[(idx + 1)..].trim();
+
                 let (category, name) = match page_raw.find(':') {
                     Some(idx) => {
                         let category = &page_raw[..idx];
-                        let name = &page_raw[(idx+1)..];
+                        let name = &page_raw[(idx + 1)..];
                         (category, name)
                     }
-                    _ => ("_default", page_raw)
+                    _ => ("_default", page_raw),
                 };
 
                 PageRef::new3(site.to_owned(), category.to_owned(), name.to_owned())
@@ -134,7 +138,7 @@ impl<'t> PageRef<'t> {
             // On-site page, e.g. "component:thing"
             Some(idx) => {
                 let category = &s[..idx];
-                let name = &s[(idx+1)..];
+                let name = &s[(idx + 1)..];
                 PageRef::new2(category.to_owned(), name.to_owned())
             }
 
@@ -156,7 +160,11 @@ impl<'t> PageRef<'t> {
         let category = owned!(self.category);
         let name = owned!(self.name);
 
-        PageRef { site, category, name }
+        PageRef {
+            site,
+            category,
+            name,
+        }
     }
 }
 

@@ -19,7 +19,9 @@
  */
 
 use super::prelude::*;
-use crate::tree::{AttributeMap, FloatAlignment, ImageSource, LinkLocation, Alignment, AnchorTarget};
+use crate::tree::{
+    Alignment, AnchorTarget, AttributeMap, FloatAlignment, ImageSource, LinkLocation,
+};
 use crate::url::normalize_link;
 
 pub fn render_image(
@@ -53,7 +55,9 @@ pub fn render_image(
 
     match source_url {
         // Found URL
-        Some(url) => render_image_element(ctx, &url, link, link_target, alignment, attributes),
+        Some(url) => {
+            render_image_element(ctx, &url, link, link_target, alignment, attributes)
+        }
 
         // Missing or error
         None => render_image_missing(ctx),
@@ -78,32 +82,46 @@ fn render_image_element(
         ));
     };
 
-    let build_link = |ctx: &mut HtmlContext| {
-        match link {
-            Some(link) => {
-                let url = normalize_link(link);
-                ctx.html()
+    let build_link = |ctx: &mut HtmlContext| match link {
+        Some(link) => {
+            let url = normalize_link(link);
+            ctx.html()
                     .a()
                     .attr(attr!("href" => &url, "target" => link_target.unwrap_or(AnchorTarget::Same).html_attr(); if link_target.is_some()))
                     .contents(build_image);
-            }
-            None => build_image(ctx),
         }
+        None => build_image(ctx),
     };
 
     let align_div_class = match alignment {
-        Some(FloatAlignment{align: Alignment::Left, float: true}) => "floatleft",
-        Some(FloatAlignment{align: Alignment::Right, float: true}) => "floatright",
-        Some(FloatAlignment{align: Alignment::Left, float: false}) => "alignleft",
-        Some(FloatAlignment{align: Alignment::Right, float: false}) => "alignright",
-        Some(FloatAlignment{align: Alignment::Center, float: false}) => "aligncenter",
-        _ => ""
+        Some(FloatAlignment {
+            align: Alignment::Left,
+            float: true,
+        }) => "floatleft",
+        Some(FloatAlignment {
+            align: Alignment::Right,
+            float: true,
+        }) => "floatright",
+        Some(FloatAlignment {
+            align: Alignment::Left,
+            float: false,
+        }) => "alignleft",
+        Some(FloatAlignment {
+            align: Alignment::Right,
+            float: false,
+        }) => "alignright",
+        Some(FloatAlignment {
+            align: Alignment::Center,
+            float: false,
+        }) => "aligncenter",
+        _ => "",
     };
 
     match align_div_class {
         "" => build_link(ctx),
         other => {
-            ctx.html().div()
+            ctx.html()
+                .div()
                 .attr(attr!("class" => &format!("image-container {other}")))
                 .contents(build_link);
         }
@@ -113,9 +131,7 @@ fn render_image_element(
 fn render_image_missing(ctx: &mut HtmlContext) {
     debug!("Image URL unresolved, missing or error");
 
-    let message = ctx
-        .handle()
-        .get_message("image-context-bad");
+    let message = ctx.handle().get_message("image-context-bad");
 
     ctx.html()
         .div()

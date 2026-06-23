@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{ExtractedToken, ParseWarning, Parser, Token, ParseWarningKind};
+use super::{ExtractedToken, ParseWarning, ParseWarningKind, Parser, Token};
 
 /// Helper function to check that the current token matches, then step.
 ///

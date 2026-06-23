@@ -19,7 +19,10 @@
  */
 
 use super::prelude::*;
-use crate::{parsing::{ParseWarning, ParseWarningKind}, tree::Alignment};
+use crate::{
+    parsing::{ParseWarning, ParseWarningKind},
+    tree::Alignment,
+};
 
 pub const BLOCK_COLLAPSIBLE: BlockRule = BlockRule {
     name: "block-collapsible",
@@ -61,8 +64,9 @@ fn parse_fn<'r, 't>(
 
     // Get body content, with paragraphs.
     // Discard paragraph_safe, since collapsibles never are.
-    let (elements, exceptions, _) =
-        parser.get_body_elements(&BLOCK_COLLAPSIBLE, name, true)?.into();
+    let (elements, exceptions, _) = parser
+        .get_body_elements(&BLOCK_COLLAPSIBLE, name, true)?
+        .into();
 
     // Build element and return
     let element = Element::Collapsible {

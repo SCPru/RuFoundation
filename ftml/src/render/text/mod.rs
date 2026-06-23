@@ -21,13 +21,13 @@
 mod context;
 mod elements;
 
-use std::rc::Rc;
 use self::context::TextContext;
 use self::elements::render_elements;
 use crate::data::{PageCallbacks, PageInfo};
 use crate::render::{Handle, Render};
 use crate::settings::WikitextSettings;
 use crate::tree::{Element, SyntaxTree};
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct TextRender;
@@ -41,7 +41,14 @@ impl TextRender {
         page_callbacks: Rc<dyn PageCallbacks>,
         settings: &WikitextSettings,
     ) -> String {
-        self.render_partial_direct(elements, page_info, page_callbacks.clone(), settings, &[], &[])
+        self.render_partial_direct(
+            elements,
+            page_info,
+            page_callbacks.clone(),
+            settings,
+            &[],
+            &[],
+        )
     }
 
     fn render_partial_direct(
@@ -65,8 +72,14 @@ impl TextRender {
 
         let handle = Handle::new(page_callbacks.clone(), &vec![]);
 
-        let mut ctx =
-            TextContext::new(page_info, page_callbacks.clone(), &handle, settings, table_of_contents, footnotes);
+        let mut ctx = TextContext::new(
+            page_info,
+            page_callbacks.clone(),
+            &handle,
+            settings,
+            table_of_contents,
+            footnotes,
+        );
         render_elements(&mut ctx, elements);
 
         // Remove leading and trailing newlines

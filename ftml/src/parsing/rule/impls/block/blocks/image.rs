@@ -21,7 +21,10 @@
 use std::borrow::Cow;
 
 use super::prelude::*;
-use crate::{tree::{FloatAlignment, ImageSource, LinkLocation, AnchorTarget}, url::validate_href};
+use crate::{
+    tree::{AnchorTarget, FloatAlignment, ImageSource, LinkLocation},
+    url::validate_href,
+};
 
 pub const BLOCK_IMAGE: BlockRule = BlockRule {
     name: "block-image",
@@ -58,17 +61,17 @@ fn parse_fn<'r, 't>(
             match &location {
                 LinkLocation::Page(page_ref, _) if page_ref.site.is_none() => {
                     parser.push_internal_link(page_ref.to_owned());
-                },
+                }
                 LinkLocation::Url(url) => {
                     if !validate_href(url, false) {
                         return Err(parser.make_warn(ParseWarningKind::RuleFailed));
                     }
-                },
+                }
                 _ => return Err(parser.make_warn(ParseWarningKind::CrossSiteRef)),
             }
             (Some(location), link_target)
         }
-        None => (None, None)
+        None => (None, None),
     };
     let alignment = FloatAlignment::parse(name);
 

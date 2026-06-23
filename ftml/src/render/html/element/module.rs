@@ -18,19 +18,23 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use std::borrow::Cow;
 use super::prelude::*;
 use crate::tree::Module;
+use std::borrow::Cow;
 
 pub fn render_module(ctx: &mut HtmlContext, module: &Module) {
     info!("Rendering module {}", module.name());
 
     if ctx.settings().no_modules {
-        return
+        return;
     }
 
     let rendered: Cow<str> = {
-        let v = ctx.callbacks().render_module(module.name().to_owned(), module.params().to_owned(), module.text().to_owned());
+        let v = ctx.callbacks().render_module(
+            module.name().to_owned(),
+            module.params().to_owned(),
+            module.text().to_owned(),
+        );
         v
     };
     str_write!(ctx.buffer(), "{}", rendered);

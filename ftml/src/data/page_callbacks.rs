@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Formatter, Result};
 use wikidot_normalize::normalize;
 
-use super::PageRef;
 use super::page_info::PartialPageInfo;
+use super::PageRef;
 
 #[derive(Debug)]
 pub enum ExpressionResult<'t> {
@@ -22,18 +22,26 @@ impl<'t> ToString for ExpressionResult<'t> {
             ExpressionResult::Bool(v) => v.to_string(),
             ExpressionResult::Float(v) => v.to_string(),
             ExpressionResult::Int(v) => v.to_string(),
-            ExpressionResult::None => String::new()
+            ExpressionResult::None => String::new(),
         }
     }
 }
 
 pub trait PageCallbacks: Debug {
     fn module_has_body(&self, module_name: Cow<str>) -> bool;
-    fn render_module<'a>(&self, module_name: Cow<str>, params: HashMap<Cow<str>, Cow<str>>, body: Cow<str>) -> Cow<'static, str>;
+    fn render_module<'a>(
+        &self,
+        module_name: Cow<str>,
+        params: HashMap<Cow<str>, Cow<str>>,
+        body: Cow<str>,
+    ) -> Cow<'static, str>;
     fn render_user<'a>(&self, user: Cow<str>, avatar: bool) -> Cow<'static, str>;
     fn get_i18n_message<'a>(&self, message_id: Cow<str>) -> Cow<'static, str>;
     fn get_html_injected_code<'a>(&self, html_id: Cow<str>) -> Cow<'static, str>;
-    fn get_page_info<'a>(&self, page_refs: &Vec<PageRef<'a>>) -> Vec<PartialPageInfo<'static>>;
+    fn get_page_info<'a>(
+        &self,
+        page_refs: &Vec<PageRef<'a>>,
+    ) -> Vec<PartialPageInfo<'static>>;
     fn evaluate_expression<'a>(&self, expression: Cow<str>) -> ExpressionResult<'static>;
     fn normalize_page_name<'a>(&self, full_name: Cow<str>) -> Cow<'static, str>;
 }
@@ -42,10 +50,15 @@ pub struct NullPageCallbacks {}
 
 impl PageCallbacks for NullPageCallbacks {
     fn module_has_body(&self, _module_name: Cow<str>) -> bool {
-        return false
+        return false;
     }
 
-    fn render_module<'a>(&self, module_name: Cow<str>, _params: HashMap<Cow<str>, Cow<str>>, _body: Cow<str>) -> Cow<'static, str> {
+    fn render_module<'a>(
+        &self,
+        module_name: Cow<str>,
+        _params: HashMap<Cow<str>, Cow<str>>,
+        _body: Cow<str>,
+    ) -> Cow<'static, str> {
         return Cow::from(format!("NullModule[{module_name}]"));
     }
 
@@ -79,11 +92,24 @@ impl PageCallbacks for NullPageCallbacks {
         cow!("")
     }
 
-    fn get_page_info<'a>(&self, page_refs: &Vec<PageRef<'a>>) -> Vec<PartialPageInfo<'static>> {
-        return page_refs.iter().map(|x| PartialPageInfo{page_ref: x.to_owned(), exists: false, title: None}).collect()
+    fn get_page_info<'a>(
+        &self,
+        page_refs: &Vec<PageRef<'a>>,
+    ) -> Vec<PartialPageInfo<'static>> {
+        return page_refs
+            .iter()
+            .map(|x| PartialPageInfo {
+                page_ref: x.to_owned(),
+                exists: false,
+                title: None,
+            })
+            .collect();
     }
 
-    fn evaluate_expression<'a>(&self, _expression: Cow<str>) -> ExpressionResult<'static> {
+    fn evaluate_expression<'a>(
+        &self,
+        _expression: Cow<str>,
+    ) -> ExpressionResult<'static> {
         ExpressionResult::None
     }
 

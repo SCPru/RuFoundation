@@ -35,11 +35,11 @@ pub mod html;
 
 mod handle;
 
-use std::rc::Rc;
 use self::handle::Handle;
 use crate::data::{PageCallbacks, PageInfo};
 use crate::settings::WikitextSettings;
 use crate::tree::SyntaxTree;
+use std::rc::Rc;
 
 /// Abstract trait for any ftml renderer.
 ///

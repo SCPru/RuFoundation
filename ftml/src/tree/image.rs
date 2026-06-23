@@ -19,7 +19,7 @@
  */
 
 use super::clone::string_to_owned;
-use crate::url::{validate_href, is_known_scheme};
+use crate::url::{is_known_scheme, validate_href};
 use std::borrow::Cow;
 use strum_macros::IntoStaticStr;
 
@@ -62,7 +62,7 @@ impl<'t> ImageSource<'t> {
                     return Some(ImageSource::Url(cow!(source)));
                 }
                 return None;
-            },
+            }
         };
 
         Some(source)

@@ -24,12 +24,12 @@ use std::num::NonZeroU32;
 use ref_map::*;
 
 use crate::data::PageRef;
+use crate::tree::clone::*;
 use crate::tree::{
     Alignment, AnchorTarget, AttributeMap, ClearFloat, Container, Date,
-    DefinitionListItem, FloatAlignment, ImageSource, LinkLabel, LinkLocation,
-    LinkType, ListItem, ListType, Module, PartialElement, Tab, Table, VariableMap, FormInput
+    DefinitionListItem, FloatAlignment, FormInput, ImageSource, LinkLabel, LinkLocation,
+    LinkType, ListItem, ListType, Module, PartialElement, Tab, Table, VariableMap,
 };
-use crate::tree::clone::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case", tag = "element", content = "data")]
@@ -40,7 +40,7 @@ pub enum Element<'t> {
     Container(Container<'t>),
 
     /// Paragraph text alignment marker.
-    /// 
+    ///
     /// This happens in the beginning of a <p> and sets it's text-align.
     AlignMarker(Alignment),
 
@@ -64,7 +64,7 @@ pub enum Element<'t> {
     Raw(Cow<'t, str>),
 
     /// HTML entity.
-    /// 
+    ///
     /// This is produced by a @< >@ raw tag.
     HtmlEntity(Cow<'t, str>),
 
@@ -225,7 +225,9 @@ pub enum Element<'t> {
 
     /// Element containing inline math.
     #[serde(rename_all = "kebab-case")]
-    MathInline { latex_source: Cow<'t, str> },
+    MathInline {
+        latex_source: Cow<'t, str>,
+    },
 
     /// Element referring to an equation elsewhere in the page.
     EquationReference(Cow<'t, str>),
@@ -268,7 +270,7 @@ pub enum Element<'t> {
     HorizontalRule,
 
     /// A fragment.
-    /// 
+    ///
     /// This allows returning many elements as one.
     /// Other than being a hack, it's very similar to Element::Elements, but on a different level.
     /// You should return Elements whenever possible.
@@ -394,7 +396,7 @@ impl Element<'_> {
             Element::HorizontalRule => false,
             Element::Partial(_) => {
                 panic!("Should not check for paragraph safety of partials")
-            },
+            }
             Element::Void => false,
         }
     }
@@ -527,7 +529,7 @@ impl Element<'_> {
             }
             Element::Html { contents, external } => Element::Html {
                 contents: string_to_owned(contents),
-                external: *external
+                external: *external,
             },
             Element::Iframe { url, attributes } => Element::Iframe {
                 url: string_to_owned(url),

@@ -89,11 +89,10 @@ fn parse_fn<'r, 't>(
         None,
     )?;
 
-    let cond_matched =     
-    match name.splitn(2, ':').next().unwrap_or("") {
+    let cond_matched = match name.splitn(2, ':').next().unwrap_or("") {
         "#if" => evaluate_if(parser, condition),
         "#ifexpr" => evaluate_ifexpr(parser, condition),
-        _ => unreachable!()
+        _ => unreachable!(),
     };
 
     let parser_tx = &mut parser.transaction(ParserTransactionFlags::all());
@@ -102,12 +101,19 @@ fn parse_fn<'r, 't>(
         parser_tx,
         rule,
         &[],
-        &[ParseCondition::current(Token::RightBlock), ParseCondition::current(Token::Pipe)],
+        &[
+            ParseCondition::current(Token::RightBlock),
+            ParseCondition::current(Token::Pipe),
+        ],
         &[],
-        None
+        None,
     )?;
 
-    let truthy = ParseSuccess::new(truthy_raw.item.0, truthy_raw.exceptions, truthy_raw.paragraph_safe);
+    let truthy = ParseSuccess::new(
+        truthy_raw.item.0,
+        truthy_raw.exceptions,
+        truthy_raw.paragraph_safe,
+    );
 
     if no_conditionals || cond_matched {
         parser_tx.commit();
@@ -124,10 +130,10 @@ fn parse_fn<'r, 't>(
             &[],
             &[ParseCondition::current(Token::RightBlock)],
             &[],
-            None
+            None,
         )?,
         Token::RightBlock => ParseSuccess::new(vec![], vec![], true),
-        _ => return Err(falsey_tx.make_warn(ParseWarningKind::RuleFailed))
+        _ => return Err(falsey_tx.make_warn(ParseWarningKind::RuleFailed)),
     };
 
     if no_conditionals || !cond_matched {
@@ -136,7 +142,7 @@ fn parse_fn<'r, 't>(
         falsey_tx.rollback();
     }
 
-    // evaluate right away; 
+    // evaluate right away;
     if no_conditionals {
         ok!(truthy.paragraph_safe && falsey.paragraph_safe; [truthy.item, falsey.item].concat(), [truthy.exceptions, falsey.exceptions].concat())
     } else {
@@ -176,7 +182,11 @@ fn parse_ifexpr_with_body<'r, 't>(
     parse_with_body(parser, name, &BLOCK_IFEXPR_WITH_BODY)
 }
 
-fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &BlockRule) -> ParseResult<'r, 't, Elements<'t>> {
+fn parse_with_body<'r, 't>(
+    parser: &mut Parser<'r, 't>,
+    name: &'t str,
+    rule: &BlockRule,
+) -> ParseResult<'r, 't, Elements<'t>> {
     // syntax: [[if|ifexpr condition]]truthy nodes[[else]]falsey nodes[[/if|ifexpr]]
 
     let condition = collect_text(
@@ -188,21 +198,20 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
         None,
     )?;
 
-    let cond_matched =     
-        match name.splitn(2, ':').next().unwrap_or("") {
-            "if" => evaluate_if(parser, condition),
-            "ifexpr" => evaluate_ifexpr(parser, condition),
-            _ => unreachable!()
-        };
+    let cond_matched = match name.splitn(2, ':').next().unwrap_or("") {
+        "if" => evaluate_if(parser, condition),
+        "ifexpr" => evaluate_ifexpr(parser, condition),
+        _ => unreachable!(),
+    };
 
     let no_conditionals = parser.settings().no_conditionals;
     let parser_tx = &mut parser.transaction(ParserTransactionFlags::all());
 
     // Get body content, never with paragraphs
-    let (truthy, truthy_exceptions, _) =
-        parser_tx.get_body_elements_with_custom_stop(rule, name, false, |parser| {
+    let (truthy, truthy_exceptions, _) = parser_tx
+        .get_body_elements_with_custom_stop(rule, name, false, |parser| {
             // check for presence of "else"
-            
+
             let found_else = parser.save_evaluate_fn(|parser| {
                 let (name, _) = parser.get_block_name(false)?;
 
@@ -214,11 +223,12 @@ fn parse_with_body<'r, 't>(parser: &mut Parser<'r, 't>, name: &'t str, rule: &Bl
             });
 
             found_else.is_some()
-        })?.into();
+        })?
+        .into();
 
-    let has_else = truthy_exceptions.iter().any(|exc| {
-        match exc {
-            ParseException::Warning(warning) => warning.kind() == ParseWarningKind::ManualBreak
+    let has_else = truthy_exceptions.iter().any(|exc| match exc {
+        ParseException::Warning(warning) => {
+            warning.kind() == ParseWarningKind::ManualBreak
         }
     });
 
@@ -286,7 +296,10 @@ fn parse_expr<'r, 't>(
 fn evaluate_if<'r, 't>(_parser: &mut Parser<'r, 't>, expr: &str) -> bool {
     let mut expr = expr.trim().to_ascii_lowercase();
     _parser.replace_variables(&mut expr);
-    !(expr == "false" || expr == "null" || (expr.starts_with("{$") && expr.ends_with('}')) || (expr.starts_with("%%") && expr.ends_with("%%")))
+    !(expr == "false"
+        || expr == "null"
+        || (expr.starts_with("{$") && expr.ends_with('}'))
+        || (expr.starts_with("%%") && expr.ends_with("%%")))
 }
 
 fn evaluate_ifexpr<'r, 't>(parser: &mut Parser<'t, 't>, expr: &str) -> bool {
@@ -298,10 +311,13 @@ fn evaluate_ifexpr<'r, 't>(parser: &mut Parser<'t, 't>, expr: &str) -> bool {
         ExpressionResult::Int(i) => i != 0,
         ExpressionResult::Float(f) => f != 0.0,
         ExpressionResult::String(s) => s != "",
-        ExpressionResult::None => false
+        ExpressionResult::None => false,
     }
 }
 
-fn evaluate_expr<'r, 't>(parser: &mut Parser<'r, 't>, expr: &str) -> ExpressionResult<'static> {
+fn evaluate_expr<'r, 't>(
+    parser: &mut Parser<'r, 't>,
+    expr: &str,
+) -> ExpressionResult<'static> {
     parser.page_callbacks().evaluate_expression(Cow::from(expr))
 }

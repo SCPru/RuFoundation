@@ -20,9 +20,9 @@
 
 //! A simple renderer that outputs the `SyntaxTree` using Rust's debug formatter.
 
-use std::rc::Rc;
-use crate::data::PageCallbacks;
 use super::prelude::*;
+use crate::data::PageCallbacks;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct DebugRender;
@@ -39,6 +39,9 @@ impl Render for DebugRender {
         settings: &WikitextSettings,
     ) -> String {
         info!("Running debug logger on syntax tree");
-        format!("{:#?}\n{:#?}\n{:#?}\n{:#?}", settings, page_info, page_callbacks, tree)
+        format!(
+            "{:#?}\n{:#?}\n{:#?}\n{:#?}",
+            settings, page_info, page_callbacks, tree
+        )
     }
 }

@@ -53,7 +53,7 @@ fn parse_fn<'r, 't>(
 
     let element = Element::Html {
         contents: html,
-        external
+        external,
     };
 
     ok!(element)

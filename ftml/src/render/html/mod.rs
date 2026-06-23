@@ -29,9 +29,9 @@ mod output;
 mod random;
 mod render;
 
-use std::rc::Rc;
 pub use self::meta::{HtmlMeta, HtmlMetaType};
 pub use self::output::HtmlOutput;
+use std::rc::Rc;
 
 use self::context::HtmlContext;
 use crate::data::{PageCallbacks, PageInfo};

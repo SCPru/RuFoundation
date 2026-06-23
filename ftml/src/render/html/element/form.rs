@@ -23,6 +23,6 @@ use crate::tree::FormInput;
 
 pub fn render_form_input(ctx: &mut HtmlContext, input: &FormInput) {
     info!("Rendering form input");
- 
+
     ctx.html().input().attr(attr!(;; input.attributes));
 }

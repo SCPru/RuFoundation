@@ -35,7 +35,7 @@ fn block_regular<'r, 't>(
     parser: &mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     if !parser.settings().enable_block_elements {
-        return Err(parser.make_warn(ParseWarningKind::NoRulesMatch))
+        return Err(parser.make_warn(ParseWarningKind::NoRulesMatch));
     }
 
     info!("Trying to process a block");
@@ -55,8 +55,8 @@ where
         Token::BulletItem => {
             parser.step()?;
             true
-        },
-        _ => false
+        }
+        _ => false,
     };
 
     info!("Trying to process a block (star {flag_star})");
@@ -107,7 +107,7 @@ where
     // then processing the body (if any) and tail block.
     let parser = &mut parser.transaction(ParserTransactionFlags::AcceptsPartial);
     parser.set_accepts_partial(block.accepts_partial);
-    
+
     let result = (block.parse_fn)(parser, full_name, flag_star, flag_score, in_head)?;
 
     // If this is an underline block, skip whitespace to next element. This is what Wikidot does.

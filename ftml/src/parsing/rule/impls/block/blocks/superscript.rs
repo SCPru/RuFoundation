@@ -45,8 +45,9 @@ fn parse_fn<'r, 't>(
     let arguments = parser.get_head_map(&BLOCK_SUPERSCRIPT, in_head)?;
 
     // Get body content, without paragraphs
-    let (elements, exceptions, paragraph_safe) =
-        parser.get_body_elements(&BLOCK_SUPERSCRIPT, name, false)?.into();
+    let (elements, exceptions, paragraph_safe) = parser
+        .get_body_elements(&BLOCK_SUPERSCRIPT, name, false)?
+        .into();
 
     let element = Element::Container(Container::new(
         ContainerType::Superscript,

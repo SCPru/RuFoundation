@@ -22,7 +22,8 @@
 
 use super::TextContext;
 use crate::tree::{
-    ContainerType, DefinitionListItem, Element, LinkLocation, ListItem, ListType, Tab, FormInput
+    ContainerType, DefinitionListItem, Element, FormInput, LinkLocation, ListItem,
+    ListType, Tab,
 };
 use crate::url::normalize_link;
 use std::borrow::Cow;
@@ -40,7 +41,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
 
     match element {
         Element::Fragment(elements) => render_elements(ctx, elements),
-        Element::AlignMarker(_) => {},
+        Element::AlignMarker(_) => {}
         Element::Container(container) => {
             let mut invisible = false;
             let (add_newlines, prefix) = match container.ctype() {
@@ -60,9 +61,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                 // Also, determine if we add a prefix.
                 ContainerType::Div | ContainerType::Paragraph => (true, None),
                 ContainerType::Blockquote => (true, Some("    ")),
-                ContainerType::Header(_heading) => {
-                    (true, None)
-                }
+                ContainerType::Header(_heading) => (true, None),
 
                 // Wrap any ruby text with parentheses
                 ContainerType::RubyText => {
@@ -161,12 +160,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                 ctx.add_newline();
             }
         }
-        Element::Anchor {
-            elements,
-            ..
-        } => {
-            render_elements(ctx, elements)
-        }
+        Element::Anchor { elements, .. } => render_elements(ctx, elements),
         Element::AnchorName(_) => {
             // Anchor names are an invisible addition to the HTML
             // to aid navigation. So in text mode, they are ignored.
@@ -182,7 +176,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
 
             ctx.push_str(&label)
         }
-        Element::Image {..} => {
+        Element::Image { .. } => {
             // do not render images, they are not text.
         }
         Element::List { ltype, items, .. } => {
@@ -192,7 +186,9 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
 
             for item in items {
                 match item {
-                    ListItem::Elements { elements, hidden, .. } => {
+                    ListItem::Elements {
+                        elements, hidden, ..
+                    } => {
                         // Don't do anything if it's empty
                         if elements.is_empty() {
                             continue;
@@ -249,15 +245,14 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             show_bottom,
             ..
         } => {
-
             let show_text = match show_text {
                 Some(s) => String::from(s.as_ref()),
-                _ => ctx.handle().get_message("collapsible-open")
+                _ => ctx.handle().get_message("collapsible-open"),
             };
-        
+
             let hide_text = match hide_text {
                 Some(s) => String::from(s.as_ref()),
-                _ => ctx.handle().get_message("collapsible-hide")
+                _ => ctx.handle().get_message("collapsible-hide"),
             };
 
             // Top of collapsible
@@ -280,15 +275,13 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
                 ctx.add_newline();
             }
         }
-        Element::FormInput(FormInput{ .. }) => {
+        Element::FormInput(FormInput { .. }) => {
             // forms are not rendered
         }
         Element::TableOfContents { .. } => {
             info!("Rendering table of contents");
 
-            let table_of_contents_title = ctx
-                .handle()
-                .get_message("table-of-contents");
+            let table_of_contents_title = ctx.handle().get_message("table-of-contents");
 
             ctx.add_newline();
             ctx.push_str(&table_of_contents_title);
@@ -313,9 +306,7 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             let title = match title {
                 Some(title) => String::from(title.as_ref()),
                 None => {
-                    title_default = ctx
-                        .handle()
-                        .get_message("footnote-block-title");
+                    title_default = ctx.handle().get_message("footnote-block-title");
 
                     title_default
                 }
@@ -335,7 +326,11 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
         }
         Element::User { name, .. } => ctx.push_str(name),
         Element::Date { value, .. } => {
-            str_write!(ctx, "{}", value.format(Some((*value).default_format_string())));
+            str_write!(
+                ctx,
+                "{}",
+                value.format(Some((*value).default_format_string()))
+            );
         }
         Element::Color { elements, .. } => render_elements(ctx, elements),
         Element::Code { contents, .. } => {
@@ -352,15 +347,16 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
         Element::EquationReference(_name) => {
             // math is not supported in text
         }
-        Element::Html { contents, external: _ } => {
+        Element::Html {
+            contents,
+            external: _,
+        } => {
             str_write!(ctx, "\n{contents}\n");
         }
         Element::Iframe { .. } => {
             // iframes are not supported in text
-        },
-        Element::Include {
-            ..
-        } => {
+        }
+        Element::Include { .. } => {
             // include is not supported in text
         }
         Element::LineBreak => ctx.add_newline(),
@@ -376,6 +372,6 @@ pub fn render_element(ctx: &mut TextContext, element: &Element) {
             // noop visual element
         }
         Element::Partial(_) => panic!("Encountered partial element during parsing"),
-        Element::Void => {},
+        Element::Void => {}
     }
 }

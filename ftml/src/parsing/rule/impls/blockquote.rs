@@ -40,7 +40,7 @@ fn try_consume_fn<'p, 'r, 't>(
     loop {
         match parser.current().token {
             Token::Quote => {}
-            _ => break
+            _ => break,
         }
         // read all tokens until newline.
         // after that, append the newline to tokens as well
@@ -53,12 +53,12 @@ fn try_consume_fn<'p, 'r, 't>(
             Token::LineBreak => {
                 tokens.push(parser.current().clone());
                 parser.step()?;
-                continue
+                continue;
             }
             Token::ParagraphBreak => {
                 tokens.push(parser.current().clone());
                 parser.step()?;
-                break
+                break;
             }
             _ => {}
         }
@@ -69,7 +69,7 @@ fn try_consume_fn<'p, 'r, 't>(
                 Token::LineBreak => {
                     tokens.push(parser.current().clone());
                     parser.step()?;
-                    break
+                    break;
                 }
                 Token::InputEnd | Token::ParagraphBreak => break,
                 _ => {}

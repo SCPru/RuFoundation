@@ -123,14 +123,13 @@ fn try_consume_fn<'p, 'r, 't>(
             _ => true,
         };
 
-        let mut elements =
-            collected_result
-                .map(|success| success.0)
-                .chain(&mut exceptions, &mut paragraph_safe);
+        let mut elements = collected_result
+            .map(|success| success.0)
+            .chain(&mut exceptions, &mut paragraph_safe);
 
         // Check if depth is empty.
         strip_whitespace(&mut elements);
-        
+
         if !elements.is_empty() {
             // Append list line
             depths.push((depth, list_type, elements));
@@ -161,38 +160,47 @@ fn build_list_element(
 ) -> Element {
     let mut items = vec![];
 
-    list.into_iter().for_each(|item| return match item {
-        DepthItem::Item(elements) => {
-            let item = ListItem::Elements {
-                hidden: false,
-                elements,
-                attributes: AttributeMap::new(),
-            };
-            items.push(item);
-        },
-        DepthItem::List(ltype, list) => {
-            let sub = build_list_element(ltype, list);
-            if items.is_empty() {
-                items.push(ListItem::Elements {
+    list.into_iter().for_each(|item| {
+        return match item {
+            DepthItem::Item(elements) => {
+                let item = ListItem::Elements {
                     hidden: false,
-                    elements: vec![],
+                    elements,
                     attributes: AttributeMap::new(),
-                });
+                };
+                items.push(item);
             }
-            match items.last_mut().unwrap() {
-                ListItem::Elements { ref mut elements, .. } => {
-                    elements.push(sub);
+            DepthItem::List(ltype, list) => {
+                let sub = build_list_element(ltype, list);
+                if items.is_empty() {
+                    items.push(ListItem::Elements {
+                        hidden: false,
+                        elements: vec![],
+                        attributes: AttributeMap::new(),
+                    });
                 }
-                _ => {}
+                match items.last_mut().unwrap() {
+                    ListItem::Elements {
+                        ref mut elements, ..
+                    } => {
+                        elements.push(sub);
+                    }
+                    _ => {}
+                }
             }
-        },
+        };
     });
 
     // if this list consists of
     let attributes = AttributeMap::new();
 
     items.iter_mut().for_each(|item| {
-        if let ListItem::Elements { ref mut hidden, elements, .. } = item {
+        if let ListItem::Elements {
+            ref mut hidden,
+            elements,
+            ..
+        } = item
+        {
             if elements.len() == 1 {
                 if let Some(Element::List { .. }) = elements.first() {
                     *hidden = true;

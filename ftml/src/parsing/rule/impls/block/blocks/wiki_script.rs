@@ -51,14 +51,13 @@ fn parse_scope<'r, 't>(
     // [[/scope]]
 
     assert_block_name(&BLOCK_SCOPE, name);
-    
+
     parser.push_scope();
 
     let arguments = parser.get_head_map(&BLOCK_SCOPE, in_head)?;
 
-    let (elements, exceptions, _) = parser
-        .get_body_elements(&BLOCK_SCOPE, name, false)?
-        .into();
+    let (elements, exceptions, _) =
+        parser.get_body_elements(&BLOCK_SCOPE, name, false)?.into();
 
     let element = Element::Container(Container::new(
         ContainerType::WSScope,
@@ -69,7 +68,6 @@ fn parse_scope<'r, 't>(
     parser.pop_scope();
 
     ok!(element, exceptions)
-
 }
 
 fn parse_var<'r, 't>(
@@ -94,16 +92,16 @@ fn parse_var<'r, 't>(
         None,
     )?;
 
-    let mut params = condition.splitn(2," ");
+    let mut params = condition.splitn(2, " ");
 
     let var_name = match params.next() {
         Some(param) => param,
-        None => ""
+        None => "",
     };
 
     let mut expr = match params.next() {
         Some(param) => Cow::Borrowed(param),
-        None => Cow::Borrowed("")
+        None => Cow::Borrowed(""),
     };
 
     if var_name == "" || expr == "" {
@@ -111,7 +109,6 @@ fn parse_var<'r, 't>(
     }
 
     parser.replace_variables(expr.to_mut());
-
 
     let value = if flag_star {
         Cow::from(evaluate_expr(parser, &expr).to_string())
@@ -128,6 +125,11 @@ fn parse_var<'r, 't>(
     ok!(Element::Void)
 }
 
-fn evaluate_expr<'r, 't>(parser: &mut Parser<'r, 't>, expr: &str) -> ExpressionResult<'static> {
-    parser.page_callbacks().evaluate_expression(Cow::Borrowed(expr))
+fn evaluate_expr<'r, 't>(
+    parser: &mut Parser<'r, 't>,
+    expr: &str,
+) -> ExpressionResult<'static> {
+    parser
+        .page_callbacks()
+        .evaluate_expression(Cow::Borrowed(expr))
 }

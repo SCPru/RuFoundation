@@ -46,8 +46,9 @@ fn parse_fn<'r, 't>(
     // Gather paragraphs
     let arguments = parser.get_head_map(&BLOCK_PARAGRAPH, in_head)?;
     let attributes = arguments.to_attribute_map(parser.settings());
-    let (mut elements, exceptions, _) =
-        parser.get_body_elements(&BLOCK_PARAGRAPH, name, true)?.into();
+    let (mut elements, exceptions, _) = parser
+        .get_body_elements(&BLOCK_PARAGRAPH, name, true)?
+        .into();
 
     // Apply attributes to each paragraph
     for element in &mut elements {

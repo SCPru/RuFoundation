@@ -34,27 +34,31 @@ pub struct Handle<'t> {
 }
 
 impl<'t> Handle<'t> {
-    pub fn new(callbacks: Rc<dyn PageCallbacks>, raw_internal_links: &Vec<PartialPageInfo<'t>>) -> Self {
+    pub fn new(
+        callbacks: Rc<dyn PageCallbacks>,
+        raw_internal_links: &Vec<PartialPageInfo<'t>>,
+    ) -> Self {
         let mut internal_links = HashMap::new();
         for info in raw_internal_links {
             internal_links.insert(info.page_ref.to_owned(), info.to_owned());
         }
 
-        Handle { callbacks, internal_links }
+        Handle {
+            callbacks,
+            internal_links,
+        }
     }
 
     pub fn get_page_title(&self, page_ref: &PageRef) -> Option<String> {
         info!("Fetching page title");
 
         match self.internal_links.get(page_ref) {
-            Some(info) => {
-                match &info.title {
-                    Some(Cow::Borrowed("")) => None,
-                    None => None,
-                    Some(title) => Some(title.to_string())
-                }
+            Some(info) => match &info.title {
+                Some(Cow::Borrowed("")) => None,
+                None => None,
+                Some(title) => Some(title.to_string()),
             },
-            None => None
+            None => None,
         }
     }
 
@@ -63,7 +67,7 @@ impl<'t> Handle<'t> {
 
         match self.internal_links.get(page_ref) {
             Some(info) => info.exists,
-            None => false
+            None => false,
         }
     }
 
@@ -77,8 +81,7 @@ impl<'t> Handle<'t> {
 
         let (site, page, file): (&str, Cow<str>, &str) = match source {
             ImageSource::Url(url) => return Some(Cow::clone(url)),
-            ImageSource::File1 { .. }
-            | ImageSource::File2 { .. }
+            ImageSource::File1 { .. } | ImageSource::File2 { .. }
                 if !settings.allow_local_paths =>
             {
                 warn!("Specified path image source when local paths are disabled");
@@ -92,7 +95,10 @@ impl<'t> Handle<'t> {
         if info.site != site {
             None
         } else {
-            Some(Cow::Owned(format!("//{}/local--files/{page}/{file}", &info.media_domain)))
+            Some(Cow::Owned(format!(
+                "//{}/local--files/{page}/{file}",
+                &info.media_domain
+            )))
         }
     }
 
@@ -103,15 +109,15 @@ impl<'t> Handle<'t> {
         info: &PageInfo,
     ) -> Cow<'a, str> {
         info!("Getting file link for iframe");
-        Cow::Owned(format!("//{}/local--html/{}/{hash}-{id}", &info.media_domain, &info.full_name()))
+        Cow::Owned(format!(
+            "//{}/local--html/{}/{hash}-{id}",
+            &info.media_domain,
+            &info.full_name()
+        ))
     }
 
-    pub fn get_link_label<F>(
-        &self,
-        link: &LinkLocation,
-        label: &LinkLabel,
-        f: F,
-    ) where
+    pub fn get_link_label<F>(&self, link: &LinkLocation, label: &LinkLabel, f: F)
+    where
         F: FnOnce(&str),
     {
         let page_title;
@@ -120,12 +126,12 @@ impl<'t> Handle<'t> {
             LinkLabel::Url(Some(ref text)) => Cow::from(text.as_ref()),
             LinkLabel::Url(None) => match link {
                 LinkLocation::Url(url) => Cow::from(url.as_ref()),
-                LinkLocation::Page(page_ref, _) => Cow::from(page_ref.to_string().to_owned()),
+                LinkLocation::Page(page_ref, _) => {
+                    Cow::from(page_ref.to_string().to_owned())
+                }
             },
             LinkLabel::Page => match link {
-                LinkLocation::Url(url) => {
-                    Cow::from(url.as_ref())
-                }
+                LinkLocation::Url(url) => Cow::from(url.as_ref()),
                 LinkLocation::Page(page_ref, _) => {
                     page_title = match self.get_page_title(page_ref) {
                         Some(title) if !title.trim().is_empty() => title,
@@ -141,11 +147,17 @@ impl<'t> Handle<'t> {
     }
 
     pub fn get_message(&self, message: &str) -> String {
-        self.callbacks.get_i18n_message(Cow::from(message)).as_ref().to_owned()
+        self.callbacks
+            .get_i18n_message(Cow::from(message))
+            .as_ref()
+            .to_owned()
     }
 
     pub fn get_html_injected_code(&self, html_id: &str) -> String {
-        self.callbacks.get_html_injected_code(Cow::from(html_id)).as_ref().to_owned()
+        self.callbacks
+            .get_html_injected_code(Cow::from(html_id))
+            .as_ref()
+            .to_owned()
     }
 }
 
