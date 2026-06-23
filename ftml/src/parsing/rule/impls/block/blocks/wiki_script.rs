@@ -83,6 +83,7 @@ fn parse_var<'r, 't>(
     // syntax: [[declare name value]]
     //         [[set name value]]
 
+    let at_start_of_line = parser.start_of_line();
     let condition = collect_text(
         parser,
         parser.rule(),
@@ -118,9 +119,21 @@ fn parse_var<'r, 't>(
 
     parser.push_variable(Cow::Borrowed(var_name), value.clone(), name == "declare");
 
-    let transaction = &mut parser.transaction(ParserTransactionFlags::Scopes);
+    {
+        let transaction = &mut parser.transaction(ParserTransactionFlags::Scopes);
+        transaction.commit();
+    }
 
-    transaction.commit();
+    // Standalone WikiScript assignments are structural and render no output.
+    // The following newline should not become a visible <br>.
+    if at_start_of_line
+        && matches!(
+            parser.current().token,
+            Token::LineBreak | Token::ParagraphBreak
+        )
+    {
+        parser.get_optional_token(parser.current().token)?;
+    }
 
     ok!(Element::Void)
 }

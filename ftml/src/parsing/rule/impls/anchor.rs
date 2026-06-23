@@ -25,6 +25,8 @@
 //! `<a id="name-of-anchor">` anchor that can be jumped to.
 
 use super::prelude::*;
+use crate::id_prefix::isolate_ids;
+use std::borrow::Cow;
 
 pub const RULE_ANCHOR: Rule = Rule {
     name: "anchor",
@@ -36,6 +38,8 @@ fn try_consume_fn<'p, 'r, 't>(
     parser: &'p mut Parser<'r, 't>,
 ) -> ParseResult<'r, 't, Elements<'t>> {
     info!("Trying to create a named anchor");
+    let at_start_of_line = parser.start_of_line();
+
     check_step(parser, Token::LeftBlock, ParseWarningKind::RuleFailed)?;
     check_step(parser, Token::NumberedItem, ParseWarningKind::RuleFailed)?;
 
@@ -57,8 +61,23 @@ fn try_consume_fn<'p, 'r, 't>(
     )?;
 
     // Isolate ID if requested
-    let name = cow!(name);
+    let name = if parser.settings().isolate_user_ids {
+        Cow::Owned(isolate_ids(name))
+    } else {
+        cow!(name)
+    };
+
+    // A standalone anchor is structural, so it should not leave a visible <br>
+    // or get wrapped in an otherwise empty paragraph.
+    let standalone = at_start_of_line
+        && matches!(
+            parser.current().token,
+            Token::LineBreak | Token::ParagraphBreak
+        );
+    if standalone {
+        parser.get_optional_token(parser.current().token)?;
+    }
 
     // Build and return link element
-    ok!(Element::AnchorName(name))
+    ok!(!standalone; Element::AnchorName(name))
 }
