@@ -478,10 +478,12 @@
 .thread-container .post .long .options.w-forum-post-options .forum-reactions {
   position: static;
   text-align: left;
+  clear: unset !important;
 }
 
 .forum-reaction-list {
   display: block;
+  clear: unset !important;
 }
 
 .forum-reaction-chip {
