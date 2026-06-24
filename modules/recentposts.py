@@ -14,6 +14,7 @@ from renderer import RenderContext, render_template_from_string, render_user_to_
 from renderer.utils import render_vote_to_html
 
 from web.controllers import articles
+from web.controllers import forum_reactions
 from web.models.articles import Vote
 from web.models.users import User
 from web.models.forum import ForumCategory, ForumSection, ForumPost
@@ -38,7 +39,9 @@ def highlight_mentions(text: str, usernames: set[str]) -> str:
 
 
 def get_post_info(context, posts, category_for_comments, usernames: set[str]=set()):
+    posts = list(posts)
     post_contents = get_post_contents(posts)
+    reaction_context = forum_reactions.build_reaction_context(posts, context.user)
     post_info = []
 
     for post in posts:
@@ -58,6 +61,18 @@ def get_post_info(context, posts, category_for_comments, usernames: set[str]=set
             renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user), 'message'),
             usernames
         )
+        reaction_state = forum_reactions.serialize_post_reaction_state(post, context.user, reaction_context)
+        reactions = []
+        for summary in reaction_state['reactions']:
+            reaction = summary['reaction']
+            name = reaction.get('name') or ''
+            reactions.append({
+                'name': name,
+                'image_url': reaction.get('imageUrl'),
+                'fallback': name[:1] or '?',
+                'count': summary['count'],
+                'is_inactive': not reaction.get('isActive'),
+            })
         render_post = {
             'id': post.id,
             'name': post.name.strip() or 'Перейти к сообщению',
@@ -66,6 +81,7 @@ def get_post_info(context, posts, category_for_comments, usernames: set[str]=set
             'author_rate': author_vote,
             'created_at': render_date(post.created_at),
             'content': content,
+            'reactions': reactions,
             'url': '%s#post-%d' % (thread_url, post.id),
             'category': {
                 'id': post.thread.category.id,
@@ -220,6 +236,22 @@ def render(context: RenderContext, params):
                                 <div class="content">
                                     {{ post.content }}
                                 </div>
+                                {% if post.reactions %}
+                                <div class="forum-reactions forum-reactions-static" aria-label="Реакции к сообщению">
+                                    <div class="forum-reaction-list">
+                                        {% for reaction in post.reactions %}
+                                        <span class="forum-reaction-chip forum-reaction-chip-static {% if reaction.is_inactive %}is-inactive{% endif %}" title="{{ reaction.name }}: {{ reaction.count }}">
+                                            {% if reaction.image_url %}
+                                                <img class="forum-reaction-chip-image" src="{{ reaction.image_url }}" alt="{{ reaction.name }}">
+                                            {% else %}
+                                                <span class="forum-reaction-chip-image forum-reaction-image-fallback">{{ reaction.fallback }}</span>
+                                            {% endif %}
+                                            <span class="forum-reaction-chip-count">{{ reaction.count }}</span>
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

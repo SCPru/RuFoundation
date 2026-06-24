@@ -222,13 +222,22 @@ export function makeForumThread(node: HTMLElement) {
     return null
   }
 
-  const loadInfinitePage = async (page: number) => {
-    if (isInfiniteLoading || loadedPages.has(page) || page > maxPage) {
+  const getPreviousInfinitePage = () => {
+    for (let page = Math.min(...Array.from(loadedPages)) - 1; page >= 1; page--) {
+      if (!loadedPages.has(page)) {
+        return page
+      }
+    }
+    return null
+  }
+
+  const loadInfinitePage = async (page: number, direction: 'append' | 'prepend') => {
+    if (isInfiniteLoading || loadedPages.has(page) || page < 1 || page > maxPage) {
       return
     }
 
     isInfiniteLoading = true
-    const sentinel = node.querySelector(':scope > .forum-infinite-sentinel') as HTMLElement | null
+    const sentinel = node.querySelector(`:scope > .forum-infinite-sentinel[data-direction="${direction}"]`) as HTMLElement | null
     sentinel?.classList.add('is-loading')
     if (sentinel) {
       renderTo(sentinel, <Loader size={36} borderSize={4} />)
@@ -244,7 +253,19 @@ export function makeForumThread(node: HTMLElement) {
       const newPosts = newPostsRoot ? Array.from(newPostsRoot.children).filter(child => !child.classList.contains('pager')) : []
 
       if (postsRoot && newPosts.length) {
-        newPosts.forEach(post => postsRoot.appendChild(post))
+        const scrollAnchor = direction === 'prepend' ? (postsRoot.firstElementChild as HTMLElement | null) : null
+        const anchorTop = scrollAnchor?.getBoundingClientRect().top ?? 0
+
+        if (direction === 'prepend') {
+          const fragment = document.createDocumentFragment()
+          newPosts.forEach(post => fragment.appendChild(post))
+          postsRoot.insertBefore(fragment, postsRoot.firstChild)
+          if (scrollAnchor) {
+            window.scrollBy({ top: scrollAnchor.getBoundingClientRect().top - anchorTop, behavior: 'auto' })
+          }
+        } else {
+          newPosts.forEach(post => postsRoot.appendChild(post))
+        }
         animateInsertedPosts(newPosts)
       }
     } catch (e) {
@@ -359,31 +380,50 @@ export function makeForumThread(node: HTMLElement) {
 
     renderDateRail()
 
-    const nextPage = getNextInfinitePage()
-    if (!nextPage) {
-      return
+    const postsRoot = node.querySelector('#thread-container-posts')
+    const previousPage = getPreviousInfinitePage()
+    if (previousPage && postsRoot) {
+      const sentinel = document.createElement('button')
+      sentinel.className = 'forum-infinite-sentinel is-before'
+      sentinel.dataset.direction = 'prepend'
+      sentinel.type = 'button'
+      sentinel.innerHTML = '<span>Загрузить предыдущие</span>'
+      sentinel.addEventListener('click', e => {
+        e.preventDefault()
+        loadInfinitePage(previousPage, 'prepend')
+      })
+      node.insertBefore(sentinel, postsRoot)
     }
 
-    const sentinel = document.createElement('button')
-    sentinel.className = 'forum-infinite-sentinel'
-    sentinel.type = 'button'
-    sentinel.innerHTML = '<span>Загрузить ещё</span>'
-    sentinel.addEventListener('click', e => {
-      e.preventDefault()
-      loadInfinitePage(nextPage)
-    })
-    node.appendChild(sentinel)
+    const nextPage = getNextInfinitePage()
+    if (nextPage) {
+      const sentinel = document.createElement('button')
+      sentinel.className = 'forum-infinite-sentinel is-after'
+      sentinel.dataset.direction = 'append'
+      sentinel.type = 'button'
+      sentinel.innerHTML = '<span>Загрузить ещё</span>'
+      sentinel.addEventListener('click', e => {
+        e.preventDefault()
+        loadInfinitePage(nextPage, 'append')
+      })
+      node.appendChild(sentinel)
+    }
 
     if ('IntersectionObserver' in window) {
       infiniteObserver = new IntersectionObserver(
         entries => {
-          if (entries.some(entry => entry.isIntersecting)) {
-            loadInfinitePage(nextPage)
+          const visibleEntry = entries.find(entry => entry.isIntersecting)
+          const direction = (visibleEntry?.target as HTMLElement | undefined)?.dataset.direction
+          if (direction === 'prepend' && previousPage) {
+            loadInfinitePage(previousPage, 'prepend')
+          }
+          if (direction === 'append' && nextPage) {
+            loadInfinitePage(nextPage, 'append')
           }
         },
         { rootMargin: '420px 0px' },
       )
-      infiniteObserver.observe(sentinel)
+      node.querySelectorAll(':scope > .forum-infinite-sentinel').forEach(sentinel => infiniteObserver?.observe(sentinel))
     }
   }
 

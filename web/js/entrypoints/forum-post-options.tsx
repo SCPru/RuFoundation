@@ -58,6 +58,47 @@ function navigateToForumPost(url: string) {
   }
 }
 
+function fitFloatingElementToViewport(element?: HTMLElement | null) {
+  if (!element) {
+    return
+  }
+
+  const margin = 8
+  const anchor = element.parentElement
+  const viewportWidth = document.documentElement.clientWidth
+  const viewportHeight = document.documentElement.clientHeight
+  const anchorRect = anchor?.getBoundingClientRect()
+
+  element.classList.remove('is-above')
+  element.style.removeProperty('--forum-popup-shift-x')
+  element.style.removeProperty('max-height')
+  element.style.removeProperty('overflow-y')
+
+  let rect = element.getBoundingClientRect()
+  const availableBelow = viewportHeight - (anchorRect?.bottom ?? rect.top) - margin
+  const availableAbove = (anchorRect?.top ?? rect.top) - margin
+  if (rect.bottom > viewportHeight - margin && availableAbove > availableBelow) {
+    element.classList.add('is-above')
+    rect = element.getBoundingClientRect()
+  }
+
+  const availableVerticalSpace = element.classList.contains('is-above') ? availableAbove : availableBelow
+  if (rect.height > availableVerticalSpace) {
+    element.style.maxHeight = `${Math.max(96, availableVerticalSpace)}px`
+    element.style.overflowY = 'auto'
+    rect = element.getBoundingClientRect()
+  }
+
+  let shiftX = 0
+  if (rect.right > viewportWidth - margin) {
+    shiftX -= rect.right - (viewportWidth - margin)
+  }
+  if (rect.left + shiftX < margin) {
+    shiftX += margin - (rect.left + shiftX)
+  }
+  element.style.setProperty('--forum-popup-shift-x', `${Math.round(shiftX)}px`)
+}
+
 const ForumPostOptions: React.FC<Props> = ({
   user,
   threadId,
@@ -113,7 +154,9 @@ const ForumPostOptions: React.FC<Props> = ({
   const refPreviewContent = useRef<HTMLElement>()
   const refReplyPreview = useRef<HTMLElement>()
   const refReactionPicker = useRef<HTMLElement>()
+  const refReactionPickerDropdown = useRef<HTMLElement>()
   const refPostMenu = useRef<HTMLElement>()
+  const refPostMenuDropdown = useRef<HTMLElement>()
 
   useLayoutEffect(() => {
     if (!refSelf.current) {
@@ -172,6 +215,22 @@ const ForumPostOptions: React.FC<Props> = ({
     }
   }, [open])
 
+  useLayoutEffect(() => {
+    if (!open) {
+      return
+    }
+
+    const updatePosition = () => fitFloatingElementToViewport(refPostMenuDropdown.current)
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [open])
+
   useEffect(() => {
     if (!reactionPickerOpen) {
       return
@@ -191,6 +250,22 @@ const ForumPostOptions: React.FC<Props> = ({
     return () => {
       document.removeEventListener('mousedown', onDocumentMouseDown)
       document.removeEventListener('touchstart', onDocumentMouseDown)
+    }
+  }, [reactionPickerOpen])
+
+  useLayoutEffect(() => {
+    if (!reactionPickerOpen) {
+      return
+    }
+
+    const updatePosition = () => fitFloatingElementToViewport(refReactionPickerDropdown.current)
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
     }
   }, [reactionPickerOpen])
 
@@ -573,7 +648,7 @@ const ForumPostOptions: React.FC<Props> = ({
     }
 
     return (
-      <div className="forum-reaction-picker">
+      <div className="forum-reaction-picker" ref={r => (refReactionPickerDropdown.current = r ?? undefined)}>
         {reactionState.availableReactions.map(reaction => {
           const summary = findReactionSummary(reaction.id)
           const selected = summary?.me === true
@@ -747,7 +822,7 @@ const ForumPostOptions: React.FC<Props> = ({
         <i className="fas fa-ellipsis-v" />
       </button>
       {open && (
-        <div className="forum-post-menu-dropdown" role="menu">
+        <div className="forum-post-menu-dropdown" ref={r => (refPostMenuDropdown.current = r ?? undefined)} role="menu">
           {canShare && (
             <button onClick={onShare} role="menuitem" type="button">
               Поделиться
