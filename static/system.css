@@ -164,6 +164,133 @@ html {
   word-break: break-word;
 }
 
+.system-content .profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.system-content .profile-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border: 1px solid #b8c0c0;
+  border-radius: 4px;
+  color: #263636;
+  background: #f8fafa;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.system-content .profile-actions a:hover {
+  color: #0e1414;
+  background: white;
+  text-decoration: none;
+}
+
+.preferences-layout {
+  display: grid;
+  grid-template-columns: 180px minmax(300px, 520px);
+  gap: 18px;
+  align-items: start;
+}
+
+.preferences-sidebar {
+  padding: 10px;
+  border: 1px solid #c8d0d0;
+  border-radius: 5px;
+  background: #f8fafa;
+}
+
+.preferences-sections {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.preferences-sections li + li {
+  margin-top: 6px;
+}
+
+.preferences-sections a {
+  color: #263636;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.preferences-sections a:hover {
+  color: #0e1414;
+  text-decoration: underline;
+}
+
+.preferences-main {
+  min-width: 0;
+}
+
+.preferences-form {
+  min-width: 300px;
+}
+
+.preferences-form p {
+  margin: 0 0 14px;
+}
+
+.preferences-form label {
+  display: block;
+  margin-bottom: 5px;
+  color: #263636;
+  font-weight: 700;
+}
+
+.preferences-form select {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid #444;
+  background: white;
+  font-size: 14px;
+}
+
+.preferences-form .helptext {
+  display: block;
+  margin-top: 4px;
+  color: #5f6f6f;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.preferences-form .errorlist {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  color: #9a1b1b;
+}
+
+.preferences-form input[type=checkbox] {
+  margin-right: 6px;
+}
+
+@media (max-width: 640px) {
+  .system-container {
+    align-items: stretch;
+    padding: 40px 8px 16px;
+  }
+
+  .system-content {
+    width: 100%;
+  }
+
+  .preferences-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .preferences-form,
+  .system-content .profile-form {
+    min-width: 0;
+  }
+}
+
 .system-heading-avatar {
   float: left;
   display: block;

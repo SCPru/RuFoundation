@@ -50,6 +50,14 @@ interface Props {
   preferences?: { [key: string]: any }
 }
 
+function navigateToForumPost(url: string) {
+  const detail = { url, handled: false }
+  window.dispatchEvent(new CustomEvent('forum:post-created', { detail }))
+  if (!detail.handled) {
+    window.location.href = url
+  }
+}
+
 const ForumPostOptions: React.FC<Props> = ({
   user,
   threadId,
@@ -99,13 +107,13 @@ const ForumPostOptions: React.FC<Props> = ({
   const [reactionError, setReactionError] = useState('')
   const [reactionLoading, setReactionLoading] = useState(false)
   const [menuPortal, setMenuPortal] = useState<HTMLElement | null>(null)
-  const [replyPortal, setReplyPortal] = useState<HTMLElement | null>(null)
 
   const refSelf = useRef<HTMLElement>()
   const refPreviewTitle = useRef<HTMLElement>()
   const refPreviewContent = useRef<HTMLElement>()
   const refReplyPreview = useRef<HTMLElement>()
   const refReactionPicker = useRef<HTMLElement>()
+  const refPostMenu = useRef<HTMLElement>()
 
   useLayoutEffect(() => {
     if (!refSelf.current) {
@@ -116,9 +124,6 @@ const ForumPostOptions: React.FC<Props> = ({
     if (!longPost) {
       return
     }
-    if (canReply) {
-      longPost.classList.add('has-forum-reply-action')
-    }
     refPreviewTitle.current = (longPost.querySelector('.head .title') as HTMLElement | null) ?? undefined
     refPreviewContent.current = (longPost.querySelector('.content') as HTMLElement | null) ?? undefined
     const head = longPost.querySelector('.head') as HTMLElement | null
@@ -128,10 +133,6 @@ const ForumPostOptions: React.FC<Props> = ({
       head.insertBefore(menuSlot, head.firstChild)
       setMenuPortal(menuSlot)
     }
-    const replySlot = document.createElement('div')
-    replySlot.className = 'forum-post-reply-slot'
-    longPost.appendChild(replySlot)
-    setReplyPortal(replySlot)
     let newRefReplyPreview: HTMLElement | undefined = (longPost.querySelector('.w-reply-preview') as HTMLElement | null) ?? undefined
     if (!newRefReplyPreview) {
       newRefReplyPreview = document.createElement('div')
@@ -143,15 +144,33 @@ const ForumPostOptions: React.FC<Props> = ({
     setOriginalPreviewContent(refPreviewContent.current?.innerHTML ?? '')
 
     return () => {
-      longPost.classList.remove('has-forum-reply-action')
       if (menuSlot.parentElement) {
         menuSlot.parentElement.removeChild(menuSlot)
       }
-      if (replySlot.parentElement) {
-        replySlot.parentElement.removeChild(replySlot)
-      }
     }
-  }, [canReply])
+  }, [])
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    const onDocumentMouseDown = (e: MouseEvent | TouchEvent) => {
+      const target = e.target
+      if (target instanceof Node && refPostMenu.current?.contains(target)) {
+        return
+      }
+      setOpen(false)
+    }
+
+    document.addEventListener('mousedown', onDocumentMouseDown)
+    document.addEventListener('touchstart', onDocumentMouseDown)
+
+    return () => {
+      document.removeEventListener('mousedown', onDocumentMouseDown)
+      document.removeEventListener('touchstart', onDocumentMouseDown)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!reactionPickerOpen) {
@@ -193,12 +212,7 @@ const ForumPostOptions: React.FC<Props> = ({
 
     const { url } = await createForumPost(request)
     onReplyClose()
-
-    window.onhashchange = () => {
-      window.location.reload()
-    }
-
-    window.location.href = url
+    navigateToForumPost(url)
   })
 
   const onReplyPreview = useConstCallback((input: ForumPostPreviewData) => {
@@ -720,7 +734,7 @@ const ForumPostOptions: React.FC<Props> = ({
   const canShare = true
   const hasPostOptions = canShare || canEdit || canDelete || canOpenReactionList
   const postMenu = hasPostOptions ? (
-    <div className="forum-post-menu">
+    <div className="forum-post-menu" ref={r => (refPostMenu.current = r ?? undefined)}>
       <button
         aria-expanded={open}
         aria-haspopup="true"
@@ -761,9 +775,10 @@ const ForumPostOptions: React.FC<Props> = ({
   const replyButton =
     canReply && !isReplying ? (
       <a aria-label="Ответить" className="forum-post-reply-button" href="#" onClick={onReply} title="Ответить">
-        <i className="fas fa-reply" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M268.2 82.4C280.2 87.4 288 99 288 112L288 192L400 192C497.2 192 576 270.8 576 368C576 481.3 494.5 531.9 475.8 542.1C473.3 543.5 470.5 544 467.7 544C456.8 544 448 535.1 448 524.3C448 516.8 452.3 509.9 457.8 504.8C467.2 496 480 478.4 480 448.1C480 395.1 437 352.1 384 352.1L288 352.1L288 432.1C288 445 280.2 456.7 268.2 461.7C256.2 466.7 242.5 463.9 233.3 454.8L73.3 294.8C60.8 282.3 60.8 262 73.3 249.5L233.3 89.5C242.5 80.3 256.2 77.6 268.2 82.6z"/></svg>
       </a>
     ) : null
+  const reactionControls = renderReactions()
 
   return (
     <>
@@ -820,14 +835,18 @@ const ForumPostOptions: React.FC<Props> = ({
         </WikidotModal>
       )}
       {renderReactionList()}
-      {renderReactions()}
+      {(replyButton || reactionControls) && (
+        <div className="forum-post-actions">
+          {replyButton}
+          {reactionControls}
+        </div>
+      )}
       {menuPortal ? postMenu && ReactDOM.createPortal(postMenu, menuPortal) : postMenu}
-      {replyPortal ? replyButton && ReactDOM.createPortal(replyButton, replyPortal) : replyButton}
       {isReplying && (
         <div className="post-container">
           <ForumPostEditor
             isNew
-            useAdvancedEditor={preferences?.['qol__advanced_source_editor_enabled'] === true}
+            useAdvancedEditor={false}
             onClose={onReplyClose}
             onSubmit={onReplySubmit}
             onPreview={onReplyPreview}
@@ -838,7 +857,7 @@ const ForumPostOptions: React.FC<Props> = ({
       {isEditing && (
         <ForumPostEditor
           postId={postId}
-          useAdvancedEditor={preferences?.['qol__advanced_source_editor_enabled'] === true}
+          useAdvancedEditor={false}
           onClose={onEditClose}
           onSubmit={onEditSubmit}
           onPreview={onEditPreview}

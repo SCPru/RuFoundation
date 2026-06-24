@@ -37,6 +37,12 @@
 
 {% block content %}
     <div class="profile-form">
+        {% if request.user == object %}
+            <div class="profile-actions">
+                <a href="{% url "profile_edit" %}"><i class="fas fa-pen"></i> Редактировать профиль</a>
+                <a href="/-/preferences/user/"><i class="fas fa-sliders-h"></i> Настройки интерфейса</a>
+            </div>
+        {% endif %}
         {% if object.type == 'wikidot' %}<p><b>Важно:</b> Пользователь перенесен с платформы Wikidot и не является активным.<br><br></p>{% endif %}
         {% if object.type == 'bot' %}<p><b>Важно:</b> Пользователь является ботом.<br><br></p>{% endif %}
         {% if object.first_name %}<p><b>Имя:</b> {{ object.first_name }}</p>{% endif %}

@@ -13,6 +13,14 @@ interface Props {
   preferences?: { [key: string]: any }
 }
 
+function navigateToForumPost(url: string) {
+  const detail = { url, handled: false }
+  window.dispatchEvent(new CustomEvent('forum:post-created', { detail }))
+  if (!detail.handled) {
+    window.location.href = url
+  }
+}
+
 const ForumNewPost: React.FC<Props> = ({ user, threadId, threadName, preferences }) => {
   const [preview, setPreview] = useState<ForumPostPreviewData>()
   const [open, setOpen] = useState(false)
@@ -39,8 +47,8 @@ const ForumNewPost: React.FC<Props> = ({ user, threadId, threadName, preferences
       source: input.source,
     }
     const { url } = await createForumPost(request)
-    window.location.href = url
     setOpen(false)
+    navigateToForumPost(url)
   })
 
   const onPreview = useConstCallback((input: ForumPostPreviewData) => {
@@ -58,7 +66,7 @@ const ForumNewPost: React.FC<Props> = ({ user, threadId, threadName, preferences
       {preview && <ForumPostPreview preview={preview} user={user} />}
       <ForumPostEditor
         isNew
-        useAdvancedEditor={preferences?.['qol__advanced_source_editor_enabled'] === true}
+        useAdvancedEditor={false}
         onClose={onClose}
         onSubmit={onSubmit}
         onPreview={onPreview}

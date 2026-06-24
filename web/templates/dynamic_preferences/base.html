@@ -1,0 +1,16 @@
+{% extends "system_base.html" %}
+
+{% block title %}Настройки интерфейса{% endblock %}
+{% block h1 %}Настройки интерфейса{% endblock %}
+{% block back_link %}<a class="back-link" href="/-/profile"><span class="fa fa-arrow-left"></span> Назад к профилю</a>{% endblock %}
+
+{% block content %}
+    <div class="preferences-layout">
+        <aside class="preferences-sidebar">
+            {% include "dynamic_preferences/sections.html" with registry=registry sections=registry.sections %}
+        </aside>
+        <div class="preferences-main">
+            {% block preferences_content %}{% endblock %}
+        </div>
+    </div>
+{% endblock %}

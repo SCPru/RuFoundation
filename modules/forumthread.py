@@ -67,6 +67,67 @@ def get_forum_post_max_depth():
     return max(1, settings.forum_post_max_depth or 1)
 
 
+def get_user_preferences(user):
+    if getattr(user, 'is_anonymous', True):
+        return {}
+    try:
+        return user.preferences.all()
+    except Exception:
+        return {}
+
+
+def get_forum_view_settings(user_preferences, params):
+    display_mode = (
+        params.get('displaymode') or
+        params.get('displayMode') or
+        user_preferences.get('qol__forum_display_mode') or
+        'pagination'
+    )
+    sort_order = (
+        params.get('sortorder') or
+        params.get('sortOrder') or
+        user_preferences.get('qol__forum_sort_order') or
+        'oldest'
+    )
+
+    if display_mode not in ('pagination', 'infinite'):
+        display_mode = 'pagination'
+    if sort_order not in ('oldest', 'newest'):
+        sort_order = 'oldest'
+
+    return display_mode, sort_order
+
+
+def get_date_anchors(posts, total, per_page, max_anchors=14):
+    if total <= 0:
+        return []
+
+    anchor_count = min(total, max_anchors)
+    if anchor_count == 1:
+        indexes = [0]
+    else:
+        indexes = sorted({
+            round(i * (total - 1) / (anchor_count - 1))
+            for i in range(anchor_count)
+        })
+
+    anchors = []
+    values = posts.values('id', 'created_at')
+    for index in indexes:
+        post = values[index]
+        created_at = post['created_at']
+        anchors.append({
+            'postId': post['id'],
+            'page': int(index / per_page) + 1,
+            'label': created_at.strftime('%d.%m.%Y'),
+            'title': created_at.strftime('%d.%m.%Y %H:%M'),
+            'iso': created_at.isoformat(),
+            'position': 0 if total == 1 else index / (total - 1),
+        })
+
+    return anchors
+
+
 def highlight_mentions(text: str, usernames: set[str]) -> str:
     regex = re.compile(r'@[\w.-]+')
 
@@ -90,6 +151,7 @@ def get_post_info(
     post_contents=None,
     replies_by_parent=None,
     reaction_context=None,
+    user_preferences=None,
     depth=1,
     max_depth=5,
 ):
@@ -152,6 +214,7 @@ def get_post_info(
                 'reactionLimits': reaction_state['limits'],
                 'reactionTotalCount': reaction_state['totalCount'],
                 'myReactionCount': reaction_state['myCount'],
+                'preferences': user_preferences or {},
             })
         }
         post_info.append(render_post)
@@ -166,6 +229,7 @@ def get_post_info(
                 post_contents,
                 replies_by_parent,
                 reaction_context,
+                user_preferences,
                 depth + 1,
                 max_depth,
             )
@@ -179,6 +243,7 @@ def get_post_info(
                 post_contents,
                 replies_by_parent,
                 reaction_context,
+                user_preferences,
                 depth,
                 max_depth,
             ))
@@ -266,7 +331,11 @@ def render(context: RenderContext, params):
 
     per_page = 10
 
-    q = ForumPost.objects.filter(thread=thread, reply_to__isnull=True).order_by('created_at')
+    user_preferences = get_user_preferences(context.user)
+    display_mode, sort_order = get_forum_view_settings(user_preferences, params)
+    order_by = ('created_at', 'id') if sort_order == 'oldest' else ('-created_at', '-id')
+
+    q = ForumPost.objects.filter(thread=thread, reply_to__isnull=True).order_by(*order_by)
 
     total = q.count()
 
@@ -310,15 +379,26 @@ def render(context: RenderContext, params):
 
     usernames = set(User.objects.all().values_list(Lower('username'), flat=True))
     posts = q[(page-1)*per_page:page*per_page]
-    post_info = get_post_info(context, thread, posts, usernames=usernames, max_depth=get_forum_post_max_depth())
+    post_info = get_post_info(
+        context,
+        thread,
+        posts,
+        usernames=usernames,
+        user_preferences=user_preferences,
+        max_depth=get_forum_post_max_depth(),
+    )
 
 
     context.path_params['p'] = str(page)
+    data_params = dict(params)
+    data_params['displayMode'] = display_mode
+    data_params['sortOrder'] = sort_order
 
     new_post_config = {
         'threadId': thread.id,
         'threadName': name,
         'user': render_user_to_json(context.user),
+        'preferences': user_preferences,
     }
 
     categories = []
@@ -389,11 +469,17 @@ def render(context: RenderContext, params):
             <div class="thread-container w-forum-thread"
                  id="thread-container"
                  data-forum-thread-path-params="{{ data_path_params }}"
-                 data-forum-thread-params="{{ data_params }}">
+                 data-forum-thread-params="{{ data_params }}"
+                 data-forum-thread-mode="{{ display_mode }}"
+                 data-forum-thread-sort-order="{{ sort_order }}"
+                 data-forum-thread-current-page="{{ page }}"
+                 data-forum-thread-max-page="{{ max_page }}"
+                 data-forum-thread-total-posts="{{ total_posts }}"
+                 data-forum-thread-date-anchors="{{ date_anchors }}">
                 <div id="thread-container-posts">
-                    {{ pagination }}
+                    {% if display_mode == 'pagination' %}{{ pagination }}{% endif %}
                     {{ posts }}
-                    {{ pagination }}
+                    {% if display_mode == 'pagination' %}{{ pagination }}{% endif %}
                 </div>
             </div>
             {% if can_reply and not content_only %}
@@ -409,13 +495,18 @@ def render(context: RenderContext, params):
         created_by=render_user_to_html(thread.author),
         created_at=render_date(thread.created_at),
         total_posts=total,
-        pagination=render_pagination(short_url, page, max_page) if max_page != 1 else '',
+        pagination=render_pagination(short_url, page, max_page) if display_mode == 'pagination' and max_page != 1 else '',
         new_post_config=json.dumps(new_post_config),
         posts=render_posts(post_info),
         can_reply=context.user.has_perm('roles.create_forum_posts', thread) if not thread.article else context.user.has_perm('roles.comment_articles', thread),
         content_only=content_only,
         data_path_params=json.dumps(context.path_params),
-        data_params=json.dumps(params),
+        data_params=json.dumps(data_params),
+        display_mode=display_mode,
+        sort_order=sort_order,
+        page=page,
+        max_page=max_page,
+        date_anchors=json.dumps(get_date_anchors(q, total, per_page)),
         thread_options_config=json.dumps(thread_options_config)
     )
 

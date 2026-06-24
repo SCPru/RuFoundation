@@ -1,0 +1,9 @@
+{% extends "dynamic_preferences/base.html" %}
+
+{% block preferences_content %}
+    <form class="preferences-form" action="" enctype="multipart/form-data" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">Сохранить</button>
+    </form>
+{% endblock %}

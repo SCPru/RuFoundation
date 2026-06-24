@@ -41,7 +41,7 @@ const ForumNewThread: React.FC<Props> = ({ user, categoryId, cancelUrl, preferen
       <ForumPostEditor
         isNew
         isThread
-        useAdvancedEditor={preferences?.['qol__advanced_source_editor_enabled'] === true}
+        useAdvancedEditor={false}
         onClose={onClose}
         onSubmit={onSubmit}
         onPreview={onPreview}
