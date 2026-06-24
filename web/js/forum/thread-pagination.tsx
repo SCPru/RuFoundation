@@ -13,6 +13,11 @@ interface SwitchPageConfig {
   isFromHistory?: boolean
 }
 
+function getPostIdFromHash() {
+  const match = window.location.hash.match(/^#post-(\d+)$/)
+  return match ? match[1] : null
+}
+
 export function makeForumThread(node: HTMLElement) {
   // hack: mark node as already processed because it was
   if ((node as any)._forumthread) {
@@ -40,6 +45,18 @@ export function makeForumThread(node: HTMLElement) {
     justifyContent: 'center',
     boxSizing: 'border-box',
   })
+
+  const scrollToPost = (postId?: string | null) => {
+    if (!postId) {
+      return
+    }
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        document.getElementById(`post-${postId}`)?.scrollIntoView({ block: 'start' })
+      })
+    })
+  }
 
   const setupPageSwitch = () => {
     // handle page switch
@@ -86,6 +103,7 @@ export function makeForumThread(node: HTMLElement) {
       const newNode = tmp.firstElementChild as HTMLElement
       node.innerHTML = newNode.innerHTML
       setupPageSwitch()
+      scrollToPost(config.postId)
       // rewrite URL so that users can easily copy-paste specific thread page from the address bar
       let newUrl
       if (!config.isFromHistory) {
@@ -116,18 +134,20 @@ export function makeForumThread(node: HTMLElement) {
   })
 
   window.addEventListener('hashchange', () => {
-    if (window.location.hash.startsWith('#post-')) {
+    const postId = getPostIdFromHash()
+    if (postId) {
       // navigate to different post; ignore page
-      switchPage(null, { postId: window.location.hash.substring(6) })
+      switchPage(null, { postId })
     }
   })
 
   // due to wikidot's shitty way of doing direct post links, we have to detect it here.
   // if this is a direct post link, erase any inner HTML and produce a pagination query with the post ID taken from hash
-  if (window.location.hash.startsWith('#post-')) {
+  const initialPostId = getPostIdFromHash()
+  if (initialPostId) {
     node.innerHTML = ''
     setupPageSwitch()
-    switchPage(null, { postId: window.location.hash.substring(6) })
+    switchPage(null, { postId: initialPostId })
   } else {
     setupPageSwitch()
   }

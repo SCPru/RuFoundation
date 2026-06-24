@@ -6,6 +6,7 @@ from modules.forumnewpost import OnForumNewPost
 from web.events import on_trigger
 from web.controllers.logging import add_action_log
 from web.controllers.articles import OnVote, OnCreateArticle, OnDeleteArticle, OnEditArticle, get_rating
+from web.controllers.forum_reactions import OnForumReactionAdd, OnForumReactionRemove
 from web.models.logs import ActionLogEntry
 
 
@@ -97,3 +98,40 @@ def log_forum_delete_post(e: OnForumDeletePost):
     }
     
     add_action_log(e.user, ActionLogEntry.ActionType.RemoveForumPost, meta)
+
+
+def _forum_reaction_meta(post, reaction, target_user):
+    return {
+        'post': model_to_dict(post),
+        'thread': {
+            'id': post.thread_id,
+            'name': post.thread.name,
+        },
+        'reaction': {
+            'id': reaction.id,
+            'name': reaction.name,
+            'image': str(reaction.image),
+        },
+        'target_user': {
+            'id': target_user.id,
+            'username': target_user.username,
+        },
+    }
+
+
+@on_trigger(OnForumReactionAdd)
+def log_forum_reaction_add(e: OnForumReactionAdd):
+    add_action_log(
+        e.user,
+        ActionLogEntry.ActionType.AddForumReaction,
+        _forum_reaction_meta(e.post, e.reaction, e.user),
+    )
+
+
+@on_trigger(OnForumReactionRemove)
+def log_forum_reaction_remove(e: OnForumReactionRemove):
+    add_action_log(
+        e.user,
+        ActionLogEntry.ActionType.RemoveForumReaction,
+        _forum_reaction_meta(e.post, e.reaction, e.target_user),
+    )

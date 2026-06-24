@@ -63,7 +63,16 @@ class ManageForumPermission(BaseRolePermission):
     name = 'Управлять форумом'
     codename = 'manage_forum'
     description = 'Позволяет создавать, редактировать и удалять категории и разделы форума'
-    represent_django_perms = ['web.view_forumcategory', 'web.add_forumcategory', 'web.change_forumcategory', 'web.delete_forumcategory', 'web.view_forumsection', 'web.add_forumsection', 'web.change_forumsection', 'web.delete_forumsection']
+    represent_django_perms = ['web.view_forumcategory', 'web.add_forumcategory', 'web.change_forumcategory', 'web.delete_forumcategory', 'web.view_forumsection', 'web.add_forumsection', 'web.change_forumsection', 'web.delete_forumsection', 'web.view_forumreaction', 'web.add_forumreaction', 'web.change_forumreaction', 'web.delete_forumreaction', 'web.view_forumpostreaction', 'web.delete_forumpostreaction']
+    group = 'Админка'
+    admin_only = True
+
+
+class ManageForumReactionsPermission(BaseRolePermission):
+    name = 'Управлять реакциями форума'
+    codename = 'manage_forum_reactions'
+    description = 'Позволяет создавать, редактировать и удалять реакции форума в админке'
+    represent_django_perms = ['web.view_forumreaction', 'web.add_forumreaction', 'web.change_forumreaction', 'web.delete_forumreaction', 'web.view_forumpostreaction', 'web.delete_forumpostreaction']
     group = 'Админка'
     admin_only = True
 

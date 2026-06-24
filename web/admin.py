@@ -9,6 +9,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib import admin
 from django.urls import path
+from django.utils.html import format_html
 from django import forms
 
 import web.fields
@@ -72,6 +73,17 @@ class SettingsAdmin(admin.StackedInline):
     model = Settings
     can_delete = False
     max_num = 1
+    fieldsets = (
+        (None, {
+            'fields': ('rating_mode', 'can_user_create_tags')
+        }),
+        ('Реакции форума', {
+            'fields': ('forum_reactions_per_user', 'forum_reaction_types_per_post')
+        }),
+        ('Форум', {
+            'fields': ('forum_post_max_depth',)
+        }),
+    )
 
 
 class CategoryForm(forms.ModelForm):
@@ -215,6 +227,37 @@ class ForumCategoryAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description']
     list_filter = ['section']
     list_display = ['name', 'section']
+
+
+class ForumReactionForm(forms.ModelForm):
+    class Meta:
+        model = ForumReaction
+        widgets = {
+            'name': forms.TextInput,
+            'image': forms.FileInput(attrs={'accept': 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml,.svg'}),
+        }
+        fields = '__all__'
+
+
+@admin.register(ForumReaction)
+class ForumReactionAdmin(SortableAdminMixin, admin.ModelAdmin):
+    form = ForumReactionForm
+    search_fields = ['name']
+    list_filter = ['is_active']
+    list_display = ['image_preview', 'name', 'is_active']
+    list_editable = ['is_active']
+    ordering = ['sort_order', 'id']
+
+    class Media:
+        css = {
+            'all': ('admin/forum-reaction-admin.css',),
+        }
+
+    @admin.display(description='Картинка')
+    def image_preview(self, obj):
+        if not obj.image:
+            return ''
+        return format_html('<img src="{}" alt="" style="width: 24px; height: 24px; object-fit: contain;">', obj.image_url)
 
 
 class AdvancedUserChangeForm(UserChangeForm):
@@ -473,4 +516,3 @@ class RoleAdmin(SortableAdminMixin, admin.ModelAdmin):
         if obj and obj.slug  in ['everyone', 'registered']:
             return self.readonly_fields + ("slug",)
         return self.readonly_fields
-    

@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from renderer.utils import render_user_to_json
 from web.events import EventBase
 from web.models import ForumPost, ForumPostVersion, User
+from web.controllers import forum_reactions
 
 from ._csrf_protection import csrf_safe_method
 
@@ -134,6 +135,52 @@ def api_delete(context, params):
     return {
         'status': 'ok'
     }
+
+
+@csrf_safe_method
+def api_reactions(context, params):
+    post_id = params.get('postid', -1)
+    post = forum_reactions.get_forum_post_for_reactions(post_id)
+    if post is None:
+        raise ModuleError('Сообщение "%s" не существует' % post_id)
+    if not forum_reactions.user_can_view_post(context.user, post):
+        raise ModuleError('Недостаточно прав для просмотра сообщения')
+
+    return forum_reactions.serialize_post_reaction_state(post, context.user)
+
+
+def api_react(context, params):
+    post_id = params.get('postid', -1)
+    post = forum_reactions.get_forum_post_for_reactions(post_id, lock=True)
+    if post is None:
+        raise ModuleError('Сообщение "%s" не существует' % post_id)
+
+    try:
+        forum_reactions.add_reaction_to_post(post, params.get('reactionid'), context.user)
+    except forum_reactions.ForumReactionError as e:
+        raise ModuleError(e.message)
+
+    return forum_reactions.serialize_post_reaction_state(post, context.user)
+
+
+def api_unreact(context, params):
+    post_id = params.get('postid', -1)
+    post = forum_reactions.get_forum_post_for_reactions(post_id, lock=True)
+    if post is None:
+        raise ModuleError('Сообщение "%s" не существует' % post_id)
+
+    try:
+        forum_reactions.remove_reaction_from_post(
+            post,
+            params.get('reactionid'),
+            context.user,
+            params.get('userid'),
+            params.get('allusers'),
+        )
+    except forum_reactions.ForumReactionError as e:
+        raise ModuleError(e.message)
+
+    return forum_reactions.serialize_post_reaction_state(post, context.user)
 
 
 @csrf_safe_method

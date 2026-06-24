@@ -221,6 +221,7 @@ WIKIDOT_AVATAR = '/-/static/images/wikidot_avatar.png'
 # Fixes static images
 mimetypes.add_type('text/css', '.css', True)
 mimetypes.add_type('text/javascript', '.js', True)
+mimetypes.add_type('image/svg+xml', '.svg', True)
 
 
 ARTICLE_IMPORT_REPLACE_CONFIG = {}

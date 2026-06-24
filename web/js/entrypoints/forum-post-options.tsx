@@ -1,13 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import * as ReactDOM from 'react-dom'
 import { renderTo, unmountFromRoot } from '~util/react-render-into'
 import {
+  addForumPostReaction,
   createForumPost,
   deleteForumPost,
   fetchForumPost,
   fetchForumPostVersions,
   ForumNewPostRequest,
+  ForumPostReactionState,
+  ForumPostReactionSummary,
   ForumPostVersion,
+  ForumReaction,
+  ForumReactionLimits,
   ForumUpdatePostRequest,
+  removeAllForumPostReactions,
+  removeForumPostReaction,
   updateForumPost,
 } from '../api/forum'
 import { UserData } from '../api/user'
@@ -28,6 +36,14 @@ interface Props {
   canEdit?: boolean
   canDelete?: boolean
   canReact?: boolean
+  canRemoveOwnReactions?: boolean
+  canModerateReactions?: boolean
+  canUseInactiveReactions?: boolean
+  availableReactions?: Array<ForumReaction>
+  reactions?: Array<ForumPostReactionSummary>
+  reactionLimits?: ForumReactionLimits
+  reactionTotalCount?: number
+  myReactionCount?: number
   hasRevisions?: boolean
   lastRevisionDate?: string
   lastRevisionAuthor?: UserData
@@ -44,6 +60,14 @@ const ForumPostOptions: React.FC<Props> = ({
   canEdit,
   canDelete,
   canReact,
+  canRemoveOwnReactions,
+  canModerateReactions,
+  canUseInactiveReactions,
+  availableReactions = [],
+  reactions = [],
+  reactionLimits = { maxPerUser: 0, maxPerPost: 0 },
+  reactionTotalCount,
+  myReactionCount,
   hasRevisions,
   lastRevisionDate,
   lastRevisionAuthor,
@@ -58,35 +82,98 @@ const ForumPostOptions: React.FC<Props> = ({
   const [revisionsOpen, setRevisionsOpen] = useState(false)
   const [currentRevision, setCurrentRevision] = useState('')
   const [revisions, setRevisions] = useState<Array<ForumPostVersion>>([])
+  const [reactionState, setReactionState] = useState<ForumPostReactionState>(() => ({
+    availableReactions,
+    reactions,
+    limits: reactionLimits,
+    totalCount: reactionTotalCount ?? reactions.reduce((sum, item) => sum + item.count, 0),
+    myCount: myReactionCount ?? reactions.filter(item => item.me).length,
+    canReact: canReact === true,
+    canRemoveOwnReactions: canRemoveOwnReactions === true,
+    canModerateReactions: canModerateReactions === true,
+    canUseInactiveReactions: canUseInactiveReactions === true,
+  }))
+  const [reactionPickerOpen, setReactionPickerOpen] = useState(false)
+  const [reactionListOpen, setReactionListOpen] = useState(false)
+  const [activeReactionId, setActiveReactionId] = useState<number | null>(null)
+  const [reactionError, setReactionError] = useState('')
+  const [reactionLoading, setReactionLoading] = useState(false)
+  const [menuPortal, setMenuPortal] = useState<HTMLElement | null>(null)
+  const [replyPortal, setReplyPortal] = useState<HTMLElement | null>(null)
 
   const refSelf = useRef<HTMLElement>()
   const refPreviewTitle = useRef<HTMLElement>()
   const refPreviewContent = useRef<HTMLElement>()
   const refReplyPreview = useRef<HTMLElement>()
+  const refReactionPicker = useRef<HTMLElement>()
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!refSelf.current) {
       // something bad happened
       return
     }
-    const longPost = refSelf.current.parentNode
+    const longPost = refSelf.current.closest('.long') as HTMLElement | null
     if (!longPost) {
       return
     }
+    if (canReply) {
+      longPost.classList.add('has-forum-reply-action')
+    }
     refPreviewTitle.current = (longPost.querySelector('.head .title') as HTMLElement | null) ?? undefined
     refPreviewContent.current = (longPost.querySelector('.content') as HTMLElement | null) ?? undefined
+    const head = longPost.querySelector('.head') as HTMLElement | null
+    const menuSlot = document.createElement('div')
+    menuSlot.className = 'forum-post-menu-slot'
+    if (head) {
+      head.insertBefore(menuSlot, head.firstChild)
+      setMenuPortal(menuSlot)
+    }
+    const replySlot = document.createElement('div')
+    replySlot.className = 'forum-post-reply-slot'
+    longPost.appendChild(replySlot)
+    setReplyPortal(replySlot)
     let newRefReplyPreview: HTMLElement | undefined = (longPost.querySelector('.w-reply-preview') as HTMLElement | null) ?? undefined
     if (!newRefReplyPreview) {
       newRefReplyPreview = document.createElement('div')
       newRefReplyPreview.className = 'w-reply-preview'
-      if (refSelf.current.parentNode) {
-        refSelf.current.parentNode.insertBefore(newRefReplyPreview, refSelf.current)
-      }
+      longPost.insertBefore(newRefReplyPreview, refSelf.current)
     }
     refReplyPreview.current = newRefReplyPreview
     setOriginalPreviewTitle(refPreviewTitle.current?.textContent ?? '')
     setOriginalPreviewContent(refPreviewContent.current?.innerHTML ?? '')
-  }, [])
+
+    return () => {
+      longPost.classList.remove('has-forum-reply-action')
+      if (menuSlot.parentElement) {
+        menuSlot.parentElement.removeChild(menuSlot)
+      }
+      if (replySlot.parentElement) {
+        replySlot.parentElement.removeChild(replySlot)
+      }
+    }
+  }, [canReply])
+
+  useEffect(() => {
+    if (!reactionPickerOpen) {
+      return
+    }
+
+    const onDocumentMouseDown = (e: MouseEvent | TouchEvent) => {
+      const target = e.target
+      if (target instanceof Node && refReactionPicker.current?.contains(target)) {
+        return
+      }
+      setReactionPickerOpen(false)
+    }
+
+    document.addEventListener('mousedown', onDocumentMouseDown)
+    document.addEventListener('touchstart', onDocumentMouseDown)
+
+    return () => {
+      document.removeEventListener('mousedown', onDocumentMouseDown)
+      document.removeEventListener('touchstart', onDocumentMouseDown)
+    }
+  }, [reactionPickerOpen])
 
   const onReplyClose = useConstCallback(() => {
     setIsReplying(false)
@@ -215,6 +302,52 @@ const ForumPostOptions: React.FC<Props> = ({
     setOpen(!open)
   })
 
+  const getPostShareUrl = useConstCallback(() => {
+    const url = new URL(`/forum/t-${threadId}`, window.location.origin)
+    url.hash = `post-${postId}`
+    return url.toString()
+  })
+
+  const copyText = useConstCallback(async (text: string) => {
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text)
+        return
+      } catch {
+        // fallback below
+      }
+    }
+
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.setAttribute('readonly', 'readonly')
+    Object.assign(textarea.style, {
+      position: 'fixed',
+      left: '-9999px',
+      top: '0',
+    })
+    document.body.appendChild(textarea)
+    textarea.select()
+    const copied = document.execCommand('copy')
+    document.body.removeChild(textarea)
+
+    if (!copied) {
+      throw new Error('copy failed')
+    }
+  })
+
+  const onShare = useConstCallback(async (e: React.MouseEvent<HTMLElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    try {
+      await copyText(getPostShareUrl())
+      setOpen(false)
+    } catch {
+      setDeleteError('Не удалось скопировать ссылку')
+    }
+  })
+
   const onCloseError = useConstCallback(() => {
     setDeleteError('')
   })
@@ -265,6 +398,373 @@ const ForumPostOptions: React.FC<Props> = ({
     })
   })
 
+  const canAddUserReaction = reactionState.canReact && reactionState.myCount < reactionState.limits.maxPerUser
+
+  const findReactionSummary = useConstCallback((reactionId: number) => {
+    return reactionState.reactions.find(item => item.reaction.id === reactionId) ?? null
+  })
+
+  const applyReactionState = useConstCallback((nextState: ForumPostReactionState) => {
+    setReactionState(nextState)
+  })
+
+  const canAddReactionType = useConstCallback((reactionId: number) => {
+    if (!canAddUserReaction) {
+      return false
+    }
+
+    const isVisibleType = reactionState.reactions.some(item => item.reaction.id === reactionId)
+    return isVisibleType || reactionState.reactions.length < reactionState.limits.maxPerPost
+  })
+
+  const addReaction = useConstCallback(async (reaction: ForumReaction) => {
+    if (reactionLoading) {
+      return
+    }
+    if (!reaction.isActive && !reactionState.canUseInactiveReactions) {
+      setReactionError('Эта реакция сейчас недоступна')
+      return
+    }
+    if (!canAddReactionType(reaction.id)) {
+      setReactionError('Достигнут лимит типов реакций под этим сообщением')
+      return
+    }
+
+    setReactionLoading(true)
+    setReactionError('')
+    try {
+      const nextState = await addForumPostReaction(postId, reaction.id)
+      applyReactionState(nextState)
+      setReactionPickerOpen(false)
+    } catch (e) {
+      setReactionError(e.error || 'Ошибка связи с сервером')
+    } finally {
+      setReactionLoading(false)
+    }
+  })
+
+  const removeReaction = useConstCallback(async (reactionId: number, userId?: number) => {
+    if (reactionLoading) {
+      return
+    }
+
+    setReactionLoading(true)
+    setReactionError('')
+    try {
+      const nextState = await removeForumPostReaction(postId, reactionId, userId)
+      applyReactionState(nextState)
+    } catch (e) {
+      setReactionError(e.error || 'Ошибка связи с сервером')
+    } finally {
+      setReactionLoading(false)
+    }
+  })
+
+  const onToggleReaction = useConstCallback((e: React.MouseEvent<HTMLElement>, summary: ForumPostReactionSummary) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (summary.me && reactionState.canRemoveOwnReactions) {
+      removeReaction(summary.reaction.id)
+      return
+    }
+    addReaction(summary.reaction)
+  })
+
+  const onPickReaction = useConstCallback((e: React.MouseEvent<HTMLElement>, reaction: ForumReaction) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const summary = findReactionSummary(reaction.id)
+    if (summary?.me && reactionState.canRemoveOwnReactions) {
+      removeReaction(reaction.id)
+      setReactionPickerOpen(false)
+      return
+    }
+    addReaction(reaction)
+  })
+
+  const onToggleReactionPicker = useConstCallback((e: React.MouseEvent<HTMLElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    setReactionPickerOpen(!reactionPickerOpen)
+  })
+
+  const onOpenReactionList = useConstCallback((e: React.MouseEvent<HTMLElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    setActiveReactionId(reactionState.reactions[0]?.reaction.id ?? null)
+    setReactionListOpen(true)
+    setOpen(false)
+  })
+
+  const onCloseReactionList = useConstCallback(() => {
+    setReactionListOpen(false)
+  })
+
+  const onCloseReactionError = useConstCallback(() => {
+    setReactionError('')
+  })
+
+  const onRemoveReactionUser = useConstCallback((e: React.MouseEvent<HTMLElement>, summary: ForumPostReactionSummary, reactionUser: UserData) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (reactionUser.id === undefined || !reactionState.canModerateReactions) {
+      return
+    }
+    removeReaction(summary.reaction.id, reactionUser.id)
+  })
+
+  const onRemoveReactionType = useConstCallback(async (e: React.MouseEvent<HTMLElement>, summary: ForumPostReactionSummary) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (reactionLoading || !reactionState.canModerateReactions) {
+      return
+    }
+
+    setReactionLoading(true)
+    setReactionError('')
+    try {
+      const nextState = await removeAllForumPostReactions(postId, summary.reaction.id)
+      applyReactionState(nextState)
+      setActiveReactionId(nextState.reactions[0]?.reaction.id ?? null)
+    } catch (e) {
+      setReactionError(e.error || 'Ошибка связи с сервером')
+    } finally {
+      setReactionLoading(false)
+    }
+  })
+
+  const onSelectReactionTab = useConstCallback((e: React.MouseEvent<HTMLElement>, summary: ForumPostReactionSummary) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    setActiveReactionId(summary.reaction.id)
+  })
+
+  const renderReactionImage = useConstCallback((reaction: ForumReaction, className: string) => {
+    if (reaction.imageUrl) {
+      return <img className={className} src={reaction.imageUrl} alt={reaction.name} />
+    }
+    return <span className={`${className} forum-reaction-image-fallback`}>{reaction.name.slice(0, 1)}</span>
+  })
+
+  const renderReactionPicker = useConstCallback(() => {
+    if (!reactionPickerOpen) {
+      return null
+    }
+
+    return (
+      <div className="forum-reaction-picker">
+        {reactionState.availableReactions.map(reaction => {
+          const summary = findReactionSummary(reaction.id)
+          const selected = summary?.me === true
+          const disabled =
+            reactionLoading ||
+            (selected && !reactionState.canRemoveOwnReactions) ||
+            (!selected && (!canAddReactionType(reaction.id) || (!reaction.isActive && !reactionState.canUseInactiveReactions)))
+
+          return (
+            <button
+              className={`forum-reaction-picker-item ${selected ? 'is-selected' : ''} ${reactionLoading ? 'is-loading' : ''}`}
+              disabled={disabled}
+              key={reaction.id}
+              onClick={e => onPickReaction(e, reaction)}
+              title={reaction.name}
+              type="button"
+            >
+              {renderReactionImage(reaction, 'forum-reaction-picker-image')}
+            </button>
+          )
+        })}
+        {reactionState.availableReactions.length === 0 && <div className="forum-reaction-picker-empty">Нет доступных реакций</div>}
+      </div>
+    )
+  })
+
+  const renderReactions = useConstCallback(() => {
+    const showPickerButton = reactionState.canReact && reactionState.availableReactions.length > 0
+    if (!reactionState.reactions.length && !showPickerButton) {
+      return null
+    }
+
+    return (
+      <div className="forum-reactions">
+        <div className="forum-reaction-list">
+          {reactionState.reactions.map(summary => {
+            const canToggle = summary.me
+              ? reactionState.canRemoveOwnReactions
+              : (summary.reaction.isActive || reactionState.canUseInactiveReactions) && canAddReactionType(summary.reaction.id)
+            const chipTitle = summary.me
+              ? `Убрать реакцию "${summary.reaction.name}"`
+              : summary.reaction.isActive || reactionState.canUseInactiveReactions
+                ? `Поставить реакцию "${summary.reaction.name}"`
+                : `Реакция "${summary.reaction.name}" сейчас недоступна`
+
+            return (
+              <span
+                className={`forum-reaction-chip ${!summary.reaction.isActive ? 'is-inactive' : ''}`}
+                key={summary.reaction.id}
+              >
+                <button
+                  className={`forum-reaction-chip-main ${reactionLoading ? 'is-loading' : ''}`}
+                  disabled={reactionLoading || !canToggle}
+                  onClick={e => onToggleReaction(e, summary)}
+                  title={chipTitle}
+                  type="button"
+                >
+                  {renderReactionImage(summary.reaction, 'forum-reaction-chip-image')}
+                  <span className={`forum-reaction-chip-count ${summary.me ? 'is-mine' : ''}`}>{summary.count}</span>
+                </button>
+              </span>
+            )
+          })}
+          {showPickerButton && (
+            <span className="forum-reaction-picker-wrap" ref={r => (refReactionPicker.current = r ?? undefined)}>
+              <button
+                className={`forum-reaction-add ${reactionLoading ? 'is-loading' : ''}`}
+                disabled={reactionLoading}
+                onClick={onToggleReactionPicker}
+                title="Добавить реакцию"
+                type="button"
+              >
+                <i className="far fa-smile" />
+              </button>
+              {renderReactionPicker()}
+            </span>
+          )}
+        </div>
+      </div>
+    )
+  })
+
+  const renderReactionList = useConstCallback(() => {
+    if (!reactionListOpen) {
+      return null
+    }
+
+    const activeSummary =
+      reactionState.reactions.find(summary => summary.reaction.id === activeReactionId) ?? reactionState.reactions[0] ?? null
+
+    return (
+      <WikidotModal buttons={[{ title: 'Закрыть', onClick: onCloseReactionList }]} isLoading={reactionLoading}>
+        <div className="forum-reaction-details">
+          <h2>Реакции</h2>
+          {reactionState.reactions.length > 0 ? (
+            <div className="forum-reaction-tabs-layout">
+              <div className="forum-reaction-tabs" role="tablist" aria-label="Реакции к сообщению">
+                {reactionState.reactions.map(summary => {
+                  const isActive = activeSummary?.reaction.id === summary.reaction.id
+
+                  return (
+                    <button
+                      aria-selected={isActive}
+                      className={`forum-reaction-tab ${isActive ? 'is-active' : ''}`}
+                      key={summary.reaction.id}
+                      onClick={e => onSelectReactionTab(e, summary)}
+                      role="tab"
+                      title={summary.reaction.name}
+                      type="button"
+                    >
+                      {renderReactionImage(summary.reaction, 'forum-reaction-details-image')}
+                      <span>{summary.reaction.name}</span>
+                      <strong>{summary.count}</strong>
+                    </button>
+                  )
+                })}
+              </div>
+              {activeSummary && (
+                <div className="forum-reaction-tab-panel" role="tabpanel">
+                  <div className="forum-reaction-panel-head">
+                    <div className="forum-reaction-panel-title">
+                      {renderReactionImage(activeSummary.reaction, 'forum-reaction-details-image')}
+                      <span>{activeSummary.reaction.name}</span>
+                      <strong>{activeSummary.count}</strong>
+                    </div>
+                    {reactionState.canModerateReactions && (
+                      <a href="#" className="btn btn-danger btn-xs" onClick={e => onRemoveReactionType(e, activeSummary)}>
+                        <i className="fas fa-times" /> Удалить всех
+                      </a>
+                    )}
+                  </div>
+                  <div className="forum-reaction-user-list">
+                    {activeSummary.users.map((reactionUser, index) => (
+                      <div className="forum-reaction-user-row" key={`${activeSummary.reaction.id}-${reactionUser.id ?? index}`}>
+                        <div className="forum-reaction-user">
+                          <UserView data={reactionUser} />
+                        </div>
+                        {reactionState.canModerateReactions && reactionUser.id !== undefined && (
+                          <a href="#" className="btn btn-default btn-xs" onClick={e => onRemoveReactionUser(e, activeSummary, reactionUser)}>
+                            <i className="fas fa-times" /> Удалить
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="forum-reaction-table-empty">Под сообщением пока нет реакций.</p>
+          )}
+        </div>
+      </WikidotModal>
+    )
+  })
+
+  const canOpenReactionList = reactionState.reactions.length > 0
+  const canShare = true
+  const hasPostOptions = canShare || canEdit || canDelete || canOpenReactionList
+  const postMenu = hasPostOptions ? (
+    <div className="forum-post-menu">
+      <button
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-label="Опции"
+        className="forum-post-menu-button"
+        onClick={onToggle}
+        title="Опции"
+        type="button"
+      >
+        <i className="fas fa-ellipsis-v" />
+      </button>
+      {open && (
+        <div className="forum-post-menu-dropdown" role="menu">
+          {canShare && (
+            <button onClick={onShare} role="menuitem" type="button">
+              Поделиться
+            </button>
+          )}
+          {canOpenReactionList && (
+            <a href="#" onClick={onOpenReactionList} role="menuitem">
+              Реакции
+            </a>
+          )}
+          {canEdit && (
+            <a href="#" onClick={onEdit} role="menuitem">
+              Редактировать
+            </a>
+          )}
+          {canDelete && (
+            <a href="#" onClick={onDelete} role="menuitem">
+              Удалить
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  ) : null
+  const replyButton =
+    canReply && !isReplying ? (
+      <a aria-label="Ответить" className="forum-post-reply-button" href="#" onClick={onReply} title="Ответить">
+        <i className="fas fa-reply" />
+      </a>
+    ) : null
+
   return (
     <>
       {hasRevisions && lastRevisionDate && lastRevisionAuthor && !revisionsOpen && (
@@ -312,32 +812,17 @@ const ForumPostOptions: React.FC<Props> = ({
           </p>
         </WikidotModal>
       )}
-      {canReply && (
-        <strong>
-          <a href="#" onClick={onReply}>
-            Ответить
-          </a>
-        </strong>
-      )}{' '}
-      {(canEdit || canDelete) && (
-        <a href="#" onClick={onToggle}>
-          Опции
-        </a>
+      {reactionError && (
+        <WikidotModal buttons={[{ title: 'Закрыть', onClick: onCloseReactionError }]} isError>
+          <p>
+            <strong>Ошибка:</strong> {reactionError}
+          </p>
+        </WikidotModal>
       )}
-      {open && (
-        <div className="options">
-          {canEdit && (
-            <a href="#" onClick={onEdit}>
-              Редактировать
-            </a>
-          )}{' '}
-          {canDelete && (
-            <a href="#" onClick={onDelete}>
-              Удалить
-            </a>
-          )}
-        </div>
-      )}
+      {renderReactionList()}
+      {renderReactions()}
+      {menuPortal ? postMenu && ReactDOM.createPortal(postMenu, menuPortal) : postMenu}
+      {replyPortal ? replyButton && ReactDOM.createPortal(replyButton, replyPortal) : replyButton}
       {isReplying && (
         <div className="post-container">
           <ForumPostEditor

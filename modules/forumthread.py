@@ -13,9 +13,12 @@ from renderer.utils import render_user_to_json, render_user_to_html, render_temp
 from renderer import RenderContext
 
 from web.controllers import articles
+from web.controllers import forum_reactions
 from web.models.users import User
 from web.models.articles import Vote
 from web.models.forum import ForumCategory, ForumThread, ForumSection, ForumPost, ForumPostVersion
+from web.models.settings import Settings
+from web.models.site import get_current_site
 
 from ._csrf_protection import csrf_safe_method
 
@@ -35,6 +38,35 @@ def get_post_contents(posts):
     return ret
 
 
+def get_replies_by_parent(root_posts):
+    all_posts = list(root_posts)
+    replies_by_parent = {}
+    frontier = list(root_posts)
+
+    while frontier:
+        parent_ids = [post.id for post in frontier]
+        replies = list(
+            ForumPost.objects
+            .filter(reply_to_id__in=parent_ids)
+            .select_related('author')
+            .order_by('created_at', 'id')
+        )
+
+        for reply in replies:
+            replies_by_parent.setdefault(reply.reply_to_id, []).append(reply)
+
+        all_posts.extend(replies)
+        frontier = replies
+
+    return all_posts, replies_by_parent
+
+
+def get_forum_post_max_depth():
+    site = get_current_site(required=False)
+    settings = site.settings if site else Settings.get_default_settings()
+    return max(1, settings.forum_post_max_depth or 1)
+
+
 def highlight_mentions(text: str, usernames: set[str]) -> str:
     regex = re.compile(r'@[\w.-]+')
 
@@ -49,14 +81,33 @@ def highlight_mentions(text: str, usernames: set[str]) -> str:
     return SafeString(regex.sub(repl, text))
 
 
-def get_post_info(context, thread, posts, show_replies=True, usernames: set[str]=set()):
-    post_contents = get_post_contents(posts)
+def get_post_info(
+    context,
+    thread,
+    posts,
+    show_replies=True,
+    usernames: set[str] | None=None,
+    post_contents=None,
+    replies_by_parent=None,
+    reaction_context=None,
+    depth=1,
+    max_depth=5,
+):
+    posts = list(posts)
+    usernames = usernames or set()
+
+    if post_contents is None or replies_by_parent is None or reaction_context is None:
+        all_posts, replies_by_parent = get_replies_by_parent(posts) if show_replies else (posts, {})
+        post_contents = get_post_contents(all_posts)
+        reaction_context = forum_reactions.build_reaction_context(all_posts, context.user)
+
     post_info = []
 
     for post in posts:
-        replies = ForumPost.objects.filter(reply_to=post).order_by('created_at') if show_replies else []
+        replies = replies_by_parent.get(post.id, []) if show_replies else []
         author_vote = ''
         is_op = thread.author == post.author
+        reaction_state = forum_reactions.serialize_post_reaction_state(post, context.user, reaction_context)
 
         if thread.article:
             rating_mode = thread.article.settings.rating_mode
@@ -78,7 +129,7 @@ def get_post_info(context, thread, posts, show_replies=True, usernames: set[str]
             'created_at': render_date(post.created_at),
             'updated_at': render_date(post.updated_at),
             'content': content,
-            'replies': get_post_info(context, thread, replies, show_replies, usernames),
+            'replies': [],
             'rendered_replies': None,
             'options_config': json.dumps({
                 'threadId': thread.id,
@@ -91,10 +142,46 @@ def get_post_info(context, thread, posts, show_replies=True, usernames: set[str]
                 'user': render_user_to_json(context.user),
                 'canReply': context.user.has_perm('roles.create_forum_posts', thread) if not thread.article else context.user.has_perm('roles.comment_articles', thread),
                 'canEdit': context.user.has_perm('roles.edit_forum_posts', post),
-                'canDelete': context.user.has_perm('roles.delete_forum_posts', post)
+                'canDelete': context.user.has_perm('roles.delete_forum_posts', post),
+                'canReact': reaction_state['canReact'],
+                'canRemoveOwnReactions': reaction_state['canRemoveOwnReactions'],
+                'canModerateReactions': reaction_state['canModerateReactions'],
+                'canUseInactiveReactions': reaction_state['canUseInactiveReactions'],
+                'availableReactions': reaction_state['availableReactions'],
+                'reactions': reaction_state['reactions'],
+                'reactionLimits': reaction_state['limits'],
+                'reactionTotalCount': reaction_state['totalCount'],
+                'myReactionCount': reaction_state['myCount'],
             })
         }
         post_info.append(render_post)
+
+        if replies and depth < max_depth:
+            render_post['replies'] = get_post_info(
+                context,
+                thread,
+                replies,
+                show_replies,
+                usernames,
+                post_contents,
+                replies_by_parent,
+                reaction_context,
+                depth + 1,
+                max_depth,
+            )
+        elif replies:
+            post_info.extend(get_post_info(
+                context,
+                thread,
+                replies,
+                show_replies,
+                usernames,
+                post_contents,
+                replies_by_parent,
+                reaction_context,
+                depth,
+                max_depth,
+            ))
 
     return post_info
 
@@ -223,7 +310,7 @@ def render(context: RenderContext, params):
 
     usernames = set(User.objects.all().values_list(Lower('username'), flat=True))
     posts = q[(page-1)*per_page:page*per_page]
-    post_info = get_post_info(context, thread, posts, usernames=usernames)
+    post_info = get_post_info(context, thread, posts, usernames=usernames, max_depth=get_forum_post_max_depth())
 
 
     context.path_params['p'] = str(page)

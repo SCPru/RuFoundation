@@ -122,6 +122,19 @@ def get_action_log_entry_description(log_entry: ActionLogEntry):
                 return _render_post_edit_preview(m)
             case ActionType.RemoveForumPost:
                 return _make_post_preview(m['post']['id'], m['post']['author'], m['title'], m['source'])
+            case ActionType.AddForumReaction:
+                thread_name = m['thread']['name']
+                post_id = m['post']['id']
+                reaction_name = m['reaction']['name']
+                return f'В теме "{thread_name}" к сообщению №{post_id} добавлена реакция "{reaction_name}"'
+            case ActionType.RemoveForumReaction:
+                thread_name = m['thread']['name']
+                post_id = m['post']['id']
+                reaction_name = m['reaction']['name']
+                target_user = m['target_user']['username']
+                if m['target_user']['id'] == log_entry.user_id:
+                    return f'В теме "{thread_name}" с сообщения №{post_id} удалена реакция "{reaction_name}"'
+                return f'В теме "{thread_name}" с сообщения №{post_id} удалена реакция "{reaction_name}" пользователя {target_user}'
             case _:
                 return None
     except:

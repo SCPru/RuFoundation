@@ -192,6 +192,9 @@ class Role(auto_prefetch.Model):
             slug='registered',
         )
         if created:
+            registred.permissions.add(
+                web.permissions.forum.ReactForumPostsPermission.as_permission(),
+            )
             registred.index = 1
             registred.save()
         return registred

@@ -1,0 +1,23 @@
+body.model-forumreaction.change-list #result_list thead th.column-_reorder_,
+body.model-forumreaction.change-list #result_list tbody td.field-_reorder_ {
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+body.model-forumreaction.change-list #result_list thead th.column-_reorder_ .text {
+  display: none;
+}
+
+body.model-forumreaction.change-list #result_list thead th.column-_reorder_::after {
+  content: "#";
+  color: var(--body-quiet-color, #666);
+  font-weight: 600;
+}
+
+body.model-forumreaction.change-list #result_list tbody td.field-_reorder_ {
+  padding-left: 6px;
+  padding-right: 6px;
+}

@@ -19,6 +19,13 @@ class CreateForumPostsPermission(BaseRolePermission):
     group = 'Форум'
 
 
+class ReactForumPostsPermission(BaseRolePermission):
+    name = 'Ставить реакции на форуме'
+    codename = 'react_forum_posts'
+    description = 'Позволяет ставить и удалять свои реакции под сообщениями форума'
+    group = 'Форум'
+
+
 class EditForumPostsPermission(BaseRolePermission):
     name = 'Редактировать посты на форуме'
     codename = 'edit_forum_posts'

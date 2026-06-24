@@ -3,6 +3,7 @@ from django.http import HttpRequest
 from renderer import single_pass_render
 from renderer.parser import RenderContext
 from renderer.utils import render_user_to_json
+from web.controllers import forum_reactions
 from web.models.forum import ForumPost, ForumPostVersion, ForumThread
 from web.views.api import APIError, APIView
 
@@ -34,9 +35,11 @@ class ForumThreadView(APIView):
         post: ForumPost,
         versions: dict[int, ForumPostVersion],
         children_by_parent: dict[int, list[ForumPost]],
+        reaction_context: dict,
     ):
         version = versions.get(post.id)
         source = version.source if version else ''
+        reaction_state = forum_reactions.serialize_post_reaction_state(post, request.user, reaction_context)
 
         return {
             'id': post.id,
@@ -51,8 +54,9 @@ class ForumThreadView(APIView):
                 'createdAt': version.created_at.isoformat(),
                 'author': render_user_to_json(version.author),
             } if version else None,
+            'reactionState': reaction_state,
             'replies': [
-                self._render_post(request, child, versions, children_by_parent)
+                self._render_post(request, child, versions, children_by_parent, reaction_context)
                 for child in children_by_parent.get(post.id, [])
             ],
         }
@@ -87,6 +91,7 @@ class ForumThreadView(APIView):
             .order_by('created_at', 'id')
         )
         versions = self._get_latest_versions(posts)
+        reaction_context = forum_reactions.build_reaction_context(posts, request.user)
 
         children_by_parent: dict[int, list[ForumPost]] = {}
         root_posts: list[ForumPost] = []
@@ -121,8 +126,10 @@ class ForumThreadView(APIView):
                 },
             } if thread.category_id else None,
             'postCount': len(posts),
+            'availableReactions': reaction_context['availableReactions'],
+            'reactionLimits': reaction_context['limits'],
             'posts': [
-                self._render_post(request, post, versions, children_by_parent)
+                self._render_post(request, post, versions, children_by_parent, reaction_context)
                 for post in root_posts
             ],
         })

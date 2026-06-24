@@ -61,6 +61,44 @@ export interface ForumFetchPostVersionsResponse {
   versions: Array<ForumPostVersion>
 }
 
+export interface ForumReaction {
+  id: number
+  name: string
+  imageUrl: string
+  isActive: boolean
+}
+
+export interface ForumPostReactionSummary {
+  reaction: ForumReaction
+  count: number
+  me: boolean
+  users: Array<UserData>
+}
+
+export interface ForumReactionLimits {
+  maxPerUser: number
+  maxPerPost: number
+}
+
+export interface ForumPostReactionState {
+  availableReactions: Array<ForumReaction>
+  limits: ForumReactionLimits
+  reactions: Array<ForumPostReactionSummary>
+  totalCount: number
+  myCount: number
+  canReact: boolean
+  canRemoveOwnReactions: boolean
+  canModerateReactions: boolean
+  canUseInactiveReactions: boolean
+}
+
+export interface ForumPostReactionRequest {
+  postId: number
+  reactionId: number
+  userId?: number
+  allUsers?: boolean
+}
+
 export interface ForumUpdateThreadRequest {
   threadId: number
   name?: string
@@ -109,6 +147,7 @@ export interface ForumThreadExportPost {
   source: string
   content: string
   version: ForumThreadExportPostVersion | null
+  reactionState: ForumPostReactionState
   replies: Array<ForumThreadExportPost>
 }
 
@@ -124,6 +163,8 @@ export interface ForumThreadExport {
   article: ForumThreadExportArticle | null
   category: ForumThreadExportCategory | null
   postCount: number
+  availableReactions: Array<ForumReaction>
+  reactionLimits: ForumReactionLimits
   posts: Array<ForumThreadExportPost>
 }
 
@@ -167,6 +208,36 @@ export async function fetchForumPostVersions(postId: number) {
     postId,
   }
   return await callModule<ForumFetchPostVersionsResponse>({ module: 'forumpost', method: 'fetchversions', params: request })
+}
+
+export async function fetchForumPostReactions(postId: number) {
+  return await callModule<ForumPostReactionState>({ module: 'forumpost', method: 'reactions', params: { postId } })
+}
+
+export async function addForumPostReaction(postId: number, reactionId: number) {
+  const request: ForumPostReactionRequest = {
+    postId,
+    reactionId,
+  }
+  return await callModule<ForumPostReactionState>({ module: 'forumpost', method: 'react', params: request })
+}
+
+export async function removeForumPostReaction(postId: number, reactionId: number, userId?: number) {
+  const request: ForumPostReactionRequest = {
+    postId,
+    reactionId,
+    userId,
+  }
+  return await callModule<ForumPostReactionState>({ module: 'forumpost', method: 'unreact', params: request })
+}
+
+export async function removeAllForumPostReactions(postId: number, reactionId: number) {
+  const request: ForumPostReactionRequest = {
+    postId,
+    reactionId,
+    allUsers: true,
+  }
+  return await callModule<ForumPostReactionState>({ module: 'forumpost', method: 'unreact', params: request })
 }
 
 export async function updateForumThread(request: ForumUpdateThreadRequest) {
