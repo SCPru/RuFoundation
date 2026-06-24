@@ -348,8 +348,8 @@
 }
 
 .thread-container .post .long .head .title {
-  max-width: 100%;
-  min-width: 0;
+  display: inline;
+  line-height: 1.25;
   overflow-wrap: anywhere;
   white-space: normal;
   word-break: normal;
