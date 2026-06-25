@@ -78,7 +78,7 @@ def get_post_info(context, posts, category_for_comments, usernames: set[str]=set
             })
         render_post = {
             'id': post.id,
-            'name': post.name.strip(),
+            'name': post.name.strip() or 'Перейти к сообщению',
             'is_op': is_op,
             'author_mark': author_mark,
             'author': render_user_to_html(post.author),
