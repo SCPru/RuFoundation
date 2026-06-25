@@ -262,6 +262,7 @@
   right: 12px;
   bottom: 18vh;
   z-index: 25;
+  box-sizing: border-box;
   width: 34px;
   opacity: 0.52;
   transition: opacity 0.18s ease;
@@ -310,6 +311,7 @@
   position: absolute;
   top: var(--forum-date-position);
   right: calc(100% + 8px);
+  box-sizing: border-box;
   min-width: 74px;
   padding: 4px 7px;
   border: 1px solid rgba(92, 108, 135, 0.34);
@@ -1053,13 +1055,15 @@
 @media (max-width: 720px) {
   .forum-date-rail {
     top: auto;
-    right: 12px;
+    right: max(12px, env(safe-area-inset-right));
     bottom: max(12px, env(safe-area-inset-bottom));
-    left: 12px;
+    left: max(12px, env(safe-area-inset-left));
     z-index: 90;
     width: auto;
+    max-width: calc(100vw - max(12px, env(safe-area-inset-left)) - max(12px, env(safe-area-inset-right)));
     height: 40px;
     opacity: 0.92;
+    overflow: visible;
   }
 
   .forum-date-rail-track {
@@ -1082,7 +1086,10 @@
     top: auto;
     right: auto;
     bottom: calc(100% + 8px);
-    left: var(--forum-date-position);
+    left: clamp(37px, var(--forum-date-position), calc(100% - 37px));
+    max-width: calc(100vw - 24px);
+    overflow: hidden;
+    text-overflow: ellipsis;
     transform: translateX(-50%);
   }
 }
