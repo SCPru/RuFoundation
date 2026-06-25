@@ -271,7 +271,7 @@ def render(context: RenderContext, params):
                                 <div class="forum-reactions forum-reactions-static" aria-label="Реакции к сообщению">
                                     <div class="forum-reaction-list">
                                         {% for reaction in post.reactions %}
-                                        <span class="forum-reaction-chip forum-reaction-chip-static {% if reaction.is_inactive %}is-inactive{% endif %}" title="{{ reaction.name }}: {{ reaction.count }}">
+                                        <span class="forum-reaction-chip forum-reaction-chip-static {% if reaction.is_inactive %}is-inactive{% endif %}" data-tooltip="{{ reaction.name }}: {{ reaction.count }}">
                                             {% if reaction.image_url %}
                                                 <img class="forum-reaction-chip-image" src="{{ reaction.image_url }}" alt="{{ reaction.name }}">
                                             {% else %}

@@ -23,6 +23,7 @@ import ForumPostEditor, { ForumPostPreviewData, ForumPostSubmissionData } from '
 import ForumPostPreview from '../forum/forum-post-preview'
 import useConstCallback from '../util/const-callback'
 import formatDate from '../util/date-format'
+import Tooltip from '../util/tooltip'
 import UserView from '../util/user-view'
 import WikidotModal from '../util/wikidot-modal'
 
@@ -717,16 +718,18 @@ const ForumPostOptions: React.FC<Props> = ({
             (!selected && (!canAddReactionType(reaction.id) || (!reaction.isActive && !reactionState.canUseInactiveReactions)))
 
           return (
-            <button
-              className={`forum-reaction-picker-item ${selected ? 'is-selected' : ''} ${reactionLoading ? 'is-loading' : ''}`}
-              disabled={disabled}
-              key={reaction.id}
-              onClick={e => onPickReaction(e, reaction)}
-              title={reaction.name}
-              type="button"
-            >
-              {renderReactionImage(reaction, 'forum-reaction-picker-image')}
-            </button>
+            <Tooltip content={reaction.name} key={reaction.id}>
+              <span className="forum-reaction-tooltip-target">
+                <button
+                  className={`forum-reaction-picker-item ${selected ? 'is-selected' : ''} ${reactionLoading ? 'is-loading' : ''}`}
+                  disabled={disabled}
+                  onClick={e => onPickReaction(e, reaction)}
+                  type="button"
+                >
+                  {renderReactionImage(reaction, 'forum-reaction-picker-image')}
+                </button>
+              </span>
+            </Tooltip>
           )
         })}
         {reactionState.availableReactions.length === 0 && <div className="forum-reaction-picker-empty">Нет доступных реакций</div>}
@@ -754,34 +757,37 @@ const ForumPostOptions: React.FC<Props> = ({
                 : `Реакция "${summary.reaction.name}" сейчас недоступна`
 
             return (
-              <span
-                className={`forum-reaction-chip ${!summary.reaction.isActive ? 'is-inactive' : ''}`}
-                key={summary.reaction.id}
-              >
-                <button
-                  className={`forum-reaction-chip-main ${reactionLoading ? 'is-loading' : ''}`}
-                  disabled={reactionLoading || !canToggle}
-                  onClick={e => onToggleReaction(e, summary)}
-                  title={chipTitle}
-                  type="button"
-                >
-                  {renderReactionImage(summary.reaction, 'forum-reaction-chip-image')}
-                  <span className={`forum-reaction-chip-count ${summary.me ? 'is-mine' : ''}`}>{summary.count}</span>
-                </button>
+              <span className={`forum-reaction-chip ${!summary.reaction.isActive ? 'is-inactive' : ''}`} key={summary.reaction.id}>
+                <Tooltip content={chipTitle}>
+                  <span className="forum-reaction-tooltip-target">
+                    <button
+                      className={`forum-reaction-chip-main ${reactionLoading ? 'is-loading' : ''}`}
+                      disabled={reactionLoading || !canToggle}
+                      onClick={e => onToggleReaction(e, summary)}
+                      type="button"
+                    >
+                      {renderReactionImage(summary.reaction, 'forum-reaction-chip-image')}
+                      <span className={`forum-reaction-chip-count ${summary.me ? 'is-mine' : ''}`}>{summary.count}</span>
+                    </button>
+                  </span>
+                </Tooltip>
               </span>
             )
           })}
           {showPickerButton && (
             <span className="forum-reaction-picker-wrap" ref={r => (refReactionPicker.current = r ?? undefined)}>
-              <button
-                className={`forum-reaction-add ${reactionLoading ? 'is-loading' : ''}`}
-                disabled={reactionLoading}
-                onClick={onToggleReactionPicker}
-                title="Добавить реакцию"
-                type="button"
-              >
-                <i className="far fa-smile" />
-              </button>
+              <Tooltip content="Добавить реакцию">
+                <span className="forum-reaction-tooltip-target">
+                  <button
+                    className={`forum-reaction-add ${reactionLoading ? 'is-loading' : ''}`}
+                    disabled={reactionLoading}
+                    onClick={onToggleReactionPicker}
+                    type="button"
+                  >
+                    <i className="far fa-smile" />
+                  </button>
+                </span>
+              </Tooltip>
               {renderReactionPicker()}
             </span>
           )}
@@ -809,19 +815,19 @@ const ForumPostOptions: React.FC<Props> = ({
                   const isActive = activeSummary?.reaction.id === summary.reaction.id
 
                   return (
-                    <button
-                      aria-selected={isActive}
-                      className={`forum-reaction-tab ${isActive ? 'is-active' : ''}`}
-                      key={summary.reaction.id}
-                      onClick={e => onSelectReactionTab(e, summary)}
-                      role="tab"
-                      title={summary.reaction.name}
-                      type="button"
-                    >
-                      {renderReactionImage(summary.reaction, 'forum-reaction-details-image')}
-                      <span>{summary.reaction.name}</span>
-                      <strong>{summary.count}</strong>
-                    </button>
+                    <Tooltip content={summary.reaction.name} key={summary.reaction.id}>
+                      <button
+                        aria-selected={isActive}
+                        className={`forum-reaction-tab ${isActive ? 'is-active' : ''}`}
+                        onClick={e => onSelectReactionTab(e, summary)}
+                        role="tab"
+                        type="button"
+                      >
+                        {renderReactionImage(summary.reaction, 'forum-reaction-details-image')}
+                        <span>{summary.reaction.name}</span>
+                        <strong>{summary.count}</strong>
+                      </button>
+                    </Tooltip>
                   )
                 })}
               </div>
@@ -871,39 +877,35 @@ const ForumPostOptions: React.FC<Props> = ({
   const revisionAuthorLabel = getUserLabel(revisionAuthor)
   const editMeta =
     hasVisibleRevisions && revisionDate && revisionAuthor ? (
-      <span
-        aria-label={`Последнее редактирование: ${revisionDateLabel}, ${revisionAuthorLabel}`}
-        className="forum-post-edit-meta"
-        tabIndex={0}
-      >
-        <i aria-hidden="true" className="fas fa-pen" />
-        <span className="forum-post-edit-tooltip" role="tooltip">
-          <span className="forum-post-edit-tooltip-title">Последнее редактирование</span>
-          <span>
-            Дата:{' '}
-            <span className="odate" style={{ display: 'inline' }}>
-              {revisionDateLabel}
+      <Tooltip
+        className="w-tooltip-stack"
+        content={
+          <>
+            <span className="w-tooltip-title">Последнее редактирование</span>
+            <span>
+              Дата:{' '}
+              <span className="odate" style={{ display: 'inline' }}>
+                {revisionDateLabel}
+              </span>
             </span>
-          </span>
-          <span>
-            Пользователь: <UserView data={revisionAuthor} />
-          </span>
+            <span>
+              Пользователь: <UserView data={revisionAuthor} />
+            </span>
+          </>
+        }
+      >
+        <span aria-label={`Последнее редактирование: ${revisionDateLabel}, ${revisionAuthorLabel}`} className="forum-post-edit-meta" tabIndex={0}>
+          <i aria-hidden="true" className="fas fa-pen" />
         </span>
-      </span>
+      </Tooltip>
     ) : null
   const postMenu = hasPostOptions ? (
     <div className="forum-post-menu" ref={r => (refPostMenu.current = r ?? undefined)}>
-      <button
-        aria-expanded={open}
-        aria-haspopup="true"
-        aria-label="Опции"
-        className="forum-post-menu-button"
-        onClick={onToggle}
-        title="Опции"
-        type="button"
-      >
-        <i className="fas fa-ellipsis-v" />
-      </button>
+      <Tooltip content="Опции">
+        <button aria-expanded={open} aria-haspopup="true" aria-label="Опции" className="forum-post-menu-button" onClick={onToggle} type="button">
+          <i className="fas fa-ellipsis-v" />
+        </button>
+      </Tooltip>
       {open && (
         <div className="forum-post-menu-dropdown" ref={r => (refPostMenuDropdown.current = r ?? undefined)} role="menu">
           {canShare && (
@@ -937,9 +939,11 @@ const ForumPostOptions: React.FC<Props> = ({
   ) : null
   const replyButton =
     canReply && !isReplying ? (
-      <a aria-label="Ответить" className="forum-post-reply-button" href="#" onClick={onReply} title="Ответить">
-        <i className="fas fa-reply"></i>
-      </a>
+      <Tooltip content="Ответить">
+        <a aria-label="Ответить" className="forum-post-reply-button" href="#" onClick={onReply}>
+          <i className="fas fa-reply"></i>
+        </a>
+      </Tooltip>
     ) : null
   const repliesToggle =
     replyCount > 0 && replyCountLabel ? (
