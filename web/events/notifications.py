@@ -16,6 +16,20 @@ from web.events import on_trigger
 from web.controllers.notifications import get_notification_subscribtions, send_user_notification, UserNotification
 
 
+def get_user_preferences(user):
+    if user is None or getattr(user, 'is_anonymous', True):
+        return {}
+    try:
+        return user.preferences.all()
+    except Exception:
+        return {}
+
+
+def get_forum_reply_notification_mode(user):
+    mode = get_user_preferences(user).get('qol__forum_reply_notification_mode') or 'tree'
+    return mode if mode in ('tree', 'direct', 'off') else 'tree'
+
+
 @on_trigger(OnUserSignUp)
 def signup_notification(e: OnUserSignUp):
     send_user_notification(e.user, UserNotification.NotificationType.Welcome)
@@ -71,15 +85,19 @@ def new_forum_post_notification(e: OnForumNewPost):
     }
 
     if e.post.reply_to:
-        reply_subscribers = []
-        curr_post = e.post
+        reply_subscribers = set()
+        curr_post = e.post.reply_to
+        is_direct_reply = True
         for _ in range(UserNotification.POST_REPLY_TTL):
-            reply_subscribers.append(curr_post.author)
+            if curr_post.author_id:
+                mode = get_forum_reply_notification_mode(curr_post.author)
+                if mode == 'tree' or (mode == 'direct' and is_direct_reply):
+                    reply_subscribers.add(curr_post.author)
             curr_post = curr_post.reply_to
+            is_direct_reply = False
             if not curr_post:
                 break
 
-        reply_subscribers = set(reply_subscribers)
         if user in reply_subscribers:
             reply_subscribers.remove(user)
         notification_subscribers -= reply_subscribers

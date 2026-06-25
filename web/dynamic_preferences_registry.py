@@ -55,3 +55,16 @@ class ForumReplyCountMode(ChoicePreference):
         ('direct', 'Только прямые ответы'),
         ('tree', 'Вся ветка ответов'),
     )
+
+
+@user_preferences_registry.register
+class ForumReplyNotificationMode(ChoicePreference):
+    section = articles
+    name = 'forum_reply_notification_mode'
+    verbose_name = 'Уведомления об ответах на форуме'
+    default = 'tree'
+    choices = (
+        ('tree', 'Вся ветка ответов'),
+        ('direct', 'Только прямые ответы'),
+        ('off', 'Отключены'),
+    )
