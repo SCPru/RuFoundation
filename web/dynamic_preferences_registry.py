@@ -35,3 +35,23 @@ class ForumSortOrder(ChoicePreference):
         ('oldest', 'Старые сверху'),
         ('newest', 'Новые сверху'),
     )
+
+
+@user_preferences_registry.register
+class ForumHideReactions(BooleanPreference):
+    section = articles
+    name = 'forum_hide_reactions'
+    verbose_name = 'Скрывать реакции на форуме'
+    default = False
+
+
+@user_preferences_registry.register
+class ForumReplyCountMode(ChoicePreference):
+    section = articles
+    name = 'forum_reply_count_mode'
+    verbose_name = 'Счетчик ответов на форуме'
+    default = 'direct'
+    choices = (
+        ('direct', 'Только прямые ответы'),
+        ('tree', 'Вся ветка ответов'),
+    )

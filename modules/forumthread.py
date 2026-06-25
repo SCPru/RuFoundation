@@ -171,6 +171,32 @@ def get_forum_view_settings(user_preferences, params):
     return display_mode, sort_order
 
 
+def are_forum_reactions_hidden(user_preferences):
+    return user_preferences.get('qol__forum_hide_reactions') is True
+
+
+def get_forum_reply_count_mode(user_preferences):
+    mode = user_preferences.get('qol__forum_reply_count_mode') or 'direct'
+    return mode if mode in ('direct', 'tree') else 'direct'
+
+
+def get_reply_descendant_counts(replies_by_parent):
+    counts = {}
+
+    def count_for(post_id):
+        if post_id in counts:
+            return counts[post_id]
+        children = replies_by_parent.get(post_id, [])
+        count = len(children) + sum(count_for(child.id) for child in children)
+        counts[post_id] = count
+        return count
+
+    for post_id in replies_by_parent:
+        count_for(post_id)
+
+    return counts
+
+
 def get_date_anchors(posts, total, per_page, max_anchors=14):
     if total <= 0:
         return []
@@ -238,28 +264,51 @@ def get_post_info(
     replies_by_parent=None,
     reaction_context=None,
     user_preferences=None,
+    hide_reactions=False,
+    reply_count_mode='direct',
+    reply_descendant_counts=None,
     depth=1,
     max_depth=5,
 ):
     posts = list(posts)
     usernames = usernames or set()
 
-    if post_contents is None or replies_by_parent is None or reaction_context is None:
+    if post_contents is None or replies_by_parent is None or (reaction_context is None and not hide_reactions):
         all_posts, replies_by_parent = get_replies_by_parent(posts) if show_replies else (posts, {})
         post_contents = get_post_contents(all_posts)
-        reaction_context = forum_reactions.build_reaction_context(all_posts, context.user)
+        reaction_context = None if hide_reactions else forum_reactions.build_reaction_context(all_posts, context.user)
+        reply_descendant_counts = get_reply_descendant_counts(replies_by_parent)
+
+    reply_descendant_counts = reply_descendant_counts or {}
 
     post_info = []
 
     for post in posts:
         post_url = '%s#post-%d' % (get_thread_url(thread), post.id)
         replies = replies_by_parent.get(post.id, []) if show_replies else []
-        reply_count = len(replies) if replies and depth < max_depth else 0
+        if replies and depth < max_depth:
+            reply_count = reply_descendant_counts.get(post.id, len(replies)) if reply_count_mode == 'tree' else len(replies)
+        else:
+            reply_count = 0
         author_vote = ''
         is_thread_author = post.author_id is not None and thread.author_id == post.author_id
         is_op = is_thread_author
         author_mark = 'Автор темы' if is_op else ''
-        reaction_state = forum_reactions.serialize_post_reaction_state(post, context.user, reaction_context)
+        reaction_state = (
+            {
+                'availableReactions': [],
+                'limits': {'maxPerUser': 0, 'maxPerPost': 0},
+                'reactions': [],
+                'totalCount': 0,
+                'myCount': 0,
+                'canReact': False,
+                'canRemoveOwnReactions': False,
+                'canModerateReactions': False,
+                'canUseInactiveReactions': False,
+            }
+            if hide_reactions
+            else forum_reactions.serialize_post_reaction_state(post, context.user, reaction_context)
+        )
 
         if thread.article:
             is_article_author = post.author_id is not None and post.author in thread.article.authors.all()
@@ -333,6 +382,9 @@ def get_post_info(
                 replies_by_parent,
                 reaction_context,
                 user_preferences,
+                hide_reactions,
+                reply_count_mode,
+                reply_descendant_counts,
                 depth + 1,
                 max_depth,
             )
@@ -347,6 +399,9 @@ def get_post_info(
                 replies_by_parent,
                 reaction_context,
                 user_preferences,
+                hide_reactions,
+                reply_count_mode,
+                reply_descendant_counts,
                 depth,
                 max_depth,
             ))
@@ -543,6 +598,8 @@ def render(context: RenderContext, params):
         page = max_page
 
     usernames = set(User.objects.all().values_list(Lower('username'), flat=True))
+    hide_reactions = are_forum_reactions_hidden(user_preferences)
+    reply_count_mode = get_forum_reply_count_mode(user_preferences)
     pinned_posts = (
         ForumPost.objects
         .filter(thread=thread, is_pinned=True)
@@ -561,6 +618,8 @@ def render(context: RenderContext, params):
         show_replies=False,
         usernames=usernames,
         user_preferences=user_preferences,
+        hide_reactions=hide_reactions,
+        reply_count_mode=reply_count_mode,
         max_depth=get_forum_post_max_depth(),
     )
     posts = q[(page-1)*per_page:page*per_page]
@@ -570,6 +629,8 @@ def render(context: RenderContext, params):
         posts,
         usernames=usernames,
         user_preferences=user_preferences,
+        hide_reactions=hide_reactions,
+        reply_count_mode=reply_count_mode,
         max_depth=get_forum_post_max_depth(),
     )
 

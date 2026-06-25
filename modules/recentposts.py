@@ -8,7 +8,7 @@ from django.utils.safestring import SafeString
 
 import renderer
 
-from modules.forumthread import get_post_contents, get_reply_target_info, get_thread_url
+from modules.forumthread import are_forum_reactions_hidden, get_post_contents, get_reply_target_info, get_thread_url, get_user_preferences
 from modules.listpages import render_pagination, render_date
 from renderer import RenderContext, render_template_from_string, render_user_to_html
 from renderer.utils import render_vote_to_html
@@ -54,7 +54,7 @@ def render_author_mark(mark):
 def get_post_info(context, posts, category_for_comments, usernames: set[str]=set(), hide_reactions=False):
     posts = list(posts)
     post_contents = get_post_contents(posts)
-    reaction_context = forum_reactions.build_reaction_context(posts, context.user)
+    reaction_context = None if hide_reactions else forum_reactions.build_reaction_context(posts, context.user)
     post_info = []
 
     for post in posts:
@@ -77,18 +77,19 @@ def get_post_info(context, posts, category_for_comments, usernames: set[str]=set
             renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user), 'message'),
             usernames
         )
-        reaction_state = forum_reactions.serialize_post_reaction_state(post, context.user, reaction_context)
+        reaction_state = None if hide_reactions else forum_reactions.serialize_post_reaction_state(post, context.user, reaction_context)
         reactions = []
-        for summary in reaction_state['reactions']:
-            reaction = summary['reaction']
-            name = reaction.get('name') or ''
-            reactions.append({
-                'name': name,
-                'image_url': reaction.get('imageUrl'),
-                'fallback': name[:1] or '?',
-                'count': summary['count'],
-                'is_inactive': not reaction.get('isActive'),
-            })
+        if reaction_state:
+            for summary in reaction_state['reactions']:
+                reaction = summary['reaction']
+                name = reaction.get('name') or ''
+                reactions.append({
+                    'name': name,
+                    'image_url': reaction.get('imageUrl'),
+                    'fallback': name[:1] or '?',
+                    'count': summary['count'],
+                    'is_inactive': not reaction.get('isActive'),
+                })
         render_post = {
             'id': post.id,
             'name': post.name.strip() or 'Перейти к сообщению',
@@ -188,7 +189,14 @@ def render(context: RenderContext, params):
 
     usernames = set(User.objects.all().values_list(Lower('username'), flat=True))
     posts = q[(page - 1) * per_page:page * per_page]
-    post_info = get_post_info(context, posts, category_for_comments, usernames=usernames)
+    user_preferences = get_user_preferences(context.user)
+    post_info = get_post_info(
+        context,
+        posts,
+        category_for_comments,
+        usernames=usernames,
+        hide_reactions=are_forum_reactions_hidden(user_preferences),
+    )
 
     categories = []
     raw_categories = all_categories
