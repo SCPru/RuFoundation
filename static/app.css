@@ -175,10 +175,6 @@
 /* ======================= */
 
 /* New forum triks */
-.thread-container .post .long .head.op-post {
-  background: transparent;
-}
-
 .thread-container.w-forum-thread {
   position: relative;
 }
