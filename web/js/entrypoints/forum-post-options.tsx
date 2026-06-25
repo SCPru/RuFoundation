@@ -32,6 +32,8 @@ interface Props {
   threadName: string
   postId: number
   postName: string
+  replyCount?: number
+  replyCountLabel?: string
   canReply?: boolean
   canEdit?: boolean
   canDelete?: boolean
@@ -117,6 +119,8 @@ const ForumPostOptions: React.FC<Props> = ({
   threadId,
   postId,
   postName,
+  replyCount = 0,
+  replyCountLabel = '',
   canReply,
   canEdit,
   canDelete,
@@ -146,6 +150,7 @@ const ForumPostOptions: React.FC<Props> = ({
   const [hasVisibleRevisions, setHasVisibleRevisions] = useState(initialHasRevisions === true)
   const [revisionDate, setRevisionDate] = useState(initialLastRevisionDate)
   const [revisionAuthor, setRevisionAuthor] = useState<UserData | undefined>(initialLastRevisionAuthor)
+  const [repliesCollapsed, setRepliesCollapsed] = useState(false)
   const [reactionState, setReactionState] = useState<ForumPostReactionState>(() => ({
     availableReactions,
     reactions,
@@ -218,6 +223,19 @@ const ForumPostOptions: React.FC<Props> = ({
       }
     }
   }, [])
+
+  useLayoutEffect(() => {
+    const postContainer = refSelf.current?.closest('.post-container') as HTMLElement | null
+    if (!postContainer || !replyCount) {
+      return
+    }
+
+    postContainer.classList.toggle('forum-post-replies-collapsed', repliesCollapsed)
+
+    return () => {
+      postContainer.classList.remove('forum-post-replies-collapsed')
+    }
+  }, [replyCount, repliesCollapsed])
 
   useEffect(() => {
     if (!open) {
@@ -422,6 +440,13 @@ const ForumPostOptions: React.FC<Props> = ({
     e.stopPropagation()
 
     setOpen(!open)
+  })
+
+  const onToggleReplies = useConstCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    setRepliesCollapsed(value => !value)
   })
 
   const getPostShareUrl = useConstCallback(() => {
@@ -916,6 +941,26 @@ const ForumPostOptions: React.FC<Props> = ({
         <i className="fas fa-reply"></i>
       </a>
     ) : null
+  const repliesToggle =
+    replyCount > 0 && replyCountLabel ? (
+      <button
+        aria-expanded={!repliesCollapsed}
+        aria-label={repliesCollapsed ? `Развернуть ${replyCountLabel}` : `Свернуть ${replyCountLabel}`}
+        className={`forum-post-replies-toggle ${repliesCollapsed ? 'is-collapsed' : ''}`}
+        onClick={onToggleReplies}
+        type="button"
+      >
+        <span>{replyCountLabel}</span>
+        <i className={`fas ${repliesCollapsed ? 'fa-angle-right' : 'fa-angle-down'}`} aria-hidden="true" />
+      </button>
+    ) : null
+  const rightActions =
+    replyButton || repliesToggle ? (
+      <div className="forum-post-right-actions">
+        {repliesToggle}
+        {replyButton}
+      </div>
+    ) : null
   const reactionControls = renderReactions()
 
   return (
@@ -961,9 +1006,9 @@ const ForumPostOptions: React.FC<Props> = ({
         </WikidotModal>
       )}
       {renderReactionList()}
-      {(replyButton || reactionControls) && (
+      {(rightActions || reactionControls) && (
         <div className="forum-post-actions">
-          {replyButton}
+          {rightActions}
           {reactionControls}
         </div>
       )}

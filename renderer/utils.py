@@ -32,6 +32,19 @@ def render_template_from_string(template: str, **context: object) -> SafeString:
     return tpl.render(Context(context))
 
 
+def format_ru_plural(number, one, few, many):
+    abs_number = abs(int(number))
+    if 11 <= abs_number % 100 <= 14:
+        form = many
+    elif abs_number % 10 == 1:
+        form = one
+    elif 2 <= abs_number % 10 <= 4:
+        form = few
+    else:
+        form = many
+    return f'{number} {form}'
+
+
 class RoleJSON(JSONInterface):
     slug: str
     name: Optional[str]=None

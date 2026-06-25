@@ -195,6 +195,10 @@
   animation: forum-post-focus 1.4s ease;
 }
 
+.thread-container .post-container.forum-post-replies-collapsed > .post-container {
+  display: none;
+}
+
 .forum-post-enter {
   opacity: 0;
   transform: translateY(8px);
@@ -625,6 +629,16 @@
   clear: both;
 }
 
+.forum-post-right-actions {
+  float: right;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 4px 8px;
+}
+
 .forum-post-reply-button {
   float: right;
   position: relative;
@@ -640,6 +654,11 @@
   text-decoration: none;
 }
 
+.forum-post-right-actions .forum-post-reply-button {
+  float: none;
+  margin: 0;
+}
+
 .forum-post-reply-button svg {
   display: block;
   width: 20px;
@@ -651,6 +670,33 @@
 .forum-post-reply-button:focus {
   color: #334;
   text-decoration: none;
+}
+
+.forum-post-replies-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 20px;
+  padding: 0;
+  border: 0;
+  color: #77A;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.forum-post-replies-toggle:hover,
+.forum-post-replies-toggle:focus {
+  color: #334;
+  text-decoration: none;
+}
+
+.forum-post-replies-toggle i {
+  font-size: 12px;
+  line-height: 1;
 }
 /* =============== */
 

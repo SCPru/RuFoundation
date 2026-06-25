@@ -10,7 +10,7 @@ import renderer
 
 from modules import ModuleError
 from modules.listpages import render_date, render_pagination
-from renderer.utils import render_user_to_json, render_user_to_html, render_template_from_string, render_vote_to_html
+from renderer.utils import format_ru_plural, render_user_to_json, render_user_to_html, render_template_from_string, render_vote_to_html
 from renderer import RenderContext
 
 from web.controllers import articles
@@ -240,6 +240,7 @@ def get_post_info(
 
     for post in posts:
         replies = replies_by_parent.get(post.id, []) if show_replies else []
+        reply_count = len(replies) if replies and depth < max_depth else 0
         author_vote = ''
         is_thread_author = post.author_id is not None and thread.author_id == post.author_id
         is_op = is_thread_author
@@ -279,6 +280,8 @@ def get_post_info(
                 'threadName': thread.name if thread.category_id else thread.article.display_name,
                 'postId': post.id,
                 'postName': post.name,
+                'replyCount': reply_count,
+                'replyCountLabel': format_ru_plural(reply_count, 'ответ', 'ответа', 'ответов') if reply_count else '',
                 'hasRevisions': has_revisions,
                 'lastRevisionDate': post.updated_at.isoformat(),
                 'lastRevisionAuthor': render_user_to_json(post_content[1]),
