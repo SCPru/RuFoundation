@@ -417,7 +417,6 @@
 .thread-container .post .long .head .info .forum-post-edit-meta-slot {
   display: inline-block;
   margin-left: 4px;
-  vertical-align: baseline;
 }
 
 .forum-post-edit-meta {
@@ -432,6 +431,7 @@
   cursor: help;
   vertical-align: -0.1em;
   outline: none;
+  baseline-shift: center;
 }
 
 .forum-post-edit-meta:hover,
