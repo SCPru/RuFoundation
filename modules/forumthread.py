@@ -68,23 +68,31 @@ def get_post_content(post, post_contents=None):
     return latest.source, latest.author, version_count
 
 
+def truncate_reply_target_text(text):
+    text = re.sub(r'\s+', ' ', text or '').strip()
+    if len(text) > REPLY_TARGET_EXCERPT_LENGTH:
+        return text[:REPLY_TARGET_EXCERPT_LENGTH].rstrip() + '...'
+    return text
+
+
 def make_reply_target_excerpt(source, context):
     text = renderer.single_pass_render_text(source, RenderContext(None, None, {}, context.user), 'message')
-    text = re.sub(r'\s+', ' ', text).strip()
-    if len(text) > REPLY_TARGET_EXCERPT_LENGTH:
-        text = text[:REPLY_TARGET_EXCERPT_LENGTH].rstrip()
-    return (text or '') + '...'
+    return truncate_reply_target_text(text)
 
 
 def get_reply_target_info(context, thread, post, post_contents=None):
     if post.reply_to_id and post.reply_to:
         target = post.reply_to
-        source, _author, _version_count = get_post_content(target, post_contents)
+        title = truncate_reply_target_text(target.name or '')
+        excerpt = ''
+        if not title:
+            source, _author, _version_count = get_post_content(target, post_contents)
+            excerpt = make_reply_target_excerpt(source, context)
         return {
             'url': '%s#post-%d' % (get_thread_url(thread), target.id),
             'user': render_user_to_html(target.author, interactive=False),
-            'excerpt': make_reply_target_excerpt(source, context),
-            'title': '',
+            'excerpt': excerpt,
+            'title': title,
         }
 
     if thread.article_id:
@@ -340,10 +348,10 @@ def render_posts(post_info):
                             <span class="forum-reply-target-label">На</span>
                             {% if post.reply_target.user %}
                                 {{ post.reply_target.user }}
-                            {% else %}
-                                <span class="forum-reply-target-title">{{ post.reply_target.title }}</span>
                             {% endif %}
-                            {% if post.reply_target.excerpt %}
+                            {% if post.reply_target.title %}
+                                <span class="forum-reply-target-title">{{ post.reply_target.title }}</span>
+                            {% elif post.reply_target.excerpt %}
                                 <span class="forum-reply-target-excerpt">{{ post.reply_target.excerpt }}</span>
                             {% endif %}
                         </a>

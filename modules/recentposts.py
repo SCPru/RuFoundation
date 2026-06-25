@@ -229,10 +229,10 @@ def render(context: RenderContext, params):
                                         <span class="forum-reply-target-label">На</span>
                                         {% if post.reply_target.user %}
                                             {{ post.reply_target.user }}
-                                        {% else %}
-                                            <span class="forum-reply-target-title">{{ post.reply_target.title }}</span>
                                         {% endif %}
-                                        {% if post.reply_target.excerpt %}
+                                        {% if post.reply_target.title %}
+                                            <span class="forum-reply-target-title">{{ post.reply_target.title }}</span>
+                                        {% elif post.reply_target.excerpt %}
                                             <span class="forum-reply-target-excerpt">{{ post.reply_target.excerpt }}</span>
                                         {% endif %}
                                     </a>

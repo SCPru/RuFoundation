@@ -387,6 +387,10 @@
   font-weight: 600;
 }
 
+.forum-reply-target .printuser + .forum-reply-target-title {
+  margin-left: 4px;
+}
+
 .forum-reply-target .printuser .printuser-name {
   color: #b01;
 }
