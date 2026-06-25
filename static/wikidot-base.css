@@ -2051,7 +2051,7 @@ version: 2.3.1
 
 .forum-thread-box  .description-block{
 	border: 1px solid #CCC;
-	margin: 1em 4em;
+	margin: 1em 0;
 	padding: 0.5em;
 	background-color: #F5F5F5;
 	overflow: hidden;
