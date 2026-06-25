@@ -122,6 +122,14 @@ def get_action_log_entry_description(log_entry: ActionLogEntry):
                 return _render_post_edit_preview(m)
             case ActionType.RemoveForumPost:
                 return _make_post_preview(m['post']['id'], m['post']['author'], m['title'], m['source'])
+            case ActionType.PinForumPost:
+                thread_name = m['thread']['name']
+                post_id = m['post']['id']
+                return f'В теме "{thread_name}" закреплено сообщение №{post_id}'
+            case ActionType.UnpinForumPost:
+                thread_name = m['thread']['name']
+                post_id = m['post']['id']
+                return f'В теме "{thread_name}" откреплено сообщение №{post_id}'
             case ActionType.AddForumReaction:
                 thread_name = m['thread']['name']
                 post_id = m['post']['id']

@@ -1,6 +1,6 @@
 from django.forms.models import model_to_dict
 
-from modules.forumpost import OnForumDeletePost, OnForumEditPost
+from modules.forumpost import OnForumDeletePost, OnForumEditPost, OnForumPinPost
 from modules.forumnewpost import OnForumNewPost
 
 from web.events import on_trigger
@@ -98,6 +98,23 @@ def log_forum_delete_post(e: OnForumDeletePost):
     }
     
     add_action_log(e.user, ActionLogEntry.ActionType.RemoveForumPost, meta)
+
+
+@on_trigger(OnForumPinPost)
+def log_forum_pin_post(e: OnForumPinPost):
+    meta = {
+        'author_id': e.post.author_id,
+        'post': model_to_dict(e.post),
+        'thread': {
+            'id': e.post.thread_id,
+            'name': e.post.thread.name,
+        },
+        'is_pinned': e.is_pinned,
+        'prev_is_pinned': e.prev_is_pinned,
+    }
+
+    action_type = ActionLogEntry.ActionType.PinForumPost if e.is_pinned else ActionLogEntry.ActionType.UnpinForumPost
+    add_action_log(e.user, action_type, meta)
 
 
 def _forum_reaction_meta(post, reaction, target_user):

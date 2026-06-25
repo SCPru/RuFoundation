@@ -30,6 +30,8 @@ class ActionLogEntry(auto_prefetch.Model):
         NewForumPost = ('add_forum_post', 'Новое сообщение форума')
         EditForumPost = ('edit_forum_post', 'Сообщение форума изменено')
         RemoveForumPost = ('remove_forum_post', 'Сообщение форума удалено')
+        PinForumPost = ('pin_forum_post', 'Сообщение форума закреплено')
+        UnpinForumPost = ('unpin_forum_post', 'Сообщение форума откреплено')
         AddForumReaction = ('add_forum_reaction', 'Реакция на форуме добавлена')
         RemoveForumReaction = ('remove_forum_reaction', 'Реакция на форуме удалена')
         ChangeProfileInfo = ('change_profile_info', 'Информация профиля изменена')
