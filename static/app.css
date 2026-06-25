@@ -1052,15 +1052,58 @@
   height: 1.5em;
   display: inline-flex;
   align-items: center;
+  position: relative;
   vertical-align: text-top;
   box-sizing: border-box;
 }
 
 .printuser .icon {
   display: inline-flex;
+  position: relative;
   vertical-align: text-top;
   height: 14.4px;
   width: 14.4px;
+}
+
+.printuser-role-tail {
+  cursor: help;
+  outline: none;
+}
+
+.printuser-role-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  z-index: 40;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 5px 7px;
+  border: 1px solid #cfd6e0;
+  border-radius: 5px;
+  color: #243044;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+  text-align: center;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, -2px);
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease,
+    visibility 0.12s ease;
+}
+
+.printuser-role-tail:hover .printuser-role-tooltip,
+.printuser-role-tail:focus .printuser-role-tooltip,
+.printuser-role-tail:focus-within .printuser-role-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
 }
 
 .w-user-mention {

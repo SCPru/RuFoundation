@@ -128,10 +128,10 @@ def render_user_to_html(user: _UserType, avatar=True, hover=True, interactive=Tr
             {% endif %}
             {% if show_avatar %}
                 {% for icon in tails.icons %}
-                    <span class="icon" {% if icon.tooltip %}title="{{icon.tooltip|safe}}"{% endif %}><img src="data:image/svg+xml,{{icon.icon}}"/></span>
+                    <span class="icon{% if icon.tooltip %} printuser-role-tail{% endif %}" {% if icon.tooltip %}tabindex="0"{% endif %}><img src="data:image/svg+xml,{{icon.icon}}"/>{% if icon.tooltip %}<span class="printuser-role-tooltip" role="tooltip">{{icon.tooltip|safe}}</span>{% endif %}</span>
                 {% endfor %}
                 {% for badge in tails.badges %}
-                    <span class="badge" {% if badge.tooltip %}title="{{badge.tooltip|safe}}"{% endif %} style="background: {{badge.bg|safe}}; color: {{badge.text_color|safe}}; {% if badge.show_border %}border: solid 1px {{badge.text_color|safe}}{% endif %}">{{badge.text|safe}}</span>
+                    <span class="badge{% if badge.tooltip %} printuser-role-tail{% endif %}" {% if badge.tooltip %}tabindex="0"{% endif %} style="background: {{badge.bg|safe}}; color: {{badge.text_color|safe}}; {% if badge.show_border %}border: solid 1px {{badge.text_color|safe}}{% endif %}">{{badge.text|safe}}{% if badge.tooltip %}<span class="printuser-role-tooltip" role="tooltip">{{badge.tooltip|safe}}</span>{% endif %}</span>
                 {% endfor %}
             {% endif %}
         </span>
