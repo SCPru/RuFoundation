@@ -90,7 +90,7 @@ def get_reply_target_info(context, thread, post, post_contents=None):
             excerpt = make_reply_target_excerpt(source, context)
         return {
             'url': '%s#post-%d' % (get_thread_url(thread), target.id),
-            'user': render_user_to_html(target.author, interactive=False),
+            'user': render_user_to_html(target.author, interactive=False, show_tails=False),
             'excerpt': excerpt,
             'title': title,
         }
@@ -215,6 +215,19 @@ def highlight_mentions(text: str, usernames: set[str]) -> str:
     return SafeString(regex.sub(repl, text))
 
 
+def render_author_mark(mark):
+    if not mark:
+        return ''
+    return render_template_from_string(
+        """
+        <span class="forum-author-mark" tabindex="0" aria-label="{{ mark }}" data-tooltip="{{ mark }}">
+            <i class="fas fa-feather-pointed" aria-hidden="true"></i>
+        </span>
+        """,
+        mark=mark
+    )
+
+
 def get_post_info(
     context,
     thread,
@@ -267,7 +280,7 @@ def get_post_info(
             'name': post.name,
             'is_op': is_op,
             'author_mark': author_mark,
-            'author': render_user_to_html(post.author),
+            'author': render_user_to_html(post.author, extra_tail=render_author_mark(author_mark)),
             'author_rate': author_vote,
             'created_at': render_date(post.created_at),
             'updated_at': render_date(post.updated_at),
@@ -362,12 +375,6 @@ def render_posts(post_info):
                         <div class="title">{{ post.name }}</div>
                         <div class="info">
                             {{ post.author }} {{ post.created_at }}
-                            {% if post.author_mark %}
-                                <span class="forum-author-mark" tabindex="0" aria-label="{{ post.author_mark }}">
-                                    <i class="fas fa-feather" aria-hidden="true"></i>
-                                    <span class="forum-author-mark-tooltip" role="tooltip">{{ post.author_mark }}</span>
-                                </span>
-                            {% endif %}
                             {{ post.author_rate }}
                         </div>
                     </div>

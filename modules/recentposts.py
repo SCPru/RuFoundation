@@ -38,7 +38,20 @@ def highlight_mentions(text: str, usernames: set[str]) -> str:
     return SafeString(regex.sub(repl, text))
 
 
-def get_post_info(context, posts, category_for_comments, usernames: set[str]=set()):
+def render_author_mark(mark):
+    if not mark:
+        return ''
+    return render_template_from_string(
+        """
+        <span class="forum-author-mark" tabindex="0" aria-label="{{ mark }}" data-tooltip="{{ mark }}">
+            <i class="fas fa-feather-pointed" aria-hidden="true"></i>
+        </span>
+        """,
+        mark=mark
+    )
+
+
+def get_post_info(context, posts, category_for_comments, usernames: set[str]=set(), hide_reactions=False):
     posts = list(posts)
     post_contents = get_post_contents(posts)
     reaction_context = forum_reactions.build_reaction_context(posts, context.user)
@@ -81,7 +94,7 @@ def get_post_info(context, posts, category_for_comments, usernames: set[str]=set
             'name': post.name.strip() or 'Перейти к сообщению',
             'is_op': is_op,
             'author_mark': author_mark,
-            'author': render_user_to_html(post.author),
+            'author': render_user_to_html(post.author, extra_tail=render_author_mark(author_mark)),
             'author_rate': author_vote,
             'created_at': render_date(post.created_at),
             'content': content,
@@ -240,12 +253,6 @@ def render(context: RenderContext, params):
                                     <div class="title">{% if post.name %}<a href="{{ post.url }}">{{ post.name }}</a>{% endif %}</div>
                                     <div class="info">
                                         {{ post.author }} {{ post.created_at }}
-                                        {% if post.author_mark %}
-                                            <span class="forum-author-mark" tabindex="0" aria-label="{{ post.author_mark }}">
-                                                <i class="fas fa-feather" aria-hidden="true"></i>
-                                                <span class="forum-author-mark-tooltip" role="tooltip">{{ post.author_mark }}</span>
-                                            </span>
-                                        {% endif %}
                                         {{ post.author_rate }}
                                     </div>
                                     <span>
