@@ -48,6 +48,7 @@ class ForumThreadView(APIView):
             'updatedAt': post.updated_at.isoformat(),
             'author': render_user_to_json(post.author),
             'replyTo': post.reply_to_id,
+            'isPinned': post.is_pinned,
             'source': source,
             'content': single_pass_render(source, RenderContext(None, None, {}, request.user), 'message'),
             'version': {

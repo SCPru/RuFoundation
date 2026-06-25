@@ -133,8 +133,11 @@ class ForumThread(auto_prefetch.Model, PermissionsOverrideMixin):
     def override_perms(self, user_obj, perms: set, roles=[]):
         if user_obj == self.author:
             perms.add('roles.edit_forum_threads')
+            perms.add('roles.pin_forum_posts')
+        if self.article_id and not user_obj.is_anonymous and user_obj in self.article.authors.all():
+            perms.add('roles.pin_forum_posts')
         if not user_obj.is_anonymous and not user_obj.is_forum_active or self.is_locked and 'roles.lock_forum_threads' not in perms:
-            perms_to_revoke = {'roles.comment_articles', 'roles.create_forum_posts', 'roles.react_forum_posts', 'roles.edit_forum_posts', 'roles.delete_forum_posts', 'roles.edit_forum_threads', 'roles.pin_forum_threads', 'roles.move_forum_threads'}
+            perms_to_revoke = {'roles.comment_articles', 'roles.create_forum_posts', 'roles.react_forum_posts', 'roles.edit_forum_posts', 'roles.delete_forum_posts', 'roles.edit_forum_threads', 'roles.pin_forum_threads', 'roles.pin_forum_posts', 'roles.move_forum_threads'}
             perms = perms.difference(perms_to_revoke)
         return super().override_perms(user_obj, perms, roles)
 
@@ -152,6 +155,7 @@ class ForumPost(auto_prefetch.Model, PermissionsOverrideMixin):
     author = auto_prefetch.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name='Автор')
     reply_to = auto_prefetch.ForeignKey('ForumPost', on_delete=models.SET_NULL, null=True, verbose_name='Ответ на комментарий')
     thread = auto_prefetch.ForeignKey(ForumThread, on_delete=models.CASCADE, verbose_name='Тема')
+    is_pinned = models.BooleanField('Пришпилено', default=False, db_index=True)
 
     def override_perms(self, user_obj, perms: set, roles=[]):
         if user_obj == self.author and user_obj.has_perm('roles.create_forum_posts'):

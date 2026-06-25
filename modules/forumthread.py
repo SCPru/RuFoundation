@@ -252,6 +252,7 @@ def get_post_info(
     post_info = []
 
     for post in posts:
+        post_url = '%s#post-%d' % (get_thread_url(thread), post.id)
         replies = replies_by_parent.get(post.id, []) if show_replies else []
         reply_count = len(replies) if replies and depth < max_depth else 0
         author_vote = ''
@@ -278,7 +279,9 @@ def get_post_info(
         render_post = {
             'id': post.id,
             'name': post.name,
+            'display_name': post.name.strip() or 'Перейти к сообщению',
             'is_op': is_op,
+            'is_pinned': post.is_pinned,
             'author_mark': author_mark,
             'author': render_user_to_html(post.author, extra_tail=render_author_mark(author_mark)),
             'author_rate': author_vote,
@@ -286,6 +289,7 @@ def get_post_info(
             'updated_at': render_date(post.updated_at),
             'content': content,
             'reply_target': get_reply_target_info(context, thread, post, post_contents),
+            'url': post_url,
             'replies': [],
             'rendered_replies': None,
             'options_config': json.dumps({
@@ -302,6 +306,8 @@ def get_post_info(
                 'canReply': context.user.has_perm('roles.create_forum_posts', thread) if not thread.article else context.user.has_perm('roles.comment_articles', thread),
                 'canEdit': context.user.has_perm('roles.edit_forum_posts', post),
                 'canDelete': context.user.has_perm('roles.delete_forum_posts', post),
+                'canPin': context.user.has_perm('roles.pin_forum_posts', post),
+                'isPinned': post.is_pinned,
                 'canReact': reaction_state['canReact'],
                 'canRemoveOwnReactions': reaction_state['canRemoveOwnReactions'],
                 'canModerateReactions': reaction_state['canModerateReactions'],
@@ -357,7 +363,7 @@ def render_posts(post_info):
         <div class="post-container">
             <div class="post" id="post-{{ post.id }}">
                 <div class="long">
-                    <div class="head {% if post.is_op %}op-post{% endif %}">
+                    <div class="head {% if post.is_op %}op-post{% endif %} {% if post.is_pinned %}pinned-post{% endif %}">
                         {% if post.reply_target %}
                         <a class="forum-reply-target" href="{{ post.reply_target.url }}">
                             <i class="fas fa-reply" aria-hidden="true"></i>
@@ -389,6 +395,55 @@ def render_posts(post_info):
             {% endif %}
         </div>
         {% endfor %}
+        """,
+        posts=post_info
+    )
+
+
+def render_pinned_posts(post_info):
+    if not post_info:
+        return ''
+    return render_template_from_string(
+        """
+        <div class="forum-pinned-posts" aria-label="Закрепленные сообщения">
+            {% for post in posts %}
+            <div class="post-container forum-pinned-post-preview" id="pinned-post-{{ post.id }}">
+                <div class="post">
+                    <div class="long">
+                        <div class="head {% if post.is_op %}op-post{% endif %} pinned-post">
+                            {% if post.reply_target %}
+                            <a class="forum-reply-target" href="{{ post.reply_target.url }}">
+                                <i class="fas fa-reply" aria-hidden="true"></i>
+                                <span class="forum-reply-target-label">На</span>
+                                {% if post.reply_target.user %}
+                                    {{ post.reply_target.user }}
+                                {% endif %}
+                                {% if post.reply_target.title %}
+                                    <span class="forum-reply-target-title">{{ post.reply_target.title }}</span>
+                                {% elif post.reply_target.excerpt %}
+                                    <span class="forum-reply-target-excerpt">{{ post.reply_target.excerpt }}</span>
+                                {% endif %}
+                            </a>
+                            {% endif %}
+                            <div class="title">
+                                <a class="forum-pinned-post-link" href="{{ post.url }}">
+                                    <i class="fas fa-thumbtack" aria-hidden="true"></i>
+                                    {{ post.display_name }}
+                                </a>
+                            </div>
+                            <div class="info">
+                                {{ post.author }} {{ post.created_at }}
+                                {{ post.author_rate }}
+                            </div>
+                        </div>
+                        <div class="content">
+                            {{ post.content }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
         """,
         posts=post_info
     )
@@ -488,6 +543,26 @@ def render(context: RenderContext, params):
         page = max_page
 
     usernames = set(User.objects.all().values_list(Lower('username'), flat=True))
+    pinned_posts = (
+        ForumPost.objects
+        .filter(thread=thread, is_pinned=True)
+        .select_related('author', 'reply_to', 'reply_to__author')
+        .prefetch_related(
+            'author__roles',
+            'author__roles__permissions',
+            'author__roles__restrictions',
+        )
+        .order_by('created_at', 'id')
+    )
+    pinned_post_info = get_post_info(
+        context,
+        thread,
+        pinned_posts,
+        show_replies=False,
+        usernames=usernames,
+        user_preferences=user_preferences,
+        max_depth=get_forum_post_max_depth(),
+    )
     posts = q[(page-1)*per_page:page*per_page]
     post_info = get_post_info(
         context,
@@ -587,6 +662,7 @@ def render(context: RenderContext, params):
                  data-forum-thread-total-posts="{{ total_posts }}"
                  data-forum-thread-date-anchors="{{ date_anchors }}">
                 <div id="thread-container-posts">
+                    {{ pinned_posts }}
                     {% if display_mode == 'pagination' %}{{ pagination }}{% endif %}
                     {{ posts }}
                     {% if display_mode == 'pagination' %}{{ pagination }}{% endif %}
@@ -607,6 +683,7 @@ def render(context: RenderContext, params):
         total_posts=total,
         pagination=render_pagination(short_url, page, max_page) if display_mode == 'pagination' and max_page != 1 else '',
         new_post_config=json.dumps(new_post_config),
+        pinned_posts=render_pinned_posts(pinned_post_info),
         posts=render_posts(post_info),
         can_reply=context.user.has_perm('roles.create_forum_posts', thread) if not thread.article else context.user.has_perm('roles.comment_articles', thread),
         content_only=content_only,

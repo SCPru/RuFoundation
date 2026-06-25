@@ -1,5 +1,5 @@
-import { callModule, ModuleRenderResponse } from './modules'
 import { wFetch } from '../util/fetch-util'
+import { callModule, ModuleRenderResponse } from './modules'
 import { UserData } from './user'
 
 export interface ForumNewThreadRequest {
@@ -49,6 +49,16 @@ export interface ForumUpdatePostRequest {
 
 export interface ForumDeletePostRequest {
   postId: number
+}
+
+export interface ForumPinPostRequest {
+  postId: number
+  isPinned: boolean
+}
+
+export interface ForumPinPostResponse {
+  postId: number
+  isPinned: boolean
 }
 
 export interface ForumFetchPostVersionsRequest {
@@ -147,6 +157,7 @@ export interface ForumThreadExportPost {
   updatedAt: string
   author: UserData
   replyTo: number | null
+  isPinned: boolean
   source: string
   content: string
   version: ForumThreadExportPostVersion | null
@@ -204,6 +215,14 @@ export async function deleteForumPost(postId: number) {
     postId,
   }
   await callModule({ module: 'forumpost', method: 'delete', params: request })
+}
+
+export async function pinForumPost(postId: number, isPinned: boolean) {
+  const request: ForumPinPostRequest = {
+    postId,
+    isPinned,
+  }
+  return await callModule<ForumPinPostResponse>({ module: 'forumpost', method: 'pin', params: request })
 }
 
 export async function fetchForumPostVersions(postId: number) {

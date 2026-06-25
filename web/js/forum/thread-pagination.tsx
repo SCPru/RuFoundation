@@ -285,7 +285,9 @@ export function makeForumThread(node: HTMLElement) {
 
       const postsRoot = node.querySelector('#thread-container-posts')
       const newPostsRoot = newNode.querySelector('#thread-container-posts')
-      const newPosts = newPostsRoot ? Array.from(newPostsRoot.children).filter(child => !child.classList.contains('pager')) : []
+      const newPosts = newPostsRoot
+        ? Array.from(newPostsRoot.children).filter(child => !child.classList.contains('pager') && !child.classList.contains('forum-pinned-posts'))
+        : []
 
       if (postsRoot && newPosts.length) {
         const scrollAnchor = direction === 'prepend' ? (postsRoot.firstElementChild as HTMLElement | null) : null
@@ -560,6 +562,10 @@ export function makeForumThread(node: HTMLElement) {
     }
     event.detail.handled = true
     navigateToPost(postId)
+  })
+
+  window.addEventListener('forum:post-pin-changed', () => {
+    switchPage(null, { page: String(currentPage), isFromHistory: true })
   })
 
   // due to wikidot's shitty way of doing direct post links, we have to detect it here.

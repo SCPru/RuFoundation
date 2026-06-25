@@ -27,6 +27,13 @@ class OnForumDeletePost(EventBase):
     source: str
 
 
+class OnForumPinPost(EventBase):
+    user: User
+    post: ForumPost
+    is_pinned: bool
+    prev_is_pinned: bool
+
+
 def has_content():
     return False
 
@@ -140,6 +147,33 @@ def api_delete(context, params):
 
     return {
         'status': 'ok'
+    }
+
+
+def api_pin(context, params):
+    post_id = params.get('postid', -1)
+
+    post = (
+        ForumPost.objects
+        .select_related('thread', 'thread__article')
+        .filter(id=post_id)
+        .first()
+    )
+    if post is None:
+        raise ModuleError('Сообщение "%s" не существует' % post_id)
+
+    if not context.user.has_perm('roles.pin_forum_posts', post):
+        raise ModuleError('Недостаточно прав для закрепления сообщения')
+
+    prev_is_pinned = post.is_pinned
+    post.is_pinned = bool(params.get('ispinned'))
+    if post.is_pinned != prev_is_pinned:
+        post.save(update_fields=['is_pinned'])
+        OnForumPinPost(context.user, post, post.is_pinned, prev_is_pinned).emit()
+
+    return {
+        'postId': post.id,
+        'isPinned': post.is_pinned,
     }
 
 

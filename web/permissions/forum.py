@@ -40,6 +40,13 @@ class DeleteForumPostsPermission(BaseRolePermission):
     group = 'Форум'
 
 
+class PinForumPostsPermission(BaseRolePermission):
+    name = 'Закреплять посты на форуме'
+    codename = 'pin_forum_posts'
+    description = 'Позволяет закреплять и откреплять посты на форуме'
+    group = 'Форум'
+
+
 class ViewForumThreadsPermission(BaseRolePermission):
     name = 'Просматривать ветки форума'
     codename = 'view_forum_threads'

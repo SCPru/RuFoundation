@@ -14,6 +14,7 @@ import {
   ForumReaction,
   ForumReactionLimits,
   ForumUpdatePostRequest,
+  pinForumPost,
   removeAllForumPostReactions,
   removeForumPostReaction,
   updateForumPost,
@@ -38,6 +39,8 @@ interface Props {
   canReply?: boolean
   canEdit?: boolean
   canDelete?: boolean
+  canPin?: boolean
+  isPinned?: boolean
   canReact?: boolean
   canRemoveOwnReactions?: boolean
   canModerateReactions?: boolean
@@ -125,6 +128,8 @@ const ForumPostOptions: React.FC<Props> = ({
   canReply,
   canEdit,
   canDelete,
+  canPin,
+  isPinned,
   canReact,
   canRemoveOwnReactions,
   canModerateReactions,
@@ -145,6 +150,8 @@ const ForumPostOptions: React.FC<Props> = ({
   const [originalPreviewTitle, setOriginalPreviewTitle] = useState('')
   const [originalPreviewContent, setOriginalPreviewContent] = useState('')
   const [deleteError, setDeleteError] = useState('')
+  const [postPinned, setPostPinned] = useState(isPinned === true)
+  const [pinLoading, setPinLoading] = useState(false)
   const [revisionsOpen, setRevisionsOpen] = useState(false)
   const [currentRevision, setCurrentRevision] = useState('')
   const [revisions, setRevisions] = useState<Array<ForumPostVersion>>([])
@@ -237,6 +244,13 @@ const ForumPostOptions: React.FC<Props> = ({
       postContainer.classList.remove('forum-post-replies-collapsed')
     }
   }, [replyCount, repliesCollapsed])
+
+  useLayoutEffect(() => {
+    const post = refSelf.current?.closest('.post') as HTMLElement | null
+    const head = post?.querySelector(':scope > .long > .head') as HTMLElement | null
+    post?.classList.toggle('is-pinned', postPinned)
+    head?.classList.toggle('pinned-post', postPinned)
+  }, [postPinned])
 
   useEffect(() => {
     if (!open) {
@@ -434,6 +448,28 @@ const ForumPostOptions: React.FC<Props> = ({
       .catch(e => {
         setDeleteError(e.error || 'Ошибка связи с сервером')
       })
+  })
+
+  const onTogglePin = useConstCallback(async (e: React.MouseEvent<HTMLElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (pinLoading) {
+      return
+    }
+
+    const nextPinned = !postPinned
+    setPinLoading(true)
+    try {
+      const result = await pinForumPost(postId, nextPinned)
+      setPostPinned(result.isPinned)
+      setOpen(false)
+      window.dispatchEvent(new CustomEvent('forum:post-pin-changed', { detail: result }))
+    } catch (e) {
+      setDeleteError(e.error || 'Ошибка связи с сервером')
+    } finally {
+      setPinLoading(false)
+    }
   })
 
   const onToggle = useConstCallback(e => {
@@ -872,7 +908,7 @@ const ForumPostOptions: React.FC<Props> = ({
 
   const canOpenReactionList = reactionState.reactions.length > 0
   const canShare = true
-  const hasPostOptions = canShare || canEdit || canDelete || canOpenReactionList || hasVisibleRevisions
+  const hasPostOptions = canShare || canEdit || canDelete || canPin || canOpenReactionList || hasVisibleRevisions
   const revisionDateLabel = revisionDate ? formatDate(new Date(revisionDate)) : ''
   const revisionAuthorLabel = getUserLabel(revisionAuthor)
   const editMeta =
@@ -913,6 +949,11 @@ const ForumPostOptions: React.FC<Props> = ({
               Поделиться
             </button>
           )}
+          {canPin && (
+            <button disabled={pinLoading} onClick={onTogglePin} role="menuitem" type="button">
+              {postPinned ? 'Открепить' : 'Закрепить'}
+            </button>
+          )}
           {canOpenReactionList && (
             <a href="#" onClick={onOpenReactionList} role="menuitem">
               Реакции
@@ -937,6 +978,20 @@ const ForumPostOptions: React.FC<Props> = ({
       )}
     </div>
   ) : null
+  const pinIndicator = postPinned ? (
+    <Tooltip content="Закрепленное сообщение">
+      <span aria-label="Закрепленное сообщение" className="forum-post-pin-indicator" tabIndex={0}>
+        <i aria-hidden="true" className="fas fa-thumbtack" />
+      </span>
+    </Tooltip>
+  ) : null
+  const menuContent =
+    pinIndicator || postMenu ? (
+      <>
+        {pinIndicator}
+        {postMenu}
+      </>
+    ) : null
   const replyButton =
     canReply && !isReplying ? (
       <Tooltip content="Ответить">
@@ -1016,7 +1071,7 @@ const ForumPostOptions: React.FC<Props> = ({
           {reactionControls}
         </div>
       )}
-      {menuPortal ? postMenu && ReactDOM.createPortal(postMenu, menuPortal) : postMenu}
+      {menuPortal ? menuContent && ReactDOM.createPortal(menuContent, menuPortal) : menuContent}
       {editMetaPortal ? editMeta && ReactDOM.createPortal(editMeta, editMetaPortal) : null}
       {isReplying && (
         <div className="post-container">
