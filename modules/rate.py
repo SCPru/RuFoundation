@@ -25,9 +25,9 @@ def render(context, _params):
             ''.join([
                 '<div class="w-rate-module page-rate-widget-box" data-page-id="{{page_id}}">',
                 '<span class="rate-points">рейтинг:&nbsp;<span class="number prw54353">{{rating}}</span></span>',
-                '<span class="rateup btn btn-default"><a title="Мне нравится" href="#">+</a></span>',
-                '<span class="ratedown btn btn-default"><a title="Мне не нравится" href="#">–</a></span>',
-                '<span class="cancel btn btn-default"><a title="Отменить голос" href="#">x</a></span>',
+                '<span class="rateup btn btn-default"><a data-tooltip="Мне нравится" aria-label="Мне нравится" href="#">+</a></span>',
+                '<span class="ratedown btn btn-default"><a data-tooltip="Мне не нравится" aria-label="Мне не нравится" href="#">–</a></span>',
+                '<span class="cancel btn btn-default"><a data-tooltip="Отменить голос" aria-label="Отменить голос" href="#">x</a></span>',
                 '</div>'
             ]),
             page_id=context.article.full_name,
@@ -42,7 +42,7 @@ def render(context, _params):
                 '<div class="w-stars-rate-stars-wrapper"><div class="w-stars-rate-stars-view" style="width: {{rating_percentage}}%; --rated-var: {{rated}}"></div></div>',
                 '<div class="w-stars-rate-cancel"></div>'
                 '</div>',
-                '<div class="w-stars-rate-votes"><span class="w-stars-rate-number" title="Количество голосов">{{votes}}</span>/<span class="w-stars-rate-popularity" title="Популярность (процент голосов 3.0 и выше)">{{popularity}}</span>%</div>',
+                '<div class="w-stars-rate-votes"><span class="w-stars-rate-number" data-tooltip="Количество голосов">{{votes}}</span>/<span class="w-stars-rate-popularity" data-tooltip="Популярность (процент голосов 3.0 и выше)">{{popularity}}</span>%</div>',
                 '</div>'
             ]),
             page_id=context.article.full_name,

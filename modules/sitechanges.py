@@ -321,7 +321,7 @@ def render(context: RenderContext, params):
                             </a>
                         </td>
                         <td class="flags">
-                            {% for t in entry.types %}<span class="spantip" title="{{ t.desc }}">{{ t.id }}</span>{% endfor %}
+                            {% for t in entry.types %}<span class="spantip" data-tooltip="{{ t.desc }}">{{ t.id }}</span>{% endfor %}
                         </td>
                         <td class="mod-date">
                             {{ entry.date }}

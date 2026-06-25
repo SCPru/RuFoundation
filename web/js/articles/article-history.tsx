@@ -7,6 +7,7 @@ import useConstCallback from '../util/const-callback'
 import formatDate from '../util/date-format'
 import Loader from '../util/loader'
 import Pagination from '../util/pagination'
+import Tooltip from '../util/tooltip'
 import UserView from '../util/user-view'
 import { showVersionMessage } from '../util/wikidot-message'
 import WikidotModal, { showRevertModal } from '../util/wikidot-modal'
@@ -70,85 +71,47 @@ const Styles = styled.div<{ loading?: boolean }>`
   }
 `
 
+const HistoryFlag: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+  <Tooltip content={label}>
+    <span className="spantip">{children}</span>
+  </Tooltip>
+)
+
 export function renderArticleHistoryFlags(entry: ArticleLogEntry) {
   const renderType = (type: string) => {
     switch (type) {
       case 'new':
-        return (
-          <span className="spantip" title="создана новая страница">
-            N
-          </span>
-        )
+        return <HistoryFlag label="создана новая страница">N</HistoryFlag>
 
       case 'title':
-        return (
-          <span className="spantip" title="изменился заголовок">
-            T
-          </span>
-        )
+        return <HistoryFlag label="изменился заголовок">T</HistoryFlag>
 
       case 'source':
-        return (
-          <span className="spantip" title="изменился текст статьи">
-            S
-          </span>
-        )
+        return <HistoryFlag label="изменился текст статьи">S</HistoryFlag>
 
       case 'tags':
-        return (
-          <span className="spantip" title="метки изменились">
-            A
-          </span>
-        )
+        return <HistoryFlag label="метки изменились">A</HistoryFlag>
 
       case 'name':
-        return (
-          <span className="spantip" title="страница переименована/удалена">
-            R
-          </span>
-        )
+        return <HistoryFlag label="страница переименована/удалена">R</HistoryFlag>
 
       case 'parent':
-        return (
-          <span className="spantip" title="изменилась родительская страница">
-            M
-          </span>
-        )
+        return <HistoryFlag label="изменилась родительская страница">M</HistoryFlag>
 
       case 'file_added':
-        return (
-          <span className="spantip" title="файл добавлен">
-            F
-          </span>
-        )
+        return <HistoryFlag label="файл добавлен">F</HistoryFlag>
 
       case 'file_deleted':
-        return (
-          <span className="spantip" title="файл удалён">
-            F
-          </span>
-        )
+        return <HistoryFlag label="файл удалён">F</HistoryFlag>
 
       case 'file_renamed':
-        return (
-          <span className="spantip" title="файл переименован">
-            F
-          </span>
-        )
+        return <HistoryFlag label="файл переименован">F</HistoryFlag>
 
       case 'votes_deleted':
-        return (
-          <span className="spantip" title="голоса изменены">
-            V
-          </span>
-        )
+        return <HistoryFlag label="голоса изменены">V</HistoryFlag>
 
       case 'wikidot':
-        return (
-          <span className="spantip" title="правка, портированная с Wikidot">
-            W
-          </span>
-        )
+        return <HistoryFlag label="правка, портированная с Wikidot">W</HistoryFlag>
     }
   }
 
@@ -343,16 +306,22 @@ const ArticleHistory: React.FC<Props> = ({ pageId, pathParams, onClose: onCloseD
     }
     return (
       <>
-        <a href="#" onClick={e => displayArticleVersion(e, entry)} title="Просмотр изменений страницы">
-          V
-        </a>
-        <a href="#" onClick={e => displayVersionSource(e, entry)} title="Просмотр источника изменений">
-          S
-        </a>
-        {entryCount !== entry.revNumber + 1 && (
-          <a href="#" onClick={e => revertArticleVersion(e, entry)} title="Вернуться к правке">
-            R
+        <Tooltip content="Просмотр изменений страницы">
+          <a href="#" onClick={e => displayArticleVersion(e, entry)}>
+            V
           </a>
+        </Tooltip>
+        <Tooltip content="Просмотр источника изменений">
+          <a href="#" onClick={e => displayVersionSource(e, entry)}>
+            S
+          </a>
+        </Tooltip>
+        {entryCount !== entry.revNumber + 1 && (
+          <Tooltip content="Вернуться к правке">
+            <a href="#" onClick={e => revertArticleVersion(e, entry)}>
+              R
+            </a>
+          </Tooltip>
         )}
       </>
     )

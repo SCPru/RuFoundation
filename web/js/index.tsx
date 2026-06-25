@@ -28,6 +28,7 @@ import ReactivePage from './reactive/router'
 import { makePasswordToggle } from './util/password'
 import AdminSusUsers from './entrypoints/admin-sus-users'
 import { renderTo } from '~util/react-render-into'
+import { makeCustomTooltips } from './util/tooltip'
 
 attachApiMessageListener()
 
@@ -99,6 +100,7 @@ window.addEventListener('DOMContentLoaded', () => {
       processNode(node)
     }
   })
+  makeCustomTooltips(document.body)
 
   const reactiveRoot: HTMLElement | null = document.querySelector('#reactive-root')
   if (reactiveRoot) {
@@ -119,6 +121,7 @@ window.addEventListener('DOMContentLoaded', () => {
               processNode(subnode)
             }
           })
+          makeCustomTooltips(node)
         })
       } else if (record.type === 'attributes') {
         if (record.attributeName === 'class' && record.target) {

@@ -87,7 +87,7 @@ def render_user_to_text(user: _UserType):
     return user.username
 
 
-def render_user_to_html(user: _UserType, avatar=True, hover=True, interactive=True):
+def render_user_to_html(user: _UserType, avatar=True, hover=True, interactive=True, extra_tail='', show_tails=True):
     class_add = ' avatarhover' if hover and interactive else ''
     if user is None:
         return render_template_from_string(
@@ -139,24 +139,27 @@ def render_user_to_html(user: _UserType, avatar=True, hover=True, interactive=Tr
             {% else %}
                 <span class="printuser-name">{{displayname}}</span>
             {% endif %}
-            {% if show_avatar %}
+            {% if show_avatar and show_tails %}
                 {% for icon in tails.icons %}
-                    <span class="icon{% if icon.tooltip %} printuser-role-tail{% endif %}" {% if icon.tooltip %}tabindex="0"{% endif %}><img src="data:image/svg+xml,{{icon.icon}}"/>{% if icon.tooltip %}<span class="printuser-role-tooltip" role="tooltip">{{icon.tooltip|safe}}</span>{% endif %}</span>
+                    <span class="icon{% if icon.tooltip %} printuser-role-tail{% endif %}" {% if icon.tooltip %}tabindex="0" data-tooltip="{{icon.tooltip}}"{% endif %}><img src="data:image/svg+xml,{{icon.icon}}"/></span>
                 {% endfor %}
                 {% for badge in tails.badges %}
-                    <span class="badge{% if badge.tooltip %} printuser-role-tail{% endif %}" {% if badge.tooltip %}tabindex="0"{% endif %} style="background: {{badge.bg|safe}}; color: {{badge.text_color|safe}}; {% if badge.show_border %}border: solid 1px {{badge.text_color|safe}}{% endif %}">{{badge.text|safe}}{% if badge.tooltip %}<span class="printuser-role-tooltip" role="tooltip">{{badge.tooltip|safe}}</span>{% endif %}</span>
+                    <span class="badge{% if badge.tooltip %} printuser-role-tail{% endif %}" {% if badge.tooltip %}tabindex="0" data-tooltip="{{badge.tooltip}}"{% endif %} style="background: {{badge.bg|safe}}; color: {{badge.text_color|safe}}; {% if badge.show_border %}border: solid 1px {{badge.text_color|safe}}{% endif %}">{{badge.text|safe}}</span>
                 {% endfor %}
             {% endif %}
+            {{ extra_tail }}
         </span>
         """,
         class_add=class_add,
         show_avatar=avatar,
+        show_tails=show_tails,
         interactive=interactive,
         tails=user.name_tails,
         avatar=user_avatar,
         user_id=user.pk,
         username=user.username,
-        displayname=displayname
+        displayname=displayname,
+        extra_tail=extra_tail
     )
 
 
@@ -238,7 +241,7 @@ def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Default, capitalize
             msg = msg.capitalize()
         return render_template_from_string(
             """
-            <span class="vote" title="Оценка обсуждаемой статьи">{{msg}}</span>
+            <span class="vote" data-tooltip="Оценка обсуждаемой статьи">{{msg}}</span>
             """,
             msg=msg
         )
@@ -255,7 +258,7 @@ def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Default, capitalize
 
     return render_template_from_string(
         """
-        <span class="vote" title="Оценка обсуждаемой статьи"><span class="rate">{{visual_rate}}</span>
+        <span class="vote" data-tooltip="Оценка обсуждаемой статьи"><span class="rate">{{visual_rate}}</span></span>
         """,
         visual_rate=visual_rate
     )

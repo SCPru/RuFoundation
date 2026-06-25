@@ -7,6 +7,7 @@ import { fetchPageVotes, ModuleRateVote, RatingMode } from '../api/rate'
 import useConstCallback from '../util/const-callback'
 import formatDate from '../util/date-format'
 import Loader from '../util/loader'
+import Tooltip from '../util/tooltip'
 import UserView from '../util/user-view'
 import WikidotModal from '../util/wikidot-modal'
 
@@ -191,19 +192,25 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
           рейтинг:&nbsp;<span className="number prw54353">{rating >= 0 ? `+${rating}` : rating}</span>
         </span>
         <span className="rateup btn btn-default">
-          <a title="Мне нравится" href="#">
-            +
-          </a>
+          <Tooltip content="Мне нравится">
+            <a aria-label="Мне нравится" href="#">
+              +
+            </a>
+          </Tooltip>
         </span>
         <span className="ratedown btn btn-default">
-          <a title="Мне не нравится" href="#">
-            -
-          </a>
+          <Tooltip content="Мне не нравится">
+            <a aria-label="Мне не нравится" href="#">
+              -
+            </a>
+          </Tooltip>
         </span>
         <span className="cancel btn btn-default">
-          <a title="Отменить голос" href="#">
-            X
-          </a>
+          <Tooltip content="Отменить голос">
+            <a aria-label="Отменить голос" href="#">
+              X
+            </a>
+          </Tooltip>
         </span>
       </div>
     )
@@ -222,13 +229,13 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
           <div className="w-stars-rate-cancel" />
         </div>
         <div className="w-stars-rate-votes">
-          <span className="w-stars-rate-number" title="Количество голосов">
-            {votes.length}
-          </span>
+          <Tooltip content="Количество голосов">
+            <span className="w-stars-rate-number">{votes.length}</span>
+          </Tooltip>
           /
-          <span className="w-stars-rate-popularity" title="Популярность (процент голосов 3.0 и выше)">
-            {popularity}
-          </span>
+          <Tooltip content="Популярность (процент голосов 3.0 и выше)">
+            <span className="w-stars-rate-popularity">{popularity}</span>
+          </Tooltip>
           %
         </div>
       </div>
