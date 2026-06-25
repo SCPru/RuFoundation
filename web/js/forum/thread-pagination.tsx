@@ -150,6 +150,41 @@ export function makeForumThread(node: HTMLElement) {
     })
   }
 
+  const hasLoadedPost = (postId?: string | null) => {
+    return postId ? document.getElementById(`post-${postId}`) !== null : false
+  }
+
+  const navigateToLoadedPost = (postId?: string | null, updateHash = true) => {
+    if (!hasLoadedPost(postId)) {
+      return false
+    }
+
+    if (updateHash) {
+      const nextHash = `#post-${postId}`
+      if (window.location.hash !== nextHash) {
+        window.history.pushState(
+          {
+            ...(window.history.state || {}),
+            forumThread: fBasePathParams.t,
+            forumThreadPage: fBasePathParams.p || String(currentPage),
+          },
+          '',
+          nextHash,
+        )
+      }
+    }
+
+    scrollToPost(postId)
+    return true
+  }
+
+  const navigateToPost = (postId?: string | null) => {
+    if (!postId || navigateToLoadedPost(postId)) {
+      return
+    }
+    switchPage(null, { postId })
+  }
+
   const animateInsertedPosts = (posts: Array<Element>) => {
     posts.forEach(post => post.classList.add('forum-post-enter'))
     window.requestAnimationFrame(() => {
@@ -314,15 +349,12 @@ export function makeForumThread(node: HTMLElement) {
     rail.appendChild(label)
 
     let isDragging = false
-    let startedOnMarker = false
-
     const showAnchor = (anchor: DateAnchor | null) => {
       if (!anchor) {
         rail.classList.remove('is-previewing')
         return
       }
       label.textContent = anchor.label
-      label.title = anchor.title
       label.style.setProperty('--forum-date-position', `${anchor.position * 100}%`)
       rail.classList.add('is-previewing')
     }
@@ -331,19 +363,20 @@ export function makeForumThread(node: HTMLElement) {
       const marker = document.createElement('button')
       marker.className = 'forum-date-rail-marker'
       marker.type = 'button'
-      marker.title = anchor.title
       marker.setAttribute('aria-label', anchor.title)
       marker.style.setProperty('--forum-date-position', `${anchor.position * 100}%`)
       marker.addEventListener('click', e => {
         e.preventDefault()
-        switchPage(null, { postId: String(anchor.postId) })
+        if (e.detail !== 0) {
+          return
+        }
+        navigateToPost(String(anchor.postId))
       })
       rail.appendChild(marker)
     })
 
     rail.addEventListener('pointerdown', e => {
       isDragging = true
-      startedOnMarker = (e.target as HTMLElement).closest('.forum-date-rail-marker') !== null
       rail.classList.add('is-dragging')
       rail.setPointerCapture(e.pointerId)
       showAnchor(getAnchorFromPointer(e, rail))
@@ -359,14 +392,21 @@ export function makeForumThread(node: HTMLElement) {
       }
     })
     rail.addEventListener('pointerup', e => {
+      if (!isDragging) {
+        return
+      }
       const anchor = getAnchorFromPointer(e, rail)
       isDragging = false
       rail.classList.remove('is-dragging')
       showAnchor(null)
-      if (!startedOnMarker && anchor) {
-        switchPage(null, { postId: String(anchor.postId) })
+      if (anchor) {
+        navigateToPost(String(anchor.postId))
       }
-      startedOnMarker = false
+    })
+    rail.addEventListener('pointercancel', () => {
+      isDragging = false
+      rail.classList.remove('is-dragging')
+      showAnchor(null)
     })
 
     node.appendChild(rail)
@@ -441,6 +481,36 @@ export function makeForumThread(node: HTMLElement) {
     setupInfiniteScroll()
   }
 
+  const onPostLinkClick = (e: MouseEvent) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+      return
+    }
+
+    const target = e.target
+    if (!(target instanceof Element)) {
+      return
+    }
+
+    const link = target.closest('a[href]') as HTMLAnchorElement | null
+    if (!link || !node.contains(link)) {
+      return
+    }
+
+    const postId = getPostIdFromUrl(link.href)
+    if (!postId) {
+      return
+    }
+
+    const threadId = getThreadIdFromUrl(link.href)
+    if (threadId && String(threadId) !== String(fBasePathParams.t)) {
+      return
+    }
+
+    e.preventDefault()
+    e.stopPropagation()
+    navigateToPost(postId)
+  }
+
   //
   const switchPage = async (e: MouseEvent | null, config: SwitchPageConfig) => {
     if (e) {
@@ -473,6 +543,9 @@ export function makeForumThread(node: HTMLElement) {
   window.addEventListener('hashchange', () => {
     const postId = getPostIdFromHash()
     if (postId) {
+      if (navigateToLoadedPost(postId, false)) {
+        return
+      }
       // navigate to different post; ignore page
       switchPage(null, { postId })
     }
@@ -486,14 +559,15 @@ export function makeForumThread(node: HTMLElement) {
       return
     }
     event.detail.handled = true
-    switchPage(null, { postId })
+    navigateToPost(postId)
   })
 
   // due to wikidot's shitty way of doing direct post links, we have to detect it here.
   // if this is a direct post link, produce a pagination query with the post ID taken from hash
   const initialPostId = getPostIdFromHash()
+  node.addEventListener('click', onPostLinkClick)
   setupPageSwitch()
   if (initialPostId) {
-    switchPage(null, { postId: initialPostId })
+    navigateToPost(initialPostId)
   }
 }

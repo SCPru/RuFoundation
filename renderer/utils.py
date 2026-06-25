@@ -74,24 +74,35 @@ def render_user_to_text(user: _UserType):
     return user.username
 
 
-def render_user_to_html(user: _UserType, avatar=True, hover=True):
+def render_user_to_html(user: _UserType, avatar=True, hover=True, interactive=True):
+    class_add = ' avatarhover' if hover and interactive else ''
     if user is None:
         return render_template_from_string(
             '<span class="printuser{{class_add}}"><strong>system</strong></span>',
-            class_add=(' avatarhover' if hover else '')
+            class_add=class_add
         )
     if isinstance(user, AnonymousUser):
         return render_template_from_string(
             """
             <span class="printuser{{class_add}}">
                 {% if show_avatar %}
-                    <a onclick="return false;"><img class="small" src="{{avatar}}" alt="Anonymous User"></a>
+                    {% if interactive %}
+                        <a onclick="return false;"><img class="small" src="{{avatar}}" alt="Anonymous User"></a>
+                    {% else %}
+                        <span class="printuser-avatar"><img class="small" src="{{avatar}}" alt="Anonymous User"></span>
+                    {% endif %}
                 {% endif %}
-                <a onclick="return false;">Anonymous User</a></span>
+                {% if interactive %}
+                    <a onclick="return false;">Anonymous User</a>
+                {% else %}
+                    <span class="printuser-name">Anonymous User</span>
+                {% endif %}
+            </span>
             """,
-            class_add=(' avatarhover' if hover else ''),
+            class_add=class_add,
             show_avatar=avatar,
-            avatar=settings.ANON_AVATAR
+            avatar=settings.ANON_AVATAR,
+            interactive=interactive
         )
     if user.type == 'wikidot':
         user_avatar = settings.WIKIDOT_AVATAR
@@ -104,9 +115,17 @@ def render_user_to_html(user: _UserType, avatar=True, hover=True):
         """
         <span class="printuser w-user{{class_add}}" data-user-id="{{user_id}}" data-user-name="{{username}}">
             {% if show_avatar %}
-                <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
+                {% if interactive %}
+                    <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>
+                {% else %}
+                    <span class="printuser-avatar"><img class="small" src="{{avatar}}" alt="{{displayname}}"></span>
+                {% endif %}
             {% endif %}
-            <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a>
+            {% if interactive %}
+                <a href="/-/users/{{user_id}}-{{username}}">{{displayname}}</a>
+            {% else %}
+                <span class="printuser-name">{{displayname}}</span>
+            {% endif %}
             {% if show_avatar %}
                 {% for icon in tails.icons %}
                     <span class="icon" {% if icon.tooltip %}title="{{icon.tooltip|safe}}"{% endif %}><img src="data:image/svg+xml,{{icon.icon}}"/></span>
@@ -117,8 +136,9 @@ def render_user_to_html(user: _UserType, avatar=True, hover=True):
             {% endif %}
         </span>
         """,
-        class_add=(' avatarhover' if hover else ''),
+        class_add=class_add,
         show_avatar=avatar,
+        interactive=interactive,
         tails=user.name_tails,
         avatar=user_avatar,
         user_id=user.pk,

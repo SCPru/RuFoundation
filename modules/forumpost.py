@@ -86,12 +86,13 @@ def api_update(context, params):
     if not context.user.has_perm('roles.edit_forum_posts', post):
         raise ModuleError('Недостаточно прав для редактирования сообщения')
 
-    latest_version = ForumPostVersion.objects.filter(post=post).order_by('-created_at')[:1]
-    prev_source = latest_version[0].source if latest_version else ''
+    latest_version = ForumPostVersion.objects.filter(post=post).order_by('-created_at').first()
+    prev_source = latest_version.source if latest_version else ''
 
     if source != prev_source:
         new_version = ForumPostVersion(post=post, source=source, author=context.user)
         new_version.save()
+        latest_version = new_version
         post.updated_at = datetime.now(timezone.utc)
 
     prev_title = post.name
@@ -105,11 +106,16 @@ def api_update(context, params):
 
     content = single_pass_render(source, RenderContext(None, None, {}, context.user), 'message')
 
+    has_revisions = ForumPostVersion.objects.filter(post=post).count() > 1
+
     return {
         'postId': post.id,
         'name': post.name,
         'createdAt': post.created_at.isoformat(),
         'updatedAt': post.updated_at.isoformat(),
+        'hasRevisions': has_revisions,
+        'lastRevisionDate': post.updated_at.isoformat() if has_revisions else None,
+        'lastRevisionAuthor': render_user_to_json(latest_version.author) if has_revisions and latest_version else None,
         'source': source,
         'content': content
     }

@@ -36,6 +36,9 @@ export interface ForumFetchPostResponse {
   name: string
   source: string
   content: string
+  hasRevisions?: boolean
+  lastRevisionDate?: string
+  lastRevisionAuthor?: UserData
 }
 
 export interface ForumUpdatePostRequest {

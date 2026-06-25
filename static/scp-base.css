@@ -1153,7 +1153,7 @@ div.sexy-box div.image-container img {
   background-color: #eee;
   background-image: linear-gradient(to right, #eee, #eeecec);
   box-shadow: inset 2px 2px 10px rgba(0, 0, 0, 0.15);
-  border-radius: 5px;
+  border-radius: 6px;
 }
 
 .thread-container .post .long .head .title {

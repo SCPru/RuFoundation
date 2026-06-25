@@ -8,7 +8,7 @@ from django.utils.safestring import SafeString
 
 import renderer
 
-from modules.forumthread import get_post_contents
+from modules.forumthread import get_post_contents, get_reply_target_info, get_thread_url
 from modules.listpages import render_pagination, render_date
 from renderer import RenderContext, render_template_from_string, render_user_to_html
 from renderer.utils import render_vote_to_html
@@ -46,16 +46,19 @@ def get_post_info(context, posts, category_for_comments, usernames: set[str]=set
 
     for post in posts:
         thread = post.thread
-        thread_url = '/forum/t-%d/%s' % (thread.id, articles.normalize_article_name(thread.name if thread.category_id else thread.article.display_name))
+        thread_url = get_thread_url(thread)
         author_vote = ''
-        is_op = thread.author == post.author
+        is_thread_author = post.author_id is not None and thread.author_id == post.author_id
+        is_op = is_thread_author
+        author_mark = 'Автор темы' if is_op else ''
 
         if thread.article:
+            is_article_author = post.author_id is not None and post.author in thread.article.authors.all()
             rating_mode = thread.article.settings.rating_mode
             author_vote = Vote.objects.filter(user=post.author, article=thread.article).last()
             author_vote = render_vote_to_html(author_vote, rating_mode)
-            if post.author in thread.article.authors.all():
-                is_op = True
+            is_op = is_article_author
+            author_mark = 'Автор статьи' if is_article_author else ''
         
         content = highlight_mentions(
             renderer.single_pass_render(post_contents.get(post.id, ('', None))[0], RenderContext(None, None, {}, context.user), 'message'),
@@ -75,12 +78,14 @@ def get_post_info(context, posts, category_for_comments, usernames: set[str]=set
             })
         render_post = {
             'id': post.id,
-            'name': post.name.strip() or 'Перейти к сообщению',
+            'name': post.name.strip(),
             'is_op': is_op,
+            'author_mark': author_mark,
             'author': render_user_to_html(post.author),
             'author_rate': author_vote,
             'created_at': render_date(post.created_at),
             'content': content,
+            'reply_target': get_reply_target_info(context, thread, post, post_contents),
             'reactions': reactions,
             'url': '%s#post-%d' % (thread_url, post.id),
             'category': {
@@ -218,11 +223,30 @@ def render(context: RenderContext, params):
                         <div class="post" id="post-{{ post.id }}">
                             <div class="long">
                                 <div class="head {% if post.is_op %}op-post{% endif %}">
-                                    <div class="title">
-                                        <a href="{{ post.url }}">{{ post.name }}</a>
-                                    </div>
+                                    {% if post.reply_target %}
+                                    <a class="forum-reply-target" href="{{ post.reply_target.url }}">
+                                        <i class="fas fa-reply" aria-hidden="true"></i>
+                                        <span class="forum-reply-target-label">На</span>
+                                        {% if post.reply_target.user %}
+                                            {{ post.reply_target.user }}
+                                        {% else %}
+                                            <span class="forum-reply-target-title">{{ post.reply_target.title }}</span>
+                                        {% endif %}
+                                        {% if post.reply_target.excerpt %}
+                                            <span class="forum-reply-target-excerpt">{{ post.reply_target.excerpt }}</span>
+                                        {% endif %}
+                                    </a>
+                                    {% endif %}
+                                    <div class="title">{% if post.name %}<a href="{{ post.url }}">{{ post.name }}</a>{% endif %}</div>
                                     <div class="info">
-                                        {{ post.author }} {{ post.created_at }} {{ post.author_rate }}
+                                        {{ post.author }} {{ post.created_at }}
+                                        {% if post.author_mark %}
+                                            <span class="forum-author-mark" tabindex="0" aria-label="{{ post.author_mark }}">
+                                                <i class="fas fa-feather" aria-hidden="true"></i>
+                                                <span class="forum-author-mark-tooltip" role="tooltip">{{ post.author_mark }}</span>
+                                            </span>
+                                        {% endif %}
+                                        {{ post.author_rate }}
                                     </div>
                                     <span>
                                         в дискуссии

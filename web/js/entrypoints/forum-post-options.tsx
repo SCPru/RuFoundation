@@ -99,10 +99,22 @@ function fitFloatingElementToViewport(element?: HTMLElement | null) {
   element.style.setProperty('--forum-popup-shift-x', `${Math.round(shiftX)}px`)
 }
 
+function getUserLabel(user?: UserData) {
+  if (!user) {
+    return 'system'
+  }
+  if (user.type === 'system') {
+    return 'system'
+  }
+  if (user.type === 'anonymous') {
+    return 'Anonymous User'
+  }
+  return user.name || user.username || 'system'
+}
+
 const ForumPostOptions: React.FC<Props> = ({
   user,
   threadId,
-  threadName,
   postId,
   postName,
   canReply,
@@ -117,9 +129,9 @@ const ForumPostOptions: React.FC<Props> = ({
   reactionLimits = { maxPerUser: 0, maxPerPost: 0 },
   reactionTotalCount,
   myReactionCount,
-  hasRevisions,
-  lastRevisionDate,
-  lastRevisionAuthor,
+  hasRevisions: initialHasRevisions,
+  lastRevisionDate: initialLastRevisionDate,
+  lastRevisionAuthor: initialLastRevisionAuthor,
   preferences,
 }) => {
   const [isEditing, setIsEditing] = useState(false)
@@ -131,6 +143,9 @@ const ForumPostOptions: React.FC<Props> = ({
   const [revisionsOpen, setRevisionsOpen] = useState(false)
   const [currentRevision, setCurrentRevision] = useState('')
   const [revisions, setRevisions] = useState<Array<ForumPostVersion>>([])
+  const [hasVisibleRevisions, setHasVisibleRevisions] = useState(initialHasRevisions === true)
+  const [revisionDate, setRevisionDate] = useState(initialLastRevisionDate)
+  const [revisionAuthor, setRevisionAuthor] = useState<UserData | undefined>(initialLastRevisionAuthor)
   const [reactionState, setReactionState] = useState<ForumPostReactionState>(() => ({
     availableReactions,
     reactions,
@@ -148,6 +163,7 @@ const ForumPostOptions: React.FC<Props> = ({
   const [reactionError, setReactionError] = useState('')
   const [reactionLoading, setReactionLoading] = useState(false)
   const [menuPortal, setMenuPortal] = useState<HTMLElement | null>(null)
+  const [editMetaPortal, setEditMetaPortal] = useState<HTMLElement | null>(null)
 
   const refSelf = useRef<HTMLElement>()
   const refPreviewTitle = useRef<HTMLElement>()
@@ -170,11 +186,18 @@ const ForumPostOptions: React.FC<Props> = ({
     refPreviewTitle.current = (longPost.querySelector('.head .title') as HTMLElement | null) ?? undefined
     refPreviewContent.current = (longPost.querySelector('.content') as HTMLElement | null) ?? undefined
     const head = longPost.querySelector('.head') as HTMLElement | null
+    const infoDate = longPost.querySelector('.head .info .odate') as HTMLElement | null
     const menuSlot = document.createElement('div')
     menuSlot.className = 'forum-post-menu-slot'
+    const editMetaSlot = document.createElement('span')
+    editMetaSlot.className = 'forum-post-edit-meta-slot'
     if (head) {
       head.insertBefore(menuSlot, head.firstChild)
       setMenuPortal(menuSlot)
+    }
+    if (infoDate) {
+      infoDate.insertAdjacentElement('afterend', editMetaSlot)
+      setEditMetaPortal(editMetaSlot)
     }
     let newRefReplyPreview: HTMLElement | undefined = (longPost.querySelector('.w-reply-preview') as HTMLElement | null) ?? undefined
     if (!newRefReplyPreview) {
@@ -189,6 +212,9 @@ const ForumPostOptions: React.FC<Props> = ({
     return () => {
       if (menuSlot.parentElement) {
         menuSlot.parentElement.removeChild(menuSlot)
+      }
+      if (editMetaSlot.parentElement) {
+        editMetaSlot.parentElement.removeChild(editMetaSlot)
       }
     }
   }, [])
@@ -332,6 +358,13 @@ const ForumPostOptions: React.FC<Props> = ({
     }
     setOriginalPreviewTitle(result.name)
     setOriginalPreviewContent(result.content)
+    const nextHasRevisions = result.hasRevisions ?? result.createdAt !== result.updatedAt
+    setHasVisibleRevisions(nextHasRevisions)
+    setRevisionDate(nextHasRevisions ? result.lastRevisionDate || result.updatedAt : undefined)
+    setRevisionAuthor(nextHasRevisions ? result.lastRevisionAuthor : undefined)
+    setRevisions([])
+    setRevisionsOpen(false)
+    setCurrentRevision('')
     setIsEditing(false)
   })
 
@@ -449,6 +482,7 @@ const ForumPostOptions: React.FC<Props> = ({
       .then(revisions => {
         setRevisionsOpen(true)
         setRevisions(revisions.versions)
+        setOpen(false)
       })
       .catch(e => {
         setRevisionsOpen(false)
@@ -807,7 +841,31 @@ const ForumPostOptions: React.FC<Props> = ({
 
   const canOpenReactionList = reactionState.reactions.length > 0
   const canShare = true
-  const hasPostOptions = canShare || canEdit || canDelete || canOpenReactionList
+  const hasPostOptions = canShare || canEdit || canDelete || canOpenReactionList || hasVisibleRevisions
+  const revisionDateLabel = revisionDate ? formatDate(new Date(revisionDate)) : ''
+  const revisionAuthorLabel = getUserLabel(revisionAuthor)
+  const editMeta =
+    hasVisibleRevisions && revisionDate && revisionAuthor ? (
+      <span
+        aria-label={`Последнее редактирование: ${revisionDateLabel}, ${revisionAuthorLabel}`}
+        className="forum-post-edit-meta"
+        tabIndex={0}
+      >
+        <i aria-hidden="true" className="fas fa-pen" />
+        <span className="forum-post-edit-tooltip" role="tooltip">
+          <span className="forum-post-edit-tooltip-title">Последнее редактирование</span>
+          <span>
+            Дата:{' '}
+            <span className="odate" style={{ display: 'inline' }}>
+              {revisionDateLabel}
+            </span>
+          </span>
+          <span>
+            Пользователь: <UserView data={revisionAuthor} />
+          </span>
+        </span>
+      </span>
+    ) : null
   const postMenu = hasPostOptions ? (
     <div className="forum-post-menu" ref={r => (refPostMenu.current = r ?? undefined)}>
       <button
@@ -833,6 +891,11 @@ const ForumPostOptions: React.FC<Props> = ({
               Реакции
             </a>
           )}
+          {hasVisibleRevisions && (
+            <a href="#" onClick={onOpenRevisions} role="menuitem">
+              История правок
+            </a>
+          )}
           {canEdit && (
             <a href="#" onClick={onEdit} role="menuitem">
               Редактировать
@@ -850,25 +913,13 @@ const ForumPostOptions: React.FC<Props> = ({
   const replyButton =
     canReply && !isReplying ? (
       <a aria-label="Ответить" className="forum-post-reply-button" href="#" onClick={onReply} title="Ответить">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M268.2 82.4C280.2 87.4 288 99 288 112L288 192L400 192C497.2 192 576 270.8 576 368C576 481.3 494.5 531.9 475.8 542.1C473.3 543.5 470.5 544 467.7 544C456.8 544 448 535.1 448 524.3C448 516.8 452.3 509.9 457.8 504.8C467.2 496 480 478.4 480 448.1C480 395.1 437 352.1 384 352.1L288 352.1L288 432.1C288 445 280.2 456.7 268.2 461.7C256.2 466.7 242.5 463.9 233.3 454.8L73.3 294.8C60.8 282.3 60.8 262 73.3 249.5L233.3 89.5C242.5 80.3 256.2 77.6 268.2 82.6z"/></svg>
+        <i className="fas fa-reply"></i>
       </a>
     ) : null
   const reactionControls = renderReactions()
 
   return (
     <>
-      {hasRevisions && lastRevisionDate && lastRevisionAuthor && !revisionsOpen && (
-        <div className="changes" style={{ display: 'block' }}>
-          Последнее редактирование{' '}
-          <span className="odate" style={{ display: 'inline' }}>
-            {formatDate(new Date(lastRevisionDate))}
-          </span>{' '}
-          от <UserView data={lastRevisionAuthor} hideAvatar />{' '}
-          <a href="#" onClick={onOpenRevisions}>
-            <i className="icon-plus" /> Показать ещё
-          </a>
-        </div>
-      )}
       {revisionsOpen && (
         <div className="revisions" style={{ display: 'block' }}>
           <a href="#" onClick={onCloseRevisions}>
@@ -917,6 +968,7 @@ const ForumPostOptions: React.FC<Props> = ({
         </div>
       )}
       {menuPortal ? postMenu && ReactDOM.createPortal(postMenu, menuPortal) : postMenu}
+      {editMetaPortal ? editMeta && ReactDOM.createPortal(editMeta, editMetaPortal) : null}
       {isReplying && (
         <div className="post-container">
           <ForumPostEditor
@@ -925,7 +977,6 @@ const ForumPostOptions: React.FC<Props> = ({
             onClose={onReplyClose}
             onSubmit={onReplySubmit}
             onPreview={onReplyPreview}
-            initialTitle={'Re: ' + (postName || threadName)}
           />
         </div>
       )}

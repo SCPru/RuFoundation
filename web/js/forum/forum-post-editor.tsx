@@ -313,6 +313,7 @@ const ForumPostEditor: React.FC<Props> = ({
                   value={name}
                   onChange={onInputChange}
                   name="name"
+                  placeholder='Введите заголовок или оставьте пустым...'
                   type="text"
                   size={35}
                   maxLength={128}

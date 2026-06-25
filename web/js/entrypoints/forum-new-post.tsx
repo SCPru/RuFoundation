@@ -21,7 +21,7 @@ function navigateToForumPost(url: string) {
   }
 }
 
-const ForumNewPost: React.FC<Props> = ({ user, threadId, threadName, preferences }) => {
+const ForumNewPost: React.FC<Props> = ({ user, threadId, preferences }) => {
   const [preview, setPreview] = useState<ForumPostPreviewData>()
   const [open, setOpen] = useState(false)
 
@@ -70,7 +70,6 @@ const ForumNewPost: React.FC<Props> = ({ user, threadId, threadName, preferences
         onClose={onClose}
         onSubmit={onSubmit}
         onPreview={onPreview}
-        initialTitle={'Re: ' + threadName}
       />
     </>
   )
