@@ -111,6 +111,7 @@
   position: relative;
   color: #243044;
   background: #fff;
+  padding-bottom: 12px;
 }
 
 .profile-popover-loading,
@@ -238,12 +239,11 @@
   overflow: hidden;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 5;
 }
 
 .profile-popover-mod {
   margin-top: 12px;
-  padding: 10px 12px 12px;
+  padding: 10px 12px 0 12px;
   border-top: 1px solid #e2e7ee;
   background: #fbfcfe;
 }
