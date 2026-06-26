@@ -132,8 +132,8 @@ def get_status_items(user: User):
         items.append({'kind': 'warning', 'label': 'Реакции принудительно отключены', 'until': user.forum_reactions_disabled_until})
     elif user.is_forum_reactions_disabled:
         items.append({'kind': 'warning', 'label': 'Реакции принудительно отключены бессрочно'})
-    else:
-        items.append({'kind': 'ok', 'label': 'Реакции зависят от ролей'})
+    elif user.is_active and user.is_forum_active and user.has_perm('roles.react_forum_posts'):
+        items.append({'kind': 'ok', 'label': 'Реакции включены'})
     return items
 
 
