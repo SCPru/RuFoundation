@@ -169,9 +169,7 @@ function openPopover(anchor: HTMLElement) {
   activePopover = popover
 
   tooltip.addEventListener('mouseenter', () => clearCloseTimer(popover))
-  tooltip.addEventListener('mouseleave', () => scheduleClose(popover))
   tooltip.addEventListener('focusin', () => clearCloseTimer(popover))
-  tooltip.addEventListener('focusout', () => scheduleClose(popover))
 
   window.addEventListener('resize', popover.update)
   window.addEventListener('scroll', popover.update, true)
@@ -266,12 +264,10 @@ function bindAnchor(anchor: HTMLElement) {
   anchor.addEventListener('mouseenter', () => scheduleOpen(anchor))
   anchor.addEventListener('mouseleave', () => {
     clearOpenTimer()
-    scheduleClose()
   })
   anchor.addEventListener('focusin', () => scheduleOpen(anchor))
   anchor.addEventListener('focusout', () => {
     clearOpenTimer()
-    scheduleClose()
   })
   anchor.addEventListener(
     'click',
