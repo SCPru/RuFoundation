@@ -80,6 +80,12 @@ def user_can_add_reaction(user: _UserType, post: ForumPost) -> bool:
     return True
 
 
+def user_can_react(user: _UserType) -> bool:
+    if user is None or isinstance(user, AnonymousUser) or user.is_anonymous:
+        return False
+    return user.is_active and user.is_forum_active and user.has_perm('roles.react_forum_posts')
+
+
 def user_can_moderate_reactions(user: _UserType, post: ForumPost) -> bool:
     if user is None or isinstance(user, AnonymousUser) or user.is_anonymous:
         return False

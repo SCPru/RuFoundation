@@ -97,7 +97,7 @@
                     <form method="post" action="{% url 'user_moderate' object.pk object.username %}">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="save_status">
-                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <input type="hidden" name="next" value="{{ profile_url }}">
 
                         {% if status_form.non_field_errors %}
                             <div class="profile-form-errors">{{ status_form.non_field_errors }}</div>
@@ -177,7 +177,7 @@
                         <form method="post" action="{% url 'user_moderate' object.pk object.username %}">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="save_roles">
-                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <input type="hidden" name="next" value="{{ profile_url }}">
                             {{ roles_form.roles.errors }}
                             <div class="profile-roles-list">
                                 {{ roles_form.roles }}
@@ -192,7 +192,7 @@
                     <form method="post" action="{% url 'user_moderate' object.pk object.username %}" enctype="multipart/form-data">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="save_public_info">
-                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <input type="hidden" name="next" value="{{ profile_url }}">
                         <div class="profile-public-form">
                             {% for field in public_info_form %}
                                 <div class="profile-public-field">

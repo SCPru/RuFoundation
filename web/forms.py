@@ -61,7 +61,7 @@ class ModeratorUserStatusForm(forms.Form):
     )
     reactions_state = forms.ChoiceField(label='Реакции', choices=STATE_CHOICES, widget=forms.RadioSelect)
     reactions_forced_disabled = forms.BooleanField(
-        label='Принудительно отключить реакции форума',
+        label='Отключить реакции форума',
         required=False,
     )
     reactions_disabled_until = forms.DateTimeField(

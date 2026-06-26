@@ -152,7 +152,7 @@ def get_action_log_entry_description(log_entry: ActionLogEntry):
                     'roles': 'изменил роли',
                     'toggle_is_active': 'переключил блокировку аккаунта',
                     'toggle_is_forum_active': 'переключил доступ к форуму',
-                    'toggle_is_forum_reactions_disabled': 'переключил принудительное отключение реакций форума',
+                    'toggle_is_forum_reactions_disabled': 'переключил запрет реакций форума',
                 }
                 return f"{action_labels.get(action, 'изменил профиль')} пользователя {target_user}"
             case _:

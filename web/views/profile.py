@@ -12,6 +12,7 @@ from django.views import View
 
 from renderer import single_pass_render
 from renderer.parser import RenderContext
+from web.controllers import forum_reactions
 from web.controllers.logging import add_action_log
 from web.forms import ModeratorUserPublicInfoForm, ModeratorUserRolesForm, ModeratorUserStatusForm, UserProfileForm
 from web.models.logs import ActionLogEntry
@@ -129,10 +130,10 @@ def get_status_items(user: User):
         items.append({'kind': 'warning', 'label': 'Форум отключен бессрочно'})
 
     if user.forum_reactions_disabled_until:
-        items.append({'kind': 'warning', 'label': 'Реакции принудительно отключены', 'until': user.forum_reactions_disabled_until})
+        items.append({'kind': 'warning', 'label': 'Реакции отключены', 'until': user.forum_reactions_disabled_until})
     elif user.is_forum_reactions_disabled:
-        items.append({'kind': 'warning', 'label': 'Реакции принудительно отключены бессрочно'})
-    elif user.is_active and user.is_forum_active and user.has_perm('roles.react_forum_posts'):
+        items.append({'kind': 'warning', 'label': 'Реакции отключены бессрочно'})
+    elif forum_reactions.user_can_react(user):
         items.append({'kind': 'ok', 'label': 'Реакции включены'})
     return items
 
@@ -284,7 +285,7 @@ class ModerateUserView(LoginRequiredMixin, View):
         target.save(update_fields=['is_forum_reactions_disabled', 'forum_reactions_disabled_until'])
         changes = changed_fields(before, target, ['is_forum_reactions_disabled', 'forum_reactions_disabled_until'])
         log_profile_change(request.user, target, 'toggle_is_forum_reactions_disabled', changes)
-        message = 'Реакции принудительно отключены.' if target.is_forum_reactions_disabled else 'Принудительное отключение реакций снято.'
+        message = 'Реакции отключены.' if target.is_forum_reactions_disabled else 'Отключение реакций снято.'
         return self.finish(request, target, message)
 
     def invalid_form(self, request, target: User, **forms):

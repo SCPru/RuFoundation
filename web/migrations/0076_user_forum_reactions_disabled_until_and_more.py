@@ -13,11 +13,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='user',
             name='forum_reactions_disabled_until',
-            field=models.DateTimeField(null=True, verbose_name='Принудительно отключить реакции форума до'),
+            field=models.DateTimeField(null=True, verbose_name='Отключить реакции форума до'),
         ),
         migrations.AddField(
             model_name='user',
             name='is_forum_reactions_disabled',
-            field=models.BooleanField(default=False, verbose_name='Реакции форума принудительно отключены'),
+            field=models.BooleanField(default=False, verbose_name='Реакции форума отключены'),
         ),
     ]

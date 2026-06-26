@@ -74,8 +74,8 @@ class User(AbstractUser, RolesMixin):
     is_forum_active = models.BooleanField('Активирован форум', default=True)
     forum_inactive_until = models.DateTimeField('Деактивировать форум до', null=True)
 
-    is_forum_reactions_disabled = models.BooleanField('Реакции форума принудительно отключены', default=False)
-    forum_reactions_disabled_until = models.DateTimeField('Принудительно отключить реакции форума до', null=True)
+    is_forum_reactions_disabled = models.BooleanField('Реакции форума отключены', default=False)
+    forum_reactions_disabled_until = models.DateTimeField('Отключить реакции форума до', null=True)
 
     is_active = models.BooleanField('Активирован', default=True)
     inactive_until = models.DateTimeField('Деактивировать до', null=True)

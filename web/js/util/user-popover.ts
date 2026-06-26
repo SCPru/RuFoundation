@@ -212,7 +212,12 @@ async function submitPopoverForm(popover: ActivePopover, form: HTMLFormElement, 
   })
 
   try {
-    const response = await fetch(form.action, {
+    const actionUrl = form.getAttribute('action') || ''
+    if (!actionUrl) {
+      throw new Error('Неверный URL для действия.')
+    }
+
+    const response = await fetch(actionUrl, {
       method: 'POST',
       body: new FormData(form),
       credentials: 'same-origin',

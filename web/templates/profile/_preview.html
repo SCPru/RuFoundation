@@ -84,7 +84,7 @@
                 <form method="post" action="{% url 'user_moderate' object.pk object.username %}" class="profile-popover-action-form">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="toggle_reactions">
-                    <button type="submit" class="profile-mod-button" {% if not object.is_forum_reactions_disabled %}data-confirm="Принудительно отключить пользователю реакции форума бессрочно?"{% endif %}>
+                    <button type="submit" class="profile-mod-button" {% if not object.is_forum_reactions_disabled %}data-confirm="Отключить пользователю реакции форума бессрочно?"{% endif %}>
                         <i class="fas fa-icons"></i>
                         <span>{% if object.is_forum_reactions_disabled %}Снять запрет{% else %}Реакции выкл.{% endif %}</span>
                     </button>
