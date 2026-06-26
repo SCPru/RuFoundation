@@ -126,7 +126,7 @@ def render_user_to_html(user: _UserType, avatar=True, hover=True, interactive=Tr
 
     return render_template_from_string(
         """
-        <span class="printuser w-user{{class_add}}" data-user-id="{{user_id}}" data-user-name="{{username}}">
+        <span class="printuser w-user{{class_add}} w-user-preview-trigger" data-user-id="{{user_id}}" data-user-name="{{username}}">
             {% if show_avatar %}
                 {% if interactive %}
                     <a href="/-/users/{{user_id}}-{{username}}"><img class="small" src="{{avatar}}" alt="{{displayname}}"></a>

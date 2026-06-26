@@ -287,7 +287,7 @@ class AdvancedUserAdmin(ProtectSensitiveAdmin, UserAdmin):
     fieldsets = UserAdmin.fieldsets
     fieldsets[0][1]['fields'] = ('username', 'wikidot_username', 'type', 'password', 'api_key', '_op_index')
     fieldsets[1][1]['fields'] += ('bio', 'avatar')
-    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'roles', 'is_superuser')
+    fieldsets[2][1]['fields'] = ('is_active', 'inactive_until', 'is_forum_active', 'forum_inactive_until', 'is_forum_reactions_disabled', 'forum_reactions_disabled_until', 'roles', 'is_superuser')
 
     @admin.display(ordering='username_or_wd')
     def username_or_wd(self, obj):
@@ -309,7 +309,7 @@ class AdvancedUserAdmin(ProtectSensitiveAdmin, UserAdmin):
 
     def get_form(self, request, *args, **kwargs):
         form = super().get_form(request, *args, **kwargs)
-        not_required = ['inactive_until', 'forum_inactive_until', 'wikidot_username']
+        not_required = ['inactive_until', 'forum_inactive_until', 'forum_reactions_disabled_until', 'wikidot_username']
         for not_required_field in not_required:
             if not_required_field in form.base_fields:
                 form.base_fields[not_required_field].required = False

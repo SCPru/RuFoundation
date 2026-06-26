@@ -74,6 +74,9 @@ class User(AbstractUser, RolesMixin):
     is_forum_active = models.BooleanField('Активирован форум', default=True)
     forum_inactive_until = models.DateTimeField('Деактивировать форум до', null=True)
 
+    is_forum_reactions_disabled = models.BooleanField('Реакции форума принудительно отключены', default=False)
+    forum_reactions_disabled_until = models.DateTimeField('Принудительно отключить реакции форума до', null=True)
+
     is_active = models.BooleanField('Активирован', default=True)
     inactive_until = models.DateTimeField('Деактивировать до', null=True)
 
@@ -91,6 +94,11 @@ class User(AbstractUser, RolesMixin):
         if self.forum_inactive_until and not self.is_forum_active and datetime.now(ZoneInfo('UTC')) > self.forum_inactive_until:
             self.forum_inactive_until = None
             self.is_forum_active = True
+        if self.forum_reactions_disabled_until:
+            self.is_forum_reactions_disabled = True
+        if self.forum_reactions_disabled_until and self.is_forum_reactions_disabled and datetime.now(ZoneInfo('UTC')) > self.forum_reactions_disabled_until:
+            self.forum_reactions_disabled_until = None
+            self.is_forum_reactions_disabled = False
 
     def get_avatar(self, default=None):
         if self.avatar:

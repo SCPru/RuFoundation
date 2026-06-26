@@ -35,7 +35,11 @@ const UserView: React.FC<Props> = ({ data, avatarHover, hideAvatar }) => {
   let avatar = data.type === 'wikidot' ? WIKIDOT_AVATAR : data.avatar || DEFAULT_AVATAR
 
   return (
-    <span className={`printuser w-user ${avatarHover !== false ? 'avatarhover' : ''}`} data-user-name={data.username}>
+    <span
+      className={`printuser w-user w-user-preview-trigger ${avatarHover !== false ? 'avatarhover' : ''}`}
+      data-user-id={data.id}
+      data-user-name={data.username}
+    >
       {data.showAvatar && !hideAvatar && (
         <a href={`/-/users/${data.id}-${encodeURIComponent(data.username)}`}>
           <img className="small" src={avatar} alt={data.name} />

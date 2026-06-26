@@ -5,20 +5,8 @@
 {% endblock %}
 
 {% block h1 %}
-    <style>
-        a.manage-user {
-            color: unset;
-            text-decoration: unset;
-        }
-        a.manage-user:hover {
-            color: #ff5f5f;
-            text-decoration: underline;
-            background-color: transparent;
-        }
-    </style>
-
     <img class="system-heading-avatar" src="{{ avatar }}" alt="{{ displayname }}">
-    {% if can_manage_users %}
+    {% if can_manage_target %}
         <a class="manage-user" href="{{ manage_url }}" target="_blank">{{ displayname }}</a>
     {% else %}
         {{ displayname }}
@@ -28,26 +16,197 @@
             {{ subtitle }}
         </div>
     {% endif %}
-    {% if request.user == object %}
-        <div class="edit-button">
-            <a href="{% url "profile_edit" %}" title="Редактирование" class="icon"><span>Edit</span> <i class="fas fa-pen"></i></a>
-        </div>
-    {% endif %}
 {% endblock %}
 
 {% block content %}
-    <div class="profile-form">
+    <div class="profile-page">
         {% if request.user == object %}
             <div class="profile-actions">
                 <a href="{% url "profile_edit" %}"><i class="fas fa-pen"></i> Редактировать профиль</a>
                 <a href="/-/preferences/user/"><i class="fas fa-sliders-h"></i> Настройки интерфейса</a>
             </div>
         {% endif %}
-        {% if object.type == 'wikidot' %}<p><b>Важно:</b> Пользователь перенесен с платформы Wikidot и не является активным.<br><br></p>{% endif %}
-        {% if object.type == 'bot' %}<p><b>Важно:</b> Пользователь является ботом.<br><br></p>{% endif %}
-        {% if object.first_name %}<p><b>Имя:</b> {{ object.first_name }}</p>{% endif %}
-        {% if object.last_name %}<p><b>Фамилия:</b> {{ object.last_name }}</p>{% endif %}
-        {% if object.bio %}<p><b>Описание:</b> {{ bio_rendered }}</p>{% endif %}
-        <p><b>Участник сайта:</b> c {{ object.date_joined }}</p>
+
+        {% if showcase_badges %}
+            <div class="profile-badges">
+                {% for badge in showcase_badges %}
+                    <span class="profile-badge" {% if badge.tooltip %}data-tooltip="{{ badge.tooltip }}"{% endif %} style="background: {{ badge.bg }}; color: {{ badge.text_color }}; {% if badge.show_border %}border-color: {{ badge.text_color }}{% endif %}">
+                        {{ badge.text }}
+                    </span>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="profile-notices">
+            {% if object.type == 'wikidot' %}<p><b>Важно:</b> пользователь перенесен с платформы Wikidot и не является активным.<br><br></p>{% endif %}
+            {% if object.type == 'bot' %}<p><b>Важно:</b> пользователь является ботом.</p>{% endif %}
+            {% if not object.is_active %}<p><b>Ограничение:</b> аккаунт заблокирован{% if object.inactive_until %} до {{ object.inactive_until|date:"d.m.Y H:i" }}{% endif %}.</p>{% endif %}
+            {% if not object.is_forum_active %}<p><b>Ограничение:</b> форум отключен{% if object.forum_inactive_until %} до {{ object.forum_inactive_until|date:"d.m.Y H:i" }}{% endif %}.</p>{% endif %}
+            {% if object.is_forum_reactions_disabled %}<p><b>Ограничение:</b> реакции форума отключены{% if object.forum_reactions_disabled_until %} до {{ object.forum_reactions_disabled_until|date:"d.m.Y H:i" }}{% endif %}.</p>{% endif %}
+        </div>
+
+        <dl class="profile-details">
+            {% if object.first_name %}
+                <div>
+                    <dt>Имя</dt>
+                    <dd>{{ object.first_name }}</dd>
+                </div>
+            {% endif %}
+            {% if object.last_name %}
+                <div>
+                    <dt>Фамилия</dt>
+                    <dd>{{ object.last_name }}</dd>
+                </div>
+            {% endif %}
+            {% if object.bio %}
+                <div>
+                    <dt>Описание</dt>
+                    <dd>{{ bio_rendered }}</dd>
+                </div>
+            {% endif %}
+            <div>
+                <dt>Участник сайта</dt>
+                <dd>c {{ object.date_joined|date:"d.m.Y H:i" }}</dd>
+            </div>
+        </dl>
+
+        {% if can_manage_users and not can_manage_target %}
+            <div class="profile-mod-panel is-locked">
+                <h2><i class="fas fa-shield-alt"></i> Модерация</h2>
+                <p>У вас нет достаточного уровня доступа для изменения этого пользователя.</p>
+            </div>
+        {% endif %}
+
+        {% if can_manage_target %}
+            <div class="profile-mod-panel" id="profile-mod-panel">
+                <div class="profile-mod-header">
+                    <h2><i class="fas fa-shield-alt"></i> Модерация</h2>
+                    <a href="{{ manage_url }}" target="_blank"><i class="fas fa-external-link-alt"></i> Админка</a>
+                </div>
+
+                <div class="profile-status-row">
+                    {% for item in status_items %}
+                        <span class="profile-status-chip is-{{ item.kind }}">
+                            {{ item.label }}{% if item.until %}: {{ item.until|date:"d.m.Y H:i" }}{% endif %}
+                        </span>
+                    {% endfor %}
+                </div>
+
+                <details class="profile-mod-section" open>
+                    <summary><i class="fas fa-ban"></i> Ограничения</summary>
+                    <form method="post" action="{% url 'user_moderate' object.pk object.username %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="save_status">
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+                        {% if status_form.non_field_errors %}
+                            <div class="profile-form-errors">{{ status_form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="profile-mod-grid">
+                            <fieldset>
+                                <legend>Аккаунт</legend>
+                                <div class="profile-mod-choice-list">
+                                    {% for option in moderation_state_options %}
+                                        <label class="profile-mod-choice">
+                                            <input type="radio" name="account_state" value="{{ option.value }}" {% if status_form.account_state.value == option.value %}checked{% endif %}>
+                                            <span>
+                                                <strong>{{ option.label }}</strong>
+                                                <small>{{ option.help }}</small>
+                                            </span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                <label class="profile-mod-until">
+                                    <span>{{ status_form.account_until.label }}</span>
+                                    {{ status_form.account_until }}
+                                </label>
+                                {{ status_form.account_until.errors }}
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>Форум</legend>
+                                <div class="profile-mod-choice-list">
+                                    {% for option in moderation_state_options %}
+                                        <label class="profile-mod-choice">
+                                            <input type="radio" name="forum_state" value="{{ option.value }}" {% if status_form.forum_state.value == option.value %}checked{% endif %}>
+                                            <span>
+                                                <strong>{{ option.label }}</strong>
+                                                <small>{{ option.help }}</small>
+                                            </span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                <label class="profile-mod-until">
+                                    <span>{{ status_form.forum_until.label }}</span>
+                                    {{ status_form.forum_until }}
+                                </label>
+                                {{ status_form.forum_until.errors }}
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>Реакции</legend>
+                                <div class="profile-mod-choice-list">
+                                    {% for option in moderation_state_options %}
+                                        <label class="profile-mod-choice">
+                                            <input type="radio" name="reactions_state" value="{{ option.value }}" {% if status_form.reactions_state.value == option.value %}checked{% endif %}>
+                                            <span>
+                                                <strong>{{ option.label }}</strong>
+                                                <small>{{ option.help }}</small>
+                                            </span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                <label class="profile-mod-until">
+                                    <span>{{ status_form.reactions_disabled_until.label }}</span>
+                                    {{ status_form.reactions_disabled_until }}
+                                    {% if status_form.reactions_disabled_until.help_text %}<small>{{ status_form.reactions_disabled_until.help_text }}</small>{% endif %}
+                                </label>
+                                {{ status_form.reactions_state.errors }}
+                                {{ status_form.reactions_disabled_until.errors }}
+                            </fieldset>
+                        </div>
+
+                        <button type="submit" class="btn">Сохранить ограничения</button>
+                    </form>
+                </details>
+
+                {% if can_manage_roles %}
+                    <details class="profile-mod-section">
+                        <summary><i class="fas fa-user-tag"></i> Роли</summary>
+                        <form method="post" action="{% url 'user_moderate' object.pk object.username %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="save_roles">
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            {{ roles_form.roles.errors }}
+                            <div class="profile-roles-list">
+                                {{ roles_form.roles }}
+                            </div>
+                            <button type="submit" class="btn">Сохранить роли</button>
+                        </form>
+                    </details>
+                {% endif %}
+
+                <details class="profile-mod-section">
+                    <summary><i class="fas fa-id-card"></i> Публичная информация</summary>
+                    <form method="post" action="{% url 'user_moderate' object.pk object.username %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="save_public_info">
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <div class="profile-public-form">
+                            {% for field in public_info_form %}
+                                <div class="profile-public-field">
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                    {{ field.errors }}
+                                    {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="btn">Сохранить публичную информацию</button>
+                    </form>
+                </details>
+            </div>
+        {% endif %}
     </div>
 {% endblock %}

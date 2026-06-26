@@ -139,6 +139,8 @@ class ForumThread(auto_prefetch.Model, PermissionsOverrideMixin):
         if not user_obj.is_anonymous and not user_obj.is_forum_active or self.is_locked and 'roles.lock_forum_threads' not in perms:
             perms_to_revoke = {'roles.comment_articles', 'roles.create_forum_posts', 'roles.react_forum_posts', 'roles.edit_forum_posts', 'roles.delete_forum_posts', 'roles.edit_forum_threads', 'roles.pin_forum_threads', 'roles.pin_forum_posts', 'roles.move_forum_threads'}
             perms = perms.difference(perms_to_revoke)
+        if not user_obj.is_anonymous and user_obj.is_forum_reactions_disabled:
+            perms.discard('roles.react_forum_posts')
         return super().override_perms(user_obj, perms, roles)
 
 

@@ -23,6 +23,13 @@
             <div class="heading">
                 <h1 id="title">{% block h1 %}{% endblock %}</h1>
             </div>
+            {% if messages %}
+                <div class="system-messages">
+                    {% for message in messages %}
+                        <div class="system-message {{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
             <div class="content">
                 {% block content %}{% endblock %}
             </div>

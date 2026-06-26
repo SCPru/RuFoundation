@@ -90,7 +90,9 @@ sys_patterns = [
     path('reset/<uidb64>/<token>', PasswordResetConfirmView.as_view(template_name="login/password_reset_confirm.html"), name='password_reset_confirm'),
     path('reset/done', PasswordResetCompleteView.as_view(template_name='login/password_reset_complete.html'), name='password_reset_complete'),
 
-    path("users/<int:pk>-<slug>", profile.ProfileView.as_view(template_name="profile/user.html"), name="users"),
+    path("users/<int:pk>-<str:slug>/preview", profile.ProfilePreviewView.as_view(), name="user_preview"),
+    path("users/<int:pk>-<str:slug>/moderate", profile.ModerateUserView.as_view(), name="user_moderate"),
+    path("users/<int:pk>-<str:slug>", profile.ProfileView.as_view(template_name="profile/user.html"), name="users"),
     path("profile/edit", profile.ChangeProfileView.as_view(template_name="profile/change.html"), name="profile_edit"),
 
     path('accept/<uidb64>/<token>', signup.AcceptInvitationView.as_view(), name="accept"),

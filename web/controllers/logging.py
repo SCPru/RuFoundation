@@ -143,6 +143,18 @@ def get_action_log_entry_description(log_entry: ActionLogEntry):
                 if m['target_user']['id'] == log_entry.user_id:
                     return f'В теме "{thread_name}" с сообщения №{post_id} удалена реакция "{reaction_name}"'
                 return f'В теме "{thread_name}" с сообщения №{post_id} удалена реакция "{reaction_name}" пользователя {target_user}'
+            case ActionType.ChangeProfileInfo:
+                target_user = m.get('target_user', {}).get('username', 'неизвестного пользователя')
+                action = m.get('action', 'profile')
+                action_labels = {
+                    'public_info': 'изменил публичную информацию',
+                    'status': 'изменил ограничения',
+                    'roles': 'изменил роли',
+                    'toggle_is_active': 'переключил блокировку аккаунта',
+                    'toggle_is_forum_active': 'переключил доступ к форуму',
+                    'toggle_is_forum_reactions_disabled': 'переключил принудительное отключение реакций форума',
+                }
+                return f"{action_labels.get(action, 'изменил профиль')} пользователя {target_user}"
             case _:
                 return None
     except:

@@ -26,6 +26,7 @@ import { makeRecentPosts } from './forum/recent-posts-pagination'
 import { makeForumThread } from './forum/thread-pagination'
 import ReactivePage from './reactive/router'
 import { makePasswordToggle } from './util/password'
+import { bindUserPopovers } from './util/user-popover'
 import AdminSusUsers from './entrypoints/admin-sus-users'
 import { renderTo } from '~util/react-render-into'
 import { makeCustomTooltips } from './util/tooltip'
@@ -101,6 +102,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   })
   makeCustomTooltips(document.body)
+  bindUserPopovers(document.body)
 
   const reactiveRoot: HTMLElement | null = document.querySelector('#reactive-root')
   if (reactiveRoot) {
@@ -122,6 +124,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
           })
           makeCustomTooltips(node)
+          bindUserPopovers(node)
         })
       } else if (record.type === 'attributes') {
         if (record.attributeName === 'class' && record.target) {

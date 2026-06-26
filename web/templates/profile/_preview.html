@@ -1,0 +1,98 @@
+<div class="profile-popover-card" data-user-preview-card>
+    <button type="button" class="profile-popover-close" data-user-popover-close title="Закрыть" aria-label="Закрыть">
+        <i class="fas fa-times"></i>
+    </button>
+
+    <div class="profile-popover-head">
+        <a class="profile-popover-avatar" href="{{ profile_url }}">
+            <img src="{{ avatar }}" alt="{{ displayname }}">
+        </a>
+        <div class="profile-popover-main">
+            <a class="profile-popover-name" href="{{ profile_url }}">{{ displayname }}</a>
+            {% if subtitle %}
+                <div class="profile-popover-subtitle">{{ subtitle }}</div>
+            {% endif %}
+            {% if showcase_badges %}
+                <div class="profile-badges profile-popover-badges">
+                    {% for badge in showcase_badges %}
+                        <span class="profile-badge" {% if badge.tooltip %}data-tooltip="{{ badge.tooltip }}"{% endif %} style="background: {{ badge.bg }}; color: {{ badge.text_color }}; {% if badge.show_border %}border-color: {{ badge.text_color }}{% endif %}">
+                            {{ badge.text }}
+                        </span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if object.type == 'wikidot' %}
+        <div class="profile-popover-note">Перенесен с Wikidot</div>
+    {% elif object.type == 'bot' %}
+        <div class="profile-popover-note">Бот</div>
+    {% endif %}
+
+    {% if object.first_name or object.last_name %}
+        <div class="profile-popover-line">
+            <span>Имя</span>
+            <strong>{{ object.first_name }}{% if object.first_name and object.last_name %} {% endif %}{{ object.last_name }}</strong>
+        </div>
+    {% endif %}
+
+    {% if object.bio %}
+        <div class="profile-popover-bio">{{ bio_rendered }}</div>
+    {% endif %}
+
+    <div class="profile-popover-line">
+        <span>На сайте</span>
+        <strong>{{ object.date_joined|date:"d.m.Y" }}</strong>
+    </div>
+
+    {% if can_manage_target %}
+        <div class="profile-popover-mod">
+            <div class="profile-popover-mod-title">
+                <i class="fas fa-shield-alt"></i>
+                <span>Модерация</span>
+            </div>
+            <div class="profile-popover-status-list">
+                {% for item in status_items %}
+                    <span class="profile-status-chip is-{{ item.kind }}">
+                        {{ item.label }}{% if item.until %}: {{ item.until|date:"d.m.Y H:i" }}{% endif %}
+                    </span>
+                {% endfor %}
+            </div>
+            <div class="profile-popover-mod-actions">
+                <form method="post" action="{% url 'user_moderate' object.pk object.username %}" class="profile-popover-action-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="toggle_account">
+                    {% if object.is_active %}
+                        <button type="submit" class="profile-mod-button is-danger" data-confirm="Заблокировать пользователя бессрочно?">
+                            <i class="fas fa-user-slash"></i><span>Бан</span>
+                        </button>
+                    {% else %}
+                        <button type="submit" class="profile-mod-button is-good">
+                            <i class="fas fa-user-check"></i><span>Разбан</span>
+                        </button>
+                    {% endif %}
+                </form>
+                <form method="post" action="{% url 'user_moderate' object.pk object.username %}" class="profile-popover-action-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="toggle_forum">
+                    <button type="submit" class="profile-mod-button" {% if object.is_forum_active %}data-confirm="Отключить пользователю форум бессрочно?"{% endif %}>
+                        <i class="fas fa-comments"></i>
+                        <span>{% if object.is_forum_active %}Форум выкл.{% else %}Форум вкл.{% endif %}</span>
+                    </button>
+                </form>
+                <form method="post" action="{% url 'user_moderate' object.pk object.username %}" class="profile-popover-action-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="toggle_reactions">
+                    <button type="submit" class="profile-mod-button" {% if not object.is_forum_reactions_disabled %}data-confirm="Принудительно отключить пользователю реакции форума бессрочно?"{% endif %}>
+                        <i class="fas fa-icons"></i>
+                        <span>{% if object.is_forum_reactions_disabled %}Снять запрет{% else %}Реакции выкл.{% endif %}</span>
+                    </button>
+                </form>
+                <a class="profile-mod-button" href="{{ profile_url }}#profile-mod-panel">
+                    <i class="fas fa-sliders-h"></i><span>Меню</span>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
