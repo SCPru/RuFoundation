@@ -243,9 +243,9 @@ class ForumReactionForm(forms.ModelForm):
 class ForumReactionAdmin(SortableAdminMixin, admin.ModelAdmin):
     form = ForumReactionForm
     search_fields = ['name']
-    list_filter = ['is_active']
-    list_display = ['image_preview', 'name', 'is_active']
-    list_editable = ['is_active']
+    list_filter = ['is_active', 'is_hidden_from_picker']
+    list_display = ['image_preview', 'name', 'is_active', 'is_hidden_from_picker']
+    list_editable = ['is_active', 'is_hidden_from_picker']
     ordering = ['sort_order', 'id']
 
     class Media:

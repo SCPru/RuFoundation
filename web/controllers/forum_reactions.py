@@ -107,11 +107,12 @@ def serialize_reaction(reaction: ForumReaction):
         'name': reaction.name,
         'imageUrl': reaction.image_url,
         'isActive': reaction.is_active,
+        'isHiddenFromPicker': reaction.is_hidden_from_picker,
     }
 
 
 def serialize_available_reactions(viewer: _UserType=None):
-    reactions = ForumReaction.objects.all()
+    reactions = ForumReaction.objects.filter(is_hidden_from_picker=False)
     if not user_can_manage_reactions(viewer):
         reactions = reactions.filter(is_active=True)
 
@@ -205,6 +206,8 @@ def add_reaction_to_post(post: ForumPost, reaction_id, user):
     reaction = ForumReaction.objects.filter(id=reaction_id).first()
     if reaction is None:
         raise ForumReactionError('Реакция не найдена')
+    if reaction.is_hidden_from_picker:
+        raise ForumReactionError('Эта реакция скрыта и не может быть добавлена')
     if not reaction.is_active and not user_can_manage_reactions(user):
         raise ForumReactionError('Эта реакция сейчас недоступна')
 

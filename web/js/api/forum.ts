@@ -79,6 +79,7 @@ export interface ForumReaction {
   name: string
   imageUrl: string
   isActive: boolean
+  isHiddenFromPicker: boolean
 }
 
 export interface ForumPostReactionSummary {

@@ -189,6 +189,11 @@ class ForumReaction(auto_prefetch.Model):
     name = models.TextField('Название')
     image = models.FileField('Картинка', upload_to='-/forum-reactions', validators=[validate_forum_reaction_image])
     is_active = models.BooleanField('Доступна', default=True)
+    is_hidden_from_picker = models.BooleanField(
+        'Скрыть в пикере',
+        default=False,
+        help_text='Скрытая реакция не показывается в пикере и не может быть добавлена никем, включая администраторов.',
+    )
     sort_order = models.PositiveIntegerField('Порядок сортировки', default=0, editable=False, db_index=True)
     created_at = models.DateTimeField('Время создания', auto_now_add=True)
 

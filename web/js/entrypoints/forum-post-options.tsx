@@ -606,6 +606,10 @@ const ForumPostOptions: React.FC<Props> = ({
     if (reactionLoading) {
       return
     }
+    if (reaction.isHiddenFromPicker) {
+      setReactionError('Эта реакция скрыта и не может быть добавлена')
+      return
+    }
     if (!reaction.isActive && !reactionState.canUseInactiveReactions) {
       setReactionError('Эта реакция сейчас недоступна')
       return
@@ -785,9 +789,13 @@ const ForumPostOptions: React.FC<Props> = ({
           {reactionState.reactions.map(summary => {
             const canToggle = summary.me
               ? reactionState.canRemoveOwnReactions
-              : (summary.reaction.isActive || reactionState.canUseInactiveReactions) && canAddReactionType(summary.reaction.id)
+              : !summary.reaction.isHiddenFromPicker &&
+                (summary.reaction.isActive || reactionState.canUseInactiveReactions) &&
+                canAddReactionType(summary.reaction.id)
             const chipTitle = summary.me
               ? `Убрать реакцию "${summary.reaction.name}"`
+              : summary.reaction.isHiddenFromPicker
+                ? `Реакция "${summary.reaction.name}" скрыта в пикере`
               : summary.reaction.isActive || reactionState.canUseInactiveReactions
                 ? `Поставить реакцию "${summary.reaction.name}"`
                 : `Реакция "${summary.reaction.name}" сейчас недоступна`
