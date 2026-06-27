@@ -1,4 +1,4 @@
-import { makeCustomTooltips, placeTooltip } from './tooltip'
+import { makeCustomTooltips } from './tooltip'
 
 interface ActivePopover {
   anchor: HTMLElement
@@ -17,19 +17,25 @@ interface ModerateResponse {
 
 const OPEN_DELAY = 120
 const CLOSE_DELAY = 220
+const POPOVER_MARGIN = 8
+const POPOVER_GAP = 7
 const htmlCache = new Map<string, string>()
 
 let activePopover: ActivePopover | null = null
 let openTimer: number | null = null
 
-function isCoarsePointer() {
-  return window.matchMedia('(hover: none), (pointer: coarse)').matches
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
 }
 
 function userPreviewUrl(anchor: HTMLElement) {
   const userId = anchor.dataset.userId
   const username = anchor.dataset.userName || 'user'
   return `/-/users/${userId}-${encodeURIComponent(username)}/preview`
+}
+
+function isCoarsePointer() {
+  return window.matchMedia('(hover: none), (pointer: coarse)').matches
 }
 
 function clearOpenTimer() {
@@ -46,6 +52,48 @@ function clearCloseTimer(popover: ActivePopover | null) {
   }
 }
 
+function placeUserPopover(anchor: HTMLElement, tooltip: HTMLElement) {
+  const viewportWidth = document.documentElement.clientWidth
+  const viewportHeight = document.documentElement.clientHeight
+  const anchorRect = anchor.getBoundingClientRect()
+
+  tooltip.style.maxHeight = ''
+  tooltip.style.overflowY = ''
+  tooltip.style.visibility = 'hidden'
+  tooltip.style.left = '0px'
+  tooltip.style.top = '0px'
+
+  let tooltipRect = tooltip.getBoundingClientRect()
+  const availableBelow = viewportHeight - anchorRect.bottom - POPOVER_GAP - POPOVER_MARGIN
+  const availableAbove = anchorRect.top - POPOVER_GAP - POPOVER_MARGIN
+  const fitsBelow = tooltipRect.height <= availableBelow
+  const fitsAbove = tooltipRect.height <= availableAbove
+  const maxLeft = Math.max(POPOVER_MARGIN, viewportWidth - tooltipRect.width - POPOVER_MARGIN)
+  const left = clamp(anchorRect.left + anchorRect.width / 2 - tooltipRect.width / 2, POPOVER_MARGIN, maxLeft)
+
+  let top: number
+  let placement = 'overlap'
+
+  if (fitsBelow || fitsAbove) {
+    placement = fitsBelow ? 'bottom' : 'top'
+    top = placement === 'bottom' ? anchorRect.bottom + POPOVER_GAP : anchorRect.top - tooltipRect.height - POPOVER_GAP
+  } else {
+    const maxHeight = Math.max(160, viewportHeight - POPOVER_MARGIN * 2)
+    if (tooltipRect.height > maxHeight) {
+      tooltip.style.maxHeight = `${maxHeight}px`
+      tooltip.style.overflowY = 'auto'
+      tooltipRect = tooltip.getBoundingClientRect()
+    }
+    top = anchorRect.top + anchorRect.height / 2 - tooltipRect.height / 2
+  }
+
+  const maxTop = Math.max(POPOVER_MARGIN, viewportHeight - tooltipRect.height - POPOVER_MARGIN)
+  tooltip.dataset.placement = placement
+  tooltip.style.left = `${Math.round(left)}px`
+  tooltip.style.top = `${Math.round(clamp(top, POPOVER_MARGIN, maxTop))}px`
+  tooltip.style.visibility = 'visible'
+}
+
 function closePopover() {
   clearOpenTimer()
   if (!activePopover) {
@@ -53,6 +101,7 @@ function closePopover() {
   }
 
   clearCloseTimer(activePopover)
+  document.querySelectorAll<HTMLElement>('.w-tooltip[role="tooltip"]').forEach(tooltip => tooltip.remove())
   window.removeEventListener('resize', activePopover.update)
   window.removeEventListener('scroll', activePopover.update, true)
   document.removeEventListener('pointerdown', handleDocumentPointerDown, true)
@@ -163,13 +212,15 @@ function openPopover(anchor: HTMLElement) {
     tooltip,
     userId,
     closeTimer: null,
-    update: () => placeTooltip(anchor, tooltip, 'bottom'),
+    update: () => placeUserPopover(anchor, tooltip),
   }
 
   activePopover = popover
 
   tooltip.addEventListener('mouseenter', () => clearCloseTimer(popover))
+  tooltip.addEventListener('mouseleave', () => scheduleClose(popover))
   tooltip.addEventListener('focusin', () => clearCloseTimer(popover))
+  tooltip.addEventListener('focusout', () => scheduleClose(popover))
 
   window.addEventListener('resize', popover.update)
   window.addEventListener('scroll', popover.update, true)
@@ -264,10 +315,12 @@ function bindAnchor(anchor: HTMLElement) {
   anchor.addEventListener('mouseenter', () => scheduleOpen(anchor))
   anchor.addEventListener('mouseleave', () => {
     clearOpenTimer()
+    scheduleClose()
   })
   anchor.addEventListener('focusin', () => scheduleOpen(anchor))
   anchor.addEventListener('focusout', () => {
     clearOpenTimer()
+    scheduleClose()
   })
   anchor.addEventListener(
     'click',

@@ -71,11 +71,6 @@
   white-space: nowrap;
 }
 
-.printuser.w-user-preview-trigger.avatarhover a:hover img.small,
-.printuser.w-user-preview-trigger.avatarhover span:hover img.small {
-  transform: none;
-}
-
 .profile-badges {
   display: flex;
   flex-wrap: wrap;
