@@ -593,6 +593,9 @@
 
 .forum-date-rail {
   --forum-date-position: 0%;
+  --forum-date-marker-size: 12px;
+  --forum-date-edge-space: 10px;
+  --forum-date-label-edge-space: 14px;
   position: fixed;
   top: 18vh;
   right: 12px;
@@ -605,6 +608,11 @@
   touch-action: none;
 }
 
+.forum-date-rail.is-dense {
+  --forum-date-marker-size: 10px;
+  --forum-date-edge-space: 9px;
+}
+
 .forum-date-rail:hover,
 .forum-date-rail.is-dragging,
 .forum-date-rail.is-previewing {
@@ -613,8 +621,8 @@
 
 .forum-date-rail-track {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: var(--forum-date-edge-space);
+  bottom: var(--forum-date-edge-space);
   left: 50%;
   width: 4px;
   border-radius: 999px;
@@ -624,10 +632,11 @@
 
 .forum-date-rail-marker {
   position: absolute;
-  top: var(--forum-date-position);
+  top: clamp(var(--forum-date-edge-space), var(--forum-date-position), calc(100% - var(--forum-date-edge-space)));
   left: 50%;
-  width: 12px;
-  height: 12px;
+  box-sizing: border-box;
+  width: var(--forum-date-marker-size);
+  height: var(--forum-date-marker-size);
   padding: 0;
   border: 2px solid #fff;
   border-radius: 50%;
@@ -640,12 +649,15 @@
 
 .forum-date-rail-marker:hover,
 .forum-date-rail-marker:focus {
-  po
+  background: #566f98;
+  box-shadow:
+    0 0 0 3px rgba(111, 134, 173, 0.2),
+    0 1px 5px rgba(15, 23, 42, 0.25);
 }
 
 .forum-date-rail-label {
   position: absolute;
-  top: var(--forum-date-position);
+  top: clamp(var(--forum-date-label-edge-space), var(--forum-date-position), calc(100% - var(--forum-date-label-edge-space)));
   right: calc(100% + 8px);
   box-sizing: border-box;
   min-width: 74px;
@@ -1377,9 +1389,9 @@
 
   .forum-date-rail-track {
     top: 50%;
-    right: 0;
+    right: var(--forum-date-edge-space);
     bottom: auto;
-    left: 0;
+    left: var(--forum-date-edge-space);
     width: auto;
     height: 4px;
     transform: translateY(-50%);
@@ -1387,7 +1399,7 @@
 
   .forum-date-rail-marker {
     top: 50%;
-    left: var(--forum-date-position);
+    left: clamp(var(--forum-date-edge-space), var(--forum-date-position), calc(100% - var(--forum-date-edge-space)));
     transform: translate(-50%, -50%);
   }
 

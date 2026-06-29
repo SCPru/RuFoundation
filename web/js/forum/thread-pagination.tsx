@@ -53,6 +53,10 @@ function parseInteger(value: string | undefined, fallback: number) {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
 function parseDateAnchors(node: HTMLElement): Array<DateAnchor> {
   try {
     const anchors = JSON.parse(node.dataset.forumThreadDateAnchors || '[]')
@@ -290,13 +294,16 @@ export function makeForumThread(node: HTMLElement) {
         : []
 
       if (postsRoot && newPosts.length) {
-        const scrollAnchor = direction === 'prepend' ? (postsRoot.firstElementChild as HTMLElement | null) : null
+        const firstRegularPost = Array.from(postsRoot.children).find(
+          child => !child.classList.contains('pager') && !child.classList.contains('forum-pinned-posts'),
+        ) as HTMLElement | undefined
+        const scrollAnchor = direction === 'prepend' ? (firstRegularPost ?? null) : null
         const anchorTop = scrollAnchor?.getBoundingClientRect().top ?? 0
 
         if (direction === 'prepend') {
           const fragment = document.createDocumentFragment()
           newPosts.forEach(post => fragment.appendChild(post))
-          postsRoot.insertBefore(fragment, postsRoot.firstChild)
+          postsRoot.insertBefore(fragment, firstRegularPost ?? null)
           if (scrollAnchor) {
             window.scrollBy({ top: scrollAnchor.getBoundingClientRect().top - anchorTop, behavior: 'auto' })
           }
@@ -325,8 +332,11 @@ export function makeForumThread(node: HTMLElement) {
 
     const rect = rail.getBoundingClientRect()
     const isHorizontal = window.matchMedia('(max-width: 720px)').matches
-    const rawPosition = isHorizontal ? (e.clientX - rect.left) / rect.width : (e.clientY - rect.top) / rect.height
-    const position = Math.max(0, Math.min(1, rawPosition))
+    const edgeSpace = parseFloat(window.getComputedStyle(rail).getPropertyValue('--forum-date-edge-space')) || 0
+    const axisSize = isHorizontal ? rect.width : rect.height
+    const pointerPosition = isHorizontal ? e.clientX - rect.left : e.clientY - rect.top
+    const rawPosition = (pointerPosition - edgeSpace) / Math.max(1, axisSize - edgeSpace * 2)
+    const position = clampNumber(rawPosition, 0, 1)
 
     return dateAnchors.reduce((nearest, anchor) => {
       return Math.abs(anchor.position - position) < Math.abs(nearest.position - position) ? anchor : nearest
@@ -340,6 +350,7 @@ export function makeForumThread(node: HTMLElement) {
 
     const rail = document.createElement('div')
     rail.className = 'forum-date-rail'
+    rail.classList.toggle('is-dense', dateAnchors.length >= 12)
     rail.setAttribute('aria-label', 'Навигация по датам сообщений')
 
     const track = document.createElement('div')
