@@ -103,7 +103,8 @@ def get_page_vars(page: _ArticleType)-> dict[str, str] | LazyDict:
         'fullname': lambda: articles.get_full_name(page),
         'title': lambda: page.title,
         'title_linked': lambda: '[[[%s|]]]' % (articles.get_full_name(page)),
-        'parent': lambda: page.parent.title if page.parent else None,
+        'parent': lambda: page.parent.full_name if page.parent else None,
+        'parent_title': lambda: page.parent.title if page.parent else None,
         'parent_linked': lambda: ('[[[%s|]]]' % (articles.get_full_name(page.parent))) if page.parent else None,
         'link': lambda: '/%s' % page.title,  # temporary, must be full page URL based on hostname
         'content': lambda: articles.get_latest_source(page),
