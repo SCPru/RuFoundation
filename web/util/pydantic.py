@@ -20,7 +20,7 @@ def drop_nones(fields_to_drop=None):
 
 
 @dataclass_transform()
-class JSONInterface:    
+class JSONInterface:
     def __init_subclass__(cls, **kwargs):
         dataclass_params = {
             key: kwargs.pop(key)
