@@ -36,7 +36,7 @@ def symlinks_full_update():
                 link_dir.mkdir(exist_ok=True)
                 link_name.symlink_to(rel_media_path / file.local_media_destination)
             except FileNotFoundError:
-                logging.exception(f'Failed to update symlincs for article: {file.article}')
+                logging.exception(f'Failed to update symlinks for article: {file.article}')
     except:
         logging.exception('Failed to update symlinks')
     logging.info('%s: Finished reloading symlinks', threading.current_thread().ident)
