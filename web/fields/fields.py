@@ -46,7 +46,7 @@ class PermissionsOverrideField(forms.Field):
         for role_id, perms in value.items():
             try:
                 Role.objects.get(id=role_id)
-            except:
+            except Role.DoesNotExist:
                 forms.ValidationError(f"Invalid role id: {role_id}")
 
             cleaned[role_id] = {

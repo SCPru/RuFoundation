@@ -91,8 +91,9 @@ class GetOrUploadView(FileView):
 class RenameOrDeleteView(FileView):
     @staticmethod
     def _get_file_and_article(file_id):
-        file = File.objects.get(id=file_id)
-        if file is None:
+        try:
+            file = File.objects.get(id=file_id)
+        except File.DoesNotExist:
             return None, None
         return file.article, file
 
