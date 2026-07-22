@@ -99,18 +99,18 @@ class RenameOrDeleteView(FileView):
 
     def delete(self, request: HttpRequest, file_id):
         article, file = self._get_file_and_article(file_id)
-        article = self._validate_request(request, article)
         if file is None:
             raise APIError('Файл не существует', 404)
+        article = self._validate_request(request, article)
         articles.delete_file_from_article(article, file, user=request.user)
         return self.render_json(200, {'status': 'ok'})
 
     @takes_json
     def put(self, request: HttpRequest, file_id):
         article, file = self._get_file_and_article(file_id)
-        article = self._validate_request(request, article)
         if file is None:
             raise APIError('Файл не существует', 404)
+        article = self._validate_request(request, article)
         data = self.json_input
         if not isinstance(data, dict) or 'name' not in data:
             raise APIError('Некорректный запрос', 400)
