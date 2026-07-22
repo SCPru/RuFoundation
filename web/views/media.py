@@ -11,10 +11,7 @@ from django.utils.http import http_date
 
 from web.controllers import articles
 from web.util.http import validate_mime
-
-
-class UnsafePathError(ValueError):
-    pass
+from web.util.pathtools import UnsafePathError, media_safe_path
 
 
 class MediaView(View):
@@ -46,22 +43,6 @@ class MediaView(View):
         file.seek(begin)
 
         return file.read(end - begin)
-    
-
-    def media_safe_path(self, path: str | Path, *, must_exist: bool = False) -> Path:
-        relative = Path(path)
-
-        if relative.anchor:
-            raise UnsafePathError('Anchor paths restricled')
-
-        candidate = (settings.MEDIA_ROOT / relative).resolve(strict=must_exist)
-
-        try:
-            candidate.relative_to(settings.MEDIA_ROOT)
-        except ValueError as exc:
-            raise UnsafePathError('Path extends beyond the media directory.') from exc
-
-        return candidate
 
 
     def get(self, request: HttpRequest, dir_path: str, *args, **kwargs):
@@ -90,7 +71,7 @@ class MediaView(View):
 
         dir_path = '/'.join([self._partial_quote(x) for x in dir_path_split])
         try:
-            full_path = self.media_safe_path(document_root / dir_path)
+            full_path = media_safe_path(document_root, dir_path)
         except UnsafePathError:
             return HttpResponse('What are you doing, bro?')
 
