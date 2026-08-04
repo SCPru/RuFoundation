@@ -35,7 +35,7 @@ def symlinks_full_update():
 
                 link_dir.mkdir(exist_ok=True)
                 link_name.symlink_to(rel_media_path / file.local_media_destination)
-            except FileNotFoundError:
+            except (FileNotFoundError, FileExistsError):
                 logging.exception(f'Failed to update symlinks for article: {file.article}')
     except:
         logging.exception('Failed to update symlinks')
@@ -62,9 +62,9 @@ def symlinks_article_update(article: Article, old_name: str=None):
                 link_name = article_dir / file.name
                 link_name.symlink_to(rel_media_path / file.local_media_destination)
             except FileNotFoundError:
-                logging.exception(f'Failed to update symlincs for article: {file.article}')
+                logging.exception(f'Failed to update symlinks for article: {file.article}')
     except:
-        logging.exception(f'Failed to update symlincs for article: {article}')
+        logging.exception(f'Failed to update symlinks for article: {article}')
 
 
 def symlinks_article_delete(article: Article):
@@ -75,7 +75,7 @@ def symlinks_article_delete(article: Article):
     try:
         shutil.rmtree(article_dir, ignore_errors=True)
     except:
-        logging.exception(f'Failed to delete symlincs for article: {article}')
+        logging.exception(f'Failed to delete symlinks for article: {article}')
 
 
 def update_all_symlinks_in_background():
