@@ -43,7 +43,8 @@ class ArticleView(APIView):
         if ('title' not in data or data['title'] is None) and not (allow_partial and 'title' not in data):
             raise APIError('Отсутствует название страницы', 400)
         if 'source' in data and len(data['source']) > settings.ARTICLE_SOURCE_LIMIT:
-            raise APIError('Превышен лимит размера страницы')
+            raise APIError('Превышен лимит размера страницы', 400)
+        
 
 class CreateView(ArticleView):
     @takes_json
