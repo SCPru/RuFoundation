@@ -27,15 +27,15 @@ def render(context, params):
         """
         <a name="pages"></a>
         <h2>Список страниц, помеченных тегом <em>{{ tag.name }}</em>{% if not tag.category.is_default %} из категории <em>{{ tag.category.name }}</em>{% endif %}:</h2>
-        <div id="tagged-pages-list" class="pages-list">
+        <ol id="tagged-pages-list" class="pages-list">
             {% for article in articles %}
-                <div class="pages-list-item">
+                <li class="pages-list-item">
                     <div class="title">
                         <a href="/{{ article.full_name }}">{{ article.title }}</a>
                     </div>
-                </div>
+                </li>
             {% endfor %}
-        </div>
+        </ol>
         """,
         tag=tag,
         articles=articles
