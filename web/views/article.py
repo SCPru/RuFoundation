@@ -195,7 +195,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'notificationCount': notification_count
         }
 
-        article_rating, article_votes, article_popularity, article_rating_mode = articles.get_rating(article)
+        article_rating, article_votes, article_popularity, article_rating_mode, article_rating_hidden = articles.get_visible_rating(article, self.request.user)
 
         options_config = {
             'optionsEnabled': article is not None,
@@ -207,6 +207,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'ratingMode': article_rating_mode,
             'ratingVotes': article_votes,
             'ratingPopularity': article_popularity,
+            'ratingHidden': article_rating_hidden,
             'pathParams': path_params,
             'canRate': self.request.user.has_perm('roles.rate_articles', article),
             'canComment': self.request.user.has_perm('roles.comment_articles', article) if article else False,

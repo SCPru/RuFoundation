@@ -2,7 +2,7 @@ from django.contrib.auth.models import AnonymousUser
 
 from renderer.utils import UserJSON, render_user_to_json, render_template_from_string
 
-from web.controllers.articles import get_article, get_rating, Vote
+from web.controllers.articles import get_article, Vote
 from web.models.settings import Settings
 from web.controllers import articles
 from web.util.pydantic import JSONInterface, drop_nones
@@ -24,39 +24,43 @@ def render(context, _params):
     
     if not article:
         raise ModuleError('Страница не указана')
-    rating, votes, popularity, mode = get_rating(article)
+    rating, votes, popularity, mode, rating_hidden = articles.get_visible_rating(article, context.user)
 
     if mode == Settings.RatingMode.UpDown:
         return render_template_from_string(
             ''.join([
-                '<div class="w-rate-module page-rate-widget-box" data-page-id="{{page_id}}">',
-                '<span class="rate-points">рейтинг:&nbsp;<span class="number prw54353">{{rating}}</span></span>',
+                '<div class="w-rate-module page-rate-widget-box" data-page-id="{{page_id}}" data-rating-hidden="{{rating_hidden|yesno:\'true,false\'}}">',
+                '<span class="rate-points">рейтинг:&nbsp;<span class="w-rating-visibility{% if rating_hidden %} w-rating-hidden{% endif %}" data-tooltip="{% if rating_hidden %}{{rating_hidden_tooltip}}{% endif %}"><span class="number prw54353{% if rating_hidden %} w-rating-concealed{% endif %}">{{rating}}</span></span></span>',
                 '<span class="rateup btn btn-default"><a data-tooltip="Мне нравится" aria-label="Мне нравится" href="#">+</a></span>',
                 '<span class="ratedown btn btn-default"><a data-tooltip="Мне не нравится" aria-label="Мне не нравится" href="#">–</a></span>',
                 '<span class="cancel btn btn-default"><a data-tooltip="Отменить голос" aria-label="Отменить голос" href="#">x</a></span>',
                 '</div>'
             ]),
             page_id=article.full_name,
-            rating='%+d' % rating
+            rating='%+d' % rating,
+            rating_hidden=rating_hidden,
+            rating_hidden_tooltip=articles.RATING_HIDDEN_TOOLTIP,
         )
     elif mode == Settings.RatingMode.Stars:
         return render_template_from_string(
             ''.join([
-                '<div class="w-stars-rate-module" data-page-id="{{page_id}}">',
-                '<div class="w-stars-rate-rating">рейтинг:&nbsp;<span class="w-stars-rate-number">{{rating}}</span></div>',
+                '<div class="w-stars-rate-module" data-page-id="{{page_id}}" data-rating-hidden="{{rating_hidden|yesno:\'true,false\'}}">',
+                '<div class="w-stars-rate-rating">рейтинг:&nbsp;<span class="w-rating-visibility{% if rating_hidden %} w-rating-hidden{% endif %}" data-tooltip="{% if rating_hidden %}{{rating_hidden_tooltip}}{% endif %}"><span class="w-stars-rate-number{% if rating_hidden %} w-rating-concealed{% endif %}">{{rating}}</span></span></div>',
                 '<div class="w-stars-rate-control">',
                 '<div class="w-stars-rate-stars-wrapper"><div class="w-stars-rate-stars-view" style="width: {{rating_percentage}}%; --rated-var: {{rated}}"></div></div>',
                 '<div class="w-stars-rate-cancel"></div>'
                 '</div>',
-                '<div class="w-stars-rate-votes"><span class="w-stars-rate-number" data-tooltip="Количество голосов">{{votes}}</span>/<span class="w-stars-rate-popularity" data-tooltip="Популярность (процент голосов 3.0 и выше)">{{popularity}}</span>%</div>',
+                '<div class="w-stars-rate-votes"><span class="w-rating-visibility{% if rating_hidden %} w-rating-hidden{% endif %}" data-tooltip="{% if rating_hidden %}{{rating_hidden_tooltip}}{% endif %}"><span class="w-rating-values{% if rating_hidden %} w-rating-concealed{% endif %}"><span class="w-stars-rate-number"{% if not rating_hidden %} data-tooltip="Количество голосов"{% endif %}>{{votes}}</span>/<span class="w-stars-rate-popularity"{% if not rating_hidden %} data-tooltip="Популярность (процент голосов 3.0 и выше)"{% endif %}>{{popularity}}</span>%</span></span></div>',
                 '</div>'
             ]),
             page_id=article.full_name,
-            rating=('%.1f' % rating) if votes else '—',
+            rating=('%.1f' % rating) if votes or rating_hidden else '—',
             rating_percentage='%d' % (rating * 20),
             votes='%d' % votes,
             popularity='%d' % popularity,
-            rated="#f0ac00" if context.user and not isinstance(context.user, AnonymousUser) and Vote.objects.filter(article=article, user=context.user) else '#4e6b6b'
+            rated="#f0ac00" if context.user and not isinstance(context.user, AnonymousUser) and Vote.objects.filter(article=article, user=context.user) else '#4e6b6b',
+            rating_hidden=rating_hidden,
+            rating_hidden_tooltip=articles.RATING_HIDDEN_TOOLTIP,
 
         )
     else:
@@ -67,8 +71,15 @@ def render(context, _params):
 def api_get_rating(context, _params):
     if not context.article:
         raise ModuleError('Страница не указана')
-    rating, votes, popularity, mode = articles.get_rating(context.article)
-    return {'pageId': context.article.full_name, 'rating': rating, 'voteCount': votes, 'popularity': popularity, 'ratingMode': mode}
+    rating, votes, popularity, mode, rating_hidden = articles.get_visible_rating(context.article, context.user)
+    return {
+        'pageId': context.article.full_name,
+        'rating': rating,
+        'voteCount': votes,
+        'popularity': popularity,
+        'ratingMode': mode,
+        'ratingHidden': rating_hidden,
+    }
 
 
 @drop_nones(['date'])
@@ -85,7 +96,17 @@ def api_get_votes(context, _params):
     if not context.article:
         raise ModuleError('Страница не указана')
     votes = []
-    rating, _, popularity, mode = articles.get_rating(context.article)
+    rating, _, popularity, mode, rating_hidden = articles.get_visible_rating(context.article, context.user)
+    if rating_hidden:
+        return {
+            'pageId': context.article.full_name,
+            'votes': votes,
+            'rating': rating,
+            'popularity': popularity,
+            'mode': mode,
+            'ratingHidden': True,
+        }
+
     can_view_votes_timestamp = context.user.has_perm('roles.view_votes_timestamp')
     for db_vote in Vote.objects.filter(article=context.article).order_by('-date', '-user__username'):
         rendered_vote = RenderedVoteJSON(
@@ -97,7 +118,14 @@ def api_get_votes(context, _params):
         if can_view_votes_timestamp:
             rendered_vote.date = db_vote.date.isoformat() if db_vote.date else None
         votes.append(rendered_vote)
-    return {'pageId': context.article.full_name, 'votes': votes, 'rating': rating, 'popularity': popularity, 'mode': mode}
+    return {
+        'pageId': context.article.full_name,
+        'votes': votes,
+        'rating': rating,
+        'popularity': popularity,
+        'mode': mode,
+        'ratingHidden': False,
+    }
 
 
 def pluralize_russian(number, base):

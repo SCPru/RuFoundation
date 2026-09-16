@@ -1,5 +1,6 @@
 import { sprintf } from 'sprintf-js'
-import { ModuleRateResponse, ratePage } from '../api/rate'
+import { ModuleRateResponse, ratePage, RATING_HIDDEN_TOOLTIP } from '../api/rate'
+import { makeCustomTooltips } from '../util/tooltip'
 import { showErrorModal } from '../util/wikidot-modal'
 
 async function onClick(e: MouseEvent, pageId: string, vote: number | null): Promise<ModuleRateResponse> {
@@ -14,10 +15,23 @@ async function onClick(e: MouseEvent, pageId: string, vote: number | null): Prom
 }
 
 function updateRating(number: HTMLElement, votes: HTMLElement, popularity: HTMLElement, control: HTMLElement, votesData: ModuleRateResponse) {
-  number.textContent = votesData.voteCount ? sprintf('%.1f', votesData.rating) : '—'
+  number.textContent = votesData.voteCount || votesData.ratingHidden ? sprintf('%.1f', votesData.rating) : '—'
   votes.textContent = sprintf('%d', votesData.voteCount)
   popularity.textContent = sprintf('%d', votesData.popularity)
   control.style.width = `${Math.floor(votesData.rating * 20)}%`
+
+  const module = number.closest<HTMLElement>('.w-stars-rate-module')
+  if (!module) return
+
+  module.dataset.ratingHidden = String(votesData.ratingHidden)
+  module.querySelectorAll<HTMLElement>('.w-rating-visibility').forEach(wrapper => {
+    wrapper.dataset.tooltip = votesData.ratingHidden ? RATING_HIDDEN_TOOLTIP : ''
+    wrapper.classList.toggle('w-rating-hidden', votesData.ratingHidden)
+    makeCustomTooltips(wrapper)
+  })
+  module.querySelectorAll<HTMLElement>('.w-stars-rate-rating .w-stars-rate-number, .w-rating-values').forEach(value => {
+    value.classList.toggle('w-rating-concealed', votesData.ratingHidden)
+  })
 }
 
 export function makeStarsRateModule(node: HTMLElement) {

@@ -385,6 +385,20 @@
   color: black;
   margin-bottom: 16px;
 }
+
+.w-rating-visibility {
+  display: inline-block;
+}
+
+.w-rating-visibility.w-rating-hidden {
+  cursor: help;
+}
+
+.w-rating-concealed {
+  filter: blur(4px);
+  pointer-events: none;
+  user-select: none;
+}
 .w-stars-rate-module .w-stars-rate-number {
   color: #4e6b6b;
   font-weight: bold;

@@ -23,7 +23,7 @@ class SearchView(APIView):
         output_results = []
         for result in results:
             article = result['article'].article
-            rating, votes, popularity, mode = articles.get_rating(article)
+            rating, votes, popularity, mode, rating_hidden = articles.get_visible_rating(article, request.user)
             authors = list(article.authors.all())
             authors = [render_user_to_json(author) for author in authors] if authors else [render_user_to_json(None)]
             output_results.append({
@@ -38,7 +38,8 @@ class SearchView(APIView):
                     'value': rating,
                     'votes': votes,
                     'popularity': popularity,
-                    'mode': str(mode)
+                    'mode': str(mode),
+                    'hidden': rating_hidden,
                 },
                 'tags': articles.get_tags(article),
                 'words': result['words'],

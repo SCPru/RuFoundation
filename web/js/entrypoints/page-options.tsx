@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { sprintf } from 'sprintf-js'
 import { NotificationSubscriptionData, subscribeToNotifications, unsubscribeFromNotifications } from '../api/notifications'
-import { RatingMode } from '../api/rate'
+import { fetchPageRating, RATING_HIDDEN_TOOLTIP, RatingMode } from '../api/rate'
 import ArticleAuthorship from '../articles/article-authorship'
 import ArticleBacklinksView from '../articles/article-backlinks'
 import ArticleChild from '../articles/article-child'
@@ -17,6 +17,7 @@ import ArticleRename from '../articles/article-rename'
 import ArticleSource from '../articles/article-source'
 import ArticleTags from '../articles/article-tags'
 import useConstCallback from '../util/const-callback'
+import Tooltip from '../util/tooltip'
 import WikidotModal from '../util/wikidot-modal'
 
 interface Props {
@@ -28,6 +29,7 @@ interface Props {
   rating?: number
   ratingVotes?: number
   ratingMode?: RatingMode
+  ratingHidden?: boolean
   pathParams?: { [key: string]: string }
   canRate?: boolean
   canDelete?: boolean
@@ -71,6 +73,7 @@ const PageOptions: React.FC<Props> = ({
   rating,
   ratingVotes,
   ratingMode,
+  ratingHidden,
   pathParams,
   canRate,
   canDelete,
@@ -95,6 +98,9 @@ const PageOptions: React.FC<Props> = ({
   const [isSaving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [onCancelNewEditor, setOnCancelNewEditor] = useState<() => void>()
+  const [currentRating, setCurrentRating] = useState(rating ?? 0)
+  const [currentRatingVotes, setCurrentRatingVotes] = useState(ratingVotes ?? 0)
+  const [currentRatingHidden, setCurrentRatingHidden] = useState(Boolean(ratingHidden))
 
   useEffect(() => {
     ;(window as any)._openNewEditor = (func?: () => void) => {
@@ -107,6 +113,20 @@ const PageOptions: React.FC<Props> = ({
       }
     }
     if (pathParams?.['edit'] || pathParams?.['new']) (window as any)._openNewEditor()
+
+    const onRatingUpdated = async (message: MessageEvent) => {
+      if (message.data?.type !== 'rate_updated') return
+      try {
+        const updatedRating = await fetchPageRating(pageId)
+        setCurrentRating(updatedRating.rating)
+        setCurrentRatingVotes(updatedRating.voteCount)
+        setCurrentRatingHidden(updatedRating.ratingHidden)
+      } catch {
+        // The rating widgets already surface request errors to the user.
+      }
+    }
+    window.addEventListener('message', onRatingUpdated)
+    return () => window.removeEventListener('message', onRatingUpdated)
   }, [])
 
   const onEdit = useConstCallback(e => {
@@ -273,12 +293,22 @@ const PageOptions: React.FC<Props> = ({
 
   const renderRating = useConstCallback(() => {
     if (ratingMode === 'updown') {
-      return sprintf('%+d', rating)
+      return sprintf('%+d', currentRating)
     } else if (ratingMode === 'stars') {
-      return ratingVotes ? sprintf('%.1f', rating) : '—'
+      return currentRatingHidden ? '0.0' : currentRatingVotes ? sprintf('%.1f', currentRating) : '—'
     } else {
       return 'n/a'
     }
+  })
+
+  const renderRatingWithVisibility = useConstCallback(() => {
+    return (
+      <Tooltip content={RATING_HIDDEN_TOOLTIP} disabled={!currentRatingHidden}>
+        <span className={`w-rating-visibility${currentRatingHidden ? ' w-rating-hidden' : ''}`} tabIndex={currentRatingHidden ? 0 : undefined}>
+          <span className={currentRatingHidden ? 'w-rating-concealed' : ''}>{renderRating()}</span>
+        </span>
+      </Tooltip>
+    )
   })
 
   const renderSubView = useConstCallback(() => {
@@ -304,7 +334,8 @@ const PageOptions: React.FC<Props> = ({
         return (
           <ArticleRating
             pageId={pageId}
-            rating={rating ?? 0}
+            rating={currentRating}
+            ratingHidden={currentRatingHidden}
             canEdit={Boolean(editable)}
             canResetVotes={Boolean(canResetVotes)}
             onClose={onCancelSubView}
@@ -403,7 +434,7 @@ const PageOptions: React.FC<Props> = ({
         )}
         {ratingMode != 'disabled' && (
           <a id="pagerate-button" className="btn btn-default" href="#" onClick={onRate}>
-            {canRate ? 'Оценить' : 'Оценки'}&nbsp;({renderRating()})
+            {canRate ? 'Оценить' : 'Оценки'}&nbsp;({renderRatingWithVisibility()})
           </a>
         )}
         {tagable && (

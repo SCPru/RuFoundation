@@ -21,6 +21,10 @@ class Settings(auto_prefetch.Model):
         UpDown = ('updown', 'Апвоуты')
         Stars = ('stars', 'Звёзды')
 
+    class RatingVisibilityMode(models.TextChoices):
+        Always = ('always', 'Отображать всегда')
+        AfterVote = ('after_vote', 'Отображать после оценки')
+
     class UserCreateTagsMode(models.TextChoices):
         Default = ('default', 'По умолчанию')
         Disabled = ('disabled', 'Запрещено')
@@ -30,6 +34,12 @@ class Settings(auto_prefetch.Model):
     category = auto_prefetch.OneToOneField('Category', on_delete=models.CASCADE, null=True, related_name='_settings')
 
     rating_mode = models.TextField(choices=RatingMode.choices, default=RatingMode.Default, verbose_name="Система рейтинга", null=False)
+    rating_visibility_mode = models.TextField(
+        choices=RatingVisibilityMode.choices,
+        default=RatingVisibilityMode.Always,
+        verbose_name="Отображение рейтинга",
+        null=False,
+    )
     can_user_create_tags = models.TextField(choices=UserCreateTagsMode.choices, default=UserCreateTagsMode.Default, verbose_name="Может ли пользователь создавать теги", null=False)
     forum_reactions_per_user = models.PositiveIntegerField(
         "Максимум реакций пользователя под сообщением",
@@ -54,6 +64,7 @@ class Settings(auto_prefetch.Model):
     def get_default_settings(cls):
         return cls(
             rating_mode=Settings.RatingMode.Stars,
+            rating_visibility_mode=Settings.RatingVisibilityMode.Always,
             can_user_create_tags=Settings.UserCreateTagsMode.Disabled,
             forum_reactions_per_user=20,
             forum_reaction_types_per_post=20,
@@ -67,6 +78,7 @@ class Settings(auto_prefetch.Model):
             return self
         new_settings = Settings()
         new_settings.rating_mode = other.rating_mode if other.rating_mode != Settings.RatingMode.Default else self.rating_mode
+        new_settings.rating_visibility_mode = other.rating_visibility_mode
         new_settings.can_user_create_tags = other.can_user_create_tags if other.can_user_create_tags != Settings.UserCreateTagsMode.Default else self.can_user_create_tags
         new_settings.forum_reactions_per_user = other.forum_reactions_per_user
         new_settings.forum_reaction_types_per_post = other.forum_reaction_types_per_post

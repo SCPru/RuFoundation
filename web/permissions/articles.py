@@ -75,6 +75,13 @@ class ResetArticleVotesPermission(BaseRolePermission):
     group = 'Статьи'
 
 
+class BypassRatingVisibilityPermission(BaseRolePermission):
+    name = 'Игнорировать режим отображения рейтинга'
+    codename = 'bypass_rating_visibility'
+    description = 'Позволяет видеть рейтинг и голоса статьи независимо от режима отображения рейтинга'
+    group = 'Статьи'
+
+
 class CommentArticlesPermission(BaseRolePermission):
     name = 'Обсуждать статьи'
     codename = 'comment_articles'

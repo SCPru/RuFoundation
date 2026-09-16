@@ -65,7 +65,8 @@ def get_page_vars(page: _ArticleType)-> dict[str, str] | LazyDict:
     if page is None:
         return dict()
 
-    current_user = threadvars.get('current_user', None)
+    viewer = threadvars.get('current_user', None)
+    current_user = viewer
     if not isinstance(current_user, User):
         current_user = None
     
@@ -82,9 +83,26 @@ def get_page_vars(page: _ArticleType)-> dict[str, str] | LazyDict:
     def get_rating(key: str):
         nonlocal rating_cache
         if not rating_cache:
-            _, votes, popularity, _ = articles.get_rating(page)
-            rating_cache['votes'] = votes
-            rating_cache['popularity'] = popularity
+            rating, votes, popularity, mode, hidden = articles.get_visible_rating(page, viewer)
+            if mode == Settings.RatingMode.UpDown:
+                formatted_rating = '%+d' % rating
+            elif mode == Settings.RatingMode.Stars:
+                formatted_rating = ('%.1f' % rating) if votes or hidden else '—'
+            else:
+                formatted_rating = '%d' % rating
+
+            def visible_value(value):
+                if not hidden:
+                    return str(value)
+                return ''.join([
+                    f'[[span class="w-rating-visibility w-rating-hidden" data-tooltip="{articles.RATING_HIDDEN_TOOLTIP}"]]'
+                    f'[[span class="w-rating-concealed"]]{value}[[/span]]'
+                    '[[/span]]'
+                ])
+
+            rating_cache['rating'] = visible_value(formatted_rating)
+            rating_cache['votes'] = visible_value(votes)
+            rating_cache['popularity'] = visible_value(popularity)
         return rating_cache[key]
     
     authors = []
@@ -108,7 +126,7 @@ def get_page_vars(page: _ArticleType)-> dict[str, str] | LazyDict:
         'parent_linked': lambda: ('[[[%s|]]]' % (articles.get_full_name(page.parent))) if page.parent else None,
         'link': lambda: '/%s' % page.title,  # temporary, must be full page URL based on hostname
         'content': lambda: articles.get_latest_source(page),
-        'rating': lambda: articles.get_formatted_rating(page),
+        'rating': lambda: get_rating('rating'),
         'rating_votes': lambda: str(get_rating('votes')),
         'current_user_voted': lambda: 'True' if page.votes.filter(user=current_user).exists() else 'False',
         'popularity': lambda: str(get_rating('popularity')),

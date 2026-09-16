@@ -117,6 +117,9 @@ export function makeCustomTooltips(root: ParentNode = document.body) {
     }
 
     const open = () => {
+      if (!element.dataset.tooltip?.trim()) {
+        return
+      }
       if (tooltip) {
         update()
         return

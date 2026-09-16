@@ -229,9 +229,19 @@ def render_user_to_json(user: _UserType, show_avatar=True, skip_perms=False):
         roles=[role.slug for role in user.roles.all() if role.is_visual]
     )
 
-def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Default, capitalize=True):
+def render_vote_to_html(vote: Vote, mode=Settings.RatingMode.Default, capitalize=True, hidden=False):
     if mode == Settings.RatingMode.Disabled:
         return ''
+
+    if hidden:
+        return render_template_from_string(
+            """
+            <span class="vote w-rating-visibility w-rating-hidden" data-tooltip="{{tooltip}}">
+                <span class="rate w-rating-concealed">0.0</span>
+            </span>
+            """,
+            tooltip=articles.RATING_HIDDEN_TOOLTIP,
+        )
 
     rate = vote.rate if vote else None
 

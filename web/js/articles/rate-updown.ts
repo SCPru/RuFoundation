@@ -1,4 +1,5 @@
-import { ModuleRateResponse, ratePage } from '../api/rate'
+import { ModuleRateResponse, ratePage, RATING_HIDDEN_TOOLTIP } from '../api/rate'
+import { makeCustomTooltips } from '../util/tooltip'
 import { showErrorModal } from '../util/wikidot-modal'
 
 async function onClick(e: MouseEvent, pageId: string, vote: number | null): Promise<ModuleRateResponse> {
@@ -18,6 +19,16 @@ function updateRating(element: HTMLElement, votesData: ModuleRateResponse) {
     rating = '+' + rating
   }
   element.innerText = rating
+  element.classList.toggle('w-rating-concealed', votesData.ratingHidden)
+
+  const module = element.closest<HTMLElement>('.w-rate-module')
+  const wrapper = element.closest<HTMLElement>('.w-rating-visibility')
+  if (module) module.dataset.ratingHidden = String(votesData.ratingHidden)
+  if (wrapper) {
+    wrapper.dataset.tooltip = votesData.ratingHidden ? RATING_HIDDEN_TOOLTIP : ''
+    wrapper.classList.toggle('w-rating-hidden', votesData.ratingHidden)
+    makeCustomTooltips(wrapper)
+  }
 }
 
 export function makeUpDownRateModule(node: HTMLElement) {

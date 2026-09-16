@@ -15,19 +15,63 @@ from renderer.parser import RenderContext
 import json
 
 from web.controllers.search import update_search_index
-from web.models.articles import Category, ExternalLink, Article
+from web.models.articles import Category, ExternalLink, Article, Vote
+from web.models.settings import Settings
+from web.models.site import get_current_site
 
 from modules import rate, ModuleError
 
 
 class AllArticlesView(APIView):
     def get(self, request: HttpRequest):
-        result = []
+        cached_entries = []
         hidden_categories = articles.get_hidden_categories_for(request.user)
         for category, entries in shared_articles.get_all_articles().items():
             if category in hidden_categories:
                 continue
-            result.extend(entries)
+            cached_entries.extend((category, entry) for entry in entries)
+
+        article_ids = [entry['uid'] for _, entry in cached_entries]
+        voted_article_ids = set()
+        if not request.user.is_anonymous:
+            voted_article_ids = set(
+                Vote.objects.filter(user=request.user, article_id__in=article_ids).values_list('article_id', flat=True)
+            )
+
+        category_names = {category for category, _ in cached_entries}
+        categories_by_name = {
+            category.name: category
+            for category in Category.objects.filter(name__in=category_names).select_related('_settings')
+        }
+        base_settings = Settings.get_default_settings().merge(get_current_site().settings)
+        visibility_by_category = {
+            category_name: base_settings.merge(
+                getattr(categories_by_name.get(category_name), '_settings', None)
+            ).rating_visibility_mode
+            for category_name in category_names
+        }
+        bypass_by_category = {
+            category_name: request.user.has_perm(
+                'roles.bypass_rating_visibility',
+                categories_by_name.get(category_name, Category(name=category_name)),
+            )
+            for category_name in category_names
+        }
+
+        result = []
+        for category, entry in cached_entries:
+            raw_rating = entry['rating']
+            rating_hidden = False
+            if raw_rating['mode'] != Settings.RatingMode.Disabled:
+                rating_hidden = articles.should_hide_rating(
+                    visibility_by_category[category],
+                    has_voted=entry['uid'] in voted_article_ids,
+                    can_bypass=bypass_by_category[category],
+                )
+            rating = {**raw_rating, 'hidden': rating_hidden}
+            if rating_hidden:
+                rating.update(value=0, votes=0, popularity=0)
+            result.append({**entry, 'rating': rating})
         return self.render_json(200, result)
 
 

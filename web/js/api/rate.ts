@@ -3,13 +3,16 @@ import { UserData } from './user'
 
 export type RatingMode = 'disabled' | 'updown' | 'stars'
 
+export const RATING_HIDDEN_TOOLTIP = 'Рейтинг отобразится после голоса'
+
 export interface ModuleRateResponse {
   pageId: string
   rating: number
   voteCount: number
 
   popularity: number
-  mode: RatingMode
+  ratingMode: RatingMode
+  ratingHidden: boolean
 }
 
 export interface ModuleRateVote {
@@ -26,6 +29,7 @@ export interface ModuleRateVotesResponse {
   mode: RatingMode
   votes: Array<ModuleRateVote>
   popularity: number
+  ratingHidden: boolean
 }
 
 export interface ModuleRateRequest {

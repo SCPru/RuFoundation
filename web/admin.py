@@ -62,7 +62,8 @@ class SettingsForm(forms.ModelForm):
     class Meta:
         model = Settings
         widgets = {
-            'rating_mode': forms.Select
+            'rating_mode': forms.Select,
+            'rating_visibility_mode': forms.Select,
         }
         fields = '__all__'
         exclude = ['site', 'category']
@@ -75,7 +76,7 @@ class SettingsAdmin(admin.StackedInline):
     max_num = 1
     fieldsets = (
         (None, {
-            'fields': ('rating_mode', 'can_user_create_tags')
+            'fields': ('rating_mode', 'rating_visibility_mode', 'can_user_create_tags')
         }),
         ('Реакции форума', {
             'fields': ('forum_reactions_per_user', 'forum_reaction_types_per_post')

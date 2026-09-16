@@ -1,12 +1,13 @@
 import React, { useRef, useState } from 'react'
 import { sprintf } from 'sprintf-js'
 import { useTheme } from 'styled-components'
-import { RatingMode } from '~api/rate'
+import { RATING_HIDDEN_TOOLTIP, RatingMode } from '~api/rate'
 import { fetchSearch, SearchResults } from '~api/search'
 import Page from '~reactive/containers/page'
 import { highlightWords } from '~reactive/pages/search/Search.utils'
 import useConstCallback from '~util/const-callback'
 import formatDate from '~util/date-format'
+import Tooltip from '~util/tooltip'
 import UserView from '~util/user-view'
 import WikidotModal from '~util/wikidot-modal'
 import * as Styled from './Search.styles'
@@ -156,13 +157,23 @@ export const Search: React.FC = () => {
                   <Styled.SearchResultMetaItem>
                     <Styled.SearchResultMetaKey>Рейтинг:</Styled.SearchResultMetaKey>
                     <Styled.SearchResultMetaValue>
-                      {renderRating(article.rating.value, article.rating.mode)}
-                      {article.rating.votes > 0 && (
-                        <>
-                          {' '}
-                          от {article.rating.votes} (популярность: {sprintf('%d%%', article.rating.popularity)})
-                        </>
-                      )}
+                      <Tooltip content={RATING_HIDDEN_TOOLTIP} disabled={!article.rating.hidden}>
+                        <span
+                          className={`w-rating-visibility${article.rating.hidden ? ' w-rating-hidden' : ''}`}
+                          tabIndex={article.rating.hidden ? 0 : undefined}
+                        >
+                          <span className={article.rating.hidden ? 'w-rating-concealed' : ''}>
+                            {renderRating(article.rating.value, article.rating.mode)}
+                            {article.rating.votes > 0 && (
+                              <>
+                                {' '}
+                                от {article.rating.votes} (популярность: {sprintf('%d%%', article.rating.popularity)})
+                              </>
+                            )}
+                            {article.rating.hidden && <> от 0 (популярность: 0%)</>}
+                          </span>
+                        </span>
+                      </Tooltip>
                     </Styled.SearchResultMetaValue>
                   </Styled.SearchResultMetaItem>
                 </Styled.SearchResultMeta>

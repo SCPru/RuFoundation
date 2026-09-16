@@ -33,8 +33,6 @@ RUN --mount=type=cache,target=/build/.yarn YARN_CACHE_FOLDER=/build/.yarn yarn i
 
 FROM python:3.13.2 AS python_build
 
-RUN apt-get update && apt-get install -y tini
-
 COPY requirements.txt .
 
 RUN python -m pip install -r requirements.txt
@@ -48,11 +46,14 @@ WORKDIR /app
 COPY . .
 
 COPY --from=python_build /usr/local/lib /usr/local/lib
-COPY --from=python_build /usr/bin/tini /usr/bin/tini
 COPY --from=python_build /usr/local/bin/gunicorn /usr/local/bin/gunicorn
 
 COPY --from=js_build /build/static/* ./static/
 COPY --from=rust_build /build/libftml.so ./ftml/ftml.so
+
+ENV TINI_VERSION=v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
+RUN chmod +x /usr/bin/tini
 
 RUN useradd -m -u 8877 scpwiki
 # This wierd thing extremly speeds up chown
@@ -62,7 +63,7 @@ USER scpwiki
 
 RUN python manage.py collectstatic
 
-RUN chmod 755 entrypoint.sh
+RUN chmod +x entrypoint.sh
 
 EXPOSE 8000
 

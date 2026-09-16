@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { sprintf } from 'sprintf-js'
 import styled from 'styled-components'
 import { deleteArticleVotes } from '../api/articles'
-import { fetchPageVotes, ModuleRateVote, RatingMode } from '../api/rate'
+import { fetchPageVotes, ModuleRateVote, RATING_HIDDEN_TOOLTIP, RatingMode } from '../api/rate'
 import useConstCallback from '../util/const-callback'
 import formatDate from '../util/date-format'
 import Loader from '../util/loader'
@@ -14,6 +14,7 @@ import WikidotModal from '../util/wikidot-modal'
 interface Props {
   pageId: string
   rating: number
+  ratingHidden: boolean
   canEdit: boolean
   canResetVotes: boolean
   onClose: () => void
@@ -52,6 +53,10 @@ const Styles = styled.div<{ loading?: boolean }>`
     display: flex;
     flex-wrap: wrap;
     column-gap: 25px;
+  }
+  .w-rating-hidden-votes {
+    display: inline-block;
+    line-height: 1.7;
   }
   .w-rate-dist {
     font-family: sans-serif;
@@ -96,12 +101,20 @@ const Styles = styled.div<{ loading?: boolean }>`
   }
 `
 
-const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdit, canResetVotes, onClose: onCloseDelegate }) => {
+const ArticleRating: React.FC<Props> = ({
+  pageId,
+  rating: originalRating,
+  ratingHidden: originalRatingHidden,
+  canEdit,
+  canResetVotes,
+  onClose: onCloseDelegate,
+}) => {
   const [loading, setLoading] = useState(false)
   const [rating, setRating] = useState(originalRating)
   const [mode, setMode] = useState<RatingMode>('disabled')
   const [votes, setVotes] = useState<Array<ModuleRateVote>>([])
   const [popularity, setPopularity] = useState(0)
+  const [ratingHidden, setRatingHidden] = useState(originalRatingHidden)
   const [error, setError] = useState('')
   const [deleting, setDeleting] = useState(false)
 
@@ -123,6 +136,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
       setRating(rating.rating)
       setPopularity(rating.popularity)
       setMode(rating.mode)
+      setRatingHidden(rating.ratingHidden)
     } catch (e) {
       setError(e.error || 'Ошибка связи с сервером')
     } finally {
@@ -147,6 +161,7 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
       setRating(rating.rating)
       setPopularity(rating.popularity)
       setMode(rating.mode)
+      setRatingHidden(rating.ratingHidden)
     } catch (e) {
       setError(e.error || 'Ошибка связи с сервером')
     } finally {
@@ -185,11 +200,31 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
     }
   })
 
+  const renderConcealed = useConstCallback((children: React.ReactNode, block = false) => {
+    if (block) {
+      return (
+        <Tooltip content={RATING_HIDDEN_TOOLTIP} disabled={!ratingHidden}>
+          <div className={`w-rating-visibility${ratingHidden ? ' w-rating-hidden' : ''}`} data-tooltip-ignore tabIndex={ratingHidden ? 0 : undefined}>
+            <div className={`${ratingHidden ? 'w-rating-concealed' : ''} w-rating-hidden-votes`}>{children}</div>
+          </div>
+        </Tooltip>
+      )
+    }
+    return (
+      <Tooltip content={RATING_HIDDEN_TOOLTIP} disabled={!ratingHidden}>
+        <span className={`w-rating-visibility${ratingHidden ? ' w-rating-hidden' : ''}`} data-tooltip-ignore tabIndex={ratingHidden ? 0 : undefined}>
+          <span className={ratingHidden ? 'w-rating-concealed' : ''}>{children}</span>
+        </span>
+      </Tooltip>
+    )
+  })
+
   const renderUpDownRating = useConstCallback(() => {
     return (
       <div className="w-rate-module page-rate-widget-box" data-page-id={pageId}>
         <span className="rate-points">
-          рейтинг:&nbsp;<span className="number prw54353">{rating >= 0 ? `+${rating}` : rating}</span>
+          рейтинг:&nbsp;
+          {renderConcealed(<span className="number prw54353">{rating >= 0 ? `+${rating}` : rating}</span>)}
         </span>
         <span className="rateup btn btn-default">
           <Tooltip content="Мне нравится">
@@ -220,7 +255,8 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
     return (
       <div className="w-stars-rate-module" data-page-id={pageId}>
         <div className="w-stars-rate-rating">
-          рейтинг:&nbsp;<span className="w-stars-rate-number">{votes.length ? sprintf('%.1f', rating) : '—'}</span>
+          рейтинг:&nbsp;
+          {renderConcealed(<span className="w-stars-rate-number">{ratingHidden ? '0.0' : votes.length ? sprintf('%.1f', rating) : '—'}</span>)}
         </div>
         <div className="w-stars-rate-control">
           <div className="w-stars-rate-stars-wrapper">
@@ -229,14 +265,24 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
           <div className="w-stars-rate-cancel" />
         </div>
         <div className="w-stars-rate-votes">
-          <Tooltip content="Количество голосов">
-            <span className="w-stars-rate-number">{votes.length}</span>
-          </Tooltip>
-          /
-          <Tooltip content="Популярность (процент голосов 3.0 и выше)">
-            <span className="w-stars-rate-popularity">{popularity}</span>
-          </Tooltip>
-          %
+          {ratingHidden ? (
+            renderConcealed(
+              <>
+                <span className="w-stars-rate-number">0</span>/<span className="w-stars-rate-popularity">0</span>%
+              </>,
+            )
+          ) : (
+            <>
+              <Tooltip content="Количество голосов">
+                <span className="w-stars-rate-number">{votes.length}</span>
+              </Tooltip>
+              /
+              <Tooltip content="Популярность (процент голосов 3.0 и выше)">
+                <span className="w-stars-rate-popularity">{popularity}</span>
+              </Tooltip>
+              %
+            </>
+          )}
         </div>
       </div>
     )
@@ -336,13 +382,15 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
   })
 
   const renderRatingDistribution = useConstCallback(() => {
+    let distribution: React.ReactNode
     if (mode === 'updown') {
-      return renderUpDownRatingDistribution()
+      distribution = renderUpDownRatingDistribution()
     } else if (mode === 'stars') {
-      return renderStarsRatingDistribution()
+      distribution = renderStarsRatingDistribution()
     } else {
       return null
     }
+    return ratingHidden ? renderConcealed(distribution, true) : distribution
   })
 
   const renderVoteDate = useConstCallback((date?: string) => {
@@ -449,21 +497,32 @@ const ArticleRating: React.FC<Props> = ({ pageId, rating: originalRating, canEdi
       </span>
       <div id="who-rated-page-area" className={`${loading ? 'loading' : ''}`}>
         {loading && <Loader className="loader" />}
-        {sortVotes(votes).map((group: VotesGroup, i: number) => (
-          <React.Fragment key={i}>
-            <h2>
-              {group.name} ({renderCombinedVoteRating(group.votes)})
-            </h2>
-            {group.votes.map((vote, i) => (
-              <React.Fragment key={i}>
-                <UserView data={vote.user} />
-                &nbsp;{renderUserVote(vote.value)}
-                {renderVoteDate(vote.date)}
+        {ratingHidden
+          ? renderConcealed(
+              <>
+                <strong>Голоса пользователей</strong>
                 <br />
+                Пользователь — 0.0
+                <br />
+                Пользователь — 0.0
+              </>,
+              true,
+            )
+          : sortVotes(votes).map((group: VotesGroup, i: number) => (
+              <React.Fragment key={i}>
+                <h2>
+                  {group.name} ({renderCombinedVoteRating(group.votes)})
+                </h2>
+                {group.votes.map((vote, i) => (
+                  <React.Fragment key={i}>
+                    <UserView data={vote.user} />
+                    &nbsp;{renderUserVote(vote.value)}
+                    {renderVoteDate(vote.date)}
+                    <br />
+                  </React.Fragment>
+                ))}
               </React.Fragment>
             ))}
-          </React.Fragment>
-        ))}
       </div>
     </Styles>
   )

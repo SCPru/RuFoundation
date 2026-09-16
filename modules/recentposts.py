@@ -56,6 +56,7 @@ def get_post_info(context, posts, category_for_comments, usernames: set[str]=set
     post_contents = get_post_contents(posts)
     reaction_context = None if hide_reactions else forum_reactions.build_reaction_context(posts, context.user)
     post_info = []
+    rating_visibility_cache = {}
 
     for post in posts:
         thread = post.thread
@@ -68,8 +69,11 @@ def get_post_info(context, posts, category_for_comments, usernames: set[str]=set
         if thread.article:
             is_article_author = post.author_id is not None and post.author in thread.article.authors.all()
             rating_mode = thread.article.settings.rating_mode
-            author_vote = Vote.objects.filter(user=post.author, article=thread.article).last()
-            author_vote = render_vote_to_html(author_vote, rating_mode)
+            if thread.article_id not in rating_visibility_cache:
+                rating_visibility_cache[thread.article_id] = articles.is_rating_hidden(thread.article, context.user)
+            rating_hidden = rating_visibility_cache[thread.article_id]
+            author_vote = None if rating_hidden else Vote.objects.filter(user=post.author, article=thread.article).last()
+            author_vote = render_vote_to_html(author_vote, rating_mode, hidden=rating_hidden)
             is_op = is_article_author
             author_mark = 'Автор статьи' if is_article_author else ''
         

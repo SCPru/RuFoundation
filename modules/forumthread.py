@@ -269,6 +269,7 @@ def get_post_info(
     reply_descendant_counts=None,
     depth=1,
     max_depth=5,
+    rating_hidden=None,
 ):
     posts = list(posts)
     usernames = usernames or set()
@@ -280,6 +281,9 @@ def get_post_info(
         reply_descendant_counts = get_reply_descendant_counts(replies_by_parent)
 
     reply_descendant_counts = reply_descendant_counts or {}
+
+    if rating_hidden is None and thread.article:
+        rating_hidden = articles.is_rating_hidden(thread.article, context.user)
 
     post_info = []
 
@@ -313,8 +317,8 @@ def get_post_info(
         if thread.article:
             is_article_author = post.author_id is not None and post.author in thread.article.authors.all()
             rating_mode = thread.article.settings.rating_mode
-            author_vote = Vote.objects.filter(user=post.author, article=thread.article).last()
-            author_vote = render_vote_to_html(author_vote, rating_mode)
+            author_vote = None if rating_hidden else Vote.objects.filter(user=post.author, article=thread.article).last()
+            author_vote = render_vote_to_html(author_vote, rating_mode, hidden=rating_hidden)
             is_op = is_article_author
             author_mark = 'Автор статьи' if is_article_author else ''
 
@@ -387,6 +391,7 @@ def get_post_info(
                 reply_descendant_counts,
                 depth + 1,
                 max_depth,
+                rating_hidden,
             )
         elif replies:
             post_info.extend(get_post_info(
@@ -404,6 +409,7 @@ def get_post_info(
                 reply_descendant_counts,
                 depth,
                 max_depth,
+                rating_hidden,
             ))
 
     return post_info

@@ -28,6 +28,9 @@ from web.util import lock_table
 from web.types import _UserType, _FullNameOrArticle, _FullNameOrCategory, _FullNameOrTag, _UserIdOrUser
 
 
+RATING_HIDDEN_TOOLTIP = 'Рейтинг отобразится после голоса'
+
+
 class AbstractArticleEvent(EventBase, is_abstract=True):
     user: _UserType
     full_name_or_article: _FullNameOrArticle
@@ -1029,7 +1032,53 @@ def get_rating(full_name_or_article: _FullNameOrArticle) -> tuple[int | float, i
         return 0, 0, 0, obj_settings.rating_mode
     else:
         raise ValueError('Unsupported rate type "%s"' % obj_settings.rating_mode)
-    
+
+
+def is_rating_hidden(full_name_or_article: _FullNameOrArticle, user: _UserType) -> bool:
+    """Return whether aggregate and individual rating data must be concealed."""
+    article = get_article(full_name_or_article)
+    if not article:
+        return False
+
+    obj_settings = article.settings
+    if obj_settings.rating_mode == Settings.RatingMode.Disabled:
+        return False
+
+    visibility_mode = obj_settings.rating_visibility_mode
+    if visibility_mode == Settings.RatingVisibilityMode.Always:
+        return should_hide_rating(visibility_mode, has_voted=False, can_bypass=False)
+    if visibility_mode != Settings.RatingVisibilityMode.AfterVote:
+        return should_hide_rating(visibility_mode, has_voted=False, can_bypass=False)
+
+    can_bypass = user is not None and user.has_perm('roles.bypass_rating_visibility', article)
+    if can_bypass:
+        return should_hide_rating(visibility_mode, has_voted=False, can_bypass=True)
+    has_voted = (
+        user is not None
+        and not getattr(user, 'is_anonymous', True)
+        and article.votes.filter(user=user).exists()
+    )
+    return should_hide_rating(visibility_mode, has_voted=has_voted, can_bypass=can_bypass)
+
+
+def should_hide_rating(visibility_mode: Settings.RatingVisibilityMode | str, *, has_voted: bool, can_bypass: bool) -> bool:
+    """Resolve a visibility mode without performing database queries."""
+    if visibility_mode == Settings.RatingVisibilityMode.Always:
+        return False
+    if visibility_mode == Settings.RatingVisibilityMode.AfterVote:
+        return not has_voted and not can_bypass
+
+    raise ValueError('Unsupported rating visibility mode "%s"' % visibility_mode)
+
+
+def get_visible_rating(full_name_or_article: _FullNameOrArticle, user: _UserType) -> tuple[int | float, int, int, Settings.RatingMode | str, bool]:
+    """Get rating data safe to expose to a viewer and its visibility state."""
+    rating, votes, popularity, mode = get_rating(full_name_or_article)
+    hidden = is_rating_hidden(full_name_or_article, user)
+    if hidden:
+        return 0, 0, 0, mode, True
+    return rating, votes, popularity, mode, False
+
 
 # Returns dict {article_id: (rating, votes_count, popularity, mode)}
 def get_all_ratings(articles_qs):

@@ -30,6 +30,7 @@ export interface FullArticleRating {
   mode: RatingMode
   votes: number
   popularity: number
+  hidden: boolean
 }
 
 export interface FullArticleData {
