@@ -196,6 +196,8 @@ class Article(auto_prefetch.Model, PermissionsOverrideMixin):
                 perms = perms.difference(lockable_perms)
         elif user_obj and user_obj in self.authors.all():
             perms.add('roles.manage_article_authors')
+        if user_obj in self.authors.all():
+            perms.add('roles.bypass_rating_visibility')
         return super().override_perms(user_obj, perms, roles)
 
 
