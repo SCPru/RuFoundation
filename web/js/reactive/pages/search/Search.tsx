@@ -157,7 +157,7 @@ export const Search: React.FC = () => {
                   <Styled.SearchResultMetaItem>
                     <Styled.SearchResultMetaKey>Рейтинг:</Styled.SearchResultMetaKey>
                     <Styled.SearchResultMetaValue>
-                      <Tooltip content={RATING_HIDDEN_TOOLTIP} disabled={!article.rating.hidden}>
+                      <Tooltip content={article.rating.hiddenTooltip || RATING_HIDDEN_TOOLTIP} disabled={!article.rating.hidden}>
                         <span
                           className={`w-rating-visibility${article.rating.hidden ? ' w-rating-hidden' : ''}`}
                           tabIndex={article.rating.hidden ? 0 : undefined}

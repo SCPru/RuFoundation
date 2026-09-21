@@ -66,7 +66,7 @@ class RatingVisibilityTests(SimpleTestCase):
 
     @patch.object(rate.articles, 'get_visible_rating', return_value=(0, 0, 0, Settings.RatingMode.Stars, True))
     def test_votes_api_does_not_query_or_return_hidden_votes(self, get_visible_rating):
-        article = SimpleNamespace(full_name='test')
+        article = SimpleNamespace(full_name='test', settings=Settings(rating_visibility_mode=Settings.RatingVisibilityMode.AfterVote))
         context = SimpleNamespace(article=article, user=MagicMock())
 
         with patch.object(rate.Vote, 'objects') as vote_objects:
@@ -77,3 +77,29 @@ class RatingVisibilityTests(SimpleTestCase):
         self.assertEqual(response['rating'], 0)
         self.assertEqual(response['popularity'], 0)
         vote_objects.filter.assert_not_called()
+
+    @patch.object(articles, 'get_article')
+    def test_hidden_mode_stays_hidden_after_voting(self, get_article):
+        article = self.make_article(Settings.RatingVisibilityMode.Hidden)
+        user = MagicMock(is_anonymous=False)
+        user.has_perm.return_value = False
+        article.votes.filter.return_value.exists.return_value = True
+        get_article.return_value = article
+
+        self.assertTrue(articles.is_rating_hidden(article, user))
+        article.votes.filter.assert_not_called()
+        self.assertTrue(articles.should_hide_rating(Settings.RatingVisibilityMode.Hidden, has_voted=True, can_bypass=False))
+
+    @patch.object(articles, 'get_article')
+    def test_hidden_mode_respects_bypass_permission(self, get_article):
+        article = self.make_article(Settings.RatingVisibilityMode.Hidden)
+        user = MagicMock(is_anonymous=False)
+        user.has_perm.return_value = True
+        get_article.return_value = article
+
+        self.assertFalse(articles.is_rating_hidden(article, user))
+        user.has_perm.assert_called_once_with('roles.bypass_rating_visibility', article)
+
+    def test_hidden_mode_tooltip_does_not_promise_reveal_after_vote(self):
+        article = self.make_article(Settings.RatingVisibilityMode.Hidden)
+        self.assertEqual(articles.get_rating_hidden_tooltip(article), 'Рейтинг скрыт настройками категории')

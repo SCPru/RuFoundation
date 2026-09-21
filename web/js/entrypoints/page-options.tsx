@@ -30,6 +30,7 @@ interface Props {
   ratingVotes?: number
   ratingMode?: RatingMode
   ratingHidden?: boolean
+  ratingHiddenTooltip?: string
   pathParams?: { [key: string]: string }
   canRate?: boolean
   canDelete?: boolean
@@ -74,6 +75,7 @@ const PageOptions: React.FC<Props> = ({
   ratingVotes,
   ratingMode,
   ratingHidden,
+  ratingHiddenTooltip,
   pathParams,
   canRate,
   canDelete,
@@ -101,6 +103,7 @@ const PageOptions: React.FC<Props> = ({
   const [currentRating, setCurrentRating] = useState(rating ?? 0)
   const [currentRatingVotes, setCurrentRatingVotes] = useState(ratingVotes ?? 0)
   const [currentRatingHidden, setCurrentRatingHidden] = useState(Boolean(ratingHidden))
+  const [hiddenTooltip, setHiddenTooltip] = useState(ratingHiddenTooltip || RATING_HIDDEN_TOOLTIP)
 
   useEffect(() => {
     ;(window as any)._openNewEditor = (func?: () => void) => {
@@ -121,6 +124,7 @@ const PageOptions: React.FC<Props> = ({
         setCurrentRating(updatedRating.rating)
         setCurrentRatingVotes(updatedRating.voteCount)
         setCurrentRatingHidden(updatedRating.ratingHidden)
+        setHiddenTooltip(updatedRating.ratingHiddenTooltip || RATING_HIDDEN_TOOLTIP)
       } catch {
         // The rating widgets already surface request errors to the user.
       }
@@ -303,7 +307,7 @@ const PageOptions: React.FC<Props> = ({
 
   const renderRatingWithVisibility = useConstCallback(() => {
     return (
-      <Tooltip content={RATING_HIDDEN_TOOLTIP} disabled={!currentRatingHidden}>
+      <Tooltip content={hiddenTooltip} disabled={!currentRatingHidden}>
         <span className={`w-rating-visibility${currentRatingHidden ? ' w-rating-hidden' : ''}`} tabIndex={currentRatingHidden ? 0 : undefined}>
           <span className={currentRatingHidden ? 'w-rating-concealed' : ''}>{renderRating()}</span>
         </span>
@@ -336,6 +340,7 @@ const PageOptions: React.FC<Props> = ({
             pageId={pageId}
             rating={currentRating}
             ratingHidden={currentRatingHidden}
+            ratingHiddenTooltip={hiddenTooltip}
             canEdit={Boolean(editable)}
             canResetVotes={Boolean(canResetVotes)}
             onClose={onCancelSubView}

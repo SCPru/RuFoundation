@@ -208,6 +208,7 @@ class ArticleView(TemplateResponseMixin, ContextMixin, View):
             'ratingVotes': article_votes,
             'ratingPopularity': article_popularity,
             'ratingHidden': article_rating_hidden,
+            'ratingHiddenTooltip': articles.get_rating_hidden_tooltip(article),
             'pathParams': path_params,
             'canRate': self.request.user.has_perm('roles.rate_articles', article),
             'canComment': self.request.user.has_perm('roles.comment_articles', article) if article else False,

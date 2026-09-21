@@ -318,7 +318,7 @@ def get_post_info(
             is_article_author = post.author_id is not None and post.author in thread.article.authors.all()
             rating_mode = thread.article.settings.rating_mode
             author_vote = None if rating_hidden else Vote.objects.filter(user=post.author, article=thread.article).last()
-            author_vote = render_vote_to_html(author_vote, rating_mode, hidden=rating_hidden)
+            author_vote = render_vote_to_html(author_vote, rating_mode, hidden=rating_hidden, hidden_tooltip=articles.get_rating_hidden_tooltip(thread.article))
             is_op = is_article_author
             author_mark = 'Автор статьи' if is_article_author else ''
 

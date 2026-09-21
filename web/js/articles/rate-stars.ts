@@ -25,7 +25,7 @@ function updateRating(number: HTMLElement, votes: HTMLElement, popularity: HTMLE
 
   module.dataset.ratingHidden = String(votesData.ratingHidden)
   module.querySelectorAll<HTMLElement>('.w-rating-visibility').forEach(wrapper => {
-    wrapper.dataset.tooltip = votesData.ratingHidden ? RATING_HIDDEN_TOOLTIP : ''
+    wrapper.dataset.tooltip = votesData.ratingHidden ? votesData.ratingHiddenTooltip || RATING_HIDDEN_TOOLTIP : ''
     wrapper.classList.toggle('w-rating-hidden', votesData.ratingHidden)
     makeCustomTooltips(wrapper)
   })

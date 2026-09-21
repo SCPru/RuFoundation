@@ -1047,10 +1047,9 @@ def is_rating_hidden(full_name_or_article: _FullNameOrArticle, user: _UserType) 
     visibility_mode = obj_settings.rating_visibility_mode
     if visibility_mode == Settings.RatingVisibilityMode.Always:
         return should_hide_rating(visibility_mode, has_voted=False, can_bypass=False)
-    if visibility_mode != Settings.RatingVisibilityMode.AfterVote:
-        return should_hide_rating(visibility_mode, has_voted=False, can_bypass=False)
-
     can_bypass = user is not None and user.has_perm('roles.bypass_rating_visibility', article)
+    if visibility_mode == Settings.RatingVisibilityMode.Hidden:
+        return should_hide_rating(visibility_mode, has_voted=False, can_bypass=can_bypass)
     if can_bypass:
         return should_hide_rating(visibility_mode, has_voted=False, can_bypass=True)
     has_voted = (
@@ -1067,8 +1066,16 @@ def should_hide_rating(visibility_mode: Settings.RatingVisibilityMode | str, *, 
         return False
     if visibility_mode == Settings.RatingVisibilityMode.AfterVote:
         return not has_voted and not can_bypass
+    if visibility_mode == Settings.RatingVisibilityMode.Hidden:
+        return not can_bypass
 
     raise ValueError('Unsupported rating visibility mode "%s"' % visibility_mode)
+
+
+def get_rating_hidden_tooltip(article) -> str:
+    if article and article.settings.rating_visibility_mode == Settings.RatingVisibilityMode.Hidden:
+        return 'Рейтинг скрыт настройками категории'
+    return RATING_HIDDEN_TOOLTIP
 
 
 def get_visible_rating(full_name_or_article: _FullNameOrArticle, user: _UserType) -> tuple[int | float, int, int, Settings.RatingMode | str, bool]:

@@ -24,6 +24,7 @@ class Settings(auto_prefetch.Model):
     class RatingVisibilityMode(models.TextChoices):
         Always = ('always', 'Отображать всегда')
         AfterVote = ('after_vote', 'Отображать после оценки')
+        Hidden = ('hidden', 'Всегда скрыт')
 
     class UserCreateTagsMode(models.TextChoices):
         Default = ('default', 'По умолчанию')

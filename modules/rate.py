@@ -39,7 +39,7 @@ def render(context, _params):
             page_id=article.full_name,
             rating='%+d' % rating,
             rating_hidden=rating_hidden,
-            rating_hidden_tooltip=articles.RATING_HIDDEN_TOOLTIP,
+            rating_hidden_tooltip=articles.get_rating_hidden_tooltip(article),
         )
     elif mode == Settings.RatingMode.Stars:
         return render_template_from_string(
@@ -60,7 +60,7 @@ def render(context, _params):
             popularity='%d' % popularity,
             rated="#f0ac00" if context.user and not isinstance(context.user, AnonymousUser) and Vote.objects.filter(article=article, user=context.user) else '#4e6b6b',
             rating_hidden=rating_hidden,
-            rating_hidden_tooltip=articles.RATING_HIDDEN_TOOLTIP,
+            rating_hidden_tooltip=articles.get_rating_hidden_tooltip(article),
 
         )
     else:
@@ -79,6 +79,7 @@ def api_get_rating(context, _params):
         'popularity': popularity,
         'ratingMode': mode,
         'ratingHidden': rating_hidden,
+        'ratingHiddenTooltip': articles.get_rating_hidden_tooltip(context.article),
     }
 
 
@@ -105,6 +106,7 @@ def api_get_votes(context, _params):
             'popularity': popularity,
             'mode': mode,
             'ratingHidden': True,
+            'ratingHiddenTooltip': articles.get_rating_hidden_tooltip(context.article),
         }
 
     can_view_votes_timestamp = context.user.has_perm('roles.view_votes_timestamp')
@@ -125,6 +127,7 @@ def api_get_votes(context, _params):
         'popularity': popularity,
         'mode': mode,
         'ratingHidden': False,
+        'ratingHiddenTooltip': articles.get_rating_hidden_tooltip(context.article),
     }
 
 

@@ -31,6 +31,7 @@ export interface FullArticleRating {
   votes: number
   popularity: number
   hidden: boolean
+  hiddenTooltip?: string
 }
 
 export interface FullArticleData {

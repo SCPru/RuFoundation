@@ -25,7 +25,7 @@ function updateRating(element: HTMLElement, votesData: ModuleRateResponse) {
   const wrapper = element.closest<HTMLElement>('.w-rating-visibility')
   if (module) module.dataset.ratingHidden = String(votesData.ratingHidden)
   if (wrapper) {
-    wrapper.dataset.tooltip = votesData.ratingHidden ? RATING_HIDDEN_TOOLTIP : ''
+    wrapper.dataset.tooltip = votesData.ratingHidden ? votesData.ratingHiddenTooltip || RATING_HIDDEN_TOOLTIP : ''
     wrapper.classList.toggle('w-rating-hidden', votesData.ratingHidden)
     makeCustomTooltips(wrapper)
   }

@@ -15,6 +15,7 @@ interface Props {
   pageId: string
   rating: number
   ratingHidden: boolean
+  ratingHiddenTooltip?: string
   canEdit: boolean
   canResetVotes: boolean
   onClose: () => void
@@ -105,6 +106,7 @@ const ArticleRating: React.FC<Props> = ({
   pageId,
   rating: originalRating,
   ratingHidden: originalRatingHidden,
+  ratingHiddenTooltip,
   canEdit,
   canResetVotes,
   onClose: onCloseDelegate,
@@ -115,6 +117,7 @@ const ArticleRating: React.FC<Props> = ({
   const [votes, setVotes] = useState<Array<ModuleRateVote>>([])
   const [popularity, setPopularity] = useState(0)
   const [ratingHidden, setRatingHidden] = useState(originalRatingHidden)
+  const [hiddenTooltip, setHiddenTooltip] = useState(ratingHiddenTooltip || RATING_HIDDEN_TOOLTIP)
   const [error, setError] = useState('')
   const [deleting, setDeleting] = useState(false)
 
@@ -137,6 +140,7 @@ const ArticleRating: React.FC<Props> = ({
       setPopularity(rating.popularity)
       setMode(rating.mode)
       setRatingHidden(rating.ratingHidden)
+      setHiddenTooltip(rating.ratingHiddenTooltip || RATING_HIDDEN_TOOLTIP)
     } catch (e) {
       setError(e.error || 'Ошибка связи с сервером')
     } finally {
@@ -162,6 +166,7 @@ const ArticleRating: React.FC<Props> = ({
       setPopularity(rating.popularity)
       setMode(rating.mode)
       setRatingHidden(rating.ratingHidden)
+      setHiddenTooltip(rating.ratingHiddenTooltip || RATING_HIDDEN_TOOLTIP)
     } catch (e) {
       setError(e.error || 'Ошибка связи с сервером')
     } finally {
@@ -203,7 +208,7 @@ const ArticleRating: React.FC<Props> = ({
   const renderConcealed = useConstCallback((children: React.ReactNode, block = false) => {
     if (block) {
       return (
-        <Tooltip content={RATING_HIDDEN_TOOLTIP} disabled={!ratingHidden}>
+        <Tooltip content={hiddenTooltip} disabled={!ratingHidden}>
           <div className={`w-rating-visibility${ratingHidden ? ' w-rating-hidden' : ''}`} data-tooltip-ignore tabIndex={ratingHidden ? 0 : undefined}>
             <div className={`${ratingHidden ? 'w-rating-concealed' : ''} w-rating-hidden-votes`}>{children}</div>
           </div>
@@ -211,7 +216,7 @@ const ArticleRating: React.FC<Props> = ({
       )
     }
     return (
-      <Tooltip content={RATING_HIDDEN_TOOLTIP} disabled={!ratingHidden}>
+      <Tooltip content={hiddenTooltip} disabled={!ratingHidden}>
         <span className={`w-rating-visibility${ratingHidden ? ' w-rating-hidden' : ''}`} data-tooltip-ignore tabIndex={ratingHidden ? 0 : undefined}>
           <span className={ratingHidden ? 'w-rating-concealed' : ''}>{children}</span>
         </span>

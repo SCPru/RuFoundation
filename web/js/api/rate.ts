@@ -13,6 +13,7 @@ export interface ModuleRateResponse {
   popularity: number
   ratingMode: RatingMode
   ratingHidden: boolean
+  ratingHiddenTooltip?: string
 }
 
 export interface ModuleRateVote {
@@ -30,6 +31,7 @@ export interface ModuleRateVotesResponse {
   votes: Array<ModuleRateVote>
   popularity: number
   ratingHidden: boolean
+  ratingHiddenTooltip?: string
 }
 
 export interface ModuleRateRequest {

@@ -73,7 +73,7 @@ def get_post_info(context, posts, category_for_comments, usernames: set[str]=set
                 rating_visibility_cache[thread.article_id] = articles.is_rating_hidden(thread.article, context.user)
             rating_hidden = rating_visibility_cache[thread.article_id]
             author_vote = None if rating_hidden else Vote.objects.filter(user=post.author, article=thread.article).last()
-            author_vote = render_vote_to_html(author_vote, rating_mode, hidden=rating_hidden)
+            author_vote = render_vote_to_html(author_vote, rating_mode, hidden=rating_hidden, hidden_tooltip=articles.get_rating_hidden_tooltip(thread.article))
             is_op = is_article_author
             author_mark = 'Автор статьи' if is_article_author else ''
         

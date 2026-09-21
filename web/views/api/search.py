@@ -40,6 +40,7 @@ class SearchView(APIView):
                     'popularity': popularity,
                     'mode': str(mode),
                     'hidden': rating_hidden,
+                    'hiddenTooltip': articles.get_rating_hidden_tooltip(article),
                 },
                 'tags': articles.get_tags(article),
                 'words': result['words'],

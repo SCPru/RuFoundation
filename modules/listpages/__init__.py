@@ -95,7 +95,7 @@ def get_page_vars(page: _ArticleType)-> dict[str, str] | LazyDict:
                 if not hidden:
                     return str(value)
                 return ''.join([
-                    f'[[span class="w-rating-visibility w-rating-hidden" data-tooltip="{articles.RATING_HIDDEN_TOOLTIP}"]]'
+                    f'[[span class="w-rating-visibility w-rating-hidden" data-tooltip="{articles.get_rating_hidden_tooltip(page)}"]]'
                     f'[[span class="w-rating-concealed"]]{value}[[/span]]'
                     '[[/span]]'
                 ])
