@@ -1,5 +1,3 @@
-from django.contrib.auth.models import AnonymousUser
-
 from renderer.utils import UserJSON, render_user_to_json, render_template_from_string
 
 from web.controllers.articles import get_article, Vote
@@ -15,6 +13,12 @@ def allow_api():
     return True
 
 
+def get_own_vote(article, user):
+    if not user or user.is_anonymous:
+        return None
+    return Vote.objects.filter(article=article, user=user).values_list('rate', flat=True).first()
+
+
 def render(context, _params):
     pageid = _params.get('page')
     if pageid:
@@ -25,6 +29,10 @@ def render(context, _params):
     if not article:
         raise ModuleError('Страница не указана')
     rating, votes, popularity, mode, rating_hidden = articles.get_visible_rating(article, context.user)
+    own_vote = get_own_vote(article, context.user)
+    own_vote_text = ''
+    if rating_hidden and article.settings.rating_visibility_mode == Settings.RatingVisibilityMode.Hidden and own_vote is not None:
+        own_vote_text = 'Ваша оценка: ' + ('%+d' % own_vote if mode == Settings.RatingMode.UpDown else '%.1f' % own_vote)
 
     if mode == Settings.RatingMode.UpDown:
         return render_template_from_string(
@@ -34,31 +42,36 @@ def render(context, _params):
                 '<span class="rateup btn btn-default"><a data-tooltip="Мне нравится" aria-label="Мне нравится" href="#">+</a></span>',
                 '<span class="ratedown btn btn-default"><a data-tooltip="Мне не нравится" aria-label="Мне не нравится" href="#">–</a></span>',
                 '<span class="cancel btn btn-default"><a data-tooltip="Отменить голос" aria-label="Отменить голос" href="#">x</a></span>',
+                '<span class="w-rate-own-vote" aria-live="polite">{{own_vote_text}}</span>',
                 '</div>'
             ]),
             page_id=article.full_name,
             rating='%+d' % rating,
+            own_vote_text=own_vote_text,
             rating_hidden=rating_hidden,
             rating_hidden_tooltip=articles.get_rating_hidden_tooltip(article),
         )
     elif mode == Settings.RatingMode.Stars:
         return render_template_from_string(
             ''.join([
-                '<div class="w-stars-rate-module" data-page-id="{{page_id}}" data-rating-hidden="{{rating_hidden|yesno:\'true,false\'}}">',
+                '<div class="w-stars-rate-module{% if own_vote_text %} w-rate-show-own-vote{% endif %}" data-page-id="{{page_id}}" data-rating-hidden="{{rating_hidden|yesno:\'true,false\'}}">',
                 '<div class="w-stars-rate-rating">рейтинг:&nbsp;<span class="w-rating-visibility{% if rating_hidden %} w-rating-hidden{% endif %}" data-tooltip="{% if rating_hidden %}{{rating_hidden_tooltip}}{% endif %}"><span class="w-stars-rate-number{% if rating_hidden %} w-rating-concealed{% endif %}">{{rating}}</span></span></div>',
                 '<div class="w-stars-rate-control">',
                 '<div class="w-stars-rate-stars-wrapper"><div class="w-stars-rate-stars-view" style="width: {{rating_percentage}}%; --rated-var: {{rated}}"></div></div>',
                 '<div class="w-stars-rate-cancel"></div>'
                 '</div>',
-                '<div class="w-stars-rate-votes"><span class="w-rating-visibility{% if rating_hidden %} w-rating-hidden{% endif %}" data-tooltip="{% if rating_hidden %}{{rating_hidden_tooltip}}{% endif %}"><span class="w-rating-values{% if rating_hidden %} w-rating-concealed{% endif %}"><span class="w-stars-rate-number"{% if not rating_hidden %} data-tooltip="Количество голосов"{% endif %}>{{votes}}</span>/<span class="w-stars-rate-popularity"{% if not rating_hidden %} data-tooltip="Популярность (процент голосов 3.0 и выше)"{% endif %}>{{popularity}}</span>%</span></span></div>',
+                '<div class="w-stars-rate-votes"><span class="w-rate-statistics"><span class="w-rating-visibility{% if rating_hidden %} w-rating-hidden{% endif %}" data-tooltip="{% if rating_hidden %}{{rating_hidden_tooltip}}{% endif %}"><span class="w-rating-values{% if rating_hidden %} w-rating-concealed{% endif %}"><span class="w-stars-rate-number"{% if not rating_hidden %} data-tooltip="Количество голосов"{% endif %}>{{votes}}</span>/<span class="w-stars-rate-popularity"{% if not rating_hidden %} data-tooltip="Популярность (процент голосов 3.0 и выше)"{% endif %}>{{popularity}}</span>%</span></span></span>',
+                '<span class="w-rate-own-vote" aria-live="polite">{{own_vote_text}}</span>',
+                '</div>',
                 '</div>'
             ]),
             page_id=article.full_name,
             rating=('%.1f' % rating) if votes or rating_hidden else '—',
-            rating_percentage='%d' % (rating * 20),
+            rating_percentage='%d' % ((own_vote or 0) * 20 if rating_hidden else rating * 20),
+            own_vote_text=own_vote_text,
             votes='%d' % votes,
             popularity='%d' % popularity,
-            rated="#f0ac00" if context.user and not isinstance(context.user, AnonymousUser) and Vote.objects.filter(article=article, user=context.user) else '#4e6b6b',
+            rated='#f0ac00' if own_vote is not None else '#4e6b6b',
             rating_hidden=rating_hidden,
             rating_hidden_tooltip=articles.get_rating_hidden_tooltip(article),
 
@@ -78,6 +91,8 @@ def api_get_rating(context, _params):
         'voteCount': votes,
         'popularity': popularity,
         'ratingMode': mode,
+        'ratingVisibilityMode': context.article.settings.rating_visibility_mode,
+        'ownVote': get_own_vote(context.article, context.user),
         'ratingHidden': rating_hidden,
         'ratingHiddenTooltip': articles.get_rating_hidden_tooltip(context.article),
     }
@@ -106,6 +121,8 @@ def api_get_votes(context, _params):
             'popularity': popularity,
             'mode': mode,
             'ratingHidden': True,
+            'ratingVisibilityMode': context.article.settings.rating_visibility_mode,
+            'ownVote': get_own_vote(context.article, context.user),
             'ratingHiddenTooltip': articles.get_rating_hidden_tooltip(context.article),
         }
 
@@ -127,6 +144,8 @@ def api_get_votes(context, _params):
         'popularity': popularity,
         'mode': mode,
         'ratingHidden': False,
+        'ratingVisibilityMode': context.article.settings.rating_visibility_mode,
+        'ownVote': get_own_vote(context.article, context.user),
         'ratingHiddenTooltip': articles.get_rating_hidden_tooltip(context.article),
     }
 

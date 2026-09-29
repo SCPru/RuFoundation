@@ -3,13 +3,14 @@ import { useEffect, useState } from 'react'
 import { sprintf } from 'sprintf-js'
 import styled from 'styled-components'
 import { deleteArticleVotes } from '../api/articles'
-import { fetchPageVotes, ModuleRateVote, RATING_HIDDEN_TOOLTIP, RatingMode } from '../api/rate'
+import { fetchPageVotes, ModuleRateVote, RATING_HIDDEN_TOOLTIP, RatingMode, RatingVisibilityMode } from '../api/rate'
 import useConstCallback from '../util/const-callback'
 import formatDate from '../util/date-format'
 import Loader from '../util/loader'
 import Tooltip from '../util/tooltip'
 import UserView from '../util/user-view'
 import WikidotModal from '../util/wikidot-modal'
+import { ownVoteText } from './own-vote'
 
 interface Props {
   pageId: string
@@ -113,6 +114,8 @@ const ArticleRating: React.FC<Props> = ({
 }) => {
   const [loading, setLoading] = useState(false)
   const [rating, setRating] = useState(originalRating)
+  const [ownVote, setOwnVote] = useState<number | null>(null)
+  const [visibilityMode, setVisibilityMode] = useState<RatingVisibilityMode>('always')
   const [mode, setMode] = useState<RatingMode>('disabled')
   const [votes, setVotes] = useState<Array<ModuleRateVote>>([])
   const [popularity, setPopularity] = useState(0)
@@ -136,6 +139,8 @@ const ArticleRating: React.FC<Props> = ({
     try {
       const rating = await fetchPageVotes(pageId)
       setVotes(rating.votes)
+      setOwnVote(rating.ownVote)
+      setVisibilityMode(rating.ratingVisibilityMode)
       setRating(rating.rating)
       setPopularity(rating.popularity)
       setMode(rating.mode)
@@ -162,6 +167,8 @@ const ArticleRating: React.FC<Props> = ({
     try {
       const rating = await deleteArticleVotes(pageId)
       setVotes(rating.votes)
+      setOwnVote(rating.ownVote)
+      setVisibilityMode(rating.ratingVisibilityMode)
       setRating(rating.rating)
       setPopularity(rating.popularity)
       setMode(rating.mode)
@@ -252,42 +259,51 @@ const ArticleRating: React.FC<Props> = ({
             </a>
           </Tooltip>
         </span>
+        <span className="w-rate-own-vote" aria-live="polite">
+          {ownVoteText(ratingHidden, ownVote, mode, visibilityMode)}
+        </span>
       </div>
     )
   })
 
   const renderStarsRating = useConstCallback(() => {
+    const ownVoteLabel = ownVoteText(ratingHidden, ownVote, mode, visibilityMode)
     return (
-      <div className="w-stars-rate-module" data-page-id={pageId}>
+      <div className={`w-stars-rate-module${ownVoteLabel ? ' w-rate-show-own-vote' : ''}`} data-page-id={pageId}>
         <div className="w-stars-rate-rating">
           рейтинг:&nbsp;
           {renderConcealed(<span className="w-stars-rate-number">{ratingHidden ? '0.0' : votes.length ? sprintf('%.1f', rating) : '—'}</span>)}
         </div>
         <div className="w-stars-rate-control">
           <div className="w-stars-rate-stars-wrapper">
-            <div className="w-stars-rate-stars-view" style={{ width: `${Math.floor(rating * 20)}%` }} />
+            <div className="w-stars-rate-stars-view" style={{ width: `${Math.floor((ratingHidden ? ownVote ?? 0 : rating) * 20)}%` }} />
           </div>
           <div className="w-stars-rate-cancel" />
         </div>
         <div className="w-stars-rate-votes">
-          {ratingHidden ? (
-            renderConcealed(
+          <span className="w-rate-statistics">
+            {ratingHidden ? (
+              renderConcealed(
+                <>
+                  <span className="w-stars-rate-number">0</span>/<span className="w-stars-rate-popularity">0</span>%
+                </>,
+              )
+            ) : (
               <>
-                <span className="w-stars-rate-number">0</span>/<span className="w-stars-rate-popularity">0</span>%
-              </>,
-            )
-          ) : (
-            <>
-              <Tooltip content="Количество голосов">
-                <span className="w-stars-rate-number">{votes.length}</span>
-              </Tooltip>
-              /
-              <Tooltip content="Популярность (процент голосов 3.0 и выше)">
-                <span className="w-stars-rate-popularity">{popularity}</span>
-              </Tooltip>
-              %
-            </>
-          )}
+                <Tooltip content="Количество голосов">
+                  <span className="w-stars-rate-number">{votes.length}</span>
+                </Tooltip>
+                /
+                <Tooltip content="Популярность (процент голосов 3.0 и выше)">
+                  <span className="w-stars-rate-popularity">{popularity}</span>
+                </Tooltip>
+                %
+              </>
+            )}
+          </span>
+          <span className="w-rate-own-vote" aria-live="polite">
+            {ownVoteLabel}
+          </span>
         </div>
       </div>
     )

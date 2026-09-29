@@ -2,6 +2,7 @@ import { callModule } from './modules'
 import { UserData } from './user'
 
 export type RatingMode = 'disabled' | 'updown' | 'stars'
+export type RatingVisibilityMode = 'always' | 'after_vote' | 'hidden'
 
 export const RATING_HIDDEN_TOOLTIP = 'Рейтинг отобразится после голоса'
 
@@ -12,6 +13,8 @@ export interface ModuleRateResponse {
 
   popularity: number
   ratingMode: RatingMode
+  ratingVisibilityMode: RatingVisibilityMode
+  ownVote: number | null
   ratingHidden: boolean
   ratingHiddenTooltip?: string
 }
@@ -28,6 +31,8 @@ export interface ModuleRateVotesResponse {
   pageId: string
   rating: number
   mode: RatingMode
+  ratingVisibilityMode: RatingVisibilityMode
+  ownVote: number | null
   votes: Array<ModuleRateVote>
   popularity: number
   ratingHidden: boolean

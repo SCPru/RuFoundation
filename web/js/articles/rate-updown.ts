@@ -1,6 +1,7 @@
 import { ModuleRateResponse, ratePage, RATING_HIDDEN_TOOLTIP } from '../api/rate'
 import { makeCustomTooltips } from '../util/tooltip'
 import { showErrorModal } from '../util/wikidot-modal'
+import { updateOwnVote } from './own-vote'
 
 async function onClick(e: MouseEvent, pageId: string, vote: number | null): Promise<ModuleRateResponse> {
   e.preventDefault()
@@ -23,7 +24,10 @@ function updateRating(element: HTMLElement, votesData: ModuleRateResponse) {
 
   const module = element.closest<HTMLElement>('.w-rate-module')
   const wrapper = element.closest<HTMLElement>('.w-rating-visibility')
-  if (module) module.dataset.ratingHidden = String(votesData.ratingHidden)
+  if (module) {
+    module.dataset.ratingHidden = String(votesData.ratingHidden)
+    updateOwnVote(module, votesData)
+  }
   if (wrapper) {
     wrapper.dataset.tooltip = votesData.ratingHidden ? votesData.ratingHiddenTooltip || RATING_HIDDEN_TOOLTIP : ''
     wrapper.classList.toggle('w-rating-hidden', votesData.ratingHidden)

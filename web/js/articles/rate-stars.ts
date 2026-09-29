@@ -2,6 +2,7 @@ import { sprintf } from 'sprintf-js'
 import { ModuleRateResponse, ratePage, RATING_HIDDEN_TOOLTIP } from '../api/rate'
 import { makeCustomTooltips } from '../util/tooltip'
 import { showErrorModal } from '../util/wikidot-modal'
+import { updateOwnVote } from './own-vote'
 
 async function onClick(e: MouseEvent, pageId: string, vote: number | null): Promise<ModuleRateResponse> {
   e.preventDefault()
@@ -18,10 +19,13 @@ function updateRating(number: HTMLElement, votes: HTMLElement, popularity: HTMLE
   number.textContent = votesData.voteCount || votesData.ratingHidden ? sprintf('%.1f', votesData.rating) : '—'
   votes.textContent = sprintf('%d', votesData.voteCount)
   popularity.textContent = sprintf('%d', votesData.popularity)
-  control.style.width = `${Math.floor(votesData.rating * 20)}%`
+  const displayedVote = votesData.ratingHidden ? votesData.ownVote ?? 0 : votesData.rating
+  control.style.width = `${Math.floor(displayedVote * 20)}%`
+  control.style.setProperty('--rated-var', votesData.ownVote != null ? '#f0ac00' : '#4e6b6b')
 
   const module = number.closest<HTMLElement>('.w-stars-rate-module')
   if (!module) return
+  updateOwnVote(module, votesData)
 
   module.dataset.ratingHidden = String(votesData.ratingHidden)
   module.querySelectorAll<HTMLElement>('.w-rating-visibility').forEach(wrapper => {

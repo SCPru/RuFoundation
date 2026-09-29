@@ -390,6 +390,25 @@
   display: inline-block;
 }
 
+.w-rate-own-vote {
+  display: block;
+  font-size: 85%;
+  line-height: 1.5;
+}
+
+.w-rate-own-vote:empty {
+  display: none;
+}
+
+.w-rate-show-own-vote .w-rate-statistics {
+  display: none;
+}
+
+.w-stars-rate-votes .w-rate-own-vote {
+  font-size: inherit;
+  line-height: inherit;
+}
+
 .w-rating-visibility.w-rating-hidden {
   cursor: help;
 }
