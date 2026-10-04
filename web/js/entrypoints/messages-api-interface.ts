@@ -42,22 +42,26 @@ function onApiMessage(e: MessageEvent) {
     return
   }
 
-  availableApiCalls[e.data.target](...e.data.args)
-    .then((response: any) => {
-      const data = {
+  const messageReply = (payload: any) => {
+    if (e.source) {
+      e.source.postMessage({
         type: 'ApiResponse',
         target: e.data.target,
         callId: e.data.callId,
-        response,
-      }
-      if (e.source) {
-        e.source.postMessage(data, {
-          targetOrigin: '*',
-        })
-      }
+        ...payload
+      }, {
+        targetOrigin: '*',
+      });
+    }
+  }
+
+  availableApiCalls[e.data.target](...e.data.args)
+    .then((response: any) => {
+      messageReply({ response: response })
     })
     .catch((err: any) => {
       console.error('ApiCall error with target:', e.data.target, err)
+      messageReply({ error: err })
     })
 }
 

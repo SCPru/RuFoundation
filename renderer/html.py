@@ -29,16 +29,20 @@ def get_html_injected_code(html_id: str) -> str:
                 }
                 window.parent.postMessage(data, "*");
                 let result;
-                const responsePromise = new Promise((resolve) => {
+                const responsePromise = new Promise((resolve, reject) => {
                     const listener = (e) => {
                         if (!e.data.hasOwnProperty("type") || 
                             !e.data.hasOwnProperty("target") || 
                             !e.data.hasOwnProperty("callId") || 
-                            !e.data.hasOwnProperty("response") || 
+                            (!e.data.hasOwnProperty("response") && !e.data.hasOwnProperty("error")) || 
                             e.data.type !== "ApiResponse" ||
                             e.data.callId !== data.callId)
                             return;
                         window.removeEventListener("message", listener);
+                        if (e.data.hasOwnProperty("error")) {
+                            reject(e.data.error);
+                            return;
+                        }
                         result = e.data.response;
                         resolve();
                     }
