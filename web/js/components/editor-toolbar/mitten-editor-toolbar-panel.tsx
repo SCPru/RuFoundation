@@ -778,8 +778,27 @@ const EditorToolbarPanel__Bare: React.FC<EditorToolbarPanelProps> = ({
       }, true);
     };
     
+    const setInitialHistoryEntry = () => {
+      const history = editHistoryRef.current;
+      // Since this design cannot know exactly when the parent `onSourceChange` gets called for the first time
+      // (or ever, lol), this is a workaround.
+      if (history.entries.length) return;
+      
+      addHistoryEntry({
+        source: textarea.value,
+        selection: {
+          start: textarea.selectionStart,
+          end: textarea.selectionEnd,
+        },
+      });
+    };
+    
     textarea.addEventListener("input", inputHandler);
-    return () => textarea.removeEventListener("input", inputHandler);
+    textarea.addEventListener("beforeinput", setInitialHistoryEntry);
+    return () => {
+      textarea.removeEventListener("input", inputHandler);
+      textarea.removeEventListener("beforeinput", setInitialHistoryEntry);
+    };
   }, [addHistoryEntry]);
   
   return (
