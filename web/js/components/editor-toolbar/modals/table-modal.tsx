@@ -47,7 +47,7 @@ const TableModal: EditorModalComponent = ({
 }) => {
   const [rows, setRows] = useState<number>(2);
   const [columns, setColumns] = useState<number>(2);
-  const [useHeader, setUseHeader] = useState<boolean>(false);
+  const [withHeader, setWithHeader] = useState<boolean>(false);
   
   const createTableRow = (length: number, isHeader: boolean = false): string => {
     const rowArray: string[] = [];
@@ -61,7 +61,7 @@ const TableModal: EditorModalComponent = ({
     
     const tableRows: string[] = [];
     for (let i = 0; i < totalRows; i++) tableRows.push(createTableRow(totalColumns));
-    if (useHeader) tableRows[0] = createTableRow(totalColumns, true);
+    if (withHeader) tableRows[0] = createTableRow(totalColumns, true);
     return tableRows.join("\n");
   };
   
@@ -105,8 +105,8 @@ const TableModal: EditorModalComponent = ({
             Первая строка как заголовок:
             <input
               type="checkbox"
-              checked={useHeader}
-              onChange={e => setUseHeader(e.target.checked)}
+              checked={withHeader}
+              onChange={e => setWithHeader(e.target.checked)}
             />
           </label>
         </div>

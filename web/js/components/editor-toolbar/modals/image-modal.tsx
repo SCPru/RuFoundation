@@ -186,7 +186,7 @@ const ImageModal: EditorModalComponent = ({
     if (!pageId) return;
     setSelectedFileLink("");
     fileStore.load(pageId, true);
-  }, [pageId, setSelectedFileLink]);
+  }, [pageId]);
   
   useEffect(() => {
     if (!pageId) return;

@@ -636,12 +636,12 @@ const EditorToolbarPanel__Bare: React.FC<EditorToolbarPanelProps> = ({
         end: selectionEnd,
       },
     });
-  }, [setCurrentModal]);
+  }, []);
   
   const modalClose = useCallback(() => {
     if (currentModal) selectionRef.current = currentModal.selection;
     setCurrentModal(null);
-  }, [setCurrentModal, currentModal]);
+  }, [currentModal]);
   
   const modalSubmit = useCallback((result: string) => {
     const textarea = textareaRef.current;
@@ -711,7 +711,7 @@ const EditorToolbarPanel__Bare: React.FC<EditorToolbarPanelProps> = ({
     }
     
     return keybindActionsMap;
-  }, [setKeyboardTrapped, undo, redo /* Jung Kook - Please Don't Change */]);
+  }, [undo, redo /* Jung Kook - Please Don't Change */]);
   
   // Hooks
   
@@ -898,13 +898,12 @@ const MittenEditorToolbarPanel = styled(EditorToolbarPanel__Bare)`
     background: var(--new-side-bar-color, #901);
   }
 
-  ${toolbarButtonGroups.map(buttonGroup => buttonGroup.entry
-    .map(button => {
-      return css`
-        button.${button.className} {
-          --editor-icon-image: url(${button.iconPath || "/-/static/images/editor/mitten-icons/missing.svg"});
-        }
-      `;
+  ${toolbarButtonGroups.map(buttonGroup => buttonGroup.entry.map(button => {
+    return css`
+      button.${button.className} {
+        --editor-icon-image: url(${button.iconPath || "/-/static/images/editor/mitten-icons/missing.svg"});
+      }
+    `;
     }))
   }
 `;

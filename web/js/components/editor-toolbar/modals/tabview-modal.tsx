@@ -58,11 +58,11 @@ const TabviewModal: EditorModalComponent = ({
       id: uuid4(),
     }]);
     setTitleInput("");
-  }, [setEntryArray, titleInput, setTitleInput]);
+  }, [titleInput]);
   
   const removeTitleEntry = useCallback((entryId: string) => {
     setEntryArray(prevState => prevState.filter(entry => entry.id !== entryId));
-  }, [setEntryArray]);
+  }, []);
   
   const createTabview = useCallback((): string => {
     if (!entryArray.length) return "";
