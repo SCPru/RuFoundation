@@ -9,6 +9,7 @@ import useConstCallback from '../util/const-callback'
 import Loader from '../util/loader'
 import { removeMessage, showPreviewMessage } from '../util/wikidot-message'
 import WikidotModal from '../util/wikidot-modal'
+import MittenEditorToolbarPanel from '~components/editor-toolbar/mitten-editor-toolbar-panel'
 
 interface Props {
   pageId: string
@@ -123,6 +124,8 @@ const ArticleEditor: React.FC<Props> = ({
 
   const editorRef = useRef(null)
   const monacoRef = useRef(null)
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const monacoOptions: editor.IStandaloneEditorConstructionOptions = {
     wordWrap: 'on',
@@ -357,8 +360,17 @@ const ArticleEditor: React.FC<Props> = ({
             </tr>
           </tbody>
         </table>
-        {/* This is not supported right now but we have to add empty div for BHL */}
-        <div id="wd-editor-toolbar-panel" className="wd-editor-toolbar-panel" />
+        {/* This is supported now but in a bit janky way */}
+        {!useAdvancedEditor ? (
+          <MittenEditorToolbarPanel
+            textareaRef={textareaRef}
+            onSourceChange={onSourceChange}
+            pageId={pageId}
+            disabled={loading || saving}
+          />
+        ) : (
+          <div className="wd-editor-toolbar-panel" id="wd-editor-toolbar-panel" />
+        )}
         <div className={`editor-area ${loading ? 'loading' : ''}`}>
           {!useAdvancedEditor && (
             <textarea
@@ -370,6 +382,7 @@ const ArticleEditor: React.FC<Props> = ({
               cols={60}
               style={{ width: '95%' }}
               disabled={loading || saving}
+              ref={textareaRef}
             />
           )}
           {useAdvancedEditor && (
