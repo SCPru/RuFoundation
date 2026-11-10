@@ -160,6 +160,15 @@ const Styles = styled.div<{ loading?: boolean }>`
           color: #f33;
           font-weight: bold;
         }
+        .w-upload-progress-reupload {
+          margin: 4px;
+          margin-top: 8px;
+          background: #eef;
+          border: 1px dashed #66f;
+          padding: 8px;
+          color: #33f;
+          font-weight: bold;
+        }
       }
     }
   }
@@ -176,11 +185,11 @@ class ArticleFiles extends Component<Props, State> {
       renameName: null,
     }
   }
-
+  
   componentDidMount() {
     this.loadFiles()
   }
-
+  
   async loadFiles() {
     const { pageId } = this.props
     this.setState({ loading: true, error: undefined })
@@ -191,7 +200,7 @@ class ArticleFiles extends Component<Props, State> {
       this.setState({ loading: false, error: e.error || 'Ошибка связи с сервером' })
     }
   }
-
+  
   onClose = (e?: React.UIEvent) => {
     if (e) {
       e.preventDefault()
@@ -199,19 +208,19 @@ class ArticleFiles extends Component<Props, State> {
     }
     if (this.props.onClose) this.props.onClose()
   }
-
+  
   onCloseError = () => {
     this.setState({ error: undefined })
     this.onClose()
   }
-
+  
   formatSize(size: number) {
     const sizeKb = 1024
     const sizeMb = 1024 * 1024
     const sizeGb = 1024 * 1024 * 1024
-
+    
     const roundTo2 = (value: number) => Math.round(value * 100) / 100
-
+    
     if (size < sizeKb) {
       return `${size} б`
     }
@@ -223,7 +232,7 @@ class ArticleFiles extends Component<Props, State> {
     }
     return `${roundTo2(size / sizeGb)} гб`
   }
-
+  
   onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadFiles = [...this.state.uploadFiles]
     ;[...(e.target.files ?? [])].forEach(file => {
@@ -238,7 +247,7 @@ class ArticleFiles extends Component<Props, State> {
     e.target.value = ''
     this.setState({ uploadFiles })
   }
-
+  
   updateFile(file: UploadFileRecord, props: Partial<UploadFileRecord>) {
     this.state.uploadFiles.forEach(f => {
       if (file.file === f.file) {
@@ -247,7 +256,7 @@ class ArticleFiles extends Component<Props, State> {
     })
     this.setState({ uploadFiles: this.state.uploadFiles })
   }
-
+  
   async doUpload(file: UploadFileRecord) {
     const { pageId } = this.props
     try {
@@ -262,7 +271,7 @@ class ArticleFiles extends Component<Props, State> {
       this.updateFile(file, { error: e.error || 'Ошибка загрузки файла', uploading: false })
     }
   }
-
+  
   onUploadFile = (e: React.UIEvent | null, file: UploadFileRecord) => {
     if (e) {
       e.preventDefault()
@@ -274,17 +283,37 @@ class ArticleFiles extends Component<Props, State> {
     this.updateFile(file, { uploading: true, error: null })
     this.doUpload(file)
   }
-
+  
+  onReuploadFile = (e: React.UIEvent | null, file: UploadFileRecord) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    if (file.uploading) {
+      return
+    }
+    this.updateFile(file, { uploading: true, error: null })
+    const fileToDelete = this.state.files?.find(uploadedFile => {
+      return uploadedFile.name === file.name
+    })
+    if (!fileToDelete) return;
+    
+    this.deleteFile(fileToDelete).then(_ => this.doUpload(file))
+  }
+  
   onUploadAll = (e: React.UIEvent) => {
     e.preventDefault()
     e.stopPropagation()
     this.state.uploadFiles.forEach(file => {
-      if (!file.uploading) {
+      const fileAlreadyExists = this.state.files?.some(uploadedFile => {
+        return uploadedFile.name === file.name
+      })
+      if (!file.uploading && !fileAlreadyExists) {
         this.onUploadFile(null, file)
       }
     })
   }
-
+  
   renderUpload() {
     const { uploadFiles } = this.state
     return (
@@ -297,15 +326,23 @@ class ArticleFiles extends Component<Props, State> {
           {uploadFiles.length ? (
             <div className="w-upload-rows">
               {uploadFiles.map((file, i) => {
+                const fileAlreadyExists = Boolean(this.state.files?.some(uploadedFile => {
+                  return uploadedFile.name === file.name
+                }));
                 return (
                   <div key={i} className="w-upload-row">
                     <div className="w-upload-info">
                       <span className="w-upload-name">{file.name}</span>
                       <span className="w-upload-type">{file.file.type}</span>
                       <span className="w-upload-size">{this.formatSize(file.file.size)}</span>
-                      {!file.uploading ? (
+                      {!file.uploading && !fileAlreadyExists ? (
                         <a href="#" className="w-upload-btn" onClick={e => this.onUploadFile(e, file)}>
                           Загрузить
+                        </a>
+                      ) : null}
+                      {!file.uploading && fileAlreadyExists ? (
+                        <a href="#" className="w-upload-btn" onClick={e => this.onReuploadFile(e, file)}>
+                          Заменить
                         </a>
                       ) : null}
                     </div>
@@ -317,6 +354,9 @@ class ArticleFiles extends Component<Props, State> {
                       </>
                     ) : null}
                     {file.error ? <div className="w-upload-progress-error">Файл не загружен: {file.error}</div> : null}
+                    {fileAlreadyExists ? <div className="w-upload-progress-reupload">
+                      Файл с таким именем уже существует. Хотите ли вы заменить его?
+                    </div> : null}
                   </div>
                 )
               })}
@@ -329,35 +369,8 @@ class ArticleFiles extends Component<Props, State> {
       </>
     )
   }
-
-  onOptions = (e: React.UIEvent, i: number) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (i === this.state.optionsIndex) {
-      this.setState({ optionsIndex: null })
-    } else {
-      this.setState({ optionsIndex: i })
-    }
-  }
-
-  onOptionsRename = async (e: React.UIEvent, i: number) => {
-    const { pageId } = this.props
-    e.preventDefault()
-    e.stopPropagation()
-    if (!this.state.files?.[i]) {
-      return
-    }
-    this.setState({ renameIndex: i, renameName: this.state.files[i].name })
-  }
-
-  onOptionsDelete = async (e: React.UIEvent, i: number) => {
-    const { pageId } = this.props
-    e.preventDefault()
-    e.stopPropagation()
-    if (!this.state.files?.[i]) {
-      return
-    }
-    const file = this.state.files[i]
+  
+  deleteFile = async (file: ArticleFile) => {
     try {
       this.setState({ loading: true })
       await deleteFile(file.id)
@@ -367,11 +380,41 @@ class ArticleFiles extends Component<Props, State> {
       this.setState({ loading: false, error: e.error || 'Ошибка удаления файла' })
     }
   }
-
+  
+  onOptions = (e: React.UIEvent, i: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (i === this.state.optionsIndex) {
+      this.setState({ optionsIndex: null })
+    } else {
+      this.setState({ optionsIndex: i })
+    }
+  }
+  
+  onOptionsRename = async (e: React.UIEvent, i: number) => {
+    const { pageId } = this.props
+    e.preventDefault()
+    e.stopPropagation()
+    if (!this.state.files?.[i]) {
+      return
+    }
+    this.setState({ renameIndex: i, renameName: this.state.files[i].name })
+  }
+  
+  onOptionsDelete = async (e: React.UIEvent, i: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!this.state.files?.[i]) {
+      return
+    }
+    const file = this.state.files[i]
+    await this.deleteFile(file)
+  }
+  
   onCancelRename = () => {
     this.setState({ renameIndex: null, renameName: null })
   }
-
+  
   onRename = async () => {
     const { files, renameIndex, renameName } = this.state
     if (renameName === null || renameIndex === null || !files?.[renameIndex]) {
@@ -386,11 +429,11 @@ class ArticleFiles extends Component<Props, State> {
       this.setState({ loading: false, error: e.error || 'Ошибка переименования файла' })
     }
   }
-
+  
   onRenameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ renameName: e.target.value })
   }
-
+  
   render() {
     const { editable, pageId } = this.props
     const { error, loading, files, optionsIndex, hardLimit = 0, hardUsed = 0, softLimit = 0, softUsed = 0, renameIndex, renameName } = this.state
@@ -414,16 +457,16 @@ class ArticleFiles extends Component<Props, State> {
             <div className="w-rename-modal">
               <table className="form">
                 <tbody>
-                  <tr>
-                    <td>Текущее имя:</td>
-                    <td>{files?.[renameIndex].name}</td>
-                  </tr>
-                  <tr>
-                    <td>Новое имя:</td>
-                    <td>
-                      <input type="text" value={renameName ?? ''} onChange={this.onRenameChange} />
-                    </td>
-                  </tr>
+                <tr>
+                  <td>Текущее имя:</td>
+                  <td>{files?.[renameIndex].name}</td>
+                </tr>
+                <tr>
+                  <td>Новое имя:</td>
+                  <td>
+                    <input type="text" value={renameName ?? ''} onChange={this.onRenameChange} />
+                  </td>
+                </tr>
                 </tbody>
               </table>
             </div>
@@ -463,52 +506,52 @@ class ArticleFiles extends Component<Props, State> {
               </p>
               <table className="table table-striped table-hover page-files">
                 <thead>
-                  <tr>
-                    <th>Имя файла</th>
-                    <th>Тип файла</th>
-                    <th>Размер</th>
-                    <th />
-                  </tr>
+                <tr>
+                  <th>Имя файла</th>
+                  <th>Тип файла</th>
+                  <th>Размер</th>
+                  <th />
+                </tr>
                 </thead>
                 <tbody>
-                  {files.map((file, i) => {
-                    return (
-                      <React.Fragment key={i}>
-                        <tr id={`file-row-${i}`}>
-                          {/* BHL has CSS selector that says tr[id*="file-row"] */}
-                          <td>
-                            <a href={`/local--files/${pageId}/${encodeURIComponent(file.name)}`} target="_blank">
-                              {file.name}
+                {files.map((file, i) => {
+                  return (
+                    <React.Fragment key={i}>
+                      <tr id={`file-row-${i}`}>
+                        {/* BHL has CSS selector that says tr[id*="file-row"] */}
+                        <td>
+                          <a href={`/local--files/${pageId}/${encodeURIComponent(file.name)}`} target="_blank">
+                            {file.name}
+                          </a>
+                        </td>
+                        <td>{file.mimeType}</td>
+                        <td>{this.formatSize(file.size)}</td>
+                        <td>
+                          <a className="btn btn-primary btn-sm btn-small" href="#" onClick={e => this.onOptions(e, i)}>
+                            Опции
+                          </a>
+                        </td>
+                      </tr>
+                      {optionsIndex === i ? (
+                        <tr className="highlight" id={`file-options-${i}`}>
+                          {/* same reasoning for ID as above */}
+                          <td />
+                          <td />
+                          <td />
+                          <td colSpan={4} className="options">
+                            <a className="btn btn-primary btn-sm btn-small" href="#" onClick={e => this.onOptionsRename(e, i)}>
+                              Переименовать
                             </a>
-                          </td>
-                          <td>{file.mimeType}</td>
-                          <td>{this.formatSize(file.size)}</td>
-                          <td>
-                            <a className="btn btn-primary btn-sm btn-small" href="#" onClick={e => this.onOptions(e, i)}>
-                              Опции
+                            &nbsp;
+                            <a className="btn btn-primary btn-sm btn-small" href="#" onClick={e => this.onOptionsDelete(e, i)}>
+                              Удалить
                             </a>
                           </td>
                         </tr>
-                        {optionsIndex === i ? (
-                          <tr className="highlight" id={`file-options-${i}`}>
-                            {/* same reasoning for ID as above */}
-                            <td />
-                            <td />
-                            <td />
-                            <td colSpan={4} className="options">
-                              <a className="btn btn-primary btn-sm btn-small" href="#" onClick={e => this.onOptionsRename(e, i)}>
-                                Переименовать
-                              </a>
-                              &nbsp;
-                              <a className="btn btn-primary btn-sm btn-small" href="#" onClick={e => this.onOptionsDelete(e, i)}>
-                                Удалить
-                              </a>
-                            </td>
-                          </tr>
-                        ) : null}
-                      </React.Fragment>
-                    )
-                  })}
+                      ) : null}
+                    </React.Fragment>
+                  )
+                })}
                 </tbody>
               </table>
               {editable ? this.renderUpload() : null}
