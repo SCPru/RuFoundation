@@ -28,7 +28,7 @@ class ArticleSearchIndex(auto_prefetch.Model):
             ),
         ]
 
-    article = auto_prefetch.ForeignKey(Article, on_delete=models.SET_NULL, null=True, verbose_name="Статья")
+    article = auto_prefetch.ForeignKey(Article, on_delete=models.CASCADE, verbose_name="Статья")
 
     content_plaintext = models.TextField(verbose_name="Текст статьи")
     content_source = models.TextField(verbose_name="Исходный код статьи")
